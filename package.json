@@ -1,0 +1,31 @@
+{
+  "name": "school-medical-management",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Phần mềm quản lý y tế học đường - School Medical Management System",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "start:frontend": "cd frontend && npm start",
+    "start:backend": "cd backend && npm start",
+    "dev": "concurrently \"npm run start:frontend\" \"npm run start:backend\""
+  },
+  "author": "Naammmdz",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Naammmdz/SWP391_School-Medical-Management-System.git"
+  },
+  "keywords": [
+    "school",
+    "medical",
+    "management",
+    "health",
+    "education"
+  ],
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.0.1"
+  }
+}
