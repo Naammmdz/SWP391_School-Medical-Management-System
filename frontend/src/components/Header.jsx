@@ -24,23 +24,13 @@ const Header = () => {
         <nav className={`nav-menu ${isMenuOpen ? 'active' : ''}`}>
           <ul className="nav-links">
             <li><Link to="/">Trang Chủ</Link></li>
-            <li className="dropdown">
-              <span className="nav-dropdown-trigger">Sức Khỏe Học Sinh</span>
-              <div className="dropdown-content">
-                <Link to="/hososuckhoe">Hồ Sơ Sức Khỏe</Link>
-                <Link to="/khaibaothuoc">Khai Báo Thuốc</Link>
-                <Link to="/sukienyte">Sự Kiện Y Tế</Link>
-              </div>
-            </li>
-            <li className="dropdown">
-              <span className="nav-dropdown-trigger">Quản Lý Y Tế</span>
-              <div className="dropdown-content">
-                <Link to="/tiem-chung">Tiêm Chủng</Link>
-                <Link to="/kiem-tra-dinh-ky">Kiểm Tra Định Kỳ</Link>
-                <Link to="/quan-ly-thuoc">Quản Lý Thuốc</Link>
-              </div>
-            </li>
-            <li><Link to="/bao-cao">Báo Cáo</Link></li>
+            <li><Link to="/hososuckhoe">Hồ Sơ Sức Khỏe</Link></li>
+            <li><Link to="/khaibaothuoc">Khai Báo Thuốc</Link></li>
+            <li><Link to="/sukienyte">Sự Kiện Y Tế</Link></li>
+            <li><Link to="/tiemchung">Tiêm Chủng</Link></li>
+            <li><Link to="/kiemtradinhky">Kiểm Tra Định Kỳ</Link></li>
+            <li><Link to="/quanlythuoc">Quản Lý Thuốc</Link></li>
+            <li><Link to="/login">Đăng nhập</Link></li>
           </ul>
         </nav>
 
