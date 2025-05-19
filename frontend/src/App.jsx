@@ -7,6 +7,11 @@ import Footer from './components/Footer';
 import HealthRecord from './pages/parents/HealthRecord';
 import MedicalEvents from './pages/nurse/MedicalEvents';
 import MedicineDeclarations from './pages/parents/MedicineDeclarations';
+import Pharmaceutical from './pages/nurse/Pharmaceutical';
+import VaccinationManagement from './pages/nurse/VaccinationManagement';
+import VaccinationNotifications from './pages/parents/VaccinationNotifications';
+import Admin from './pages/admin/Admin';
+
 function App() {
   return (
    
@@ -19,6 +24,9 @@ function App() {
           <Route path="/hososuckhoe" element={<HealthRecord />} />
           <Route path="/sukienyte" element={<MedicalEvents/>}/>
           <Route path="/khaibaothuoc" element={<MedicineDeclarations/>}/>
+          <Route path="/quanlythuoc" element={<Pharmaceutical/>}/>
+          <Route path="/quanlytiemchung" element={<VaccinationManagement/>}/>
+          <Route path="/thongbaotiemchung" element={<VaccinationNotifications/>}/>
           <Route path="/login" element={<Login />} />
         </Routes>
       

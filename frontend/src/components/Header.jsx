@@ -27,7 +27,8 @@ const Header = () => {
             <li><Link to="/hososuckhoe">Hồ Sơ Sức Khỏe</Link></li>
             <li><Link to="/khaibaothuoc">Khai Báo Thuốc</Link></li>
             <li><Link to="/sukienyte">Sự Kiện Y Tế</Link></li>
-            <li><Link to="/tiemchung">Tiêm Chủng</Link></li>
+            <li><Link to="/quanlytiemchung">Quản Lý Tiêm Chủng</Link></li>
+            <li><Link to="/thongbaotiemchung">Thông Báo Tiêm Chủng</Link></li>
             <li><Link to="/kiemtradinhky">Kiểm Tra Định Kỳ</Link></li>
             <li><Link to="/quanlythuoc">Quản Lý Thuốc</Link></li>
             <li><Link to="/login">Đăng nhập</Link></li>
