@@ -26,6 +26,7 @@
 }
 
 /* Tabs */
+/*
 .form-tabs {
   display: flex;
   flex-wrap: wrap;
@@ -64,6 +65,7 @@
 .tab-content.active {
   display: block;
 }
+*/
 
 /* Form elements */
 .section-title {
@@ -71,6 +73,11 @@
   font-size: 1.25rem;
   font-weight: 600;
   margin-bottom: 1rem;
+  margin-top: 2.5rem;
+}
+
+.section-title:first-of-type {
+  margin-top: 0;
 }
 
 .section-description {

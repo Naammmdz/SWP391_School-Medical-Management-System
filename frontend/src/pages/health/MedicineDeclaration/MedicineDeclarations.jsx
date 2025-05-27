@@ -1,8 +1,16 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Camera, Upload, Send, X, Image as ImageIcon, Info } from 'lucide-react';
-import './ParentPages.css';
+import '../../../pages/parents/ParentPages.css';
+
+
 
 const MedicineDeclarations = () => {
+  // Mock data - sẽ được thay thế bằng API call sau này
+  const mockStudentData = {
+    studentName: 'Nguyễn Văn A',
+    classroom: '10A1'
+  };
+
   const [formData, setFormData] = useState({
     studentName: '',
     classroom: '',
@@ -18,8 +26,49 @@ const MedicineDeclarations = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   
   const fileInputRef = useRef(null);
+
+  // Load student data when component mounts
+  useEffect(() => {
+    // Simulate API call delay
+    setTimeout(() => {
+      try {
+        // Comment out actual API call for now
+        /*
+        const response = await fetch('/api/student/info', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch student data');
+        }
+
+        const data = await response.json();
+        */
+        
+        // Use mock data instead
+        const data = mockStudentData;
+        
+        setFormData(prev => ({
+          ...prev,
+          studentName: data.studentName,
+          classroom: data.classroom
+        }));
+        
+        setIsLoading(false);
+      } catch (err) {
+        console.error('Error fetching student data:', err);
+        setSubmitError('Không thể tải thông tin học sinh. Vui lòng thử lại sau.');
+        setIsLoading(false);
+      }
+    }, 1000); // Simulate 1 second loading time
+  }, []);
   
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -135,6 +184,17 @@ const MedicineDeclarations = () => {
     }
   };
   
+  if (isLoading) {
+    return (
+      <div className="parent-page medicine-declaration-page">
+        <div className="page-header">
+          <h1>Khai Báo Thuốc</h1>
+        </div>
+        <div className="loading">Đang tải thông tin học sinh...</div>
+      </div>
+    );
+  }
+  
   return (
     <div className="parent-page medicine-declaration-page">
       <div className="page-header">
@@ -161,7 +221,7 @@ const MedicineDeclarations = () => {
           <div className="info-content">
             <h3>Hướng dẫn khai báo thuốc</h3>
             <ul>
-              <li>Vui lòng điền đầy đủ thông tin học sinh và mô tả tình trạng bệnh</li>
+              <li>Vui lòng mô tả tình trạng bệnh của học sinh</li>
               <li>Đính kèm hình ảnh đơn thuốc hoặc giấy chỉ định của bác sĩ</li>
               <li>Nhân viên y tế sẽ kiểm tra và xử lý khai báo</li>
               <li>Mọi thông tin sẽ được bảo mật và chỉ sử dụng cho mục đích chăm sóc sức khỏe của học sinh</li>
@@ -173,25 +233,25 @@ const MedicineDeclarations = () => {
           <h2>Thông tin học sinh</h2>
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="studentName">Tên học sinh <span className="required">*</span></label>
+              <label htmlFor="studentName">Tên học sinh</label>
               <input
                 type="text"
                 id="studentName"
                 name="studentName"
                 value={formData.studentName}
-                onChange={handleInputChange}
-                required
+                disabled
+                className="disabled-input"
               />
             </div>
             <div className="form-group">
-              <label htmlFor="classroom">Lớp <span className="required">*</span></label>
+              <label htmlFor="classroom">Lớp</label>
               <input
                 type="text"
                 id="classroom"
                 name="classroom"
                 value={formData.classroom}
-                onChange={handleInputChange}
-                required
+                disabled
+                className="disabled-input"
               />
             </div>
           </div>
@@ -278,10 +338,7 @@ const MedicineDeclarations = () => {
                   <p>Kéo thả hình ảnh vào đây hoặc nhấn để tải lên</p>
                   <button type="button" className="upload-button">Chọn hình ảnh</button>
                 </div>
-                <button type="button" className="capture-button" onClick={handleCaptureClick}>
-                  <Camera size={16} />
-                  Chụp ảnh
-                </button>
+               
               </div>
             ) : (
               <div className="image-preview-container">

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './MedicalEvents.css';
-import MedicalEventService from '../../services/MedicalEventService';
+import MedicalEventService from '../../../services/MedicalEventService';
 
 // Lựa chọn cho loại sự cố
 

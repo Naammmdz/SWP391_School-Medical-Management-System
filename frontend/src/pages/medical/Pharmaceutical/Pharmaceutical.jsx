@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Plus, Edit, Trash2, X, Save, RefreshCw, AlertTriangle } from 'lucide-react';
-import './NursePages.css';
+
+
 
 const Pharmaceutical = () => {
   const [medications, setMedications] = useState([]);
@@ -28,6 +29,28 @@ const Pharmaceutical = () => {
     storage: '',
     for_conditions: '',
   });
+
+  // State for medication selection and notification
+  const [isSelectingMedication, setIsSelectingMedication] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [selectedMedications, setSelectedMedications] = useState([]);
+  const [notificationModalOpen, setNotificationModalOpen] = useState(false);
+  const [notification, setNotification] = useState({
+    studentId: null,
+    studentName: '',
+    medications: [],
+    notes: '',
+    dosage: '',
+    time: '',
+    date: new Date().toISOString().split('T')[0]
+  });
+
+  // Mock data for students
+  const mockStudents = [
+    { id: 1, name: 'Nguyễn Văn A', class: '10A1' },
+    { id: 2, name: 'Trần Thị B', class: '10A1' },
+    { id: 3, name: 'Lê Văn C', class: '10A2' },
+  ];
 
   // Get all medications from API
   useEffect(() => {
@@ -291,11 +314,92 @@ const Pharmaceutical = () => {
     }
   };
 
+  // Handle medication selection
+  const handleMedicationSelect = (medication) => {
+    if (selectedMedications.find(m => m.id === medication.id)) {
+      setSelectedMedications(selectedMedications.filter(m => m.id !== medication.id));
+    } else {
+      setSelectedMedications([...selectedMedications, medication]);
+    }
+  };
+
+  // Open medication selection modal
+  const openMedicationSelection = (student) => {
+    setSelectedStudent(student);
+    setSelectedMedications([]);
+    setIsSelectingMedication(true);
+  };
+
+  // Close medication selection modal
+  const closeMedicationSelection = () => {
+    setIsSelectingMedication(false);
+    setSelectedStudent(null);
+    setSelectedMedications([]);
+  };
+
+  // Open notification modal
+  const openNotificationModal = () => {
+    if (selectedMedications.length === 0) {
+      alert('Vui lòng chọn ít nhất một loại thuốc');
+      return;
+    }
+
+    setNotification({
+      studentId: selectedStudent.id,
+      studentName: selectedStudent.name,
+      medications: selectedMedications,
+      notes: '',
+      dosage: '',
+      time: '',
+      date: new Date().toISOString().split('T')[0]
+    });
+    setNotificationModalOpen(true);
+  };
+
+  // Handle notification input changes
+  const handleNotificationChange = (e) => {
+    const { name, value } = e.target;
+    setNotification({...notification, [name]: value});
+  };
+
+  // Send notification to parent
+  const sendNotification = async (e) => {
+    e.preventDefault();
+    
+    if (!notification.dosage || !notification.time) {
+      alert('Vui lòng điền đầy đủ thông tin liều lượng và thời gian uống thuốc');
+      return;
+    }
+    
+    try {
+      // API call would go here
+      // const response = await fetch('api/medication-notifications', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify(notification)
+      // });
+      
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      alert('Thông báo đã được gửi thành công đến phụ huynh!');
+      setNotificationModalOpen(false);
+      closeMedicationSelection();
+    } catch (error) {
+      console.error('Error sending notification:', error);
+      alert('Có lỗi xảy ra khi gửi thông báo. Vui lòng thử lại sau.');
+    }
+  };
+
   return (
     <div className="nurse-page">
       <div className="page-header">
         <h1>Quản Lý Thuốc</h1>
         <div className="header-actions">
+          <button className="add-button" onClick={() => openMedicationSelection(mockStudents[0])}>
+            <Plus size={16} />
+            Chọn thuốc cho học sinh
+          </button>
           <button className="refresh-button" onClick={fetchMedications}>
             <RefreshCw size={16} />
             Làm mới
@@ -580,6 +684,180 @@ const Pharmaceutical = () => {
                 <button type="submit" className="submit-button">
                   <Save size={16} />
                   {isEditMode ? 'Cập nhật' : 'Lưu'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Medication Selection Modal */}
+      {isSelectingMedication && (
+        <div className="modal">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2>Chọn thuốc cho học sinh {selectedStudent?.name}</h2>
+              <button className="close-button" onClick={closeMedicationSelection}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="medication-selection">
+              <div className="selected-medications">
+                <h3>Thuốc đã chọn ({selectedMedications.length})</h3>
+                {selectedMedications.length > 0 ? (
+                  <ul>
+                    {selectedMedications.map(medication => (
+                      <li key={medication.id}>
+                        {medication.name} - {medication.dosage}
+                        <button 
+                          className="remove-button"
+                          onClick={() => handleMedicationSelect(medication)}
+                        >
+                          <X size={16} />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>Chưa chọn thuốc nào</p>
+                )}
+              </div>
+
+              <div className="medication-list">
+                <h3>Danh sách thuốc</h3>
+                <div className="search-container">
+                  <div className="search-input-wrapper">
+                    <Search size={18} className="search-icon" />
+                    <input
+                      type="text"
+                      placeholder="Tìm kiếm thuốc..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="search-input"
+                    />
+                  </div>
+                </div>
+
+                <div className="medication-grid">
+                  {filteredMedications.map(medication => (
+                    <div 
+                      key={medication.id}
+                      className={`medication-card ${selectedMedications.find(m => m.id === medication.id) ? 'selected' : ''}`}
+                      onClick={() => handleMedicationSelect(medication)}
+                    >
+                      <h4>{medication.name}</h4>
+                      <p>Liều lượng: {medication.dosage}</p>
+                      <p>Dạng thuốc: {medication.dosage_form}</p>
+                      <p>Công dụng: {medication.for_conditions}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-actions">
+              <button className="cancel-button" onClick={closeMedicationSelection}>
+                Hủy
+              </button>
+              <button className="submit-button" onClick={openNotificationModal}>
+                Tiếp tục
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Notification Modal */}
+      {notificationModalOpen && (
+        <div className="modal">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2>Gửi thông báo cho phụ huynh</h2>
+              <button className="close-button" onClick={() => setNotificationModalOpen(false)}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={sendNotification}>
+              <div className="form-group">
+                <label>Học sinh</label>
+                <input
+                  type="text"
+                  value={notification.studentName}
+                  disabled
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Danh sách thuốc</label>
+                <ul className="selected-medications-list">
+                  {notification.medications.map(medication => (
+                    <li key={medication.id}>
+                      {medication.name} - {medication.dosage}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="dosage">Liều lượng uống <span className="required">*</span></label>
+                <input
+                  type="text"
+                  id="dosage"
+                  name="dosage"
+                  value={notification.dosage}
+                  onChange={handleNotificationChange}
+                  placeholder="Ví dụ: 1 viên/lần, 2 lần/ngày"
+                  required
+                />
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="date">Ngày uống <span className="required">*</span></label>
+                  <input
+                    type="date"
+                    id="date"
+                    name="date"
+                    value={notification.date}
+                    onChange={handleNotificationChange}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="time">Thời gian uống <span className="required">*</span></label>
+                  <input
+                    type="time"
+                    id="time"
+                    name="time"
+                    value={notification.time}
+                    onChange={handleNotificationChange}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="notes">Ghi chú</label>
+                <textarea
+                  id="notes"
+                  name="notes"
+                  value={notification.notes}
+                  onChange={handleNotificationChange}
+                  placeholder="Thêm ghi chú về cách uống thuốc hoặc lưu ý đặc biệt"
+                  rows="3"
+                ></textarea>
+              </div>
+
+              <div className="form-actions">
+                <button type="button" className="cancel-button" onClick={() => setNotificationModalOpen(false)}>
+                  Hủy
+                </button>
+                <button type="submit" className="submit-button">
+                  <Save size={16} />
+                  Gửi thông báo
                 </button>
               </div>
             </form>

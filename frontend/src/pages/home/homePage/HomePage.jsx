@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "./HomePage.css";
-import HomePageService from "../../services/HomePageService";
+import HomePageService from "../../../services/HomePageService";
+import Blog from "../blog/Blog";
 
 export default function HomePage() {
   // State for health resources
@@ -73,7 +74,7 @@ export default function HomePage() {
             title: "5 cách giúp học sinh giảm căng thẳng trong mùa thi",
             excerpt: "Mùa thi là khoảng thời gian đầy áp lực đối với học sinh. Trong bài viết này...",
             author: "ThS. Nguyễn Thị Hoa",
-            thumbnail: "https://placehold.co/600x400",
+            thumbnail: "https://th.bing.com/th/id/OIP.fnH5EO0esItVod7gcr26vAHaFZ?w=238&h=180&c=7&r=0&o=5&cb=iwc2&dpr=2&pid=1.7",
             publishedAt: "2023-06-01",
           },
           {
@@ -81,7 +82,7 @@ export default function HomePage() {
             title: "Tầm quan trọng của bữa sáng đối với học sinh",
             excerpt: "Nhiều nghiên cứu đã chỉ ra rằng bữa sáng là bữa ăn quan trọng nhất trong ngày...",
             author: "BS. Trần Văn Khỏe",
-            thumbnail: "https://placehold.co/600x400",
+            thumbnail: "https://th.bing.com/th/id/OIP.mlzELnpvexT7SMT8-mMtQgHaE7?w=283&h=188&c=7&r=0&o=5&cb=iwc2&dpr=2&pid=1.7",
             publishedAt: "2023-05-20",
           },
           {
@@ -89,7 +90,7 @@ export default function HomePage() {
             title: "Cách phát hiện sớm các vấn đề về thị lực ở trẻ",
             excerpt: "Thị lực kém có thể ảnh hưởng nghiêm trọng đến khả năng học tập của trẻ...",
             author: "BS. Lê Thị Nhãn",
-            thumbnail: "https://placehold.co/600x400",
+            thumbnail: "https://th.bing.com/th/id/OIP.d7mUbY74nBjN1cwzc9bS7AHaEe?w=301&h=182&c=7&r=0&o=5&cb=iwc2&dpr=2&pid=1.7",
             publishedAt: "2023-05-10",
           },
         ];
@@ -106,7 +107,7 @@ export default function HomePage() {
         console.error("Error fetching school info:", error);
         // Fallback to mock data if API fails
         setSchoolInfo({
-          name: "Trường Trung Học Phổ Thông ABC",
+          name: "Trường Tiểu Học ",
           slogan: "Chăm sóc sức khỏe toàn diện cho học sinh",
           stats: {
             students: "2000+",
@@ -167,7 +168,7 @@ export default function HomePage() {
       {/* Hero Section */}
       <section className="hero">
         <div className="hero-content">
-          <h1>{schoolInfo.name || "Trường Trung Học Phổ Thông ABC"}</h1>
+          <h1>{schoolInfo.name || "Trường Tiểu Học"}</h1>
           <p>{schoolInfo.slogan || "Chăm sóc sức khỏe toàn diện cho học sinh"}</p>
           <div className="hero-buttons">
             <Link to="/about" className="btn btn-primary">
@@ -219,15 +220,15 @@ export default function HomePage() {
             </div>
             <div className="intro-image">
               <img
-                src={schoolInfo.imageUrl || "https://placehold.co/600x400"}
-                alt={schoolInfo.name || "Trường THPT ABC"}
+                src={schoolInfo.imageUrl || "https://th.bing.com/th/id/R.af5d48a3dcaf9822181b45f4fa428a4d?rik=O2JPjbyHuxy4LA&riu=http%3a%2f%2fbaodanang.vn%2fenglish%2fdataimages%2f202109%2foriginal%2fimages1623286_FPT.jpg&ehk=gNPhhFhpkw%2brCyqhuyjTSh1L8DFK1YfSGFnm%2brgCitI%3d&risl=&pid=ImgRaw&r=0"}
+                alt={schoolInfo.name || "Trường Tiểu Học ABC"}
               />
             </div>
           </div>
         </div>
       </section>
 
-      {/* Health Resources Section - REPLACED WITH FEATURES */}
+      {/* Health Resources Section */}
       <section className="section health-resources">
         <div className="container">
           <div className="section-header">
@@ -317,7 +318,9 @@ export default function HomePage() {
                     <Link to="/login" className="btn btn-sm">
                       Đăng nhập
                     </Link>
+                    
                   )}
+                  
                 </div>
               </div>
 
@@ -357,51 +360,7 @@ export default function HomePage() {
       </section>
 
       {/* Blog Section */}
-      <section className="section blog-section">
-        <div className="container">
-          <div className="section-header">
-            <h2>Blog và chia sẻ kinh nghiệm</h2>
-            <p>Kiến thức và lời khuyên từ đội ngũ y tế chuyên nghiệp</p>
-          </div>
-
-          {isLoading ? (
-            <div className="loading">Đang tải dữ liệu...</div>
-          ) : (
-            <div className="blog-posts">
-              {blogPosts.length > 0 ? (
-                blogPosts.map((post) => (
-                  <div key={post.id} className="blog-post">
-                    <div className="post-thumbnail">
-                      <img src={post.thumbnail} alt={post.title} />
-                    </div>
-                    <div className="post-content">
-                      <h3>{post.title}</h3>
-                      <p className="post-meta">
-                        <span className="post-author">{post.author}</span>
-                        <span className="post-date">
-                          {new Date(post.publishedAt).toLocaleDateString("vi-VN")}
-                        </span>
-                      </p>
-                      <p className="post-excerpt">{post.excerpt}</p>
-                      <Link to={`/blog/${post.id}`} className="read-more">
-                        Đọc tiếp
-                      </Link>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="no-data">Không có bài viết nào.</div>
-              )}
-            </div>
-          )}
-
-          <div className="blog-footer">
-            <Link to="/blog" className="btn btn-primary">
-              Xem tất cả bài viết
-            </Link>
-          </div>
-        </div>
-      </section>
+      <Blog blogPosts={blogPosts} isLoading={isLoading} />
 
       {/* Contact Section */}
       <section className="section contact-section">
@@ -425,35 +384,7 @@ export default function HomePage() {
                 </li>
               </ul>
             </div>
-            <div className="contact-form">
-              <h3>Gửi tin nhắn cho chúng tôi</h3>
-              <form onSubmit={handleContactSubmit}>
-                <div className="form-group">
-                  <input
-                    type="text"
-                    placeholder="Họ và tên"
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <input
-                    type="email"
-                    placeholder="Email"
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <textarea
-                    placeholder="Nội dung tin nhắn"
-                    rows="4"
-                    required
-                  ></textarea>
-                </div>
-                <button type="submit" className="btn btn-primary">
-                  Gửi tin nhắn
-                </button>
-              </form>
-            </div>
+          
           </div>
         </div>
       </section>

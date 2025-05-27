@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Plus, Edit, Trash2, X, Save, RefreshCw } from 'lucide-react';
-import './NursePages.css';
+import '../../../pages/nurse/NursePages.css';
 
 const MedicalSupplies = () => {
   const [supplies, setSupplies] = useState([]);

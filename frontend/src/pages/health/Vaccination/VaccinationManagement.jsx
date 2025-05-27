@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Search, Plus, Edit, Trash2, FileText, Send, AlertTriangle, CheckCircle, X } from 'lucide-react';
-import './NursePages.css';
+import "./VaccinationManagement.css";
+
 
 // Vaccine types options
 const vaccineTypes = [

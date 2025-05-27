@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AlertTriangle, CheckCircle, X, ChevronRight, Calendar, FileText, MessageCircle } from 'lucide-react';
-import './ParentPages.css';
+import "./VaccinationNotifications.css";
+
 
 const VaccinationNotifications = () => {
   const [notifications, setNotifications] = useState([]);

@@ -6,12 +6,26 @@ import { Bell, User, Menu, X } from 'lucide-react';
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
-
+  // const baseURL = 'http://localhost:8080/api/v1/users';
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
+  // const [user, setUser] = useState([]);
+  // useEffect(() => {
+  //   const fetchApi = async()=> {
+  //       try {
+  //           const response = await axios.get(`${baseURL}/id`);
+  //           console.log(response.data);
+  //       } catch (error) {
+  //            console.error('Fetch error:', error);
+  //       }
+  //   }
+  //   fetchApi();
+  //  },[]);
+   
 
   return (
+
     <header className="header">
       <div className="header-container">
         <div className="logo-container">
@@ -31,6 +45,7 @@ const Header = () => {
             <li><Link to="/thongbaotiemchung">Thông Báo Tiêm Chủng</Link></li>
             <li><Link to="/kiemtradinhky">Kiểm Tra Định Kỳ</Link></li>
             <li><Link to="/quanlythuoc">Quản Lý Thuốc</Link></li>
+            <li><Link to="/donthuoc">Đơn Thuốc</Link></li>
             <li><Link to="/login">Đăng nhập</Link></li>
           </ul>
         </nav>
@@ -47,7 +62,7 @@ const Header = () => {
               </div>
               <div className="user-info">
                 <span className="username">Xin chào, User</span>
-                <span className="user-role">Nhân viên y tế</span>
+                <span className="user-role"></span>
               </div>
             </div>
           </div>
