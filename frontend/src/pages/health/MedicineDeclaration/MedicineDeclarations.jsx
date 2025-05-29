@@ -1,17 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Camera, Upload, Send, X, Image as ImageIcon, Info } from 'lucide-react';
-import '../../../pages/parents/ParentPages.css';
-
-
+import './MedicineDeclarations.css';
+import PrescriptionService from '../../../services/PrescriptionService';
+import { toast } from 'react-toastify';
 
 const MedicineDeclarations = () => {
   // Mock data - sẽ được thay thế bằng API call sau này
   const mockStudentData = {
+    studentId: 'HS001',
     studentName: 'Nguyễn Văn A',
     classroom: '10A1'
   };
 
   const [formData, setFormData] = useState({
+    studentId: '',
     studentName: '',
     classroom: '',
     condition: '',
@@ -32,31 +34,18 @@ const MedicineDeclarations = () => {
 
   // Load student data when component mounts
   useEffect(() => {
-    // Simulate API call delay
-    setTimeout(() => {
+    const fetchStudentData = async () => {
       try {
-        // Comment out actual API call for now
-        /*
-        const response = await fetch('/api/student/info', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch student data');
-        }
-
-        const data = await response.json();
-        */
+        // TODO: Thay thế bằng API call thực tế
+        // const response = await StudentService.getStudentInfo();
+        // const data = response.data;
         
-        // Use mock data instead
+        // Sử dụng mock data tạm thời
         const data = mockStudentData;
         
         setFormData(prev => ({
           ...prev,
+          studentId: data.studentId,
           studentName: data.studentName,
           classroom: data.classroom
         }));
@@ -67,7 +56,9 @@ const MedicineDeclarations = () => {
         setSubmitError('Không thể tải thông tin học sinh. Vui lòng thử lại sau.');
         setIsLoading(false);
       }
-    }, 1000); // Simulate 1 second loading time
+    };
+
+    fetchStudentData();
   }, []);
   
   const handleInputChange = (e) => {
@@ -84,13 +75,13 @@ const MedicineDeclarations = () => {
     
     // Check file type
     if (!file.type.match('image.*')) {
-      alert('Vui lòng chọn file hình ảnh');
+      toast.error('Vui lòng chọn file hình ảnh');
       return;
     }
     
     // Check file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert('Kích thước file quá lớn. Vui lòng chọn file dưới 5MB');
+      toast.error('Kích thước file quá lớn. Vui lòng chọn file dưới 5MB');
       return;
     }
     
@@ -118,12 +109,12 @@ const MedicineDeclarations = () => {
     e.preventDefault();
     
     if (!prescriptionImg) {
-      alert('Vui lòng tải lên hình ảnh đơn thuốc');
+      toast.error('Vui lòng tải lên hình ảnh đơn thuốc');
       return;
     }
     
-    if (!formData.studentName || !formData.classroom || !formData.condition) {
-      alert('Vui lòng điền đầy đủ thông tin bắt buộc');
+    if (!formData.studentId || !formData.condition) {
+      toast.error('Vui lòng điền đầy đủ thông tin bắt buộc');
       return;
     }
     
@@ -131,34 +122,17 @@ const MedicineDeclarations = () => {
     setSubmitError(null);
     
     try {
-      // Here we would upload the image and form data to the API
-      // For now we'll just simulate a successful API call
+      // Tạo đơn thuốc mới
+      await PrescriptionService.createPrescription({
+        ...formData,
+        prescriptionImg
+      });
       
-      // Create FormData object to send both text and file data
-      const submitData = new FormData();
-      submitData.append('prescriptionImg', prescriptionImg);
-      
-      // Add all form fields to the FormData
-      for (const key in formData) {
-        submitData.append(key, formData[key]);
-      }
-      
-      // API call would go here
-      // const response = await fetch('api/medicine-declarations', {
-      //   method: 'POST',
-      //   body: submitData
-      // });
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      console.log('Form submitted:', formData);
-      console.log('Image submitted:', prescriptionImg);
-      
-      // Reset form after successful submission
+      // Reset form sau khi gửi thành công
       setFormData({
-        studentName: '',
-        classroom: '',
+        studentId: formData.studentId,
+        studentName: formData.studentName,
+        classroom: formData.classroom,
         condition: '',
         instructions: '',
         startDate: '',
@@ -170,8 +144,9 @@ const MedicineDeclarations = () => {
       if (fileInputRef.current) fileInputRef.current.value = "";
       
       setSubmitSuccess(true);
+      toast.success('Khai báo thuốc đã được gửi thành công!');
       
-      // Hide success message after 5 seconds
+      // Ẩn thông báo thành công sau 5 giây
       setTimeout(() => {
         setSubmitSuccess(false);
       }, 5000);
@@ -179,6 +154,7 @@ const MedicineDeclarations = () => {
     } catch (err) {
       console.error('Error submitting form:', err);
       setSubmitError('Có lỗi xảy ra khi gửi khai báo. Vui lòng thử lại sau.');
+      toast.error('Có lỗi xảy ra khi gửi khai báo. Vui lòng thử lại sau.');
     } finally {
       setIsSubmitting(false);
     }
@@ -203,7 +179,7 @@ const MedicineDeclarations = () => {
       
       {submitSuccess && (
         <div className="success-message">
-          <p>Khai báo thuốc đã được gửi thành công! Nhà trường sẽ xem xét và liên hệ nếu cần thêm thông tin.</p>
+          <p>Khai báo thuốc đã được gửi thành công! Nhân viên y tế sẽ xem xét và liên hệ nếu cần thêm thông tin.</p>
         </div>
       )}
       
@@ -338,7 +314,6 @@ const MedicineDeclarations = () => {
                   <p>Kéo thả hình ảnh vào đây hoặc nhấn để tải lên</p>
                   <button type="button" className="upload-button">Chọn hình ảnh</button>
                 </div>
-               
               </div>
             ) : (
               <div className="image-preview-container">

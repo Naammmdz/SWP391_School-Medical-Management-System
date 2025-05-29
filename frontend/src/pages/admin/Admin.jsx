@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Save, X } from 'lucide-react';
 import './Admin.css';
-
+import DashboardPage from '../dashboardPage/DashboardPage';
 const Admin = () => {
   // State for users list
   const [users, setUsers] = useState([]);
@@ -9,6 +9,7 @@ const Admin = () => {
   const [error, setError] = useState(null);
 
   // State for form
+  const [showForm, setShowForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentUser, setCurrentUser] = useState({
     id: null,
@@ -69,6 +70,7 @@ const Admin = () => {
       
       setUsers([...users, newUser]);
       resetForm();
+      setShowForm(false);
     } catch (error) {
       console.error('Error creating user:', error);
       setError('Failed to create user');
@@ -90,6 +92,7 @@ const Admin = () => {
         user.id === id ? { ...userData, id } : user
       ));
       resetForm();
+      setShowForm(false);
     } catch (error) {
       console.error('Error updating user:', error);
       setError('Failed to update user');
@@ -139,6 +142,7 @@ const Admin = () => {
   const editUser = (user) => {
     setIsEditing(true);
     setCurrentUser({ ...user });
+    setShowForm(true);
   };
 
   // Reset form
@@ -154,6 +158,18 @@ const Admin = () => {
     });
   };
 
+  // Show add form
+  const showAddForm = () => {
+    resetForm();
+    setShowForm(true);
+  };
+
+  // Close form
+  const closeForm = () => {
+    setShowForm(false);
+    resetForm();
+  };
+
   // Initialize component
   useEffect(() => {
     fetchUsers();
@@ -161,7 +177,13 @@ const Admin = () => {
 
   return (
     <div className="admin-page">
-      <h1>Quản lý người dùng</h1>
+      <div className="admin-header">
+        <h1>Quản lý người dùng</h1>
+        <button className="add-btn" onClick={showAddForm}>
+          <Plus size={16} />
+          Thêm mới
+        </button>
+      </div>
       
       {error && (
         <div className="error-message">
@@ -170,96 +192,107 @@ const Admin = () => {
       )}
       
       {/* User form */}
-      <form onSubmit={handleSubmit} className="user-form">
-        <div className="form-group">
-          <label htmlFor="name">Tên</label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            value={currentUser.name}
-            onChange={handleInputChange}
-            required
-          />
-        </div>
-        
-        <div className="form-group">
-          <label htmlFor="phone">Số điện thoại</label>
-          <input
-            type="tel"
-            id="phone"
-            name="phone"
-            value={currentUser.phone}
-            onChange={handleInputChange}
-            required
-          />
-        </div>
-        
-        <div className="form-group">
-          <label htmlFor="email">Email</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={currentUser.email}
-            onChange={handleInputChange}
-            required
-          />
-        </div>
-        
-        {!isEditing && (
-          <div className="form-group">
-            <label htmlFor="password">Mật khẩu</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={currentUser.password}
-              onChange={handleInputChange}
-              required
-            />
+      {showForm && (
+        <div className="form-modal">
+          <div className="form-content">
+            <div className="form-header">
+              <h2>{isEditing ? 'Chỉnh sửa người dùng' : 'Thêm người dùng mới'}</h2>
+              <button className="close-btn" onClick={closeForm}>
+                <X size={20} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleSubmit} className="user-form">
+              <div className="form-group">
+                <label htmlFor="name">Tên</label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={currentUser.name}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="phone">Số điện thoại</label>
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  value={currentUser.phone}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="email">Email</label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={currentUser.email}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              
+              {!isEditing && (
+                <div className="form-group">
+                  <label htmlFor="password">Mật khẩu</label>
+                  <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    value={currentUser.password}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+              )}
+              
+              <div className="form-group">
+                <label htmlFor="role">Vai trò</label>
+                <select
+                  id="role"
+                  name="role"
+                  value={currentUser.role}
+                  onChange={handleInputChange}
+                  required
+                >
+                  {roles.map(role => (
+                    <option key={role.value} value={role.value}>
+                      {role.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="form-actions">
+                <button type="button" onClick={closeForm} className="cancel-btn">
+                  <X size={16} />
+                  Hủy
+                </button>
+                <button type="submit" className="submit-btn">
+                  {isEditing ? (
+                    <>
+                      <Save size={16} />
+                      Cập nhật
+                    </>
+                  ) : (
+                    <>
+                      <Plus size={16} />
+                      Thêm mới
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
-        )}
-        
-        <div className="form-group">
-          <label htmlFor="role">Vai trò</label>
-          <select
-            id="role"
-            name="role"
-            value={currentUser.role}
-            onChange={handleInputChange}
-            required
-          >
-            {roles.map(role => (
-              <option key={role.value} value={role.value}>
-                {role.label}
-              </option>
-            ))}
-          </select>
         </div>
-        
-        <div className="form-actions">
-          {isEditing && (
-            <button type="button" onClick={resetForm} className="cancel-btn">
-              <X size={16} />
-              Hủy
-            </button>
-          )}
-          <button type="submit" className="submit-btn">
-            {isEditing ? (
-              <>
-                <Save size={16} />
-                Cập nhật
-              </>
-            ) : (
-              <>
-                <Plus size={16} />
-                Thêm mới
-              </>
-            )}
-          </button>
-        </div>
-      </form>
+      )}
       
       {/* Users table */}
       {loading ? (
@@ -303,6 +336,7 @@ const Admin = () => {
           </tbody>
         </table>
       )}
+      <DashboardPage/>
     </div>
   );
 };

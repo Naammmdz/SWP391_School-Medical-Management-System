@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import './Login.css';
+import React, { useState } from "react";
+import "./Login.css";
 import { toast } from 'react-toastify';
 import { Link, useNavigate } from 'react-router-dom';
-import { mockUsers } from '../../../data/mockUsers';
+import { mockUsers } from "../../../data/mockUsers";
 
 const Login = () => {
   const [phone, setPhone] = useState('');
@@ -48,10 +48,10 @@ const Login = () => {
           navigate('/admin');
           break;
         case 'parent':
-          navigate('/hososuckhoe');
+          navigate('/parent');
           break;
         case 'nurse':
-          navigate('/sukienyte');
+          navigate('/nurse');
           break;
         default:
           navigate('/');
@@ -65,21 +65,21 @@ const Login = () => {
   return (
     <>
       <div className="login-container col-6">
-        <div className="title">Login</div>
+        <div className="title">Đăng nhập</div>
 
-        <div className="text">Phone or username</div>
+        <div className="text">Số điện thoại</div>
         <input
           type="text"
-          placeholder="Enter phone or username"
+          placeholder="Nhập số điện thoại"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
         />
 
-        <div className="text">Password</div>
+        <div className="text">Mật khẩu</div>
         <div className="password-input">
           <input
             type={isShowPassword ? 'text' : 'password'}
-            placeholder="Enter password"
+            placeholder="Nhập mật khẩu"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />

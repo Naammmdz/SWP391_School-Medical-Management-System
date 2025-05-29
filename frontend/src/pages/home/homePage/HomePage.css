@@ -84,8 +84,7 @@
 
 /* Hero Section */
 .hero {
-  background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://th.bing.com/th/id/OIP.iSLfrSscbMra_2llObG74wHaE8?w=297&h=182&c=7&r=0&o=5&cb=iwc2&dpr=2&pid=1.7');
-  background-size: cover;
+  background-size: 100% auto;
   background-repeat: no-repeat;
   background-position: center;
   background-color: #666;
@@ -94,12 +93,6 @@
   padding: 120px 0;
   position: relative;
 }
-
-.hero-content {
-  max-width: 800px;
-  margin: 0 auto;
-}
-
 .hero h1 {
   font-size: 48px;
   margin-bottom: 20px;

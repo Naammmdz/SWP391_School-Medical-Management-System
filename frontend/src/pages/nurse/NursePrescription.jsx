@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Modal, Form, Input, Select, message } from 'antd';
-import { SearchOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { Table, Button, Modal, Form, Input, Select, message, DatePicker, TimePicker } from 'antd';
+import { SearchOutlined, CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import './NursePrescription.css';
+import PrescriptionService from '../../services/PrescriptionService';
+import moment from 'moment';
+
+const { TextArea } = Input;
 
 const NursePrescription = () => {
   const [prescriptions, setPrescriptions] = useState([]);
@@ -9,30 +13,24 @@ const NursePrescription = () => {
   const [selectedPrescription, setSelectedPrescription] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
-
-  // Mock data - sẽ thay thế bằng API call
-  const mockPrescriptions = [
-    {
-      id: 1,
-      studentName: 'Nguyễn Văn A',
-      studentId: 'HS001',
-      className: '10A1',
-      parentName: 'Nguyễn Văn B',
-      parentPhone: '0123456789',
-      prescriptionDate: '2024-03-20',
-      medicines: [
-        { name: 'Paracetamol', dosage: '500mg', frequency: '3 lần/ngày', note: 'Sau khi ăn' },
-        { name: 'Vitamin C', dosage: '100mg', frequency: '1 lần/ngày', note: 'Buổi sáng' }
-      ],
-      status: 'pending' // pending, completed
-    },
-    // Thêm dữ liệu mẫu khác...
-  ];
+  const [searchText, setSearchText] = useState('');
 
   useEffect(() => {
-    // TODO: Gọi API lấy danh sách đơn thuốc
-    setPrescriptions(mockPrescriptions);
+    fetchPrescriptions();
   }, []);
+
+  const fetchPrescriptions = async () => {
+    setLoading(true);
+    try {
+      const data = await PrescriptionService.getPrescriptions();
+      setPrescriptions(data);
+    } catch (error) {
+      message.error('Không thể tải danh sách đơn thuốc');
+      console.error('Error fetching prescriptions:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const columns = [
     {
@@ -45,6 +43,11 @@ const NursePrescription = () => {
           <div className="student-info">Mã: {record.studentId} - Lớp: {record.className}</div>
         </div>
       ),
+      filteredValue: searchText ? [searchText] : null,
+      onFilter: (value, record) => 
+        record.studentName.toLowerCase().includes(value.toLowerCase()) ||
+        record.studentId.toLowerCase().includes(value.toLowerCase()) ||
+        record.className.toLowerCase().includes(value.toLowerCase()),
     },
     {
       title: 'Phụ huynh',
@@ -61,6 +64,7 @@ const NursePrescription = () => {
       title: 'Ngày kê đơn',
       dataIndex: 'prescriptionDate',
       key: 'prescriptionDate',
+      render: (date) => moment(date).format('DD/MM/YYYY'),
     },
     {
       title: 'Trạng thái',
@@ -68,7 +72,9 @@ const NursePrescription = () => {
       key: 'status',
       render: (status) => (
         <span className={`status-badge ${status}`}>
-          {status === 'pending' ? 'Chờ xử lý' : 'Đã xử lý'}
+          {status === 'pending' ? 'Chờ xử lý' : 
+           status === 'in_progress' ? 'Đang xử lý' : 
+           status === 'completed' ? 'Đã hoàn thành' : 'Đã hủy'}
         </span>
       ),
     },
@@ -80,9 +86,9 @@ const NursePrescription = () => {
           type="primary"
           icon={<CheckCircleOutlined />}
           onClick={() => handleViewPrescription(record)}
-          disabled={record.status === 'completed'}
+          disabled={record.status === 'completed' || record.status === 'cancelled'}
         >
-          Xử lý
+          {record.status === 'pending' ? 'Xử lý' : 'Cập nhật'}
         </Button>
       ),
     },
@@ -90,36 +96,59 @@ const NursePrescription = () => {
 
   const handleViewPrescription = (prescription) => {
     setSelectedPrescription(prescription);
+    form.setFieldsValue({
+      nurseNote: prescription.nurseNote || '',
+      medicationDate: prescription.medicationDate ? moment(prescription.medicationDate) : null,
+      medicationTime: prescription.medicationTime ? moment(prescription.medicationTime) : null,
+    });
     setIsModalVisible(true);
   };
 
   const handleComplete = async (values) => {
     try {
-      // TODO: Gọi API cập nhật trạng thái đơn thuốc
-      const updatedPrescriptions = prescriptions.map(p => 
-        p.id === selectedPrescription.id 
-          ? { ...p, status: 'completed', nurseNote: values.nurseNote }
-          : p
+      const updatedData = {
+        status: 'completed',
+        nurseNote: values.nurseNote,
+        medicationDate: values.medicationDate.format('YYYY-MM-DD'),
+        medicationTime: values.medicationTime.format('HH:mm:ss'),
+      };
+
+      await PrescriptionService.updatePrescriptionStatus(
+        selectedPrescription.id,
+        updatedData.status,
+        updatedData.nurseNote
       );
-      setPrescriptions(updatedPrescriptions);
+
+      // Thêm bản ghi cho học sinh uống thuốc
+      await PrescriptionService.addMedicationRecord(selectedPrescription.id, {
+        date: updatedData.medicationDate,
+        time: updatedData.medicationTime,
+        note: values.nurseNote
+      });
+
       message.success('Đã cập nhật trạng thái đơn thuốc');
       setIsModalVisible(false);
+      fetchPrescriptions(); // Refresh danh sách
     } catch (error) {
       message.error('Có lỗi xảy ra khi cập nhật đơn thuốc');
+      console.error('Error updating prescription:', error);
     }
+  };
+
+  const handleSearch = (value) => {
+    setSearchText(value);
   };
 
   return (
     <div className="nurse-prescription-container">
-      <div className="header">
-        <h1>Quản lý đơn thuốc</h1>
-        <div className="search-box">
-          <Input
-            placeholder="Tìm kiếm theo tên học sinh..."
-            prefix={<SearchOutlined />}
-            // TODO: Thêm logic tìm kiếm
-          />
-        </div>
+      <h1>Quản lý đơn thuốc</h1>
+      <div className="search-box">
+        <Input
+          placeholder="Tìm kiếm theo tên học sinh, mã học sinh hoặc lớp..."
+          prefix={<SearchOutlined />}
+          onChange={(e) => handleSearch(e.target.value)}
+          allowClear
+        />
       </div>
 
       <Table
@@ -147,17 +176,21 @@ const NursePrescription = () => {
             </div>
 
             <div className="medicine-list">
-              <h3>Danh sách thuốc</h3>
-              <Table
-                dataSource={selectedPrescription.medicines}
-                columns={[
-                  { title: 'Tên thuốc', dataIndex: 'name' },
-                  { title: 'Liều lượng', dataIndex: 'dosage' },
-                  { title: 'Tần suất', dataIndex: 'frequency' },
-                  { title: 'Ghi chú', dataIndex: 'note' },
-                ]}
-                pagination={false}
-              />
+              <h3>Thông tin đơn thuốc</h3>
+              <div className="prescription-info">
+                <p><strong>Tình trạng bệnh:</strong> {selectedPrescription.condition}</p>
+                <p><strong>Hướng dẫn sử dụng:</strong> {selectedPrescription.instructions}</p>
+                <p><strong>Thời gian:</strong> {moment(selectedPrescription.startDate).format('DD/MM/YYYY')} - {moment(selectedPrescription.endDate).format('DD/MM/YYYY')}</p>
+                {selectedPrescription.additionalNotes && (
+                  <p><strong>Ghi chú thêm:</strong> {selectedPrescription.additionalNotes}</p>
+                )}
+              </div>
+              {selectedPrescription.prescriptionImg && (
+                <div className="prescription-image">
+                  <h4>Hình ảnh đơn thuốc</h4>
+                  <img src={selectedPrescription.prescriptionImg} alt="Đơn thuốc" />
+                </div>
+              )}
             </div>
 
             <Form
@@ -166,15 +199,31 @@ const NursePrescription = () => {
               layout="vertical"
             >
               <Form.Item
+                name="medicationDate"
+                label="Ngày cho uống thuốc"
+                rules={[{ required: true, message: 'Vui lòng chọn ngày' }]}
+              >
+                <DatePicker style={{ width: '100%' }} />
+              </Form.Item>
+
+              <Form.Item
+                name="medicationTime"
+                label="Thời gian cho uống thuốc"
+                rules={[{ required: true, message: 'Vui lòng chọn thời gian' }]}
+              >
+                <TimePicker style={{ width: '100%' }} format="HH:mm" />
+              </Form.Item>
+
+              <Form.Item
                 name="nurseNote"
                 label="Ghi chú của y tá"
                 rules={[{ required: true, message: 'Vui lòng nhập ghi chú' }]}
               >
-                <Input.TextArea rows={4} />
+                <TextArea rows={4} placeholder="Nhập ghi chú về việc cho học sinh uống thuốc..." />
               </Form.Item>
 
               <Form.Item>
-                <Button type="primary" htmlType="submit">
+                <Button type="primary" htmlType="submit" icon={<CheckCircleOutlined />}>
                   Xác nhận đã cho uống thuốc
                 </Button>
               </Form.Item>
@@ -186,4 +235,4 @@ const NursePrescription = () => {
   );
 };
 
-export default NursePrescription; 
+export default NursePrescription;

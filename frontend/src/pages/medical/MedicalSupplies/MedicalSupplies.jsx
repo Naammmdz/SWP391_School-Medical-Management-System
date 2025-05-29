@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Plus, Edit, Trash2, X, Save, RefreshCw } from 'lucide-react';
 import '../../../pages/nurse/NursePages.css';
-
+import './MedicalSupplies.css';
 const MedicalSupplies = () => {
   const [supplies, setSupplies] = useState([]);
   const [filteredSupplies, setFilteredSupplies] = useState([]);

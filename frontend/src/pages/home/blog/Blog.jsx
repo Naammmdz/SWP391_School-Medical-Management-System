@@ -11,9 +11,9 @@ export default function Blog({ blogPosts, isLoading }) {
           <p>Kiến thức và lời khuyên từ đội ngũ y tế chuyên nghiệp</p>
         </div>
 
-        {isLoading ? (
+        {/* {isLoading ? (
           <div className="loading">Đang tải dữ liệu...</div>
-        ) : (
+        ) : ( */}
           <div className="blog-posts">
             {blogPosts.length > 0 ? (
               blogPosts.map((post) => (
@@ -40,7 +40,7 @@ export default function Blog({ blogPosts, isLoading }) {
               <div className="no-data">Không có bài viết nào.</div>
             )}
           </div>
-        )}
+        {/* )} */}
 
         <div className="blog-footer">
           <Link to="/blog" className="btn btn-primary">

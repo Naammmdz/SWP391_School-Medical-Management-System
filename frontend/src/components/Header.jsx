@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Header.css';
 import { Bell, User, Menu, X } from 'lucide-react';
@@ -6,26 +6,46 @@ import { Bell, User, Menu, X } from 'lucide-react';
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
-  // const baseURL = 'http://localhost:8080/api/v1/users';
+  const [studentHealthOpen, setStudentHealthOpen] = useState(false);
+  const [medicalEventsOpen, setMedicalEventsOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
-  // const [user, setUser] = useState([]);
-  // useEffect(() => {
-  //   const fetchApi = async()=> {
-  //       try {
-  //           const response = await axios.get(`${baseURL}/id`);
-  //           console.log(response.data);
-  //       } catch (error) {
-  //            console.error('Fetch error:', error);
-  //       }
-  //   }
-  //   fetchApi();
-  //  },[]);
-   
+
+  // Close dropdowns on nav click (for mobile UX)
+  const closeDropdowns = () => {
+    setStudentHealthOpen(false);
+    setMedicalEventsOpen(false);
+    setIsMenuOpen(false);
+  };
+
+  const handleDropdownToggle = (dropdownType) => {
+    if (isMobile) {
+      // On mobile, toggle the dropdown
+      if (dropdownType === 'studentHealth') {
+        setStudentHealthOpen(!studentHealthOpen);
+        setMedicalEventsOpen(false);
+      } else {
+        setMedicalEventsOpen(!medicalEventsOpen);
+        setStudentHealthOpen(false);
+      }
+    }
+    // On desktop, do nothing as it's handled by onMouseEnter/onMouseLeave
+  };
 
   return (
-
     <header className="header">
       <div className="header-container">
         <div className="logo-container">
@@ -37,16 +57,57 @@ const Header = () => {
 
         <nav className={`nav-menu ${isMenuOpen ? 'active' : ''}`}>
           <ul className="nav-links">
-            <li><Link to="/">Trang Chủ</Link></li>
-            <li><Link to="/hososuckhoe">Hồ Sơ Sức Khỏe</Link></li>
-            <li><Link to="/khaibaothuoc">Khai Báo Thuốc</Link></li>
-            <li><Link to="/sukienyte">Sự Kiện Y Tế</Link></li>
-            <li><Link to="/quanlytiemchung">Quản Lý Tiêm Chủng</Link></li>
-            <li><Link to="/thongbaotiemchung">Thông Báo Tiêm Chủng</Link></li>
-            <li><Link to="/kiemtradinhky">Kiểm Tra Định Kỳ</Link></li>
-            <li><Link to="/quanlythuoc">Quản Lý Thuốc</Link></li>
-            <li><Link to="/donthuoc">Đơn Thuốc</Link></li>
-            <li><Link to="/login">Đăng nhập</Link></li>
+            <li><Link to="/" onClick={closeDropdowns}>Trang Chủ</Link></li>
+
+            <li className="dropdown"
+                onMouseEnter={() => !isMobile && setStudentHealthOpen(true)}
+                onMouseLeave={() => !isMobile && setStudentHealthOpen(false)}
+            >
+              <button
+                className="nav-dropdown-btn"
+                aria-haspopup="true"
+                aria-expanded={studentHealthOpen}
+                onClick={() => handleDropdownToggle('studentHealth')}
+                type="button"
+              >
+                Sức khỏe học sinh
+                <span className="dropdown-arrow">▼</span>
+              </button>
+              {studentHealthOpen && (
+                <ul className="dropdown-menu">
+                  <li><Link to="/hososuckhoe" onClick={closeDropdowns}>Hồ Sơ Sức Khỏe</Link></li>
+                  <li><Link to="/khaibaothuoc" onClick={closeDropdowns}>Khai Báo Thuốc</Link></li>
+                </ul>
+              )}
+            </li>
+
+            <li className="dropdown"
+                onMouseEnter={() => !isMobile && setMedicalEventsOpen(true)}
+                onMouseLeave={() => !isMobile && setMedicalEventsOpen(false)}
+            >
+              <button
+                className="nav-dropdown-btn"
+                aria-haspopup="true"
+                aria-expanded={medicalEventsOpen}
+                onClick={() => handleDropdownToggle('medicalEvents')}
+                type="button"
+              >
+                Sự kiện y tế
+                <span className="dropdown-arrow">▼</span>
+              </button>
+              {medicalEventsOpen && (
+                <ul className="dropdown-menu">
+                  <li><Link to="/sukienyte" onClick={closeDropdowns}>Sự Kiện Y Tế</Link></li>
+                  <li><Link to="/quanlytiemchung" onClick={closeDropdowns}>Quản Lý Tiêm Chủng</Link></li>
+                  <li><Link to="/thongbaotiemchung" onClick={closeDropdowns}>Thông Báo Tiêm Chủng</Link></li>
+                  <li><Link to="/kiemtradinhky" onClick={closeDropdowns}>Kiểm Tra Định Kỳ</Link></li>
+                </ul>
+              )}
+            </li>
+
+            <li><Link to="/quanlythuoc" onClick={closeDropdowns}>Quản Lý Thuốc</Link></li>
+            <li><Link to="/donthuoc" onClick={closeDropdowns}>Đơn Thuốc</Link></li>
+            <li><Link to="/login" onClick={closeDropdowns}>Đăng nhập</Link></li>
           </ul>
         </nav>
 
