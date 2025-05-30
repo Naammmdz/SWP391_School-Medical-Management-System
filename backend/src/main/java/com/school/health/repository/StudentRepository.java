@@ -1,13 +1,31 @@
 package com.school.health.repository;
 
-import com.school.health.entity.Students;
-import com.school.health.entity.Users;
-import org.springframework.data.jpa.repository.JpaRepository;
 
+import com.school.health.entity.Student;
+import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
-public interface StudentRepository extends JpaRepository<Students, Long> {
-    // Define any additional query methods if needed
-    List<Students> findAllByParent(Users parent);
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
+@Repository
+public interface StudentRepository extends JpaRepository<Student, Integer> {
+
+    // Tìm học sinh theo parent ID
+    List<Student> findByParentId(Integer parentId);
+
+    // Tìm học sinh theo lớp
+    List<Student> findByClassName(String className);
+
+    // Tìm học sinh theo tên (không phân biệt hoa thường)
+    List<Student> findByFullNameContainingIgnoreCase(String fullName);
+
+    // Custom query để tìm học sinh chưa có hồ sơ sức khỏe
+    @Query("SELECT s FROM Student s WHERE s.healthProfile IS NULL")
+    List<Student> findStudentsWithoutHealthProfile();
+
+    // Tìm học sinh theo parent ID và có hồ sơ sức khỏe
+    @Query("SELECT s FROM Student s WHERE s.parentId = :parentId AND s.healthProfile IS NOT NULL")
+    List<Student> findStudentsWithHealthProfileByParentId(@Param("parentId") Integer parentId);
 }

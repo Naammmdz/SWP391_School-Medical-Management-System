@@ -4,35 +4,24 @@ import com.school.health.entity.HealthProfile;
 import lombok.Builder;
 import lombok.Data;
 
-@Data
-@Builder
-public class HealthProfileResponseDTO {
-    private Long profileId;
-    private Long studentId;
+import lombok.Data;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
+@Data
+public class HealthProfileResponseDTO {
+    private Integer profileId;
+    private Integer studentId;
+    private String studentName;
+    private String studentClass;
     private String allergies;
     private String chronicDiseases;
     private String treatmentHistory;
-    private String eyeSight;
+    private String eyesight;
     private String hearing;
     private String bloodType;
-    private double weight;
-    private double height;
+    private BigDecimal weight;
+    private BigDecimal height;
     private String notes;
-
-    public static HealthProfileResponseDTO fromEntity(HealthProfile entity) {
-        return HealthProfileResponseDTO.builder()
-                .profileId(entity.getProfileId())
-                .studentId(entity.getStudent().getStudentId()) // vì bạn dùng quan hệ @OneToOne
-                .allergies(entity.getAllergies())
-                .chronicDiseases(entity.getChronicDiseases())
-                .treatmentHistory(entity.getTreatmentHistory())
-                .eyeSight(entity.getEyeSight())
-                .hearing(entity.getHearing())
-                .bloodType(entity.getBloodType())
-                .weight(entity.getWeight())
-                .height(entity.getHeight())
-                .notes(entity.getNotes())
-                .build();
-    }
+    private LocalDateTime updatedAt;
 }

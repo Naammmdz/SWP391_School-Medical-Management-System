@@ -1,15 +1,23 @@
 package com.school.health.service;
 
-import com.school.health.entity.Users;
-import com.school.health.dto.request.HealthProfileParentRequestDTO;
+import com.school.health.dto.request.CreateHealthProfileDTO;
+import com.school.health.dto.request.UpdateHealthProfileDTO;
 import com.school.health.dto.response.HealthProfileResponseDTO;
+import com.school.health.entity.HealthProfile;
+import com.school.health.entity.Student;
 
 import java.util.List;
 
 public interface HealthProfileService {
-    HealthProfileResponseDTO getHealthProfileForParent(Long studentId, Users parent);
-    HealthProfileResponseDTO updateHealthProfileForParent(Long studentId, HealthProfileParentRequestDTO dto, Users parent);
 
-    // 👇 thêm mới để xem danh sách tất cả học sinh của phụ huynh
-    List<HealthProfileResponseDTO> getAllHealthProfilesForParent(Users parent);
+    HealthProfileResponseDTO createHealthProfile(Integer studentId, CreateHealthProfileDTO dto);
+    HealthProfileResponseDTO updateHealthProfile(Integer studentId, UpdateHealthProfileDTO dto);
+    HealthProfileResponseDTO getHealthProfileByStudentId(Integer studentId);
+    List<HealthProfileResponseDTO> getHealthProfilesByParentId(Integer parentId);
+    List<HealthProfileResponseDTO> getStudentsWithAllergies();
+    List<HealthProfileResponseDTO> getStudentsWithChronicDiseases();
+    void deleteHealthProfile(Integer studentId);
+    HealthProfile mapToEntity(CreateHealthProfileDTO dto, Student student);
+    void updateEntityFromDTO(HealthProfile entity, UpdateHealthProfileDTO dto);
+    HealthProfileResponseDTO mapToResponseDTO(HealthProfile profile);
 }
