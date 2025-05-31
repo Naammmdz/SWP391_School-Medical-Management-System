@@ -24,49 +24,41 @@ public class HealthProfileServiceImpl implements HealthProfileService{
     private final HealthProfileRepository healthProfileRepository;
     private final StudentRepository studentRepository;
 
-    //Tạo hồ sơ sức khỏe mới cho học sinh
     @Override
-    public HealthProfileResponseDTO createHealthProfile(Integer studentId,CreateHealthProfileDTO dto) {
+    public HealthProfileResponseDTO createHealthProfile(Integer studentId,CreateHealthProfileDTO dto,Integer userId) {
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy học sinh với ID: " + studentId));
         // Kiểm tra học sinh đã có hồ sơ sức khỏe chưa
         if (healthProfileRepository.findByStudentStudentId(studentId).isPresent()) {
             throw new DuplicateResourceException("Học sinh này đã có hồ sơ sức khỏe rồi!");
         }
-        // Tạo entity từ DTO
         HealthProfile healthProfile = mapToEntity(dto, student);
-        // Lưu vào database
         HealthProfile savedProfile = healthProfileRepository.save(healthProfile);
+        if(userId != null) {
+            User user = new User();
+            user.setUserId(userId);
+            healthProfile.setUpdatedBy(user);
+        }
         return mapToResponseDTO(savedProfile);
-
-
-//        // Kiểm tra học sinh có tồn tại không
-//        Student student = studentRepository.findById(dto.getStudentId())
-//                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy học sinh với ID: " + dto.getStudentId()));
-//        // Kiểm tra học sinh đã có hồ sơ sức khỏe chưa
-//        if (healthProfileRepository.findByStudentStudentId(dto.getStudentId()).isPresent()) {
-//            throw new DuplicateResourceException("Học sinh này đã có hồ sơ sức khỏe rồi!");
-//        }
-//        // Tạo entity từ DTO
-//        HealthProfile healthProfile = mapToEntity(dto, student);
-//        // Lưu vào database
-//        HealthProfile savedProfile = healthProfileRepository.save(healthProfile);
-//        return mapToResponseDTO(savedProfile);
     }
 
     //Cập nhật hồ sơ sức khỏe
     @Override
-    public HealthProfileResponseDTO updateHealthProfile(Integer studentId, UpdateHealthProfileDTO dto) {
+    public HealthProfileResponseDTO updateHealthProfile(Integer studentId, UpdateHealthProfileDTO dto, Integer userId) {
         // Tìm hồ sơ hiện tại
         HealthProfile existingProfile = healthProfileRepository.findByStudentStudentId(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ sức khỏe cho học sinh với ID: " + studentId));
 
         // Cập nhật thông tin (chỉ cập nhật các field không null)
         updateEntityFromDTO(existingProfile, dto);
-
+        if(userId != null) {
+            User user = new User();
+            user.setUserId(userId);
+            existingProfile.setUpdatedBy(user);
+        }
+        // Cập nhật người sửa
         // Lưu vào database
         HealthProfile updatedProfile = healthProfileRepository.save(existingProfile);
-
         return mapToResponseDTO(updatedProfile);
     }
 

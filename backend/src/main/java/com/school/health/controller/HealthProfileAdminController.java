@@ -9,15 +9,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/admin/students/{studentId}/health-profile")
+@RequestMapping("/api/{userId}/students/{studentId}/health-profile")
 @CrossOrigin(origins = "*") // Cho phép React frontend gọi API
 @RequiredArgsConstructor
 public class HealthProfileAdminController {
     private final HealthProfileService service;
 
     @PostMapping
-    public ResponseEntity<?> createHealthProfile(@PathVariable Integer studentId,@RequestBody CreateHealthProfileDTO healthProfile) {
-        HealthProfileResponseDTO response = service.createHealthProfile(studentId, healthProfile);
+    public ResponseEntity<?> createHealthProfile(@PathVariable Integer studentId,@RequestBody CreateHealthProfileDTO healthProfile, @PathVariable Integer userId) {
+        HealthProfileResponseDTO response = service.createHealthProfile(studentId, healthProfile, userId);
         return ResponseEntity.ok(response);
     }
 
@@ -28,8 +28,8 @@ public class HealthProfileAdminController {
     }
 
     @PutMapping
-    public ResponseEntity<?> updateHealthProfile(@PathVariable Integer studentId, @RequestBody UpdateHealthProfileDTO healthProfile) {
-        HealthProfileResponseDTO response = service.updateHealthProfile(studentId, healthProfile);
+    public ResponseEntity<?> updateHealthProfile(@PathVariable Integer studentId, @RequestBody UpdateHealthProfileDTO healthProfile, @PathVariable Integer userId) {
+        HealthProfileResponseDTO response = service.updateHealthProfile(studentId, healthProfile, userId);
         return ResponseEntity.ok(response);
     }
 }

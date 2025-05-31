@@ -10,8 +10,8 @@ import java.util.List;
 
 public interface HealthProfileService {
 
-    HealthProfileResponseDTO createHealthProfile(Integer studentId, CreateHealthProfileDTO dto);
-    HealthProfileResponseDTO updateHealthProfile(Integer studentId, UpdateHealthProfileDTO dto);
+    HealthProfileResponseDTO createHealthProfile(Integer studentId, CreateHealthProfileDTO dto,Integer userId);
+    HealthProfileResponseDTO updateHealthProfile(Integer studentId, UpdateHealthProfileDTO dto,Integer userId);
     HealthProfileResponseDTO getHealthProfileByStudentId(Integer studentId);
     List<HealthProfileResponseDTO> getHealthProfilesByParentId(Integer parentId);
     List<HealthProfileResponseDTO> getStudentsWithAllergies();

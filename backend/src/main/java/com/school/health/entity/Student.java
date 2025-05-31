@@ -6,6 +6,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 import jakarta.validation.constraints.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
 
@@ -37,6 +38,7 @@ public class Student {
     @Column(name = "ParentId")
     private Integer parentId;
 
+    @CreationTimestamp
     @Column(name = "CreatedAt")
     private LocalDateTime createdAt;
 

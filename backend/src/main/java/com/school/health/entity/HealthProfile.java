@@ -21,9 +21,9 @@ public class HealthProfile {
     @JoinColumn(name = "StudentId", referencedColumnName = "StudentId")
     private Student student;
 
-//    @ManyToOne
-//    @JoinColumn(name = "UpdatedAt", referencedColumnName = "UserId")
-//    private User user;
+    @ManyToOne
+    @JoinColumn(name = "UpdatedBy", referencedColumnName = "UserId")
+    private User updatedBy;
 
     @Column(name = "Allergies", length = 255)
     private String allergies;

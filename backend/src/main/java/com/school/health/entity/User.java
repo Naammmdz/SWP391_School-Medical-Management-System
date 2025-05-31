@@ -1,9 +1,11 @@
 package com.school.health.entity;
 
-import com.school.health.enums.UserRole;
+import com.school.health.enums.Role;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
+
 import java.time.LocalDate;
 
 @Entity
@@ -34,8 +36,9 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "Role", length = 20, nullable = false)
-    private UserRole role;
+    private Role role;
 
+    @CreationTimestamp
     @Column(name = "CreatedAT")
     private LocalDate createdAt;
 
