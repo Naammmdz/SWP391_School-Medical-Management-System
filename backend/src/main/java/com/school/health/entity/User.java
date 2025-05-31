@@ -3,6 +3,7 @@ package com.school.health.entity;
 import com.school.health.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Nationalized;
 
 import java.time.LocalDate;
@@ -40,9 +41,9 @@ public class User {
     @Column(name = "Role", nullable = false, length = 20)
     private UserRole role;
 
-
-    @Column(name = "CreateAT")
-    private LocalDate createAt;
+    @CreationTimestamp
+    @Column(name = "CreatedAT")
+    private LocalDate createdAt;
 
     @Column(name = "IsActive")
     private boolean isActive = true;

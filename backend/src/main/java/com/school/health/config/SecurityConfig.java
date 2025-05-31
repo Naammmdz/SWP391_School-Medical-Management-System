@@ -1,5 +1,6 @@
     package com.school.health.config;
 
+    import org.springframework.beans.factory.annotation.Autowired;
     import org.springframework.context.annotation.Bean;
     import org.springframework.context.annotation.Configuration;
     import org.springframework.security.authentication.AuthenticationManager;
@@ -11,8 +12,11 @@
     import org.springframework.security.web.SecurityFilterChain;
 
     @Configuration
-    //@EnableWebSecurity
+    @EnableWebSecurity
     public class SecurityConfig {
+
+        @Autowired
+        private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
         @Bean
         public PasswordEncoder passwordEncoder() {
@@ -32,6 +36,9 @@
                     .authorizeHttpRequests(auth -> auth
                             .requestMatchers("/api/auth/login", "/api/auth/register", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                             .anyRequest().authenticated()
+                    )
+                    .exceptionHandling(exception -> exception
+                            .authenticationEntryPoint(customAuthenticationEntryPoint)
                     );
             return http.build();
         }
