@@ -35,22 +35,16 @@ public class AuthController {
     private JwtUtils jwtUtils;
 
     @PostMapping("/register")
-    public String register(@RequestBody @Valid RegisterRequest request) {
-        try {
-            UserRole role = UserRole.valueOf(request.getRole());
-            userService.registerUser(
-                    request.getFullName(),
-                    request.getEmail(),
-                    request.getPhone(),
-                    request.getPassword(),
-                    role
-            );
-            return "Đăng ký thành công!";
-        } catch (RuntimeException e) {
-            return e.getMessage(); // Có thể trả về lỗi chi tiết hơn nếu muốn
-        } catch (Exception e) {
-            return "Đăng ký thất bại!";
-        }
+    public ResponseEntity<?> register(@RequestBody @Valid RegisterRequest request) {
+        UserRole role = UserRole.valueOf(request.getRole());
+        userService.registerUser(
+                request.getFullName(),
+                request.getEmail(),
+                request.getPhone(),
+                request.getPassword(),
+                role
+        );
+        return ResponseEntity.ok("Đăng ký thành công!");
     }
 
     @PostMapping("/login")
