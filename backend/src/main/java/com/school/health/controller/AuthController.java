@@ -35,9 +35,9 @@ public class AuthController {
     private JwtUtils jwtUtils;
 
     @PostMapping("/register")
-    public String register(@RequestBody RegisterRequest request) {
+    public String register(@RequestBody @Valid RegisterRequest request) {
         try {
-            UserRole role = UserRole.valueOf(request.getRole()); // Nếu role là enum dạng String
+            UserRole role = UserRole.valueOf(request.getRole());
             userService.registerUser(
                     request.getFullName(),
                     request.getEmail(),

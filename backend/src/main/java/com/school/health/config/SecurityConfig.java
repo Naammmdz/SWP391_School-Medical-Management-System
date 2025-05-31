@@ -32,7 +32,7 @@
         public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
             http
                     .csrf(csrf -> csrf.disable())
-                    .cors(cors -> cors.disable()) // Hãy thử disable luôn CORS
+                    .cors(cors -> cors.disable())
                     .authorizeHttpRequests(auth -> auth
                             .requestMatchers("/api/auth/login", "/api/auth/register", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                             .anyRequest().authenticated()

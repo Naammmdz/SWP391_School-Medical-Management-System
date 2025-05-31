@@ -2,6 +2,7 @@ package com.school.health.service;
 
 import com.school.health.entity.User;
 import com.school.health.enums.UserRole;
+import com.school.health.exception.UserAlreadyExistsException;
 import com.school.health.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,10 +26,10 @@ public class UserService {
     public User registerUser(String fullName, String email, String phone, String plainPassword, UserRole role) {
         // Check exits
         if (userRepository.existsByEmail(email)) {
-            throw new RuntimeException("User with this email already exists");
+            throw new UserAlreadyExistsException("email", "User with this email already exists");
         }
         if (userRepository.existsByPhone(phone)) {
-            throw new RuntimeException("User with this phone already exists");
+            throw new UserAlreadyExistsException("phone", "User with this phone already exists");
         }
 
         User newUser = new User();
