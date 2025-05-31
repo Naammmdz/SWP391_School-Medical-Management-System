@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 public class SchoolHealthManagementApplication {
 
 	public static void main(String[] args) {
-
 		SpringApplication.run(SchoolHealthManagementApplication.class, args);
 	}
 

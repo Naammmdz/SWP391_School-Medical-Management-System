@@ -1,7 +1,6 @@
 package com.school.health.enums;
 
 public enum UserRole {
-    STUDENT("Student"),
     PARENT("Parent"),
     NURSE("Nurse"),
     MANAGER("Manager"),
