@@ -1,37 +1,63 @@
 package com.school.health.controller;
 
+import com.school.health.dto.request.LoginRequest;
 import com.school.health.dto.request.RegisterRequest;
-import com.school.health.dto.respone.MessageResponse;
+import com.school.health.dto.response.LoginSuccessResponse;
+import com.school.health.dto.response.MessageResponse;
+import com.school.health.security.jwt.JwtUtils;
+import com.school.health.security.services.UserDetailsImpl;
 import com.school.health.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import jakarta.validation.Valid;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/auth")
+@Validated
 public class AuthController {
 
     @Autowired
     private UserService userService;
-    // @Autowired
-    // AuthenticationManager authenticationManager; // Sẽ inject sau khi cấu hình Spring Security
 
-    // @Autowired
-    // JwtUtils jwtUtils; // Sẽ inject sau khi cấu hình JWT
+    @Autowired
+    private AuthenticationManager authenticationManager;
 
-//    @PostMapping("/register")
-//    public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
-//        try {
-//            return ResponseEntity.ok(new MessageResponse("Người dùng [" + registeredUser.getFullName() + "] đã đăng ký thành công!"));
-//        } catch (RuntimeException e) {
-//            return ResponseEntity.badRequest().body(new MessageResponse("Error: " + e.getMessage()));
-//        }
-//    }
+    @Autowired
+    private JwtUtils jwtUtils;
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(String username, String password) {
-        return ResponseEntity.ok(new MessageResponse());
+    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
+        // Xác thực thông tin đăng nhập
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        loginRequest.getEmailOrPhone(),
+                        loginRequest.getPassword()
+                )
+        );
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        // Lấy thông tin từ UserDetails (đã xác thực)
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        String jwt = jwtUtils.generateJwtToken(authentication);
+
+        return ResponseEntity.ok(new LoginSuccessResponse(
+                jwt,
+                "Bearer",
+                userDetails.getId(),
+                userDetails.getEmail(),
+                userDetails.getPhone(),
+                userDetails.getFullName(),
+                userDetails.getAuthorities().iterator().next().getAuthority()
+        ));
     }
 }

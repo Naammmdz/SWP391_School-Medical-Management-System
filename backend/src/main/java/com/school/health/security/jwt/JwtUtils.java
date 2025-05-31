@@ -1,6 +1,6 @@
 package com.school.health.security.jwt;
 
-import com.school.health.security.services.UserDetailsImpl; // Sẽ tạo ở bước tiếp theo
+import com.school.health.security.services.UserDetailsImpl;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException; // Sẽ sử dụng để tạo và xác thực JWT
@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.util.Date;
 
+@Component
 public class JwtUtils {
     private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
 

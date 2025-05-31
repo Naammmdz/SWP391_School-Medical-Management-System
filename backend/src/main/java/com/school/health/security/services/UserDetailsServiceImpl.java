@@ -18,7 +18,18 @@ public class UserDetailsServiceImpl implements UserDetailsService {
      @Override
      @Transactional
      public UserDetails loadUserByUsername(String usernameOrEmailOrPhone) throws UsernameNotFoundException {
+          User user;
 
+          //Check email or phone
+          if (usernameOrEmailOrPhone.contains("@")) {
+               user = userRepository.findByEmail(usernameOrEmailOrPhone)
+                       .orElseThrow(()->new UsernameNotFoundException("User Not Found with email: " + usernameOrEmailOrPhone));
+          } else {
+               user = userRepository.findByPhone(usernameOrEmailOrPhone)
+                       .orElseThrow(()->new UsernameNotFoundException("User Not Found with Phone: " + usernameOrEmailOrPhone));
+          }
+
+          return UserDetailsImpl.build(user);
      }
 
 }

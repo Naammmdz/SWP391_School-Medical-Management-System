@@ -1,4 +1,4 @@
-package com.school.health.dto.respone;
+package com.school.health.dto.response;
 
 import com.school.health.enums.UserRole;
 import lombok.AllArgsConstructor;
@@ -11,10 +11,10 @@ import lombok.Setter;
 public class LoginSuccessResponse {
 
     private String token;
-    private String type = "Bearer";
+    private String type;
     private Integer userId;
     private String email;
     private String phone;
     private String fullName;
-    private UserRole userRole;
+    private String userRole;
 }
