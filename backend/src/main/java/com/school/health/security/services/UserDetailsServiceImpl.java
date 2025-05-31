@@ -2,6 +2,7 @@ package com.school.health.security.services;
 
 import com.school.health.entity.User;
 import com.school.health.repository.UserRepository;
+import com.school.health.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -13,22 +14,20 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserDetailsServiceImpl implements UserDetailsService {
 
      @Autowired
-     private UserRepository userRepository;
+     private UserService userService;
+
 
      @Override
      @Transactional
      public UserDetails loadUserByUsername(String usernameOrEmailOrPhone) throws UsernameNotFoundException {
           User user;
-
-          //Check email or phone
           if (usernameOrEmailOrPhone.contains("@")) {
-               user = userRepository.findByEmail(usernameOrEmailOrPhone)
-                       .orElseThrow(()->new UsernameNotFoundException("User Not Found with email: " + usernameOrEmailOrPhone));
+               user = userService.getUserByEmail(usernameOrEmailOrPhone)
+                       .orElseThrow(() -> new UsernameNotFoundException("User Not Found with email: " + usernameOrEmailOrPhone));
           } else {
-               user = userRepository.findByPhone(usernameOrEmailOrPhone)
-                       .orElseThrow(()->new UsernameNotFoundException("User Not Found with Phone: " + usernameOrEmailOrPhone));
+               user = userService.getUserByPhone(usernameOrEmailOrPhone)
+                       .orElseThrow(() -> new UsernameNotFoundException("User Not Found with Phone: " + usernameOrEmailOrPhone));
           }
-
           return UserDetailsImpl.build(user);
      }
 

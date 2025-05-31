@@ -49,7 +49,7 @@ public class UserService {
         return userRepository.findByPhone(phone);
     }
 
-    public Optional<User> getUserById(String id) {
-        return userRepository.findById(id);
+    public Optional<User> getUserById(Integer id) {
+        return userRepository.findByUserId(id);
     }
 }
