@@ -10,7 +10,8 @@ import lombok.Setter;
 @Setter
 public class LoginSuccessResponse {
 
-    private String token;
+    private String accessToken;
+    private String refreshToken;
     private String type;
     private Integer userId;
     private String email;

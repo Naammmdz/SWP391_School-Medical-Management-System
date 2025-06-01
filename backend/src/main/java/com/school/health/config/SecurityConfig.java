@@ -15,8 +15,8 @@
     @EnableWebSecurity
     public class SecurityConfig {
 
-        @Autowired
-        private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+//        @Autowired
+//        private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
         @Bean
         public PasswordEncoder passwordEncoder() {
@@ -34,12 +34,12 @@
                     .csrf(csrf -> csrf.disable())
                     .cors(cors -> cors.disable())
                     .authorizeHttpRequests(auth -> auth
-                            .requestMatchers("/api/auth/login", "/api/auth/register", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                            .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/refresh","/swagger-ui/**", "/v3/api-docs/**").permitAll()
                             .anyRequest().authenticated()
-                    )
-                    .exceptionHandling(exception -> exception
-                            .authenticationEntryPoint(customAuthenticationEntryPoint)
                     );
+//                    .exceptionHandling(exception -> exception
+//                            .authenticationEntryPoint(customAuthenticationEntryPoint)
+//                    );
             return http.build();
         }
     }

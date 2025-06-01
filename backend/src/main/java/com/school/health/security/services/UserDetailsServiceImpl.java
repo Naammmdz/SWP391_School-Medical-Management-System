@@ -23,10 +23,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
           User user;
           if (usernameOrEmailOrPhone.contains("@")) {
                user = userService.getUserByEmail(usernameOrEmailOrPhone)
-                       .orElseThrow(() -> new UsernameNotFoundException("User Not Found with email: " + usernameOrEmailOrPhone));
+                       .orElseThrow(() -> new UsernameNotFoundException("User not found"));
           } else {
                user = userService.getUserByPhone(usernameOrEmailOrPhone)
-                       .orElseThrow(() -> new UsernameNotFoundException("User Not Found with Phone: " + usernameOrEmailOrPhone));
+                       .orElseThrow(() -> new UsernameNotFoundException("User not found"));
           }
           return UserDetailsImpl.build(user);
      }
