@@ -10,6 +10,18 @@ const Login = () => {
   const [isShowPassword, setIsShowPassword] = useState(false);
   const navigate = useNavigate();
 
+  const removeDiacritics = (str) => {
+    return str.normalize('NFD')
+              .replace(/[\u0300-\u036f]/g, '')
+              .replace(/đ/g, 'd').replace(/Đ/g, 'D');
+  };
+
+  const handlePasswordChange = (e) => {
+    // Chỉ cho phép chữ cái, số và các ký tự đặc biệt thông dụng cho mật khẩu
+    const value = e.target.value.replace(/[^a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/g, '');
+    setPassword(value);
+  };
+
   const handleLogin = async () => {
     if (!phone || !password) {
       toast.error('Phone/Password is required!');
@@ -81,7 +93,7 @@ const Login = () => {
             type={isShowPassword ? 'text' : 'password'}
             placeholder="Nhập mật khẩu"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={handlePasswordChange}
           />
           <span
             className="toggle-password"
@@ -106,7 +118,9 @@ const Login = () => {
           <p>Nurse - phone: nurse, password: nurse123</p>
         </div>
 
-        <li><Link to="/">Quay lại trang chủ</Link></li>
+        <Link to="/" className="home-button">
+          <i className="fas fa-home"></i> Trang chủ
+        </Link>
       </div>
     </>
   );

@@ -18,7 +18,7 @@ import DashboardPage from './pages/dashboardPage/DashboardPage';
 import HealthCheck from './pages/health/HealthCheck/HealthCheck';
 import ParentPages from './pages/parent/ParentPages';
 import NursePages from './pages/nurse/NursePages';
-
+import Blog from './pages/home/Blog/Blog';
 function App() {
   return (
     <>
@@ -38,6 +38,7 @@ function App() {
         <Route path="/parent" element={<ParentPages/>}/>
         <Route path="/nurse" element={<NursePages/>}/>
         <Route path='/admin' element={<Admin/>}/>
+        <Route path='/blog' element={<Blog/>}/>
       </Routes>
       <Footer />
     </>

@@ -20,18 +20,7 @@ export default function HomePage() {
   const [schoolInfo, setSchoolInfo] = useState({});
 
   useEffect(() => {
-    // Fetch health resources from API
-    const fetchHealthResources = async () => {
-      try {
-        const data = await HomePageService.getHealthResources();
-        setHealthResources(data);
-      } catch (error) {
-        console.error("Error fetching health resources:", error);
-        // Fallback to mock data if API fails
-       
-        setHealthResources(mockData);
-      }
-    };
+  
 
     // Fetch blog posts from API
     const fetchBlogPosts = async () => {
@@ -95,7 +84,7 @@ export default function HomePage() {
     const fetchAllData = async () => {
       setIsLoading(true);
       await Promise.all([
-        fetchHealthResources(),
+       
         fetchBlogPosts(),
         fetchSchoolInfo()
       ]);
@@ -202,7 +191,7 @@ export default function HomePage() {
             <div className="intro-image">
               <img
                 src={schoolInfo.imageUrl || "https://th.bing.com/th/id/R.af5d48a3dcaf9822181b45f4fa428a4d?rik=O2JPjbyHuxy4LA&riu=http%3a%2f%2fbaodanang.vn%2fenglish%2fdataimages%2f202109%2foriginal%2fimages1623286_FPT.jpg&ehk=gNPhhFhpkw%2brCyqhuyjTSh1L8DFK1YfSGFnm%2brgCitI%3d&risl=&pid=ImgRaw&r=0"}
-                alt={schoolInfo.name || "Trường Tiểu Học ABC"}
+                alt={schoolInfo.name || "Trường Tiểu Học FPT"}
               />
             </div>
           </div>

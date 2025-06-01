@@ -248,3 +248,28 @@
 .Toastify__toast--info {
   background-color: #2196f3;
 }
+
+.home-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #4caf50;
+  color: #fafafa;
+  text-decoration: none;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+  border: 1px solid #ddd;
+}
+
+.home-button:hover {
+  background-color: #e0e0e0;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.home-button i {
+  font-size: 16px;
+}

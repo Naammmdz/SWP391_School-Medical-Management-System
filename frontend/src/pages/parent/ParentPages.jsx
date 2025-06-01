@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-// import "./ParentPages.css";
+import "./ParentPages.css";
 import HomePageService from "../../services/HomePageService";
 import Blog from "../home/Blog/Blog";
 import "../home/homePage/HomePage.css";
-
+import heroImage from "../../assets/images/fpt.jpg";
 
 export default function ParentPages() {
   // State for health resources
@@ -18,46 +18,7 @@ export default function ParentPages() {
 
   useEffect(() => {
     // Fetch health resources from API
-    const fetchHealthResources = async () => {
-      try {
-        const data = await HomePageService.getHealthResources();
-        setHealthResources(data);
-      } catch (error) {
-        console.error("Error fetching health resources:", error);
-        // Fallback to mock data if API fails
-        const mockData = [
-          {
-            id: 1,
-            title: "Hướng dẫn phòng ngừa dịch bệnh mùa hè",
-            type: "guide",
-            thumbnail: "https://placehold.co/600x400",
-            createdAt: "2023-05-15",
-          },
-          {
-            id: 2,
-            title: "Thông tin về tiêm chủng bắt buộc cho học sinh",
-            type: "document",
-            thumbnail: "https://placehold.co/600x400",
-            createdAt: "2023-04-20",
-          },
-          {
-            id: 3,
-            title: "Dinh dưỡng học đường cho trẻ em",
-            type: "guide",
-            thumbnail: "https://placehold.co/600x400",
-            createdAt: "2023-06-10",
-          },
-          {
-            id: 4,
-            title: "Quy trình xử lý sự cố y tế tại trường",
-            type: "document",
-            thumbnail: "https://placehold.co/600x400",
-            createdAt: "2023-03-05",
-          },
-        ];
-        setHealthResources(mockData);
-      }
-    };
+    
 
     // Fetch blog posts from API
     const fetchBlogPosts = async () => {
@@ -134,12 +95,26 @@ export default function ParentPages() {
   return (
     <div className="parent-page">
       {/* Hero Section */}
-      <section className="hero">
-        <div className="hero-content">
-          <h1>{schoolInfo.name || "Trường Tiểu Học"}</h1>
-          <p>{schoolInfo.slogan || "Chăm sóc sức khỏe toàn diện cho học sinh"}</p>
-        </div>
-      </section>
+      <section
+  className="hero"
+  style={{
+        backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url(${heroImage})`,
+        backgroundSize: "100% auto",        // ảnh co lại vừa chiều ngang
+
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "center 30%",
+        backgroundColor: "#666",
+        color: "white",
+        textAlign: "center",
+        padding: "120px 0",
+        position: "relative",
+      }}
+>
+  <div className="hero-content" style={{ position: "relative", zIndex: 1 }}>
+    <h1>{schoolInfo.name || "Trường Tiểu Học"}</h1>
+    <p>{schoolInfo.slogan || "Chăm sóc sức khỏe toàn diện cho học sinh"}</p>
+    </div>
+    </section>
 
       {/* Health Resources Section */}
       <section className="section health-resources">

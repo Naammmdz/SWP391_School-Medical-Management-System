@@ -1,23 +1,20 @@
 import axios from 'axios';
-const API_URL ='';
-class HealthRecordService{
-    getAllHealthRecords(){
-        return axios.get(API_URL + '/health-records');
-    }
-    getHealthRecordById(id){
-        return axios.get(API_URL + '/health-records/' + id);
-    }
-    createHealthRecord(healthRecord){
-        return axios.post(API_URL + '/health-records', healthRecord);
-    }   
-    updateHealthRecord(id, healthRecord){
-        return axios.put(API_URL + '/health-records/' + id, healthRecord);
-    }
-    deleteHealthRecord(id){
-        return axios.delete(API_URL + '/health-records/' + id);
-    }   
-    
+const BASE_URL = 'http://localhost:8080/api/admin/5/students';
+const PR_URL ='http://localhost:8080/api/parent/9/students';
 
+class HealthRecordService {
+    getHealthRecordByStudentId(studentId) {
+        return axios.get(`${PR_URL}/${studentId}/health-profile`);
+    }
+    createHealthRecord(studentId, healthRecord) {
+        // Nếu backend dùng PUT cho update, POST cho tạo mới, bạn có thể tách hàm
+        return axios.post(`${BASE_URL}/${studentId}/health-profile`, healthRecord);
+    }
+    updateHealthRecord(studentId, healthRecord) {
+        // Nếu backend dùng PUT cho update, POST cho tạo mới, bạn có thể tách hàm
+        return axios.put(`${PR_URL}/${studentId}/health-profile`, healthRecord);
+    }
     
 }
+
 export default new HealthRecordService();
