@@ -82,7 +82,7 @@ export default function NursePages() {
     const fetchAllData = async () => {
       setIsLoading(true);
       await Promise.all([
-        fetchHealthResources(),
+       // fetchHealthResources(),
         fetchBlogPosts(),
         fetchSchoolInfo()
       ]);

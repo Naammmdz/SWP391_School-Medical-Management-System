@@ -18,7 +18,7 @@ export default function ParentPages() {
 
   useEffect(() => {
     // Fetch health resources from API
-    
+     
 
     // Fetch blog posts from API
     const fetchBlogPosts = async () => {
@@ -58,6 +58,7 @@ export default function ParentPages() {
       }
     };
 
+
     // Fetch school info from API
     const fetchSchoolInfo = async () => {
       try {
@@ -82,7 +83,7 @@ export default function ParentPages() {
     const fetchAllData = async () => {
       setIsLoading(true);
       await Promise.all([
-        fetchHealthResources(),
+        
         fetchBlogPosts(),
         fetchSchoolInfo()
       ]);

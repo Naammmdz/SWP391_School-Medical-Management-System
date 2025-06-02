@@ -71,11 +71,29 @@ const Header = () => {
     navigate('/login');
   };
 
+  let homeLink = '/';
+  if (user && user.userRole) {
+    switch (user.userRole.toUpperCase()) {
+      case 'ADMIN':
+        homeLink = '/admin';
+        break;
+      case 'PARENT':
+        homeLink = '/parent';
+        break;
+      case 'NURSE':
+        homeLink = '/nurse';
+        break;
+      default:
+        homeLink = '/';
+    }
+  }
+
+
   return (
     <header className="header">
       <div className="header-container">
         <div className="logo-container">
-          <Link to="" className="logo">
+          <Link to={homeLink} className="logo">
             <span className="logo-text">Y Tế Học Đường</span>
             <span className="logo-subtext">Quản lý sức khỏe học sinh</span>
           </Link>
@@ -83,7 +101,7 @@ const Header = () => {
 
         <nav className={`nav-menu ${isMenuOpen ? 'active' : ''}`}>
           <ul className="nav-links">
-            <li><Link to="/" onClick={closeDropdowns}>Trang Chủ</Link></li>
+            <li><Link to={homeLink} onClick={closeDropdowns}>Trang Chủ</Link></li>
 
             <li className="dropdown"
                 onMouseEnter={() => !isMobile && setStudentHealthOpen(true)}
