@@ -7,8 +7,11 @@ import com.school.health.exception.UserAlreadyExistsException;
 import com.school.health.repository.UserRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.crossstore.ChangeSetPersister;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
@@ -80,6 +83,13 @@ public class UserService {
                 user.setPhone(userUpdateRequest.getPhone());
             }
         }
+        userRepository.save(user);
+    }
+
+    public void updateUserStatus(Integer id, boolean isActive) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        user.setActive(isActive);
         userRepository.save(user);
     }
 }

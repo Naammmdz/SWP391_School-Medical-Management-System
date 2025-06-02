@@ -48,9 +48,26 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updateUserByAdmin(
             @PathVariable Integer id,
-            @RequestBody UserUpdateRequest userUpdateRequest
+            @RequestBody @Valid UserUpdateRequest userUpdateRequest
     ) {
         userService.updateUserId(id, userUpdateRequest);
         return ResponseEntity.ok(Map.of("message", "Cập nhật thông tin người dùng thành công!"));
+    }
+
+    // 3. Admin đổi trạng thái của user
+    @PutMapping("/{id}/status")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> updateUserStatus(
+            @PathVariable Integer id,
+            @RequestParam boolean isActive
+    ) {
+        try {
+            userService.updateUserStatus(id, isActive);
+            return ResponseEntity.ok(Map.of("message", "Cập nhật trạng thái người dùng thành công!"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "Cập nhật trạng thái người dùng thất bại!"));
+        }
     }
 }
