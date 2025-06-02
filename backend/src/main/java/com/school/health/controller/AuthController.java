@@ -13,6 +13,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -53,7 +54,7 @@ public class AuthController {
                 request.getPassword(),
                 role
         );
-        return ResponseEntity.ok("Đăng ký thành công!");
+        return ResponseEntity.ok(Map.of("message", "Đăng ký thành công!"));
     }
 
     @PostMapping("/login")
@@ -105,4 +106,5 @@ public class AuthController {
                     .body(Map.of("error", "Invalid refresh token"));
         }
     }
+
 }
