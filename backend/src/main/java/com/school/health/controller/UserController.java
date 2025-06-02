@@ -29,7 +29,7 @@ public class UserController {
     @PutMapping("/me")
     public ResponseEntity<?> updateMyAccount(
             Authentication authentication,
-            @RequestBody UserUpdateRequest userUpdateRequest
+            @RequestBody @Valid UserUpdateRequest userUpdateRequest
     ) {
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
         Integer userId = userPrincipal.getId();
@@ -37,6 +37,7 @@ public class UserController {
             userService.updateUserId(userId, userUpdateRequest);
             return ResponseEntity.ok(Map.of("message", "Cập nhật tài khoản thành công!"));
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", "Cập nhật tài khoản thất bại!"));
         }

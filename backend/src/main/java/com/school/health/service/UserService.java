@@ -56,23 +56,29 @@ public class UserService {
         return userRepository.findByUserId(id);
     }
 
-    public void updateUserId(Integer id, @Valid UserUpdateRequest userUpdateRequest) {
+    public void updateUserId(Integer id, UserUpdateRequest userUpdateRequest) {
         User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
 
         if (userUpdateRequest.getFullName() != null) {
             user.setFullName(userUpdateRequest.getFullName());
         }
         if (userUpdateRequest.getEmail() != null) {
-            if (userRepository.existsByEmail(userUpdateRequest.getEmail())) {
-                throw new UserAlreadyExistsException("email", "User with this email already exists");
+            // Chỉ check exists nếu email mới khác email hiện tại
+            if (!userUpdateRequest.getEmail().equals(user.getEmail())) {
+                if (userRepository.existsByEmail(userUpdateRequest.getEmail())) {
+                    throw new UserAlreadyExistsException("email", "User with this email already exists");
+                }
+                user.setEmail(userUpdateRequest.getEmail());
             }
-            user.setEmail(userUpdateRequest.getEmail());
         }
         if (userUpdateRequest.getPhone() != null) {
-            if (userRepository.existsByPhone(userUpdateRequest.getPhone())) {
-                throw new UserAlreadyExistsException("phone", "User with this phone already exists");
+            // Chỉ check exists nếu phone mới khác phone hiện tại
+            if (!userUpdateRequest.getPhone().equals(user.getPhone())) {
+                if (userRepository.existsByPhone(userUpdateRequest.getPhone())) {
+                    throw new UserAlreadyExistsException("phone", "User with this phone already exists");
+                }
+                user.setPhone(userUpdateRequest.getPhone());
             }
-            user.setPhone(userUpdateRequest.getPhone());
         }
         userRepository.save(user);
     }
