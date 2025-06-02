@@ -182,4 +182,12 @@ public class HealthProfileServiceImpl implements HealthProfileService{
         dto.setUpdatedAt(profile.getUpdatedAt());
         return dto;
     }
+
+    @Override
+    public List<HealthProfileResponseDTO> getAllHealthProfiles() {
+    List<HealthProfile> profiles = healthProfileRepository.findAll();
+        return profiles.stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
 }

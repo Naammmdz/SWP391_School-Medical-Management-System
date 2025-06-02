@@ -20,4 +20,5 @@ public interface HealthProfileService {
     HealthProfile mapToEntity(CreateHealthProfileDTO dto, Student student);
     void updateEntityFromDTO(HealthProfile entity, UpdateHealthProfileDTO dto);
     HealthProfileResponseDTO mapToResponseDTO(HealthProfile profile);
+    List<HealthProfileResponseDTO> getAllHealthProfiles();
 }
