@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Header.css';
 import { Bell, User, Menu, X } from 'lucide-react';
+import userService from '../services/UserService';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -9,6 +10,23 @@ const Header = () => {
   const [studentHealthOpen, setStudentHealthOpen] = useState(false);
   const [medicalEventsOpen, setMedicalEventsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  // Thông tin user từ localStorage
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+  const userData = localStorage.getItem('user');
+  try {
+    if (userData && userData !== "undefined" && userData !== "null") {
+      setUser(JSON.parse(userData));
+    } else {
+      setUser(null);
+    }
+  } catch (err) {
+    setUser(null);
+    localStorage.removeItem('user'); // Xóa dữ liệu lỗi để tránh lặp lại lỗi
+  }
+}, []);
 
   // Handle window resize
   useEffect(() => {
@@ -43,6 +61,14 @@ const Header = () => {
       }
     }
     // On desktop, do nothing as it's handled by onMouseEnter/onMouseLeave
+  };
+
+  // Xử lý đăng xuất
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    setUser(null);
+    navigate('/login');
   };
 
   return (
@@ -107,7 +133,11 @@ const Header = () => {
 
             <li><Link to="/quanlythuoc" onClick={closeDropdowns}>Quản Lý Thuốc</Link></li>
             <li><Link to="/donthuoc" onClick={closeDropdowns}>Đơn Thuốc</Link></li>
-            <li><Link to="/login" onClick={closeDropdowns}>Đăng nhập</Link></li>
+            {!user ? (
+              <li><Link to="/login" onClick={closeDropdowns}>Đăng nhập</Link></li>
+            ) : (
+              <li><button onClick={handleLogout} className="logout-btn">Đăng xuất</button></li>
+            )}
           </ul>
         </nav>
 
@@ -122,8 +152,17 @@ const Header = () => {
                 <User className="avatar-icon" />
               </div>
               <div className="user-info">
-                <span className="username">Xin chào, User</span>
-                <span className="user-role"></span>
+                {user ? (
+                  <>
+                    <span className="username">Xin chào, {user.fullName || user.email}</span>
+                    <span className="user-role">{user.userRole || user.role}</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="username">Xin chào, Khách</span>
+                    <span className="user-role"></span>
+                  </>
+                )}
               </div>
             </div>
           </div>

@@ -331,3 +331,21 @@
     background: #fff;
   }
 } 
+.logout-btn {
+  background-color: #10d569;
+  color: #fff;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, 
+  box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(231, 76, 60, 0.08);
+}
+
+.logout-btn:hover,
+.logout-btn:focus {
+  background-color: #c0392b;
+  outline: none;
+}

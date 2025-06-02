@@ -1,6 +1,10 @@
 import axios from 'axios';
+
+const user = JSON.parse(localStorage.getItem('user'));
+const userId = user?.userId; // hoặc user.id tùy backend trả về
+
 const BASE_URL = 'http://localhost:8080/api/admin/5/students';
-const PR_URL ='http://localhost:8080/api/parent/9/students';
+const PR_URL =`http://localhost:8080/api/parent/${userId}/students`;
 
 class HealthRecordService {
     getHealthRecordByStudentId(studentId) {

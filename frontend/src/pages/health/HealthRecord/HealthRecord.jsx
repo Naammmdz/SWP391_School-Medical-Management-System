@@ -7,7 +7,7 @@ import HealthRecordService from '../../../services/HealthRecordService';
 
 const HealthRecord = () => {
   // Lấy studentId thực tế, ví dụ từ localStorage hoặc useParams
-  const studentId = '2'; // Thay bằng cách lấy studentId thực tế
+  const studentId = '10'; // Thay bằng cách lấy studentId thực tế
 
   const { register, handleSubmit, setValue, formState: { errors }, reset } = useForm({
     defaultValues: {
