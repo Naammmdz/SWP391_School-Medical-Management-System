@@ -1,6 +1,7 @@
 package com.school.health.service;
 
 import com.school.health.dto.request.UserUpdateRequest;
+import com.school.health.dto.response.UserResponse;
 import com.school.health.entity.User;
 import com.school.health.enums.UserRole;
 import com.school.health.exception.UserAlreadyExistsException;
@@ -13,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -57,6 +59,22 @@ public class UserService {
 
     public Optional<User> getUserById(Integer id) {
         return userRepository.findByUserId(id);
+    }
+
+    public List<UserResponse> getAllUsers() {
+        List<User> users = userRepository.findAll();
+        return users.stream().map(this::convertToDto).toList();
+    }
+
+    private UserResponse convertToDto(User user) {
+        UserResponse dto = new UserResponse();
+        dto.setId(user.getUserId());
+        dto.setFullName(user.getFullName());
+        dto.setEmail(user.getEmail());
+        dto.setPhone(user.getPhone());
+        dto.setIsActive(user.isActive());
+        dto.setRole(user.getRole().name());
+        return dto;
     }
 
     public void updateUserId(Integer id, UserUpdateRequest userUpdateRequest) {

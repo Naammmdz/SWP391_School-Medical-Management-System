@@ -3,6 +3,8 @@ package com.school.health.controller;
 
 import com.school.health.dto.request.RegisterRequest;
 import com.school.health.dto.request.UserUpdateRequest;
+import com.school.health.dto.response.UserResponse;
+import com.school.health.entity.User;
 import com.school.health.security.services.UserDetailsImpl;
 import com.school.health.service.UserService;
 import jakarta.validation.Valid;
@@ -14,6 +16,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -69,5 +72,12 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", "Cập nhật trạng thái người dùng thất bại!"));
         }
+    }
+
+    // 4. Admin lấy thông tin của tất cả user
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping
+    public ResponseEntity<List<UserResponse>> getAllUsers() {
+        return ResponseEntity.ok(userService.getAllUsers());
     }
 }
