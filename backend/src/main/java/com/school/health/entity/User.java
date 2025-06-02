@@ -1,6 +1,6 @@
 package com.school.health.entity;
 
-import com.school.health.enums.Role;
+import com.school.health.enums.UserRole;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Data;
@@ -36,7 +36,7 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "Role", length = 20, nullable = false)
-    private Role role;
+    private UserRole role;
 
     @CreationTimestamp
     @Column(name = "CreatedAT")

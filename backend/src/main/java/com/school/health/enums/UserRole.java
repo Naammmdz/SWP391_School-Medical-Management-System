@@ -1,6 +1,6 @@
 package com.school.health.enums;
 
-public enum Role {
+public enum UserRole {
     PARENT("PARENT"),
     NURSE("NURSE"),
     MANAGER("ADMIN"),
@@ -8,7 +8,7 @@ public enum Role {
 
     private final String displayName;
 
-    Role(String displayName) {
+    UserRole(String displayName) {
         this.displayName = displayName;
     }
 

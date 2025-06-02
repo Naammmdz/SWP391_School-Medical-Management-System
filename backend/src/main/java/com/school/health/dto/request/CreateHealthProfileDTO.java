@@ -18,6 +18,10 @@ public class CreateHealthProfileDTO {
     private String chronicDiseases;
 
     @Size(max = 255, message = "Tiền sử điều trị không được vượt quá 255 ký tự")
+    @NotEmpty(message = "Tiền sử điều trị không được để trống")
+    @NotNull(message = "Tiền sử điều trị không được để trống")
+    @NotBlank(message = "Tiền sử điều trị không được để trống")
+    @Pattern(regexp = "^(?!null$).*$", message = "Tiền sử điều trị không được là 'null'")
     private String treatmentHistory;
 
     @Size(max = 50, message = "Thông tin thị lực không được vượt quá 50 ký tự")
