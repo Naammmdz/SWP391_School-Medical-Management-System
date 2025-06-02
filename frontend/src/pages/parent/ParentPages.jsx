@@ -124,9 +124,9 @@ export default function ParentPages() {
             <p>Các dịch vụ chăm sóc và quản lý sức khỏe cho học sinh</p>
           </div>
 
-          {isLoading ? (
+          {/* {isLoading ? (
             <div className="loading">Đang tải dữ liệu...</div>
-          ) : (
+          ) : ( */}
             <div className="resources-grid">
               <div className="resource-card">
                 <div className="resource-thumbnail">
@@ -184,7 +184,7 @@ export default function ParentPages() {
                 </div>
               </div>
             </div>
-          )}
+          {/* )} */}
         </div>
       </section>
       

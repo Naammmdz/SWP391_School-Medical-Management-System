@@ -10,55 +10,52 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [isShowPassword, setIsShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [loginError, setLoginError] = useState(''); // Thêm state cho lỗi
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
-  e.preventDefault();
-  if (!emailOrPhone || !password) {
-    toast.error('Vui lòng nhập đầy đủ thông tin!');
-    return;
-  }
-
-  setIsLoading(true);
-  try {
-    const loginData = { emailOrPhone, password };
-    console.log("Dữ liệu gửi lên backend:", loginData);
-
-    const response = await userService.login(loginData);
-
-    console.log("Dữ liệu trả về từ backend:", response.data);
-
-    // Lưu thông tin user và token vào localStorage
-    localStorage.setItem('user', JSON.stringify(response.data));
-    localStorage.setItem('token', response.data.accessToken);
-
-  toast.success('Đăng nhập thành công!');
-setTimeout(() => window.location.reload(), 800);
-
-    // Điều hướng theo vai trò
-    switch (response.data.userRole) {
-      case 'admin':
-        navigate('/admin');
-        break;
-      case 'PARENT':
-      case 'parent':
-        navigate('/parent');
-        break;
-      case 'nurse':
-        navigate('/nurse');
-        break;
-      default:
-        navigate('/');
+    e.preventDefault();
+    setLoginError(''); // Reset lỗi khi submit mới
+    if (!emailOrPhone || !password) {
+      toast.error('Vui lòng nhập đầy đủ thông tin!');
+      setLoginError('Vui lòng nhập đầy đủ thông tin!');
+      return;
     }
-    
-  } catch (error) {
-    console.log("Lỗi trả về từ backend:", error);
-    toast.error(
-      error.response?.data?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin!'
-    );
-  }
-  setIsLoading(false);
-};
+
+    setIsLoading(true);
+    try {
+      const loginData = { emailOrPhone, password };
+      const response = await userService.login(loginData);
+
+      localStorage.setItem('user', JSON.stringify(response.data));
+      localStorage.setItem('token', response.data.accessToken);
+
+      toast.success('Đăng nhập thành công!');
+      setTimeout(() => window.location.reload(), 800);
+
+      switch (response.data.userRole) {
+        case 'ADMIN':
+          navigate('/admin');
+          break;
+        case 'PARENT':
+        
+          navigate('/parent');
+          break;
+        case 'NURSE':
+        
+          navigate('/nurse');
+          break;
+        default:
+          navigate('/');
+      }
+    } catch (error) {
+      console.log("Lỗi trả về từ backend:", error);
+      const errMsg = error.response?.data?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin!';
+      toast.error(errMsg);
+      setLoginError(errMsg); // Hiện lỗi ra màn hình
+    }
+    setIsLoading(false);
+  };
 
   return (
     <>
@@ -89,6 +86,9 @@ setTimeout(() => window.location.reload(), 800);
               {isShowPassword ? 'Ẩn' : 'Hiện'}
             </span>
           </div>
+
+          {/* Hiển thị lỗi đăng nhập */}
+          {loginError && <div className="login-error">{loginError}</div>}
 
           <button
             className={emailOrPhone && password ? 'active' : ''}
