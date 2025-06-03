@@ -17,6 +17,7 @@
     "axios": "^1.9.0",
     "bootstrap": "^5.3.6",
     "chart.js": "^4.4.9",
+    "cors": "^2.8.5",
     "lucide-react": "^0.510.0",
     "moment": "^2.30.1",
     "react": "^19.1.0",

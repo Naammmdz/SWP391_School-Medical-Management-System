@@ -74,13 +74,13 @@ const Header = () => {
   let homeLink = '/';
   if (user && user.userRole) {
     switch (user.userRole.toUpperCase()) {
-      case 'ADMIN':
+      case 'ROLE_ADMIN':
         homeLink = '/admin';
         break;
-      case 'PARENT':
+      case 'ROLE_PARENT':
         homeLink = '/parent';
         break;
-      case 'NURSE':
+      case 'ROLE_NURSE':
         homeLink = '/nurse';
         break;
       default:

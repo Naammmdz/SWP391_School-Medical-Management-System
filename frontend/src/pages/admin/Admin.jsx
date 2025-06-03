@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Save, X } from 'lucide-react';
 import './Admin.css';
 import DashboardPage from '../dashboardPage/DashboardPage';
+import userService from '../../services/UserService';
 const Admin = () => {
   // State for users list
   const [users, setUsers] = useState([]);
@@ -13,43 +14,43 @@ const Admin = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentUser, setCurrentUser] = useState({
     id: null,
-    name: '',
+    fullName: '',
     phone: '',
-    role: 'parent', // Default role
+    role: '', // Default role
     email: '',
+    isActive: '',
     password: ''
   });
 
   // Available roles
   const roles = [
-    { value: 'admin', label: 'Admin' },
-    { value: 'nurse', label: 'Nhân viên y tế' },
-    { value: 'parent', label: 'Phụ huynh' }
+    { value: 'ADMIN', label: 'Admin' },
+    { value: 'NURSE', label: 'Nhân viên y tế' },
+    { value: 'PARENT', label: 'Phụ huynh' }
   ];
 
   // Fetch users from API
   const fetchUsers = async () => {
     setLoading(true);
+    setError(null);
     try {
-      // API call would go here
-      // const response = await fetch('api/users');
-      // const data = await response.json();
-      
-      // Mock data for now
-      const mockUsers = [
-        { id: 1, name: 'John Doe', phone: '0909090909', role: 'admin', email: 'john@example.com' },
-        { id: 2, name: 'Jane Smith', phone: '0987654321', role: 'nurse', email: 'jane@example.com' },
-        { id: 3, name: 'Bob Wilson', phone: '0123456789', role: 'parent', email: 'bob@example.com' }
-      ];
-      
-      setUsers(mockUsers);
-      setLoading(false);
+      const token = localStorage.getItem('token');
+      console.log('Gửi request getAllUsers với token:', token);
+      const response = await userService.getAllUsers({
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+     
+      setUsers(response.data);
     } catch (error) {
       console.error('Error fetching users:', error);
       setError('Failed to fetch users');
-      setLoading(false);
     }
+    setLoading(false);
   };
+
+  
 
   // Create new user
   const createUser = async (userData) => {
@@ -79,26 +80,32 @@ const Admin = () => {
 
   // Update user
   const updateUser = async (id, userData) => {
-    try {
-      // API call would go here
-      // const response = await fetch(`api/users/${id}`, {
-      //   method: 'PUT',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(userData)
-      // });
-      // const data = await response.json();
-      
-      setUsers(users.map(user => 
-        user.id === id ? { ...userData, id } : user
-      ));
-      resetForm();
-      setShowForm(false);
-    } catch (error) {
-      console.error('Error updating user:', error);
-      setError('Failed to update user');
-    }
-  };
+  try {
+    const token = localStorage.getItem('token');
+    // Chuyển đổi dữ liệu cho đúng với UserUpdateRequest
+    const updateRequest = {
+      fullName: userData.name,   // name trên form -> fullName cho backend
+      email: userData.email,
+      phone: userData.phone
+    };
+    await userService.updateUser(id, updateRequest, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
 
+    // Cập nhật lại danh sách users trên UI (nên fetch lại từ backend để đồng bộ)
+    setUsers(users.map(user =>
+      user.id === id ? { ...user, ...updateRequest, id } : user
+    ));
+    resetForm();
+    setShowForm(false);
+  } catch (error) {
+    console.error('Error updating user:', error);
+    setError('Failed to update user');
+  }
+};
   // Delete user
   const deleteUser = async (id) => {
     if (window.confirm('Bạn có chắc muốn xóa người dùng này?')) {
@@ -116,6 +123,7 @@ const Admin = () => {
     }
   };
 
+ 
   // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -238,7 +246,17 @@ const Admin = () => {
                   required
                 />
               </div>
-              
+                <div className="form-group">
+                <label htmlFor="isActive">Trạng thái</label>
+                <input
+                  type="isActive"
+                  id="isActive"
+                  name="isActive"
+                  value={currentUser.isActive}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
               {!isEditing && (
                 <div className="form-group">
                   <label htmlFor="password">Mật khẩu</label>
@@ -253,7 +271,7 @@ const Admin = () => {
                 </div>
               )}
               
-              <div className="form-group">
+              {/* <div className="form-group">
                 <label htmlFor="role">Vai trò</label>
                 <select
                   id="role"
@@ -268,7 +286,7 @@ const Admin = () => {
                     </option>
                   ))}
                 </select>
-              </div>
+              </div> */}
               
               <div className="form-actions">
                 <button type="button" onClick={closeForm} className="cancel-btn">
@@ -304,6 +322,7 @@ const Admin = () => {
               <th>Tên</th>
               <th>Số điện thoại</th>
               <th>Email</th>
+              <th>Trạng thái</th>
               <th>Vai trò</th>
               <th>Hành động</th>
             </tr>
@@ -311,9 +330,15 @@ const Admin = () => {
           <tbody>
             {users.map(user => (
               <tr key={user.id}>
-                <td>{user.name}</td>
+                <td>{user.fullName}</td>
                 <td>{user.phone}</td>
                 <td>{user.email}</td>
+                <td>
+                  {/* Hiển thị trạng thái true/false thành chữ */}
+                  {user.isActive === true || user.isActive === "true"
+                    ? "Đang hoạt động"
+                    : "Ngừng hoạt động"}
+                </td>
                 <td>
                   {roles.find(role => role.value === user.role)?.label}
                 </td>

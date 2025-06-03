@@ -34,14 +34,14 @@ const Login = () => {
       setTimeout(() => window.location.reload(), 800);
 
       switch (response.data.userRole) {
-        case 'ADMIN':
+        case 'ROLE_ADMIN':
           navigate('/admin');
           break;
-        case 'PARENT':
+        case 'ROLE_PARENT':
         
           navigate('/parent');
           break;
-        case 'NURSE':
+        case 'ROLE_NURSE':
         
           navigate('/nurse');
           break;
