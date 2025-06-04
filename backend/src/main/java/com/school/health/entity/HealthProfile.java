@@ -22,7 +22,7 @@ public class HealthProfile {
     private Student student;
 
 //    @ManyToOne
-//    @JoinColumn(name = "UpdatedAt", referencedColumnName = "UserId")
+//    @JoinColumn(name = "LastUpdatedBy", referencedColumnName = "UserId")
 //    private User user;
 
     @Column(name = "Allergies", length = 255)

@@ -34,8 +34,9 @@ public class Student {
     @Column(name = "ClassName", length = 50)
     private String className;
 
-    @Column(name = "ParentId")
-    private Integer parentId;
+    @ManyToOne
+    @JoinColumn(name = "ParentId", referencedColumnName = "UserId")
+    private User parentId;
 
     @Column(name = "CreatedAt")
     private LocalDateTime createdAt;
@@ -43,6 +44,8 @@ public class Student {
     // Relationship với HealthProfile
     @OneToOne(mappedBy = "student", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private HealthProfile healthProfile;
+
+
 
     @PrePersist
     protected void onCreate() {
