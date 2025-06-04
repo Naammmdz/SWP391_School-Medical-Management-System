@@ -14,8 +14,7 @@ import java.util.Optional;
 
 @Repository
 public interface HealthProfileRepository extends JpaRepository<HealthProfile, Integer> {
-    // Tìm tất cả hồ sơ sức khỏe
-    
+
     // Tìm hồ sơ theo student ID
     Optional<HealthProfile> findByStudentStudentId(Integer studentId);
 

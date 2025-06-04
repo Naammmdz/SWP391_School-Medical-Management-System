@@ -20,7 +20,7 @@ public class StudentControllerImpl implements StudentService {
      * Lấy danh sách học sinh theo parent ID
      */
     public List<StudentResponseDTO> getStudentsByParentId(Integer parentId) {
-        List<Student> students = studentRepository.findByParentId(parentId);
+        List<Student> students = studentRepository.findByParentUserId(parentId);
 
         return students.stream()
                 .map(this::mapToResponseDTO)
@@ -78,7 +78,7 @@ public class StudentControllerImpl implements StudentService {
         dto.setDob(student.getDob());
         dto.setGender(student.getGender());
         dto.setClassName(student.getClassName());
-        dto.setParentId(student.getParentId());
+        dto.setParentId(student.getParent().getUserId());
         dto.setCreatedAt(student.getCreatedAt());
         dto.setHasHealthProfile(student.getHealthProfile() != null);
         return dto;

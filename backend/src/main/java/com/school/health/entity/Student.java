@@ -6,6 +6,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 import jakarta.validation.constraints.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
 
@@ -34,21 +35,16 @@ public class Student {
     @Column(name = "ClassName", length = 50)
     private String className;
 
-    @ManyToOne
-    @JoinColumn(name = "ParentId", referencedColumnName = "UserId")
-    private User parentId;
+    // Parent
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ParentId", nullable = false)
+    private User parent;
 
-    @Column(name = "CreatedAt")
-    private LocalDateTime createdAt;
-
-    // Relationship với HealthProfile
     @OneToOne(mappedBy = "student", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private HealthProfile healthProfile;
 
+    @CreationTimestamp
+    @Column(name = "CreatedAt")
+    private LocalDateTime createdAt;
 
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
 }

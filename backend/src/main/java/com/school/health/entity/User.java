@@ -4,7 +4,10 @@ import com.school.health.enums.UserRole;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
+
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Table(name = "Users")
@@ -36,11 +39,16 @@ public class User {
     @Column(name = "Role", length = 20, nullable = false)
     private UserRole role;
 
+    @CreationTimestamp
     @Column(name = "CreatedAT")
     private LocalDate createdAt;
 
     @Column(name = "IsActive")
     private Boolean isActive = true;
+
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Student> students;
+
 
     @PrePersist
     protected void onCreate() {
