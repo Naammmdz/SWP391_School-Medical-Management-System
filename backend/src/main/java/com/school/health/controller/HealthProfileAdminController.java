@@ -11,26 +11,26 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/admin/{userId}/students/{studentId}/health-profile")
+@RequestMapping("/api/admin/students")
 @CrossOrigin(origins = "*") // Cho phép React frontend gọi API
 @RequiredArgsConstructor
 @Validated
 public class HealthProfileAdminController {
     private final HealthProfileService service;
 
-    @PostMapping
+    @PostMapping("/{userId}/{studentId}/health-profile")
     public ResponseEntity<?> createHealthProfile(@PathVariable Integer studentId, @RequestBody @Valid CreateHealthProfileDTO healthProfile, @PathVariable Integer userId) {
         HealthProfileResponseDTO response = service.createHealthProfile(studentId, healthProfile, userId);
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping
+    @GetMapping("/health-profile/{studentId}")
     public ResponseEntity<?> getHealthProfile(@PathVariable Integer studentId) {
         HealthProfileResponseDTO response = service.getHealthProfileByStudentId(studentId);
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping
+    @PutMapping("/{userId}/{studentId}/health-profile")
     public ResponseEntity<?> updateHealthProfile(@PathVariable Integer studentId, @RequestBody @Valid UpdateHealthProfileDTO healthProfile, @PathVariable Integer userId) {
         HealthProfileResponseDTO response = service.updateHealthProfile(studentId, healthProfile, userId);
         return ResponseEntity.ok(response);

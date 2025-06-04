@@ -7,6 +7,7 @@ import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Table(name = "Users")
@@ -44,6 +45,10 @@ public class User {
 
     @Column(name = "IsActive")
     private Boolean isActive = true;
+
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Student> students;
+
 
     @PrePersist
     protected void onCreate() {

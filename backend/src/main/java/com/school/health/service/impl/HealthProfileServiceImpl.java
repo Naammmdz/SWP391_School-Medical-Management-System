@@ -8,6 +8,7 @@ import com.school.health.exception.DuplicateResourceException;
 import com.school.health.exception.ResourceNotFoundException;
 import com.school.health.repository.*;
 import com.school.health.service.HealthProfileService;
+import com.school.health.service.MailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 public class HealthProfileServiceImpl implements HealthProfileService{
     private final HealthProfileRepository healthProfileRepository;
     private final StudentRepository studentRepository;
+    private final MailService mailService;
 
     @Override
     public HealthProfileResponseDTO createHealthProfile(Integer studentId,CreateHealthProfileDTO dto,Integer userId) {
@@ -38,6 +40,7 @@ public class HealthProfileServiceImpl implements HealthProfileService{
             User user = new User();
             user.setUserId(userId);
             healthProfile.setUpdatedBy(user);
+//            mailService.sendConfirmLink("health-profile", student.get().getEmail(), savedProfile.getProfileId());
         }
         return mapToResponseDTO(savedProfile);
     }
