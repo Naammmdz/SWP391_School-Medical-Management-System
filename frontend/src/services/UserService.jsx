@@ -14,9 +14,9 @@ const userService = {
     updateUser: (id, user, config) => {
         return axios.put(USER_URL + `/user/${id}`, user, config);
     },
-    deleteUser: (id) => {
-        return axios.delete(API_URL + `/users/${id}`);
-    },
+    deleteUser: (id, config) => {
+    return axios.put(USER_URL+`/user/${id}/status`, null, config);
+},
     login: (user) => {
         return axios.post(API_URL + '/login', user);
     },

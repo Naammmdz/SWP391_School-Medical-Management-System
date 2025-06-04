@@ -82,12 +82,12 @@ const Admin = () => {
   const updateUser = async (id, userData) => {
   try {
     const token = localStorage.getItem('token');
-    // Chuyển đổi dữ liệu cho đúng với UserUpdateRequest
-    const updateRequest = {
-      fullName: userData.name,   // name trên form -> fullName cho backend
-      email: userData.email,
-      phone: userData.phone
-    };
+    // Chỉ gửi các trường có giá trị
+    const updateRequest = {};
+    if (userData.fullName) updateRequest.fullName = userData.fullName;
+    if (userData.email) updateRequest.email = userData.email;
+    if (userData.phone) updateRequest.phone = userData.phone;
+
     await userService.updateUser(id, updateRequest, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -95,10 +95,7 @@ const Admin = () => {
       }
     });
 
-    // Cập nhật lại danh sách users trên UI (nên fetch lại từ backend để đồng bộ)
-    setUsers(users.map(user =>
-      user.id === id ? { ...user, ...updateRequest, id } : user
-    ));
+    await fetchUsers();
     resetForm();
     setShowForm(false);
   } catch (error) {
@@ -106,22 +103,34 @@ const Admin = () => {
     setError('Failed to update user');
   }
 };
-  // Delete user
-  const deleteUser = async (id) => {
-    if (window.confirm('Bạn có chắc muốn xóa người dùng này?')) {
-      try {
-        // API call would go here
-        // await fetch(`api/users/${id}`, {
-        //   method: 'DELETE'
-        // });
-        
-        setUsers(users.filter(user => user.id !== id));
-      } catch (error) {
-        console.error('Error deleting user:', error);
-        setError('Failed to delete user');
-      }
+  
+
+// Delete (vô hiệu hóa) user
+const deleteUser = async (id) => {
+  if (window.confirm('Bạn có chắc muốn vô hiệu hóa người dùng này?')) {
+    try {
+      const token = localStorage.getItem('token');
+     
+      await userService.deleteUser(id, {
+        params: { isActive: false },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      // Cập nhật lại danh sách users trên UI (nên fetch lại từ backend để đồng bộ)
+      setUsers(users.map(user =>
+        user.id === id ? { ...user, isActive: false } : user
+      ));
+    } catch (error) {
+      console.error('Error disabling user:', error);
+      setError('Failed to disable user');
     }
-  };
+  }
+};
+
+
 
  
   // Handle form input changes
@@ -134,7 +143,7 @@ const Admin = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    if (!currentUser.name || !currentUser.phone || !currentUser.role || !currentUser.email) {
+    if (!currentUser.fullName || !currentUser.phone || !currentUser.role || !currentUser.email) {
       alert('Vui lòng điền đầy đủ thông tin');
       return;
     }
@@ -158,7 +167,7 @@ const Admin = () => {
     setIsEditing(false);
     setCurrentUser({
       id: null,
-      name: '',
+      fullName: '',
       phone: '',
       role: 'parent',
       email: '',
@@ -212,14 +221,14 @@ const Admin = () => {
             
             <form onSubmit={handleSubmit} className="user-form">
               <div className="form-group">
-                <label htmlFor="name">Tên</label>
+                <label htmlFor="fullName">Tên</label>
                 <input
                   type="text"
-                  id="name"
-                  name="name"
-                  value={currentUser.name}
+                  id="fullName"
+                  name="fullName"
+                  value={currentUser.fullName}
                   onChange={handleInputChange}
-                  required
+                
                 />
               </div>
               
@@ -231,7 +240,7 @@ const Admin = () => {
                   name="phone"
                   value={currentUser.phone}
                   onChange={handleInputChange}
-                  required
+                 
                 />
               </div>
               
@@ -243,7 +252,7 @@ const Admin = () => {
                   name="email"
                   value={currentUser.email}
                   onChange={handleInputChange}
-                  required
+                  
                 />
               </div>
                 <div className="form-group">
@@ -254,7 +263,7 @@ const Admin = () => {
                   name="isActive"
                   value={currentUser.isActive}
                   onChange={handleInputChange}
-                  required
+                
                 />
               </div>
               {!isEditing && (

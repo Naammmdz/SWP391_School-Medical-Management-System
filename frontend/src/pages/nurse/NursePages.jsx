@@ -67,7 +67,7 @@ export default function NursePages() {
         console.error("Error fetching school info:", error);
         // Fallback to mock data if API fails
         setSchoolInfo({
-          name: "Trường Tiểu Học",
+          name: "Trường Tiểu Học FPT",
           slogan: "Chăm sóc sức khỏe toàn diện cho học sinh",
           stats: {
             students: "2000+",
