@@ -3,6 +3,7 @@ import { Plus, Edit, Trash2, Save, X } from 'lucide-react';
 import './Admin.css';
 import DashboardPage from '../dashboardPage/DashboardPage';
 import userService from '../../services/UserService';
+
 const Admin = () => {
   // State for users list
   const [users, setUsers] = useState([]);
@@ -29,89 +30,97 @@ const Admin = () => {
     { value: 'PARENT', label: 'Phụ huynh' }
   ];
 
+  // State for custom confirmation modal
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
+
   // Fetch users from API
   const fetchUsers = async () => {
     setLoading(true);
     setError(null);
     try {
       const token = localStorage.getItem('token');
-      console.log('Gửi request getAllUsers với token:', token);
       const response = await userService.getAllUsers({
         headers: {
           Authorization: `Bearer ${token}`
         }
       });
-     
       setUsers(response.data);
     } catch (error) {
-      console.error('Error fetching users:', error);
       setError('Failed to fetch users');
     }
     setLoading(false);
   };
 
-  
-
-  // Create new user
+  // Create new user (register)
   const createUser = async (userData) => {
     try {
-      // API call would go here
-      // const response = await fetch('api/users', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(userData)
-      // });
-      // const data = await response.json();
-      
-      // Mock response
-      const newUser = {
-        ...userData,
-        id: users.length + 1
+      const token = localStorage.getItem('token');
+      // Chuẩn bị dữ liệu đúng định dạng backend yêu cầu
+      const registerRequest = {
+        fullName: userData.fullName,
+        email: userData.email,
+        phone: userData.phone,
+        password: userData.password,
+        role: userData.role
       };
-      
-      setUsers([...users, newUser]);
+
+      // Gọi API đăng ký user mới
+      await userService.createUser(registerRequest, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      await fetchUsers();
       resetForm();
       setShowForm(false);
+      setSuccessMessage('Tạo người dùng thành công!');
+      setTimeout(() => setSuccessMessage(null), 2000);
     } catch (error) {
-      console.error('Error creating user:', error);
       setError('Failed to create user');
     }
   };
 
   // Update user
   const updateUser = async (id, userData) => {
-  try {
-    const token = localStorage.getItem('token');
-    // Chỉ gửi các trường có giá trị
-    const updateRequest = {};
-    if (userData.fullName) updateRequest.fullName = userData.fullName;
-    if (userData.email) updateRequest.email = userData.email;
-    if (userData.phone) updateRequest.phone = userData.phone;
-
-    await userService.updateUser(id, updateRequest, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    await fetchUsers();
-    resetForm();
-    setShowForm(false);
-  } catch (error) {
-    console.error('Error updating user:', error);
-    setError('Failed to update user');
-  }
-};
-  
-
-// Delete (vô hiệu hóa) user
-const deleteUser = async (id) => {
-  if (window.confirm('Bạn có chắc muốn vô hiệu hóa người dùng này?')) {
     try {
       const token = localStorage.getItem('token');
-     
-      await userService.deleteUser(id, {
+      // Chỉ gửi các trường có giá trị
+      const updateRequest = {};
+      if (userData.fullName) updateRequest.fullName = userData.fullName;
+      if (userData.email) updateRequest.email = userData.email;
+      if (userData.phone) updateRequest.phone = userData.phone;
+
+      await userService.updateUser(id, updateRequest, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      await fetchUsers();
+      resetForm();
+      setShowForm(false);
+      setSuccessMessage('Cập nhật người dùng thành công!');
+      setTimeout(() => setSuccessMessage(null), 2000);
+    } catch (error) {
+      setError('Failed to update user');
+    }
+  };
+
+  // Delete (vô hiệu hóa) user
+  const deleteUser = async (id) => {
+    setUserToDelete(id);
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await userService.deleteUser(userToDelete, {
         params: { isActive: false },
         headers: {
           Authorization: `Bearer ${token}`,
@@ -119,20 +128,16 @@ const deleteUser = async (id) => {
         }
       });
 
-      // Cập nhật lại danh sách users trên UI (nên fetch lại từ backend để đồng bộ)
       setUsers(users.map(user =>
-        user.id === id ? { ...user, isActive: false } : user
+        user.id === userToDelete ? { ...user, isActive: false } : user
       ));
+      setShowConfirmModal(false);
+      setUserToDelete(null);
     } catch (error) {
-      console.error('Error disabling user:', error);
       setError('Failed to disable user');
     }
-  }
-};
+  };
 
-
-
- 
   // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -142,15 +147,21 @@ const deleteUser = async (id) => {
   // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
-    
-    if (!currentUser.fullName || !currentUser.phone || !currentUser.role || !currentUser.email) {
-      alert('Vui lòng điền đầy đủ thông tin');
-      return;
-    }
-    
+
+    // Validate cho từng loại form
     if (isEditing) {
+      // Update: chỉ cần fullName, phone, email (role không cho sửa, password không cần)
+      if (!currentUser.fullName || !currentUser.phone || !currentUser.email) {
+        alert('Vui lòng điền đầy đủ thông tin');
+        return;
+      }
       updateUser(currentUser.id, currentUser);
     } else {
+      // Create: cần đủ các trường
+      if (!currentUser.fullName || !currentUser.phone || !currentUser.role || !currentUser.email || !currentUser.password) {
+        alert('Vui lòng điền đầy đủ thông tin');
+        return;
+      }
       createUser(currentUser);
     }
   };
@@ -158,7 +169,15 @@ const deleteUser = async (id) => {
   // Edit user
   const editUser = (user) => {
     setIsEditing(true);
-    setCurrentUser({ ...user });
+    setCurrentUser({
+      id: user.id,
+      fullName: user.fullName || '',
+      phone: user.phone || '',
+      role: user.role || '',
+      email: user.email || '',
+      isActive: user.isActive,
+      password: '' // Không cho sửa password khi update
+    });
     setShowForm(true);
   };
 
@@ -169,8 +188,9 @@ const deleteUser = async (id) => {
       id: null,
       fullName: '',
       phone: '',
-      role: 'parent',
+      role: '',
       email: '',
+      isActive: '',
       password: ''
     });
   };
@@ -201,13 +221,19 @@ const deleteUser = async (id) => {
           Thêm mới
         </button>
       </div>
-      
+
+      {successMessage && (
+        <div className="success-message">
+          <h2>{successMessage}</h2>
+        </div>
+      )}
+
       {error && (
         <div className="error-message">
           {error}
         </div>
       )}
-      
+
       {/* User form */}
       {showForm && (
         <div className="form-modal">
@@ -218,20 +244,20 @@ const deleteUser = async (id) => {
                 <X size={20} />
               </button>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="user-form">
               <div className="form-group">
-                <label htmlFor="fullName">Tên</label>
+                <label htmlFor="fullName">Họ và tên</label>
                 <input
                   type="text"
                   id="fullName"
                   name="fullName"
                   value={currentUser.fullName}
                   onChange={handleInputChange}
-                
+                  required
                 />
               </div>
-              
+
               <div className="form-group">
                 <label htmlFor="phone">Số điện thoại</label>
                 <input
@@ -240,10 +266,10 @@ const deleteUser = async (id) => {
                   name="phone"
                   value={currentUser.phone}
                   onChange={handleInputChange}
-                 
+                  required
                 />
               </div>
-              
+
               <div className="form-group">
                 <label htmlFor="email">Email</label>
                 <input
@@ -252,20 +278,32 @@ const deleteUser = async (id) => {
                   name="email"
                   value={currentUser.email}
                   onChange={handleInputChange}
-                  
+                  required
                 />
               </div>
+
+              {/* Chỉ cho chọn role khi tạo mới */}
+              {!isEditing && (
                 <div className="form-group">
-                <label htmlFor="isActive">Trạng thái</label>
-                <input
-                  type="isActive"
-                  id="isActive"
-                  name="isActive"
-                  value={currentUser.isActive}
-                  onChange={handleInputChange}
-                
-                />
-              </div>
+                  <label htmlFor="role">Vai trò</label>
+                  <select
+                    id="role"
+                    name="role"
+                    value={currentUser.role}
+                    onChange={handleInputChange}
+                    required
+                  >
+                    <option value="">Chọn vai trò</option>
+                    {roles.map(role => (
+                      <option key={role.value} value={role.value}>
+                        {role.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Chỉ nhập password khi tạo mới */}
               {!isEditing && (
                 <div className="form-group">
                   <label htmlFor="password">Mật khẩu</label>
@@ -279,24 +317,25 @@ const deleteUser = async (id) => {
                   />
                 </div>
               )}
-              
-              {/* <div className="form-group">
-                <label htmlFor="role">Vai trò</label>
-                <select
-                  id="role"
-                  name="role"
-                  value={currentUser.role}
-                  onChange={handleInputChange}
-                  required
-                >
-                  {roles.map(role => (
-                    <option key={role.value} value={role.value}>
-                      {role.label}
-                    </option>
-                  ))}
-                </select>
-              </div> */}
-              
+
+              {/* Hiển thị trạng thái khi chỉnh sửa */}
+              {isEditing && (
+                <div className="form-group">
+                  <label htmlFor="isActive">Trạng thái</label>
+                  <input
+                    type="text"
+                    id="isActive"
+                    name="isActive"
+                    value={
+                      currentUser.isActive === true || currentUser.isActive === "true"
+                        ? "Đang hoạt động"
+                        : "Ngừng hoạt động"
+                    }
+                    disabled
+                  />
+                </div>
+              )}
+
               <div className="form-actions">
                 <button type="button" onClick={closeForm} className="cancel-btn">
                   <X size={16} />
@@ -320,7 +359,7 @@ const deleteUser = async (id) => {
           </div>
         </div>
       )}
-      
+
       {/* Users table */}
       {loading ? (
         <div className="loading">Đang tải dữ liệu...</div>
@@ -328,7 +367,7 @@ const deleteUser = async (id) => {
         <table className="users-table">
           <thead>
             <tr>
-              <th>Tên</th>
+              <th>Họ và tên</th>
               <th>Số điện thoại</th>
               <th>Email</th>
               <th>Trạng thái</th>
@@ -343,7 +382,6 @@ const deleteUser = async (id) => {
                 <td>{user.phone}</td>
                 <td>{user.email}</td>
                 <td>
-                  {/* Hiển thị trạng thái true/false thành chữ */}
                   {user.isActive === true || user.isActive === "true"
                     ? "Đang hoạt động"
                     : "Ngừng hoạt động"}
@@ -352,13 +390,13 @@ const deleteUser = async (id) => {
                   {roles.find(role => role.value === user.role)?.label}
                 </td>
                 <td className="actions">
-                  <button 
+                  <button
                     className="edit-btn"
                     onClick={() => editUser(user)}
                   >
                     <Edit size={16} />
                   </button>
-                  <button 
+                  <button
                     className="delete-btn"
                     onClick={() => deleteUser(user.id)}
                   >
@@ -370,7 +408,33 @@ const deleteUser = async (id) => {
           </tbody>
         </table>
       )}
-      <DashboardPage/>
+
+      {/* Custom Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h3>Xác nhận vô hiệu hóa</h3>
+              <button className="close-modal" onClick={() => setShowConfirmModal(false)}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className="modal-body">
+              <p>Bạn có chắc chắn muốn vô hiệu hóa người dùng này?</p>
+            </div>
+            <div className="modal-footer">
+              <button className="cancel-btn" onClick={() => setShowConfirmModal(false)}>
+                Hủy
+              </button>
+              <button className="confirm-btn" onClick={handleConfirmDelete}>
+                Xác nhận
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <DashboardPage />
     </div>
   );
 };

@@ -8,19 +8,19 @@ const userService = {
     getUserById: (id) => {
         return axios.get(API_URL + `/users/${id}`);
     },
-    createUser: (user) => {
-        return axios.post(API_URL + '/users', user);
+    createUser: (data, config) => {
+        return axios.post(API_URL + '/register', data,config);
     },
     updateUser: (id, user, config) => {
         return axios.put(USER_URL + `/user/${id}`, user, config);
     },
     deleteUser: (id, config) => {
     return axios.put(USER_URL+`/user/${id}/status`, null, config);
-},
+    },
     login: (user) => {
         return axios.post(API_URL + '/login', user);
     },
-    
+  
     
     
 }

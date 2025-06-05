@@ -99,9 +99,6 @@ const Login = () => {
           </button>
         </form>
 
-        <Link to="/" className="home-button">
-          <i className="fas fa-home"></i> Trang chủ
-        </Link>
       </div>
     </>
   );

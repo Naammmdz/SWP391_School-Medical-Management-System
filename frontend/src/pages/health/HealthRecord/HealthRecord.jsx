@@ -29,6 +29,7 @@ const HealthRecord = () => {
   const [error, setError] = useState(null);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [hasRecord, setHasRecord] = useState(false);
+  const [updateSuccess, setUpdateSuccess] = useState(false);
 
   useEffect(() => {
     setIsLoading(true);
@@ -68,11 +69,16 @@ const HealthRecord = () => {
     try {
       if (hasRecord) {
         await HealthRecordService.updateHealthRecord(studentId, data);
+        setUpdateSuccess(true);
       } else {
         await HealthRecordService.createHealthRecord(studentId, data);
+        setFormSubmitted(true);
       }
-      setFormSubmitted(true);
-      setTimeout(() => setFormSubmitted(false), 1500);
+     
+      setTimeout(() => {
+        setFormSubmitted(false);
+        setUpdateSuccess(false);
+      } ,1500);
     } catch (err) {
       setError('Có lỗi xảy ra khi lưu hồ sơ. Vui lòng thử lại sau.');
     }
@@ -93,6 +99,13 @@ const HealthRecord = () => {
             <h2>Thông tin đã được gửi thành công!</h2>
           </div>
         )}
+        {
+          updateSuccess && (
+            <div className='success-message'>
+              <h2>Cập nhật hồ sơ thành công!</h2>
+              </div>
+          )
+        }
         <form onSubmit={handleSubmit(onSubmit)} className="health-record-form">
           <div className="form-group">
             <label>Họ và tên</label>

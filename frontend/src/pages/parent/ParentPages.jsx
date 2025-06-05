@@ -3,8 +3,9 @@ import { Link } from "react-router-dom";
 import "./ParentPages.css";
 import HomePageService from "../../services/HomePageService";
 import Blog from "../home/Blog/Blog";
-import "../home/homePage/HomePage.css";
+// import "../home/homePage/HomePage.css";
 import heroImage from "../../assets/images/fpt.jpg";
+import './ParentPages.css';
 
 export default function ParentPages() {
   // State for health resources

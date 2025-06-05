@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import HomePage from './pages/home/homePage/HomePage';
 import Login from './pages/auth/login/Login';
 import Header from './components/Header';
@@ -19,6 +19,25 @@ import HealthCheck from './pages/health/HealthCheck/HealthCheck';
 import ParentPages from './pages/parent/ParentPages';
 import NursePages from './pages/nurse/NursePages';
 import Blog from './pages/home/Blog/Blog';
+
+// Component ProtectedRoute
+const ProtectedRoute = ({ element, requiredRole }) => {
+  const user = JSON.parse(localStorage.getItem('user'));
+  const isAuthenticated = !!user && !!localStorage.getItem('token');
+  const hasRequiredRole = user && user.userRole === requiredRole;
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (requiredRole && !hasRequiredRole) {
+    return <Navigate to="/" replace />;
+  }
+
+ 
+  return element;
+};
+
 function App() {
   return (
     <>
@@ -35,9 +54,12 @@ function App() {
         <Route path="/donthuoc" element={<NursePrescription/>}/>
         <Route path="/thongke" element={<DashboardPage/>}/>
         <Route path="/kiemtradinhky" element={<HealthCheck/>}/>
-        <Route path="/parent" element={<ParentPages/>}/>
-        <Route path="/nurse" element={<NursePages/>}/>
-        <Route path='/admin' element={<Admin/>}/>
+      
+        <Route path="/parent" element={<ProtectedRoute element={<ParentPages/>} requiredRole="ROLE_PARENT" />} />
+        <Route path="/nurse" element={<ProtectedRoute element={<NursePages/>} requiredRole="ROLE_NURSE" />} />
+        <Route path='/admin' element={<ProtectedRoute element={<Admin/>} requiredRole="ROLE_ADMIN" />} />
+      
+
         <Route path='/blog' element={<Blog/>}/>
       </Routes>
       <Footer />

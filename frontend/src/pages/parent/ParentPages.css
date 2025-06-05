@@ -1,3 +1,11 @@
+body,
+html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden; /* Prevent horizontal scroll if elements go slightly over */
+}
+
 .parent-page {
   min-height: 100vh;
   background-color: #f8fafc;
@@ -10,8 +18,9 @@
   background-size: cover;
   background-position: center;
   color: white;
-  padding: 6rem 2rem;
+  padding: 6rem 0;
   text-align: center;
+  
 }
 
 .hero-content h1 {
@@ -29,12 +38,13 @@
 
 /* Section Styles */
 .section {
-  padding: 4rem 2rem;
+  padding: 4rem 0;
 }
 
 .container {
   max-width: 1200px;
   margin: 0 auto;
+  padding: 0 1rem;
 }
 
 .section-header {
@@ -205,7 +215,11 @@
   }
 
   .section {
-    padding: 3rem 1rem;
+    padding: 3rem 0;
+  }
+
+  .container {
+    padding: 0 0.5rem;
   }
 
   .resources-grid {
