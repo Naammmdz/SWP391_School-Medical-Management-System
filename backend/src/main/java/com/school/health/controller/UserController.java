@@ -80,4 +80,24 @@ public class UserController {
     public ResponseEntity<List<UserResponse>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
     }
+
+    // 5. User lấy thông tin tài khoản của mình
+    @GetMapping("/me")
+    public ResponseEntity<UserResponse> getMyAccount(Authentication authentication) {
+        UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
+        Integer userId = userPrincipal.getId();
+        User user = userService.getUserById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        UserResponse response = new UserResponse();
+        response.setId(user.getUserId());
+        response.setFullName(user.getFullName());
+        response.setEmail(user.getEmail());
+        response.setPhone(user.getPhone());
+        response.setIsActive(user.isActive());
+        response.setRole(user.getRole().name());
+        return ResponseEntity.ok(response);
+    }
+
+    // 6. User đổi mật khẩu của mình
+
 }
