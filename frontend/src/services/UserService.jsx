@@ -5,8 +5,8 @@ const userService = {
      getAllUsers: (config) => {
         return axios.get(USER_URL+ '/user', config);
     },
-    getUserById: (id) => {
-        return axios.get(API_URL + `/users/${id}`);
+    getUserById: (config) => {
+        return axios.get(USER_URL + `/user/me`, config);
     },
     createUser: (data, config) => {
         return axios.post(API_URL + '/register', data,config);
@@ -20,6 +20,9 @@ const userService = {
     login: (user) => {
         return axios.post(API_URL + '/login', user);
     },
+updateUserByUser: (user, config) => {
+    return axios.put(USER_URL + `/user/me`, user, config);
+}
   
     
     
