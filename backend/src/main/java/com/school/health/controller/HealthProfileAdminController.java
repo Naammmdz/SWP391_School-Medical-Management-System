@@ -63,4 +63,9 @@ public class HealthProfileAdminController {
 
     }
 
+    @GetMapping("list/{studentId}")
+    public ResponseEntity<?> getStudentById(@PathVariable Integer studentId) {
+        return ResponseEntity.ok(studentService.getStudentById(studentId));
+    }
+
 }
