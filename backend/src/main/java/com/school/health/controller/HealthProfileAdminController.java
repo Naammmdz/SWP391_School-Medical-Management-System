@@ -22,11 +22,11 @@ public class HealthProfileAdminController {
     private final HealthProfileService service;
     private final StudentServiceImpl studentService;
 
-    @PostMapping("/{userId}/{studentId}/health-profile")
-    public ResponseEntity<?> createHealthProfile(@PathVariable Integer studentId, @RequestBody @Valid CreateHealthProfileDTO healthProfile, @PathVariable Integer userId) {
-        HealthProfileResponseDTO response = service.createHealthProfile(studentId, healthProfile, userId);
-        return ResponseEntity.ok(response);
-    }
+//    @PostMapping("/{userId}/{studentId}/health-profile")
+//    public ResponseEntity<?> createHealthProfile(@PathVariable Integer studentId, @RequestBody @Valid CreateHealthProfileDTO healthProfile, @PathVariable Integer userId) {
+//        HealthProfileResponseDTO response = service.createHealthProfile(studentId, healthProfile, userId);
+//        return ResponseEntity.ok(response);
+//    }
 
     @GetMapping("/health-profile/{studentId}")
     public ResponseEntity<?> getHealthProfile(@PathVariable Integer studentId) {

@@ -3,9 +3,11 @@ package com.school.health.service.impl;
 import com.school.health.dto.request.CreateHealthProfileDTO;
 import com.school.health.dto.request.StudentRequestDTO;
 import com.school.health.dto.response.StudentResponseDTO;
+import com.school.health.entity.HealthProfile;
 import com.school.health.entity.Student;
 import com.school.health.entity.User;
 import com.school.health.exception.ResourceNotFoundException;
+import com.school.health.repository.HealthProfileRepository;
 import com.school.health.repository.StudentRepository;
 import com.school.health.repository.UserRepository;
 import com.school.health.service.StudentService;
@@ -20,6 +22,7 @@ import java.util.stream.Collectors;
 public class StudentServiceImpl implements StudentService {
     private final StudentRepository studentRepository;
     private final UserRepository userRepository;
+    private final HealthProfileRepository healthProfileRepository;
     /**
      * Lấy danh sách học sinh theo parent ID
      */
@@ -99,9 +102,12 @@ public class StudentServiceImpl implements StudentService {
         student.setGender(dto.getGender());
         student.setClassName(dto.getClassName());
         student.setParent(parent); // Gán parent đã lấy ở bước 1
-
-        // 3. Lưu vào DB
         Student savedStudent = studentRepository.save(student);
+        HealthProfile healthProfile = new HealthProfile();
+        healthProfile.setStudent(student);
+        healthProfileRepository.save(healthProfile);
+        // 3. Lưu vào DB
+
 
         return List.of(mapToResponseDTO(savedStudent));
     }
