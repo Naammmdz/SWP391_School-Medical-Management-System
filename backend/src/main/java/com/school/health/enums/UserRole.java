@@ -3,7 +3,7 @@ package com.school.health.enums;
 public enum UserRole {
     PARENT,
     NURSE,
-    MANAGER,
+    PRINCIPAL,
     ADMIN
 
 }
