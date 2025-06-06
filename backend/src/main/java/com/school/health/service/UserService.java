@@ -111,6 +111,7 @@ public class UserService {
         userRepository.save(user);
     }
 
+    //Change password for user
     public void changePassword(Integer id, String oldPassword, String newPassword) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
@@ -122,4 +123,5 @@ public class UserService {
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         userRepository.save(user);
     }
+
 }

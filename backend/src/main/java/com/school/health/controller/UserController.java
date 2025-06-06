@@ -1,6 +1,7 @@
 package com.school.health.controller;
 
 
+import com.school.health.dto.request.ChangePasswordRequest;
 import com.school.health.dto.request.RegisterRequest;
 import com.school.health.dto.request.UserUpdateRequest;
 import com.school.health.dto.response.BulkImportResponse;
@@ -111,7 +112,27 @@ public class UserController {
     }
 
     // 6. User đổi mật khẩu của mình
-
+    @PutMapping("/me/change-password")
+    public ResponseEntity<?> changePassword(
+            Authentication authentication,
+            @RequestBody @Valid ChangePasswordRequest changePasswordRequest
+    ) {
+        UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
+        Integer userId = userPrincipal.getId();
+        try {
+            userService.changePassword(
+                    userId,
+                    changePasswordRequest.getOldPassword(),
+                    changePasswordRequest.getNewPassword()
+            );
+            return ResponseEntity.ok(Map.of("message", "Đổi mật khẩu thành công!"));
+        } catch (Exception e) {
+            // It's good practice to log the exception
+            // e.printStackTrace(); // Consider using a proper logger
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
 
     // 7. Admin tải file Excel để template import user
     @GetMapping("/admin/template")
