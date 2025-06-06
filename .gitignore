@@ -83,3 +83,4 @@ Desktop.ini
 *.log
 *.tmp
 *.temp" > .gitignore
+.early.coverage

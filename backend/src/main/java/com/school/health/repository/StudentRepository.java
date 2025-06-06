@@ -13,7 +13,8 @@ import org.springframework.stereotype.Repository;
 public interface StudentRepository extends JpaRepository<Student, Integer> {
 
     // Tìm học sinh theo parent ID
-    List<Student> findByParentId(Integer parentId);
+    List<Student> findByParentUserId(Integer parentUserId);
+
 
     // Tìm học sinh theo lớp
     List<Student> findByClassName(String className);
@@ -26,6 +27,6 @@ public interface StudentRepository extends JpaRepository<Student, Integer> {
     List<Student> findStudentsWithoutHealthProfile();
 
     // Tìm học sinh theo parent ID và có hồ sơ sức khỏe
-    @Query("SELECT s FROM Student s WHERE s.parentId = :parentId AND s.healthProfile IS NOT NULL")
+    @Query("SELECT s FROM Student s WHERE s.parent.userId = :parentId AND s.healthProfile IS NOT NULL")
     List<Student> findStudentsWithHealthProfileByParentId(@Param("parentId") Integer parentId);
 }

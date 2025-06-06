@@ -1,5 +1,8 @@
 package com.school.health.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -35,19 +38,16 @@ public class Student {
     @Column(name = "ClassName", length = 50)
     private String className;
 
-    @Column(name = "ParentId")
-    private Integer parentId;
+    // Parent
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ParentId", nullable = false)
+    private User parent;
+
+    @OneToOne(mappedBy = "student", cascade = CascadeType.ALL)
+    private HealthProfile healthProfile;
 
     @CreationTimestamp
     @Column(name = "CreatedAt")
     private LocalDateTime createdAt;
 
-    // Relationship với HealthProfile
-    @OneToOne(mappedBy = "student", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private HealthProfile healthProfile;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
 }

@@ -14,6 +14,7 @@ public class HealthProfileResponseDTO {
     private Integer studentId;
     private String studentName;
     private String studentClass;
+    private String studentGender;
     private String allergies;
     private String chronicDiseases;
     private String treatmentHistory;
