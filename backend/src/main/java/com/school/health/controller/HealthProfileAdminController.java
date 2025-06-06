@@ -22,11 +22,11 @@ public class HealthProfileAdminController {
     private final HealthProfileService service;
     private final StudentServiceImpl studentService;
 
-    @PostMapping("/{userId}/{studentId}/health-profile")
-    public ResponseEntity<?> createHealthProfile(@PathVariable Integer studentId, @RequestBody @Valid CreateHealthProfileDTO healthProfile, @PathVariable Integer userId) {
-        HealthProfileResponseDTO response = service.createHealthProfile(studentId, healthProfile, userId);
-        return ResponseEntity.ok(response);
-    }
+//    @PostMapping("/{userId}/{studentId}/health-profile")
+//    public ResponseEntity<?> createHealthProfile(@PathVariable Integer studentId, @RequestBody @Valid CreateHealthProfileDTO healthProfile, @PathVariable Integer userId) {
+//        HealthProfileResponseDTO response = service.createHealthProfile(studentId, healthProfile, userId);
+//        return ResponseEntity.ok(response);
+//    }
 
     @GetMapping("/health-profile/{studentId}")
     public ResponseEntity<?> getHealthProfile(@PathVariable Integer studentId) {
@@ -61,6 +61,22 @@ public class HealthProfileAdminController {
         // Hoặc nếu bạn muốn trả về health profiles mặc định ở đây:
         // return ResponseEntity.ok(service.getAllHealthProfiles()); // Bạn cần tạo method này trong service
 
+    }
+
+    @GetMapping("list/{studentId}")
+    public ResponseEntity<?> getStudentById(@PathVariable Integer studentId) {
+        return ResponseEntity.ok(studentService.getStudentById(studentId));
+    }
+
+    @PutMapping("/{studentId}")
+    public ResponseEntity<?> updateStudent(@PathVariable Integer studentId, @RequestBody @Valid StudentRequestDTO studentRequest) {
+        return ResponseEntity.ok(studentService.updateStudent(studentId, studentRequest));
+    }
+
+    @DeleteMapping("/{studentId}")
+    public ResponseEntity<?> deleteStudent(@PathVariable Integer studentId) {
+        studentService.deleteStudent(studentId);
+        return ResponseEntity.ok("Xóa học sinh thành công");
     }
 
 }
