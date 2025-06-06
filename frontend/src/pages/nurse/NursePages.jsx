@@ -17,8 +17,33 @@ export default function NursePages() {
   const [schoolInfo, setSchoolInfo] = useState({});
 
   useEffect(() => {
-    // Fetch health resources from API
 
+    // Fetch health resources from API
+   const fetchHealthResources = async () => {
+     try {
+       const data = await HomePageService.getHealthResources();
+       setHealthResources(data);
+     } catch (error) {
+       console.error("Error fetching health resources:", error);
+       // Fallback to mock data if API fails
+       const mockData = [
+         {
+           id: 1,
+           name: "Hoạt động kiểm tra sức khỏe định kỳ",
+           description: "Theo dõi tình trạng sức khỏe học sinh qua từng thời kỳ.",
+           thumbnail: "https://example.com/checkup.jpg"
+         },
+         {
+           id: 2,
+           name: "Quản lý tiêm chủng",
+           description: "Lưu trữ và thông báo lịch tiêm chủng cho học sinh.",
+           thumbnail: "https://example.com/vaccine.jpg"
+         }
+       ];
+       setHealthResources(mockData);
+     }
+
+   }
 
     // Fetch blog posts from API
     const fetchBlogPosts = async () => {
@@ -82,7 +107,7 @@ export default function NursePages() {
     const fetchAllData = async () => {
       setIsLoading(true);
       await Promise.all([
-        // fetchHealthResources(),
+        fetchHealthResources(),
         fetchBlogPosts(),
         fetchSchoolInfo()
       ]);

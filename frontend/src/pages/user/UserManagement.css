@@ -1,0 +1,144 @@
+/* User Management styles */
+.user-management-page {
+    padding: 2rem;
+    background: #f8fafc;
+}
+
+/* Page title */
+.user-management-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 1.5rem;
+}
+
+/* Add user button */
+.add-user-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    padding: 0.625rem 1rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    margin-bottom: 1.5rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.add-user-btn:hover {
+    background-color: #1d4ed8;
+}
+
+/* Table styles */
+.user-table {
+    background: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px #00000011;
+    overflow: hidden;
+}
+
+.user-table thead th {
+    color: #64748b;
+    font-weight: 500;
+    font-size: 0.95rem;
+    background: #f1f5f9;
+    padding: 1rem;
+}
+
+.user-table td, .user-table th {
+    padding: 0.9rem 1rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.user-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* Role badges */
+.role-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.83rem;
+    font-weight: 500;
+    background: #e0e7ff;
+    color: #3730a3;
+}
+
+.role-badge.ROLE_ADMIN {
+    background: #dbeafe;
+    color: #2563eb;
+}
+.role-badge.ROLE_NURSE {
+    background: #fffbeb;
+    color: #d97706;
+}
+.role-badge.ROLE_PARENT {
+    background: #f0fdf4;
+    color: #15803d;
+}
+
+/* Action buttons */
+.action-btn {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 0.3rem 0.7rem;
+    border-radius: 0.25rem;
+    color: #2563eb;
+    transition: background 0.18s;
+    font-weight: 500;
+}
+
+.action-btn:hover {
+    background-color: #eff6ff;
+}
+
+.action-btn.delete {
+    color: #ef4444;
+}
+
+.action-btn.delete:hover {
+    background-color: #fee2e2;
+}
+
+/* Modal Styles */
+.user-modal {
+    max-width: 420px;
+}
+
+.user-modal .ant-modal-content {
+    border-radius: 0.5rem;
+}
+
+.user-modal .ant-modal-title {
+    font-weight: 600;
+    color: #1d3557;
+}
+
+.user-modal .ant-form-item-label > label {
+    font-weight: 500;
+    color: #475569;
+}
+
+.user-modal .ant-form-item {
+    margin-bottom: 1.25rem;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .user-management-page {
+        padding: 1rem 0.2rem;
+    }
+    .user-table thead, .user-table tr, .user-table td, .user-table th {
+        padding: 0.5rem;
+    }
+    .add-user-btn {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.95rem;
+    }
+}

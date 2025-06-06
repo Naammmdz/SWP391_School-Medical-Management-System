@@ -139,6 +139,7 @@ const Header = () => {
           </li>
           <li><Link to="/quanlythuoc" onClick={closeDropdowns}>Quản Lý Thuốc</Link></li>
           <li><Link to="/donthuoc" onClick={closeDropdowns}>Đơn Thuốc</Link></li>
+          <li><Link to="/quanlynguoidung" onClick={closeDropdowns}>Quản lý người dùng</Link></li>
           {!user ? (
             <li><Link to="/login" onClick={closeDropdowns}>Đăng nhập</Link></li>
           ) : (
