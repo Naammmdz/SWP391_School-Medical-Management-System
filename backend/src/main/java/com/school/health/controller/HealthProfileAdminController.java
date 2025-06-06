@@ -1,10 +1,12 @@
 package com.school.health.controller;
 
 import com.school.health.dto.request.CreateHealthProfileDTO;
+import com.school.health.dto.request.StudentRequestDTO;
 import com.school.health.dto.request.HealthProfileFilterRequest;
 import com.school.health.dto.request.UpdateHealthProfileDTO;
 import com.school.health.dto.response.HealthProfileResponseDTO;
 import com.school.health.service.HealthProfileService;
+import com.school.health.service.impl.StudentServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 @Validated
 public class HealthProfileAdminController {
     private final HealthProfileService service;
+    private final StudentServiceImpl studentService;
 
     @PostMapping("/{userId}/{studentId}/health-profile")
     public ResponseEntity<?> createHealthProfile(@PathVariable Integer studentId, @RequestBody @Valid CreateHealthProfileDTO healthProfile, @PathVariable Integer userId) {
@@ -42,6 +45,22 @@ public class HealthProfileAdminController {
           @RequestBody @Valid HealthProfileFilterRequest filterRequest
     ) {
         return ResponseEntity.ok(service.filterHealthProfiles(filterRequest));
+    }
+
+    @PostMapping("/create-students")
+    public ResponseEntity<?> createStudents(@RequestBody @Valid StudentRequestDTO studentRequest) {
+        return ResponseEntity.ok(studentService.createStudent(studentRequest));
+    }
+
+    // Bên trong HealthProfileAdminController hoặc một StudentController mới
+
+    @GetMapping("/")
+    public ResponseEntity<?> getAllStudents() {
+        // Giả sử studentService có phương thức để lấy tất cả student
+         return ResponseEntity.ok(studentService.getAllStudents());
+        // Hoặc nếu bạn muốn trả về health profiles mặc định ở đây:
+        // return ResponseEntity.ok(service.getAllHealthProfiles()); // Bạn cần tạo method này trong service
+
     }
 
 }

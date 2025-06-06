@@ -1,9 +1,13 @@
 package com.school.health.service.impl;
 
+import com.school.health.dto.request.CreateHealthProfileDTO;
+import com.school.health.dto.request.StudentRequestDTO;
 import com.school.health.dto.response.StudentResponseDTO;
 import com.school.health.entity.Student;
+import com.school.health.entity.User;
 import com.school.health.exception.ResourceNotFoundException;
 import com.school.health.repository.StudentRepository;
+import com.school.health.repository.UserRepository;
 import com.school.health.service.StudentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,9 +17,9 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class StudentControllerImpl implements StudentService {
+public class StudentServiceImpl implements StudentService {
     private final StudentRepository studentRepository;
-
+    private final UserRepository userRepository;
     /**
      * Lấy danh sách học sinh theo parent ID
      */
@@ -42,7 +46,6 @@ public class StudentControllerImpl implements StudentService {
      */
     public List<StudentResponseDTO> getStudentsWithoutHealthProfile() {
         List<Student> students = studentRepository.findStudentsWithoutHealthProfile();
-
         return students.stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
@@ -82,5 +85,31 @@ public class StudentControllerImpl implements StudentService {
         dto.setCreatedAt(student.getCreatedAt());
         dto.setHasHealthProfile(student.getHealthProfile() != null);
         return dto;
+    }
+
+    public List<StudentResponseDTO> createStudent(StudentRequestDTO dto) {
+        // 1. Tìm phụ huynh theo parentId
+        User parent = userRepository.findById(dto.getParentId())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy phụ huynh với ID: " + dto.getParentId()));
+
+        // 2. Tạo mới student và gán parent
+        Student student = new Student();
+        student.setFullName(dto.getFullName());
+        student.setDob(dto.getYob());
+        student.setGender(dto.getGender());
+        student.setClassName(dto.getClassName());
+        student.setParent(parent); // Gán parent đã lấy ở bước 1
+
+        // 3. Lưu vào DB
+        Student savedStudent = studentRepository.save(student);
+
+        return List.of(mapToResponseDTO(savedStudent));
+    }
+
+    public List<StudentResponseDTO> getAllStudents() {
+        List<Student> students = studentRepository.findAll();
+        return students.stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
     }
 }
