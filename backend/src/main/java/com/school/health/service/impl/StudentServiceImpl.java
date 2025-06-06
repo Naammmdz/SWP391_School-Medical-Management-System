@@ -118,4 +118,42 @@ public class StudentServiceImpl implements StudentService {
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
+
+    public StudentResponseDTO updateStudent(Integer studentId, StudentRequestDTO dto) {
+        // Tìm học sinh theo ID
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy học sinh với ID: " + studentId));
+        // Cập nhật thông tin học sinh
+        if (dto.getFullName() != null) {
+            student.setFullName(dto.getFullName());
+        }
+        if (dto.getYob() != null) {
+            student.setDob(dto.getYob());
+        }
+        if (dto.getGender() != null) {
+            student.setGender(dto.getGender());
+        }
+        if (dto.getClassName() != null) {
+            student.setClassName(dto.getClassName());
+        }
+        if (dto.getParentId() != null) {
+            User parent = userRepository.findById(dto.getParentId())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy phụ huynh với ID: " + dto.getParentId()));
+            student.setParent(parent);
+        }
+        // Lưu vào DB
+        Student updatedStudent = studentRepository.save(student);
+        return mapToResponseDTO(updatedStudent);
+    }
+
+    public void deleteStudent(Integer studentId) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy học sinh với ID: " + studentId));
+        // Xóa hồ sơ sức khỏe nếu có
+        if (student.getHealthProfile() != null) {
+            healthProfileRepository.delete(student.getHealthProfile());
+        }
+        // Xóa học sinh
+        studentRepository.delete(student);
+    }
 }

@@ -68,4 +68,15 @@ public class HealthProfileAdminController {
         return ResponseEntity.ok(studentService.getStudentById(studentId));
     }
 
+    @PutMapping("/{studentId}")
+    public ResponseEntity<?> updateStudent(@PathVariable Integer studentId, @RequestBody @Valid StudentRequestDTO studentRequest) {
+        return ResponseEntity.ok(studentService.updateStudent(studentId, studentRequest));
+    }
+
+    @DeleteMapping("/{studentId}")
+    public ResponseEntity<?> deleteStudent(@PathVariable Integer studentId) {
+        studentService.deleteStudent(studentId);
+        return ResponseEntity.ok("Xóa học sinh thành công");
+    }
+
 }
