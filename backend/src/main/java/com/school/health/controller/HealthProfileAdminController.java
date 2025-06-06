@@ -1,6 +1,7 @@
 package com.school.health.controller;
 
 import com.school.health.dto.request.CreateHealthProfileDTO;
+import com.school.health.dto.request.HealthProfileFilterRequest;
 import com.school.health.dto.request.UpdateHealthProfileDTO;
 import com.school.health.dto.response.HealthProfileResponseDTO;
 import com.school.health.service.HealthProfileService;
@@ -35,4 +36,12 @@ public class HealthProfileAdminController {
         HealthProfileResponseDTO response = service.updateHealthProfile(studentId, healthProfile, userId);
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/filter")
+    public ResponseEntity<?> filterHealthProfiles(
+          @RequestBody @Valid HealthProfileFilterRequest filterRequest
+    ) {
+        return ResponseEntity.ok(service.filterHealthProfiles(filterRequest));
+    }
+
 }

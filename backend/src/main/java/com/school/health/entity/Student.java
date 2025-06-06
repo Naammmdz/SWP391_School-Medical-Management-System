@@ -1,5 +1,8 @@
 package com.school.health.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -40,7 +43,7 @@ public class Student {
     @JoinColumn(name = "ParentId", nullable = false)
     private User parent;
 
-    @OneToOne(mappedBy = "student", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "student", cascade = CascadeType.ALL)
     private HealthProfile healthProfile;
 
     @CreationTimestamp

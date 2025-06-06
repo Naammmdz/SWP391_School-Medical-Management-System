@@ -1,5 +1,7 @@
 package com.school.health.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.school.health.enums.UserRole;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
@@ -46,7 +48,7 @@ public class User {
     @Column(name = "IsActive")
     private Boolean isActive = true;
 
-    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
     private List<Student> students;
 
 

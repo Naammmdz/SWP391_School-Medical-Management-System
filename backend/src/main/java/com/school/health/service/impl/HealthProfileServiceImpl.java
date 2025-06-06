@@ -1,6 +1,7 @@
 package com.school.health.service.impl;
 
 import com.school.health.dto.request.CreateHealthProfileDTO;
+import com.school.health.dto.request.HealthProfileFilterRequest;
 import com.school.health.dto.request.UpdateHealthProfileDTO;
 import com.school.health.entity.*;
 import com.school.health.dto.response.HealthProfileResponseDTO;
@@ -9,8 +10,10 @@ import com.school.health.exception.ResourceNotFoundException;
 import com.school.health.repository.*;
 import com.school.health.service.HealthProfileService;
 import com.school.health.service.MailService;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
@@ -18,16 +21,17 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class HealthProfileServiceImpl implements HealthProfileService{
+public class HealthProfileServiceImpl implements HealthProfileService {
     private final HealthProfileRepository healthProfileRepository;
     private final StudentRepository studentRepository;
     private final MailService mailService;
 
     @Override
-    public HealthProfileResponseDTO createHealthProfile(Integer studentId,CreateHealthProfileDTO dto,Integer userId) {
+    public HealthProfileResponseDTO createHealthProfile(Integer studentId, CreateHealthProfileDTO dto, Integer userId) {
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy học sinh với ID: " + studentId));
         // Kiểm tra học sinh đã có hồ sơ sức khỏe chưa
@@ -36,7 +40,7 @@ public class HealthProfileServiceImpl implements HealthProfileService{
         }
         HealthProfile healthProfile = mapToEntity(dto, student);
         HealthProfile savedProfile = healthProfileRepository.save(healthProfile);
-        if(userId != null) {
+        if (userId != null) {
             User user = new User();
             user.setUserId(userId);
             healthProfile.setUpdatedBy(user);
@@ -54,7 +58,7 @@ public class HealthProfileServiceImpl implements HealthProfileService{
 
         // Cập nhật thông tin (chỉ cập nhật các field không null)
         updateEntityFromDTO(existingProfile, dto);
-        if(userId != null) {
+        if (userId != null) {
             User user = new User();
             user.setUserId(userId);
             existingProfile.setUpdatedBy(user);
@@ -166,6 +170,46 @@ public class HealthProfileServiceImpl implements HealthProfileService{
         entity.setUpdatedAt(LocalDateTime.now());
     }
 
+
+
+    @Override
+    public List<HealthProfileResponseDTO> getAllHealthProfiles() {
+        List<HealthProfile> profiles = healthProfileRepository.findAll();
+        return profiles.stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<HealthProfileResponseDTO> filterHealthProfiles(HealthProfileFilterRequest filterRequest) {
+        Specification<HealthProfile> specification = (root, query, cb) -> {
+            Predicate predicate = cb.conjunction();
+
+            if (filterRequest.getId() != null) {
+                predicate = cb.and(predicate, cb.equal(root.get("profileId"), filterRequest.getId()));
+            }
+            if (filterRequest.getName() != null) {
+                predicate = cb.and(predicate, cb.like(cb.lower(root.get("student").get("fullName")),
+                        "%" + filterRequest.getName().toLowerCase() + "%"));
+            }
+            if (filterRequest.getClassName() != null) {
+                predicate = cb.and(predicate, cb.equal(cb.lower(root.get("student").get("className")),
+                        filterRequest.getClassName().toLowerCase()));
+            }
+            if (filterRequest.getGender() != null) {
+                predicate = cb.and(predicate, cb.equal(cb.lower(root.get("student").get("gender")),
+                        filterRequest.getGender().toLowerCase()));
+            }
+
+            return predicate;
+
+
+        };
+        List<HealthProfile> healthProfiles = healthProfileRepository.findAll(specification);
+        return healthProfiles.stream()
+                .map(this::mapToResponseDTO) // Convert entity to DTO
+                .collect(Collectors.toList());
+}
     @Override
     public HealthProfileResponseDTO mapToResponseDTO(HealthProfile profile) {
         HealthProfileResponseDTO dto = new HealthProfileResponseDTO();
@@ -173,6 +217,7 @@ public class HealthProfileServiceImpl implements HealthProfileService{
         dto.setStudentId(profile.getStudent().getStudentId());
         dto.setStudentName(profile.getStudent().getFullName());
         dto.setStudentClass(profile.getStudent().getClassName());
+        dto.setStudentGender(profile.getStudent().getGender());
         dto.setAllergies(profile.getAllergies());
         dto.setChronicDiseases(profile.getChronicDiseases());
         dto.setTreatmentHistory(profile.getTreatmentHistory());
@@ -185,12 +230,6 @@ public class HealthProfileServiceImpl implements HealthProfileService{
         dto.setUpdatedAt(profile.getUpdatedAt());
         return dto;
     }
-
-    @Override
-    public List<HealthProfileResponseDTO> getAllHealthProfiles() {
-    List<HealthProfile> profiles = healthProfileRepository.findAll();
-        return profiles.stream()
-                .map(this::mapToResponseDTO)
-                .collect(Collectors.toList());
-    }
 }
+
+
