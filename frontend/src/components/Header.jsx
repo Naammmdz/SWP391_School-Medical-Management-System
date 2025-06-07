@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Header.css';
 import { Bell, User, Menu, X } from 'lucide-react';
@@ -11,10 +11,14 @@ const Header = () => {
   const [medicalEventsOpen, setMedicalEventsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
-  // Thông tin user từ localStorage
   const [user, setUser] = useState(null);
 
+  // refs cho dropdown
+  const studentHealthRef = useRef(null);
+  const medicalEventsRef = useRef(null);
+
   useEffect(() => {
+    // Lấy user từ localStorage
     const userData = localStorage.getItem('user');
     try {
       if (userData && userData !== "undefined" && userData !== "null") {
@@ -24,8 +28,26 @@ const Header = () => {
       }
     } catch (err) {
       setUser(null);
-      localStorage.removeItem('user'); // Xóa dữ liệu lỗi để tránh lặp lại lỗi
+      localStorage.removeItem('user');
     }
+
+    // Đóng dropdown khi click ra ngoài
+    const handleClickOutside = (event) => {
+      if (
+        studentHealthRef.current &&
+        !studentHealthRef.current.contains(event.target)
+      ) {
+        setStudentHealthOpen(false);
+      }
+      if (
+        medicalEventsRef.current &&
+        !medicalEventsRef.current.contains(event.target)
+      ) {
+        setMedicalEventsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   // Handle window resize
@@ -33,7 +55,6 @@ const Header = () => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
     };
-
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -42,25 +63,11 @@ const Header = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  // Close dropdowns on nav click (for mobile UX)
+  // Đóng dropdown khi click link
   const closeDropdowns = () => {
     setStudentHealthOpen(false);
     setMedicalEventsOpen(false);
     setIsMenuOpen(false);
-  };
-
-  const handleDropdownToggle = (dropdownType) => {
-    if (isMobile) {
-      // On mobile, toggle the dropdown
-      if (dropdownType === 'studentHealth') {
-        setStudentHealthOpen(!studentHealthOpen);
-        setMedicalEventsOpen(false);
-      } else {
-        setMedicalEventsOpen(!medicalEventsOpen);
-        setStudentHealthOpen(false);
-      }
-    }
-    // On desktop, do nothing as it's handled by onMouseEnter/onMouseLeave
   };
 
   // Xử lý đăng xuất
@@ -93,50 +100,63 @@ const Header = () => {
       <nav className={`nav-menu ${isMenuOpen ? 'active' : ''}`}>
         <ul className="nav-links">
           <li><Link to={homeLink} onClick={closeDropdowns}>Trang Chủ</Link></li>
-          <li className="dropdown"
-            onMouseEnter={() => !isMobile && setStudentHealthOpen(true)}
-            onMouseLeave={() => !isMobile && setStudentHealthOpen(false)}
-          >
+          
+          {/* Sức khỏe học sinh */}
+          <li className="dropdown" ref={studentHealthRef}>
             <button
               className="nav-dropdown-btn"
               aria-haspopup="true"
               aria-expanded={studentHealthOpen}
-              onClick={() => handleDropdownToggle('studentHealth')}
+              onClick={() => setStudentHealthOpen((prev) => !prev)}
               type="button"
+              style={{ cursor: 'pointer', outline: 'none' }}
             >
               Sức khỏe học sinh
-              <span className="dropdown-arrow">▼</span>
+              <span className="dropdown-arrow" style={{ marginLeft: 6 }}>▼</span>
             </button>
             {studentHealthOpen && (
-              <ul className="dropdown-menu">
-                <li><Link to="/hososuckhoe" onClick={closeDropdowns}>Hồ Sơ Sức Khỏe</Link></li>
-                <li><Link to="/khaibaothuoc" onClick={closeDropdowns}>Khai Báo Thuốc</Link></li>
-              </ul>
+              <div className="user-dropdown-menu" tabIndex={0}>
+                <Link to="/hososuckhoe" className="dropdown-item" onClick={() => setStudentHealthOpen(false)}>
+                  Hồ Sơ Sức Khỏe
+                </Link>
+                <Link to="/khaibaothuoc" className="dropdown-item" onClick={() => setStudentHealthOpen(false)}>
+                  Khai Báo Thuốc
+                </Link>
+              </div>
             )}
           </li>
-          <li className="dropdown"
-            onMouseEnter={() => !isMobile && setMedicalEventsOpen(true)}
-            onMouseLeave={() => !isMobile && setMedicalEventsOpen(false)}
-          >
+
+          {/* Sự kiện y tế */}
+          <li className="dropdown" ref={medicalEventsRef}>
             <button
               className="nav-dropdown-btn"
               aria-haspopup="true"
               aria-expanded={medicalEventsOpen}
-              onClick={() => handleDropdownToggle('medicalEvents')}
+              onClick={() => setMedicalEventsOpen((prev) => !prev)}
               type="button"
+              style={{ cursor: 'pointer', outline: 'none' }}
             >
               Sự kiện y tế
-              <span className="dropdown-arrow">▼</span>
+              <span className="dropdown-arrow" style={{ marginLeft: 6 }}>▼</span>
             </button>
             {medicalEventsOpen && (
-              <ul className="dropdown-menu">
-                <li><Link to="/sukienyte" onClick={closeDropdowns}>Sự Kiện Y Tế</Link></li>
-                <li><Link to="/quanlytiemchung" onClick={closeDropdowns}>Quản Lý Tiêm Chủng</Link></li>
-                <li><Link to="/thongbaotiemchung" onClick={closeDropdowns}>Thông Báo Tiêm Chủng</Link></li>
-                <li><Link to="/kiemtradinhky" onClick={closeDropdowns}>Kiểm Tra Định Kỳ</Link></li>
-              </ul>
+              <div className="user-dropdown-menu" tabIndex={0}>
+                <Link to="/sukienyte" className="dropdown-item" onClick={() => setMedicalEventsOpen(false)}>
+                  Sự Kiện Y Tế
+                </Link>
+                <Link to="/quanlytiemchung" className="dropdown-item" onClick={() => setMedicalEventsOpen(false)}>
+                  Quản Lý Tiêm Chủng
+                </Link>
+                <Link to="/thongbaotiemchung" className="dropdown-item" onClick={() => setMedicalEventsOpen(false)}>
+                  Thông Báo Tiêm Chủng
+                </Link>
+                <Link to="/kiemtradinhky" className="dropdown-item" onClick={() => setMedicalEventsOpen(false)}>
+                  Kiểm Tra Định Kỳ
+                </Link>
+              </div>
             )}
           </li>
+
           <li><Link to="/quanlythuoc" onClick={closeDropdowns}>Quản Lý Thuốc</Link></li>
           <li><Link to="/donthuoc" onClick={closeDropdowns}>Đơn Thuốc</Link></li>
           {!user ? (
@@ -168,13 +188,16 @@ const Header = () => {
                 Xin chào, {user ? (user.fullName || user.email) : "Khách"}
               </span>
               <span className="user-role">
-                {user ? (user.userRole || user.role) : ""}
+                {user ? (user.userRole || user.role) : " "}
               </span>
               <span className="dropdown-arrow" style={{ marginLeft: 6 }}>▼</span>
               {showUserDropdown && (
                 <div className="user-dropdown-menu">
                   <Link to="/capnhatthongtin" className="dropdown-item" onClick={() => setShowUserDropdown(false)}>
                     <span role="img" aria-label="profile">👤</span> Cập nhật thông tin
+                  </Link>
+                  <Link to="/doimatkhau" className="dropdown-item" onClick={() => setShowUserDropdown(false)}>
+                    <span role="img" aria-label="password">🔒</span> Đổi mật khẩu
                   </Link>
                   <button className="dropdown-item" type="button" onClick={() => { setShowUserDropdown(false); alert('Liên hệ hỗ trợ qua email hoặc hotline!'); }}>
                     <span role="img" aria-label="help">❓</span> Trợ giúp và hỗ trợ

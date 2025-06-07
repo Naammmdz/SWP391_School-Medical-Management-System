@@ -20,9 +20,13 @@ const userService = {
     login: (user) => {
         return axios.post(API_URL + '/login', user);
     },
-updateUserByUser: (user, config) => {
+    updateUserByUser: (user, config) => {
     return axios.put(USER_URL + `/user/me`, user, config);
-}
+    },
+    createStudent: (student, config) => {
+    return axios.post(USER_URL+`/admin/students/create-students`, student, config);
+        
+    }
   
     
     

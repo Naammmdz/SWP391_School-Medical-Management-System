@@ -1,12 +1,15 @@
 package com.school.health.entity;
 
-import com.school.health.enums.Role;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.school.health.enums.UserRole;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Table(name = "Users")
@@ -36,7 +39,7 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "Role", length = 20, nullable = false)
-    private Role role;
+    private UserRole role;
 
     @CreationTimestamp
     @Column(name = "CreatedAT")
@@ -44,6 +47,10 @@ public class User {
 
     @Column(name = "IsActive")
     private Boolean isActive = true;
+
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
+    private List<Student> students;
+
 
     @PrePersist
     protected void onCreate() {

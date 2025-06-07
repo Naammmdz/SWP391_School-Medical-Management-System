@@ -141,6 +141,7 @@ export default function HomePage() {
         textAlign: "center",
         padding: "120px 0",
         position: "relative",
+        marginTop: "10px",
       }}
 >
   <div className="hero-content" style={{ position: "relative", zIndex: 1 }}>

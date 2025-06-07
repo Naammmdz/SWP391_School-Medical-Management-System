@@ -1,6 +1,7 @@
 package com.school.health.service;
 
 import com.school.health.dto.request.CreateHealthProfileDTO;
+import com.school.health.dto.request.HealthProfileFilterRequest;
 import com.school.health.dto.request.UpdateHealthProfileDTO;
 import com.school.health.dto.response.HealthProfileResponseDTO;
 import com.school.health.entity.HealthProfile;
@@ -20,4 +21,6 @@ public interface HealthProfileService {
     HealthProfile mapToEntity(CreateHealthProfileDTO dto, Student student);
     void updateEntityFromDTO(HealthProfile entity, UpdateHealthProfileDTO dto);
     HealthProfileResponseDTO mapToResponseDTO(HealthProfile profile);
+    List<HealthProfileResponseDTO> getAllHealthProfiles();
+    List<HealthProfileResponseDTO> filterHealthProfiles(HealthProfileFilterRequest filterRequest);
 }

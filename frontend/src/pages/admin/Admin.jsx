@@ -22,7 +22,14 @@ const Admin = () => {
     isActive: '',
     password: ''
   });
-
+  const [showStudentForm, setShowStudentForm] = useState(false);
+  const [studentForm, setStudentForm] = useState({
+    fullName: '',
+    yob: '',
+    gender: '',
+    className: '',
+    parentId: ''
+  });
   // Available roles
   const roles = [
     { value: 'ADMIN', label: 'Admin' },
@@ -34,7 +41,10 @@ const Admin = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
-
+  const handleStudentInputChange = (e) => {
+    const { name, value } = e.target;
+    setStudentForm({ ...studentForm, [name]: value });
+  };
   // Fetch users from API
   const fetchUsers = async () => {
     setLoading(true);
@@ -52,7 +62,61 @@ const Admin = () => {
     }
     setLoading(false);
   };
+  // tạo mới học sinh
+  const createStudent = async (userData) => {
+    try {
+      const token = localStorage.getItem('token');
+      // Tìm parentId từ danh sách users (role là PARENT)
+      const parentUser = users.find(u => u.role === 'PARENT' && u.email === userData.parentEmail);
+      if (!parentUser) {
+        setError('Không tìm thấy phụ huynh phù hợp!');
+        return;
+      }
+      const createRequest = {
+        fullName: userData.fullName,
+        yob: userData.yob, // ví dụ: "2025-03-03"
+        gender: userData.gender,
+        className: userData.className,
+        parentId: parentUser.id
+      };
 
+      await userService.createStudent(createRequest, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      await fetchUsers();
+      setSuccessMessage('Tạo học sinh thành công!');
+      setTimeout(() => setSuccessMessage(null), 2000);
+    } catch (err) {
+      setError('Tạo học sinh thất bại!');
+    }
+  };
+
+
+  const handleStudentSubmit = async (e) => {
+    e.preventDefault();
+    // Tìm parent theo id
+    const parentUser = users.find(u => u.role === 'PARENT' && String(u.id) === String(studentForm.parentId));
+    if (!parentUser) {
+      setError('Vui lòng chọn phụ huynh hợp lệ!');
+      return;
+    }
+    await createStudent({
+      ...studentForm,
+      parentEmail: parentUser.email // để hàm createStudent tìm đúng parentId
+    });
+    setShowStudentForm(false);
+    setStudentForm({
+      fullName: '',
+      yob: '',
+      gender: '',
+      className: '',
+      parentId: ''
+    });
+  };
   // Create new user (register)
   const createUser = async (userData) => {
     try {
@@ -220,6 +284,15 @@ const Admin = () => {
           <Plus size={16} />
           Thêm mới
         </button>
+        {/* Nút tạo mới học sinh */}
+        <button
+          className="add-btn"
+          style={{ marginLeft: 8 }}
+          onClick={() => setShowStudentForm(true)}
+        >
+          <Plus size={16} />
+          Tạo mới học sinh
+        </button>
       </div>
 
       {successMessage && (
@@ -231,6 +304,96 @@ const Admin = () => {
       {error && (
         <div className="error-message">
           {error}
+        </div>
+      )}
+
+      {/* Form tạo mới học sinh */}
+      {showStudentForm && (
+        <div className="form-modal">
+          <div className="form-content">
+            <div className="form-header">
+              <h2>Tạo mới học sinh</h2>
+              <button className="close-btn" onClick={() => setShowStudentForm(false)}>
+                <X size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleStudentSubmit} className="user-form">
+              <div className="form-group">
+                <label>Họ và tên</label>
+                <input
+                  type="text"
+                  name="fullName"
+                  value={studentForm.fullName}
+                  onChange={handleStudentInputChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Ngày sinh</label>
+                <input
+                  type="date"
+                  name="yob"
+                  value={studentForm.yob}
+                  onChange={handleStudentInputChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Giới tính</label>
+                <select
+                  name="gender"
+                  value={studentForm.gender}
+                  onChange={handleStudentInputChange}
+                  required
+                >
+                  <option value="">Chọn giới tính</option>
+                  <option value="Nam">Nam</option>
+                  <option value="Nữ">Nữ</option>
+                  <option value="Khác">Khác</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Lớp</label>
+                <input
+                  type="text"
+                  name="className"
+                  value={studentForm.className}
+                  onChange={handleStudentInputChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Phụ huynh</label>
+                <select
+                  name="parentId"
+                  value={studentForm.parentId}
+                  onChange={handleStudentInputChange}
+                  required
+                >
+                  <option value="">Phụ huynh</option>
+                  {users
+                    .filter(u => u.role === 'PARENT')
+                    .map(parent => (
+                      <option key={parent.id} value={parent.id}>
+                        {parent.fullName} 
+                      </option>
+                    ))}
+                </select>
+              </div>
+              <div className="form-actions">
+                <button
+                  type="button"
+                  className="cancel-btn"
+                  onClick={() => setShowStudentForm(false)}
+                >
+                  <X size={16} /> Hủy
+                </button>
+                <button type="submit" className="submit-btn">
+                  <Plus size={16} /> Tạo mới
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 

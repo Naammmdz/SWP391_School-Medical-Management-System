@@ -20,6 +20,7 @@ import ParentPages from './pages/parent/ParentPages';
 import NursePages from './pages/nurse/NursePages';
 import Blog from './pages/home/Blog/Blog';
 import UpdateUser from './pages/user/User';
+import UpdatePassword from './pages/user/UpdatePassword';
 
 // Component ProtectedRoute
 const ProtectedRoute = ({ element, requiredRole }) => {
@@ -56,6 +57,9 @@ function App() {
         <Route path="/thongke" element={<DashboardPage/>}/>
         <Route path="/kiemtradinhky" element={<HealthCheck/>}/>
         <Route path="/capnhatthongtin" element={<UpdateUser/>}/>
+        <Route path="/doimatkhau" element={<UpdatePassword/>}/>
+        
+
         <Route path="/parent" element={<ProtectedRoute element={<ParentPages/>} requiredRole="ROLE_PARENT" />} />
         <Route path="/nurse" element={<ProtectedRoute element={<NursePages/>} requiredRole="ROLE_NURSE" />} />
         <Route path='/admin' element={<ProtectedRoute element={<Admin/>} requiredRole="ROLE_ADMIN" />} />
