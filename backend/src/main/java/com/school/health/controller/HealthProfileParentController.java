@@ -19,7 +19,6 @@ public class HealthProfileParentController {
     private final HealthProfileService service;
 
     @GetMapping
-
     public ResponseEntity<?> getHealthProfile(@PathVariable Integer studentId) {
         HealthProfileResponseDTO response = service.getHealthProfileByStudentId(studentId);
         return ResponseEntity.ok(response);
