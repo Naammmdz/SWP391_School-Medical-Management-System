@@ -24,7 +24,7 @@ public class MailService {
             log.info("Sending email to: {}...", toWho);
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setFrom(emailFrom, "Huy from FPT");
+            helper.setFrom(emailFrom, "Phòng CTSV FPT University");
 
             if(toWho.contains(",")) {
                 helper.setTo(InternetAddress.parse(toWho));
