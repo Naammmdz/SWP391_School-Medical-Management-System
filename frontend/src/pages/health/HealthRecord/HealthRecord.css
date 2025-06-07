@@ -265,3 +265,70 @@ textarea.form-control {
     font-size: 0.75rem;
   }
 } 
+
+/* Table health-record-table chỉnh đẹp, dễ nhìn, căn giữa, bo góc */
+.health-record-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(60,60,60,0.08);
+  margin-top: 20px;
+  font-size: 0.97rem;
+}
+
+.health-record-table th,
+.health-record-table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid #e0e0e0;
+  text-align: center;
+  vertical-align: middle;
+  word-break: break-word;
+}
+
+.health-record-table th {
+  background: #e3f2fd;
+  color: #1976d2;
+  font-weight: 700;
+  font-size: 1rem;
+  border-bottom: 2px solid #90caf9;
+}
+
+.health-record-table tr:last-child td {
+  border-bottom: none;
+}
+
+.health-record-table tr:nth-child(even) {
+  background: #f7fbff;
+}
+
+.health-record-table tr:hover {
+  background: #e3f2fd;
+  transition: background 0.2s;
+}
+
+@media (max-width: 1100px) {
+  .health-record-table th, .health-record-table td {
+    font-size: 0.92rem;
+    padding: 7px 4px;
+  }
+}
+
+@media (max-width: 700px) {
+  .health-record-table {
+    font-size: 0.85rem;
+    overflow-x: auto;
+    display: block;
+  }
+  .health-record-table thead, .health-record-table tbody, .health-record-table tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+  }
+  .health-record-table th, .health-record-table td {
+    padding: 6px 2px;
+    font-size: 0.85rem;
+  }
+}

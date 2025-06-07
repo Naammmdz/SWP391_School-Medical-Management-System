@@ -5,7 +5,7 @@
   top: 0;
   left: 0;
   right: 0;
-  z-index: 1000;
+  z-index: 2000;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -17,6 +17,12 @@
   display: flex;
   align-items: center;
   flex: 1;
+  position: relative;
+  z-index: 2001;
+}
+
+.nav-menu.active {
+  z-index: 2002;
 }
 
 .nav-links {
@@ -50,6 +56,7 @@
 /* Dropdown styles for nav */
 .dropdown {
   position: relative;
+  z-index: 2003;
 }
 
 .nav-dropdown-btn {
@@ -83,46 +90,47 @@
   transform: rotate(180deg);
 }
 
-.dropdown-menu {
+/* Sửa lại user-dropdown-menu để không bị che và click được */
+.user-dropdown-menu {
   position: absolute;
-  top: 110%;
-  left: 0;
-  min-width: 180px;
+  right: 0;
+  top: 120%;
   background: #fff;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-  border-radius: 0.5em;
-  padding: 0.5em 0;
-  z-index: 100;
+  color: #222;
+  border-radius: 8px;
+  min-width: 220px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+  z-index: 3000;
+  padding: 0.5rem 0;
+}
+
+.dropdown-item {
   display: flex;
-  flex-direction: column;
-  gap: 0.2em;
-}
-
-.dropdown-menu li {
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: none;
+  border: none;
+  color: #0c0b0b;
   width: 100%;
-}
-
-.dropdown-menu a {
-  display: block;
-  width: 100%;
-  padding: 0.5rem 1rem;
-  color: #1e293b;
-  text-decoration: none;
-  border-radius: 0.25em;
+  text-align: left;
+  cursor: pointer;
   font-size: 1rem;
-  font-weight: 500;
-  transition: background 0.2s, color 0.2s;
+  text-decoration: none;
+  transition: background 0.2s;
 }
 
-.dropdown-menu a:hover {
-  background: #f0fdf4;
-  color: #15803d;
+.dropdown-item:hover {
+  background: #22aea7;
+  color: #fff;
 }
 
 .header-right {
   display: flex;
   align-items: center;
   gap: 1.5rem;
+  position: relative;
+  z-index: 2002;
 }
 
 .user-controls {
@@ -140,6 +148,7 @@
   border-radius: 50%;
   transition: all 0.2s;
   position: relative;
+  z-index: 2003;
 }
 
 .notifications-btn:hover {
@@ -168,6 +177,7 @@
   border-radius: 0.5rem;
   transition: background-color 0.2s;
   position: relative;
+  z-index: 2003;
 }
 
 .user-profile:hover {
@@ -214,39 +224,6 @@
   margin-left: 6px;
 }
 
-.user-dropdown-menu {
-  position: absolute;
-  right: 0;
-  top: 120%;
-  background: #ebeef3;
-  color: #fff;
-  border-radius: 8px;
-  min-width: 220px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
-  z-index: 100;
-  padding: 0.5rem 0;
-}
-
-.dropdown-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
-  background: none;
-  border: none;
-  color: #0c0b0b;
-  width: 100%;
-  text-align: left;
-  cursor: pointer;
-  font-size: 1rem;
-  text-decoration: none;
-  transition: background 0.2s;
-}
-
-.dropdown-item:hover {
-  background: #22aea7;
-}
-
 .logout-btn {
   background-color: #41dc7f;
   color: #fff;
@@ -273,6 +250,7 @@
   cursor: pointer;
   padding: 0.5rem;
   color: #1e293b;
+  z-index: 3001;
 }
 
 .menu-icon {
@@ -287,9 +265,6 @@
   .nav-links a,
   .nav-dropdown-btn {
     padding: 0.5rem;
-    font-size: 0.95rem;
-  }
-  .dropdown-menu a {
     font-size: 0.95rem;
   }
 }
@@ -309,6 +284,7 @@
     align-items: flex-start;
     height: auto;
     padding: 0.5rem 0.5rem 0 0.5rem;
+    z-index: 2000;
   }
 
   .nav-menu {
@@ -323,13 +299,17 @@
     opacity: 0;
     visibility: hidden;
     transition: all 0.3s ease;
-    z-index: 999;
+    z-index: 3000;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .nav-menu.active {
     transform: translateY(0);
     opacity: 1;
     visibility: visible;
+    z-index: 3001;
   }
 
   .nav-links {
@@ -350,24 +330,20 @@
     padding: 0.5rem;
   }
 
-.user-dropdown-menu {
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.08);
-  min-width: 180px;
-  padding: 0.5rem 0;
-  position: absolute;
-  z-index: 100;
-}
+  .user-dropdown-menu {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+    min-width: 180px;
+    padding: 0.5rem 0;
+    position: absolute;
+    z-index: 4000;
+  }
 
   .nav-links a,
   .nav-dropdown-btn {
     width: 100%;
     padding: 0.75rem 1rem;
-    font-size: 1rem;
-  }
-
-  .dropdown-menu a {
     font-size: 1rem;
   }
 }

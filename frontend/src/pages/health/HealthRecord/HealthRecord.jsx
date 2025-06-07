@@ -62,7 +62,7 @@ useEffect(() => {
         setIsLoading(false);
       });
   } else if (studentId) {
-    // Nếu là học sinh thì chỉ lấy hồ sơ của mình
+    // 
     HealthRecordService.getHealthRecordByStudentId(studentId, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -319,7 +319,7 @@ if (isLoading) {
             )}
           </>
         ) : (
-          // Học sinh xem và cập nhật hồ sơ của mình
+          // phụ xem và cập nhật hồ sơ của mình
           <>
             {formSubmitted && (
               <div className="success-message">
@@ -387,7 +387,7 @@ if (isLoading) {
           </>
         )}
       </div>
-      <Footer />
+      
     </div>
   );
 };

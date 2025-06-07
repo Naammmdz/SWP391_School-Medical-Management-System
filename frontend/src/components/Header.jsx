@@ -2,23 +2,22 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Header.css';
 import { Bell, User, Menu, X } from 'lucide-react';
-import userService from '../services/UserService';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const navigate = useNavigate();
   const [studentHealthOpen, setStudentHealthOpen] = useState(false);
   const [medicalEventsOpen, setMedicalEventsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [user, setUser] = useState(null);
 
-  // refs cho dropdown
+  const navigate = useNavigate();
+
   const studentHealthRef = useRef(null);
   const medicalEventsRef = useRef(null);
+  const userDropdownRef = useRef(null);
 
   useEffect(() => {
-    // Lấy user từ localStorage
     const userData = localStorage.getItem('user');
     try {
       if (userData && userData !== "undefined" && userData !== "null") {
@@ -31,7 +30,6 @@ const Header = () => {
       localStorage.removeItem('user');
     }
 
-    // Đóng dropdown khi click ra ngoài
     const handleClickOutside = (event) => {
       if (
         studentHealthRef.current &&
@@ -45,12 +43,17 @@ const Header = () => {
       ) {
         setMedicalEventsOpen(false);
       }
+      if (
+        userDropdownRef.current &&
+        !userDropdownRef.current.contains(event.target)
+      ) {
+        setShowUserDropdown(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Handle window resize
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
@@ -63,14 +66,12 @@ const Header = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  // Đóng dropdown khi click link
   const closeDropdowns = () => {
     setStudentHealthOpen(false);
     setMedicalEventsOpen(false);
     setIsMenuOpen(false);
   };
 
-  // Xử lý đăng xuất
   const handleLogout = () => {
     localStorage.removeItem('user');
     localStorage.removeItem('token');
@@ -100,8 +101,7 @@ const Header = () => {
       <nav className={`nav-menu ${isMenuOpen ? 'active' : ''}`}>
         <ul className="nav-links">
           <li><Link to={homeLink} onClick={closeDropdowns}>Trang Chủ</Link></li>
-          
-          {/* Sức khỏe học sinh */}
+
           <li className="dropdown" ref={studentHealthRef}>
             <button
               className="nav-dropdown-btn"
@@ -126,7 +126,6 @@ const Header = () => {
             )}
           </li>
 
-          {/* Sự kiện y tế */}
           <li className="dropdown" ref={medicalEventsRef}>
             <button
               className="nav-dropdown-btn"
@@ -182,7 +181,7 @@ const Header = () => {
               tabIndex={0}
               style={{ cursor: 'pointer', outline: 'none' }}
               onClick={() => setShowUserDropdown((prev) => !prev)}
-              onBlur={() => setTimeout(() => setShowUserDropdown(false), 150)}
+              ref={userDropdownRef}
             >
               <span className="username">
                 Xin chào, {user ? (user.fullName || user.email) : "Khách"}
@@ -191,22 +190,46 @@ const Header = () => {
                 {user ? (user.userRole || user.role) : " "}
               </span>
               <span className="dropdown-arrow" style={{ marginLeft: 6 }}>▼</span>
+
               {showUserDropdown && (
                 <div className="user-dropdown-menu">
-                  <Link to="/capnhatthongtin" className="dropdown-item" onClick={() => setShowUserDropdown(false)}>
-                    <span role="img" aria-label="profile">👤</span> Cập nhật thông tin
+                  <Link
+                    to="/capnhatthongtin"
+                    className="dropdown-item"
+                    onClick={() => setShowUserDropdown(false)}
+                  >
+                    👤 Cập nhật thông tin
                   </Link>
-                  <Link to="/doimatkhau" className="dropdown-item" onClick={() => setShowUserDropdown(false)}>
-                    <span role="img" aria-label="password">🔒</span> Đổi mật khẩu
+                  <Link
+                    to="/doimatkhau"
+                    className="dropdown-item"
+                    onClick={() => setShowUserDropdown(false)}
+                  >
+                    🔒 Đổi mật khẩu
                   </Link>
-                  <button className="dropdown-item" type="button" onClick={() => { setShowUserDropdown(false); alert('Liên hệ hỗ trợ qua email hoặc hotline!'); }}>
-                    <span role="img" aria-label="help">❓</span> Trợ giúp và hỗ trợ
+                  <button
+                    className="dropdown-item"
+                    onClick={() => {
+                      setShowUserDropdown(false);
+                      alert("Liên hệ hỗ trợ qua email hoặc hotline!");
+                    }}
+                  >
+                    ❓ Trợ giúp và hỗ trợ
                   </button>
-                  <button className="dropdown-item" type="button" onClick={() => { setShowUserDropdown(false); alert('Cảm ơn bạn đã đóng góp ý kiến!'); }}>
-                    <span role="img" aria-label="feedback">💬</span> Đóng góp ý kiến
+                  <button
+                    className="dropdown-item"
+                    onClick={() => {
+                      setShowUserDropdown(false);
+                      alert("Cảm ơn bạn đã đóng góp ý kiến!");
+                    }}
+                  >
+                    💬 Đóng góp ý kiến
                   </button>
-                  <button className="dropdown-item" type="button" onClick={handleLogout}>
-                    <span role="img" aria-label="logout">🚪</span> Đăng xuất
+                  <button
+                    className="dropdown-item"
+                    onClick={handleLogout}
+                  >
+                    🚪 Đăng xuất
                   </button>
                 </div>
               )}
