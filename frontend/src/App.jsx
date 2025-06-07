@@ -19,7 +19,7 @@ import HealthCheck from './pages/health/HealthCheck/HealthCheck';
 import ParentPages from './pages/parent/ParentPages';
 import NursePages from './pages/nurse/NursePages';
 import Blog from './pages/home/Blog/Blog';
-import UpdateUser from './pages/user/User';
+import UpdateUser from './pages/user/UpdateUser';
 import UpdatePassword from './pages/user/UpdatePassword';
 
 // Component ProtectedRoute

@@ -47,36 +47,36 @@ public class HealthProfileAdminController {
         return ResponseEntity.ok(service.filterHealthProfiles(filterRequest));
     }
 
-    @PostMapping("/create-students")
-    public ResponseEntity<?> createStudents(@RequestBody @Valid StudentRequestDTO studentRequest) {
-        return ResponseEntity.ok(studentService.createStudent(studentRequest));
-    }
-
-    // Bên trong HealthProfileAdminController hoặc một StudentController mới
-
-    @GetMapping("/")
-    public ResponseEntity<?> getAllStudents() {
-        // Giả sử studentService có phương thức để lấy tất cả student
-         return ResponseEntity.ok(studentService.getAllStudents());
-        // Hoặc nếu bạn muốn trả về health profiles mặc định ở đây:
-        // return ResponseEntity.ok(service.getAllHealthProfiles()); // Bạn cần tạo method này trong service
-
-    }
-
-    @GetMapping("list/{studentId}")
-    public ResponseEntity<?> getStudentById(@PathVariable Integer studentId) {
-        return ResponseEntity.ok(studentService.getStudentById(studentId));
-    }
-
-    @PutMapping("/{studentId}")
-    public ResponseEntity<?> updateStudent(@PathVariable Integer studentId, @RequestBody @Valid StudentRequestDTO studentRequest) {
-        return ResponseEntity.ok(studentService.updateStudent(studentId, studentRequest));
-    }
-
-    @DeleteMapping("/{studentId}")
-    public ResponseEntity<?> deleteStudent(@PathVariable Integer studentId) {
-        studentService.deleteStudent(studentId);
-        return ResponseEntity.ok("Xóa học sinh thành công");
-    }
+//    @PostMapping("/create-students")
+//    public ResponseEntity<?> createStudents(@RequestBody @Valid StudentRequestDTO studentRequest) {
+//        return ResponseEntity.ok(studentService.createStudent(studentRequest));
+//    }
+//
+//    // Bên trong HealthProfileAdminController hoặc một StudentController mới
+//
+//    @GetMapping("/")
+//    public ResponseEntity<?> getAllStudents() {
+//        // Giả sử studentService có phương thức để lấy tất cả student
+//         return ResponseEntity.ok(studentService.getAllStudents());
+//        // Hoặc nếu bạn muốn trả về health profiles mặc định ở đây:
+//        // return ResponseEntity.ok(service.getAllHealthProfiles()); // Bạn cần tạo method này trong service
+//
+//    }
+//
+//    @GetMapping("list/{studentId}")
+//    public ResponseEntity<?> getStudentById(@PathVariable Integer studentId) {
+//        return ResponseEntity.ok(studentService.getStudentById(studentId));
+//    }
+//
+//    @PutMapping("/{studentId}")
+//    public ResponseEntity<?> updateStudent(@PathVariable Integer studentId, @RequestBody @Valid StudentRequestDTO studentRequest) {
+//        return ResponseEntity.ok(studentService.updateStudent(studentId, studentRequest));
+//    }
+//
+//    @DeleteMapping("/{studentId}")
+//    public ResponseEntity<?> deleteStudent(@PathVariable Integer studentId) {
+//        studentService.deleteStudent(studentId);
+//        return ResponseEntity.ok("Xóa học sinh thành công");
+//    }
 
 }

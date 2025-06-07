@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import userService from '../../services/UserService';
-import './User.css';
+import './UpdateUser.css';
 
 
 const UpdateUser = () => {
