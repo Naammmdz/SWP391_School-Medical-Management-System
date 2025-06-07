@@ -26,6 +26,9 @@ const userService = {
     createStudent: (student, config) => {
     return axios.post(USER_URL+`/admin/students/create-students`, student, config);
         
+    },
+    changePassword: (user,config) => {
+        return axios.put(USER_URL+`/user/me/change-password`, user, config);
     }
   
     

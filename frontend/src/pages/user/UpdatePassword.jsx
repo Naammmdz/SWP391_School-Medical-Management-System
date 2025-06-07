@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import userService from '../../services/UserService';
@@ -6,35 +6,13 @@ import './UpdatePassword.css';
 
 const UpdatePassword = () => {
     const navigate = useNavigate();
-    const { register, handleSubmit, setError, setValue, formState: { errors } } = useForm();
+    const { register, handleSubmit, setError, formState: { errors } } = useForm();
     const [updateSuccess, setUpdateSuccess] = useState(false);
     const [error, setErrorMsg] = useState(null);
-    const [userData, setUserData] = useState({});
 
     // Lấy accessToken từ localStorage
     const accessToken = localStorage.getItem('token');
-
-    // Lấy thông tin user khi load trang
-    useEffect(() => {
-        if (!accessToken) {
-            setErrorMsg('Bạn chưa đăng nhập!');
-            return;
-        }
-        userService.getUserById({
-            headers: {
-                Authorization: `Bearer ${accessToken}`
-            }
-        })
-        .then(res => {
-            setUserData(res.data);
-            setValue('fullName', res.data.fullName || '');
-            setValue('email', res.data.email || '');
-            setValue('phone', res.data.phone || '');
-        })
-        .catch(() => {
-            setErrorMsg('Không thể tải thông tin người dùng');
-        });
-    }, [accessToken, setValue]);
+    const user = JSON.parse(localStorage.getItem('user'));
 
     const onSubmit = (data) => {
         if (!accessToken) {
@@ -45,13 +23,11 @@ const UpdatePassword = () => {
             setError('confirmNewPassword', { type: 'manual', message: 'Mật khẩu mới không khớp' });
             return;
         }
-        // Gửi đầy đủ các trường lên backend
-        userService.updateUserByUser(
+        // Gửi yêu cầu đổi mật khẩu với mật khẩu cũ và mật khẩu mới
+        userService.changePassword(
             {
-                fullName: userData.fullName,
-                email: userData.email,
-                phone: userData.phone,
-                password: data.newPassword
+                oldPassword: data.oldPassword,
+                newPassword: data.newPassword
             },
             {
                 headers: {
@@ -59,16 +35,20 @@ const UpdatePassword = () => {
                 }
             }
         )
-       .then(() => {
-    setUpdateSuccess(true);
-    let redirectPath = '';
-    if (userData.role === 'ROLE_ADMIN') redirectPath = '/admin';
-    else if (userData.role === 'ROLE_PARENT') redirectPath = '/parent';
-    else if (userData.role === 'ROLE_NURSE') redirectPath = '/nurse';
-    setTimeout(() => navigate(redirectPath), 1500);
-})
-        .catch(() => {
-            setErrorMsg('Đổi mật khẩu thất bại');
+        .then(() => {
+            setUpdateSuccess(true);
+            let redirectPath = '/';
+            if (user?.userRole === 'ROLE_ADMIN') redirectPath = '/admin';
+            else if (user?.userRole === 'ROLE_PARENT') redirectPath = '/parent';
+            else if (user?.userRole === 'ROLE_NURSE') redirectPath = '/nurse';
+            setTimeout(() => navigate(redirectPath), 1500);
+        })
+        .catch((err) => {
+            if (err.response && err.response.data && err.response.data.error) {
+                setErrorMsg(err.response.data.error);
+            } else {
+                setErrorMsg('Đổi mật khẩu thất bại');
+            }
         });
     };
 
@@ -78,6 +58,15 @@ const UpdatePassword = () => {
         <div className="update-user">
             <h2>Đổi mật khẩu</h2>
             <form onSubmit={handleSubmit(onSubmit)}>
+                <div className="form-group">
+                    <label htmlFor="oldPassword">Mật khẩu cũ</label>
+                    <input
+                        id="oldPassword"
+                        type="password"
+                        {...register('oldPassword', { required: 'Vui lòng nhập mật khẩu cũ' })}
+                    />
+                    {errors.oldPassword && <span className="error">{errors.oldPassword.message}</span>}
+                </div>
                 <div className="form-group">
                     <label htmlFor="newPassword">Mật khẩu mới</label>
                     <input
