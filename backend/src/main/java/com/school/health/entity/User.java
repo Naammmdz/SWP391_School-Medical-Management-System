@@ -63,7 +63,7 @@ public class User {
     private LocalDate createdAt;
 
     @Column(name = "IsActive")
-    private Boolean isActive = true;
+    private boolean isActive = true;
 
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
     private List<Student> students;

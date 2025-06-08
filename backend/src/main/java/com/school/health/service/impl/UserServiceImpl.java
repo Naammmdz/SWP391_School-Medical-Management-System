@@ -7,7 +7,14 @@ import com.school.health.enums.UserRole;
 import com.school.health.exception.UserAlreadyExistsException;
 import com.school.health.repository.UserRepository;
 import com.school.health.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.crossstore.ChangeSetPersister;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -15,15 +22,21 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService {
-    @Autowired
-    private UserRepository userRepository;
 
     @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
+    @Autowired
+    private final PasswordEncoder passwordEncoder;
 
+    @Autowired
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     // Đăng kí user
     public User registerUser(String fullName, String email, String phone, String plainPassword, UserRole role) {
@@ -57,18 +70,64 @@ public class UserServiceImpl implements UserService {
         return userRepository.findByUserId(id);
     }
 
-    public List<UserResponse> getAllUsers() {
-        List<User> users = userRepository.findAll();
-        return users.stream().map(this::convertToDto).toList();
+    public List<UserResponse> getAllUsers(String fullName, String email, String phone,
+                                          String roleStr, Boolean isActive,
+                                          int pageNum, int pageSize, String sortStr) {
+        Specification<User> spec = Specification.where(null);
+        if (fullName != null && !fullName.isEmpty()) {
+            spec = spec.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.like(criteriaBuilder.
+                            lower(root.get("fullName")), "%" + fullName.toLowerCase() + "%"));
+        }
+        if (email != null && !email.isEmpty()) {
+            spec = spec.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.equal(criteriaBuilder.
+                            lower(root.get("email")), email.toLowerCase()));
+        }
+        if (phone != null && !phone.isEmpty()) {
+            spec = spec.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.equal(criteriaBuilder.
+                            lower(root.get("phone")), phone.toLowerCase()));
+        }
+        if (roleStr != null && !roleStr.isEmpty()) {
+            UserRole role = UserRole.valueOf(roleStr.toUpperCase());
+            spec = spec.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.equal(root.get("role"), role));
+        }
+        if (isActive != null) {
+            spec = spec.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.equal(root.get("isActive"), isActive));
+        }
+
+        // Phân trang và sắp xếp
+        String[] sortDetails = sortStr.split(",");
+        String sortByProperty = sortDetails[0];
+        Sort.Direction sortDirection = Sort.Direction.ASC;
+
+        if (sortDetails.length > 1 && "desc".equalsIgnoreCase(sortDetails[1])) {
+            sortDirection = Sort.Direction.DESC;
+        }
+        Sort sort = Sort.by(sortDirection, sortByProperty);
+
+        // Tạo đối tượng Pageable
+        Pageable pageable = PageRequest.of(pageNum, pageSize, sort);
+
+        // Truy vấn repository với Specification và Pageable
+        Page<User> userPage = userRepository.findAll(spec, pageable);
+
+        // Chuyển đổi Page<User> sang List<UserResponse>
+        return userPage.getContent().stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
     }
 
-    public UserResponse convertToDto(User user) {
+    private UserResponse convertToDto(User user) {
         UserResponse dto = new UserResponse();
         dto.setId(user.getUserId());
         dto.setFullName(user.getFullName());
         dto.setEmail(user.getEmail());
         dto.setPhone(user.getPhone());
-        dto.setIsActive(user.getIsActive());
+        dto.setIsActive(user.isActive()); // Use getter for isActive
         dto.setRole(user.getRole().name());
         return dto;
     }
@@ -103,7 +162,20 @@ public class UserServiceImpl implements UserService {
     public void updateUserStatus(Integer id, boolean isActive) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-        user.setIsActive(isActive);
+        user.setActive(isActive); // Use setter for isActive
+        userRepository.save(user);
+    }
+
+    //Change password for user
+    public void changePassword(Integer id, String oldPassword, String newPassword) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        if (!passwordEncoder.matches(oldPassword, user.getPasswordHash())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mật khẩu cũ không đúng");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
         userRepository.save(user);
     }
 }

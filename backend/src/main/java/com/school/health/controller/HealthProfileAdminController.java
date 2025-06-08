@@ -79,10 +79,10 @@ public class HealthProfileAdminController {
 //        return ResponseEntity.ok("Xóa học sinh thành công");
 //    }
 
-    @GetMapping("/{parentId}")
-    public ResponseEntity<?> getStudentsByParentId(@PathVariable Integer parentId) {
-        return ResponseEntity.ok(service.getHealthProfilesByParentId(parentId));
-    }
+//    @GetMapping("/{parentId}")
+//    public ResponseEntity<?> getStudentsByParentId(@PathVariable Integer parentId) {
+//        return ResponseEntity.ok(service.getHealthProfilesByParentId(parentId));
+//    }
 
 
 
