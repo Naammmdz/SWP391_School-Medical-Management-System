@@ -5,5 +5,4 @@ public enum UserRole {
     NURSE,
     PRINCIPAL,
     ADMIN
-
 }

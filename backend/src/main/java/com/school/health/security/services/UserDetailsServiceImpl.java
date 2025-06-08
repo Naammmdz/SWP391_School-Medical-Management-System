@@ -3,6 +3,7 @@ package com.school.health.security.services;
 import com.school.health.entity.User;
 import com.school.health.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -24,6 +25,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         } else {
             user = userService.getUserByPhone(usernameOrEmailOrPhone)
                     .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        }
+        if (!user.getIsActive()) {
+            throw new DisabledException("User account is disabled");
+            // Alternatively: return new UserDetailsImpl(..., false); // setting enabled=false
         }
         return UserDetailsImpl.build(user);
     }
