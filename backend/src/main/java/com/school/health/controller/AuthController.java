@@ -13,11 +13,13 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -43,26 +45,47 @@ public class AuthController {
     private UserDetailsServiceImpl userDetailsServiceImpl;
 
     @PostMapping("/register")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> register(@RequestBody @Valid RegisterRequest request) {
         UserRole role = UserRole.valueOf(request.getRole());
-        userService.registerUser(request.getFullName(), request.getEmail(), request.getPhone(), request.getPassword(), role);
+        userService.registerUser(
+                request.getFullName(),
+                request.getEmail(),
+                request.getPhone(),
+                request.getPassword(),
+                role
+        );
         return ResponseEntity.ok(Map.of("message", "Đăng ký thành công!"));
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
         try {
-            Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getEmailOrPhone(), loginRequest.getPassword()));
-
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginRequest.getEmailOrPhone(),
+                            loginRequest.getPassword()
+                    )
+            );
             SecurityContextHolder.getContext().setAuthentication(authentication);
             UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
             String accessToken = jwtUtils.generateJwtToken(authentication);
             String refreshToken = jwtUtils.generateRefreshToken(authentication);
 
-            return ResponseEntity.ok(new LoginSuccessResponse(accessToken, refreshToken, "Bearer", userDetails.getId(), userDetails.getEmail(), userDetails.getPhone(), userDetails.getFullName(), userDetails.getAuthorities().iterator().next().getAuthority()));
+            return ResponseEntity.ok(new LoginSuccessResponse(
+                    accessToken,
+                    refreshToken,
+                    "Bearer",
+                    userDetails.getId(),
+                    userDetails.getEmail(),
+                    userDetails.getPhone(),
+                    userDetails.getFullName(),
+                    userDetails.getAuthorities().iterator().next().getAuthority()
+            ));
         } catch (BadCredentialsException ex) {
             // Trả về JSON lỗi
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Thông tin đăng nhập không đúng!"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Thông tin đăng nhập không đúng!"));
         }
     }
 
@@ -79,7 +102,8 @@ public class AuthController {
 
             return ResponseEntity.ok(Map.of("accessToken", newAccessToken, "type", "Bearer"));
         } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Invalid refresh token"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Invalid refresh token"));
         }
     }
 

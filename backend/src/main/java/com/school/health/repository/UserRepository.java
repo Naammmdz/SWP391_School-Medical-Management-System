@@ -2,19 +2,17 @@ package com.school.health.repository;
 
 import com.school.health.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
 
-import java.util.List;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.stereotype.Repository;
+
 import java.util.Optional;
 
-public interface UserRepository extends JpaRepository<User, Integer> {
+@Repository
+public interface UserRepository extends JpaRepository<User, Integer>, JpaSpecificationExecutor<User> {
+
     // Tìm user bằng email
-    @Query("SELECT u FROM User u WHERE u.email = :email")
     Optional<User> findByEmail(String email);
-    // chỗ này có cần khai báo query không hay có sẵn trong JPA rồi
-    // Nếu cần thì có thể dùng @Query để viết query tùy chỉnh
-    // Ví dụ: @Query("SELECT u FROM User u WHERE u.email = ?1")
-    // Tìm user bằng email
 
     // Tìm user bằng số điện thoại
     Optional<User> findByPhone(String phone);

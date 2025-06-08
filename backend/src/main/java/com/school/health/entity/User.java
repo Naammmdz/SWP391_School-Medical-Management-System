@@ -1,5 +1,6 @@
 package com.school.health.entity;
 
+
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.school.health.enums.UserRole;
@@ -11,34 +12,50 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDate;
 import java.util.List;
 
+
+import com.school.health.enums.UserRole;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Nationalized;
+
+import java.time.LocalDate;
+
 @Entity
-@Table(name = "Users")
-@Data
+@Table(name = "Users", uniqueConstraints = {
+        @UniqueConstraint(columnNames = "Phone")
+})
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
+@ToString
 public class User {
+
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "UserId")
     private Integer userId;
 
-    @NotBlank(message = "Họ tên không được để trống")
-    @Column(name = "FullName", length = 100, nullable = false)
+
+    @Column(name = "FullName", nullable = false, length = 100)
     private String fullName;
 
-    @Email(message = "Email không hợp lệ")
-    @NotBlank(message = "Email không được để trống")
-    @Column(name = "Email", length = 100, nullable = false, unique = true)
+    @Column(name = "Email", length = 100)
     private String email;
 
-    @Pattern(regexp = "^[0-9]{10,11}$", message = "Số điện thoại không hợp lệ")
-    @Column(name = "Phone", length = 20)
+    @Column(name = "Phone", nullable = false, length = 20)
     private String phone;
 
-    @NotBlank(message = "Mật khẩu không được để trống")
-    @Column(name = "PasswordHash", length = 255, nullable = false)
+    @Column(name = "PasswordHash", nullable = false, length = 255)
     private String passwordHash;
+    @Nationalized
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "Role", length = 20, nullable = false)
+    @Column(name = "Role", nullable = false, length = 20)
+
     private UserRole role;
 
     @CreationTimestamp
@@ -57,3 +74,4 @@ public class User {
         createdAt = LocalDate.now();
     }
 }
+

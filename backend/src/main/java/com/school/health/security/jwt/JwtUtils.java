@@ -22,15 +22,18 @@ public class JwtUtils {
     private String jwtSecretString;
 
     @Value("${school.health.jwtExpirationMs}")
+
     private Long jwtExpiryTime;
 
+
     @Value("${school.health.jwtRefreshExpirationMs}")
-    private int jwtRefreshExpiryTime;
+    private Long jwtRefreshExpiryTime;
 
     private SecretKey secretKey;
 
     @PostConstruct
-    private void init() {
+
+    public void init() {
         this.secretKey = Keys.hmacShaKeyFor(jwtSecretString.getBytes());
     }
 
@@ -72,7 +75,7 @@ public class JwtUtils {
     }
 
     public String getUsernameFromJwtToken(String token) {
-        return Jwts.parser()
+        return Jwts.parserBuilder()
                 .setSigningKey(secretKey)
                 .build()
                 .parseClaimsJws(token)
@@ -82,7 +85,7 @@ public class JwtUtils {
 
     public boolean validateJwtToken(String authToken) {
         try {
-            Jwts.parser()
+            Jwts.parserBuilder()
                     .setSigningKey(secretKey)
                     .build()
                     .parseClaimsJws(authToken);
@@ -101,3 +104,4 @@ public class JwtUtils {
         return false;
     }
 }
+
