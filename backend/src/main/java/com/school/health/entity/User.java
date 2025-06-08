@@ -1,9 +1,11 @@
-package com.school.health.model.entity;
+package com.school.health.entity;
 
+import com.school.health.enums.UserRole;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.Email;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Nationalized;
 
 import java.time.LocalDate;
 
@@ -11,9 +13,11 @@ import java.time.LocalDate;
 @Table(name = "Users", uniqueConstraints = {
         @UniqueConstraint(columnNames = "Phone")
 })
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
+@ToString
 public class User {
 
     @Id
@@ -32,15 +36,17 @@ public class User {
 
     @Column(name = "PasswordHash", nullable = false, length = 255)
     private String passwordHash;
+    @Nationalized
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "Role", nullable = false, length = 20)
-    private String role;
-//    @Enumerated(EnumType.STRING)
+    private UserRole role;
 
-    @Column(name = "CreateAT")
-    private LocalDate createAt;
+    @CreationTimestamp
+    @Column(name = "CreatedAT")
+    private LocalDate createdAt;
 
-    @Column(name = "IsActive", columnDefinition = "BIT DEFAULT 1")
+    @Column(name = "IsActive")
     private boolean isActive = true;
 
 }
