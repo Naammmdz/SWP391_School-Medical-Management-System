@@ -1,0 +1,31 @@
+[33m4018795[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/flow6[m[33m)[m Merge branch 'feature/flow6' of https://github.com/Naammmdz/SWP391_School-Medical-Management-System into feature/flow6
+[33m22b29d2[m save local before pull
+[33ma57f262[m[33m ([m[1;31morigin/feature/flow6[m[33m)[m cap nhat hoc sinh va xoa sinh vien bao gom healthprofile cua hoc sinh do
+[33mb03cbbd[m search by id
+[33m8d129e3[m them tao healthprofile trong khi tao moi student, de phu huynh cap nhat thay vi tao moi
+[33mcfdd1de[m add them student va get all student
+[33m9bbbcc8[m filter by id name class name and gender
+[33m177b943[m Merge branch 'feature/flow6' of https://github.com/Naammmdz/SWP391_School-Medical-Management-System into feature/flow6
+[33m49feedf[m Add jwt cho login
+[33me518e81[m  chinh sua add gmail khi send
+[33mff2fcab[m code local pull new code
+[33m9e6e629[m ok
+[33ma840267[m chinh sua lay danh sach theo id hoac get all
+[33mc992d7b[m them get all healthprofile cho parent va admin
+[33m0c3d80a[m add UpdatedBy khi tao healthprofile
+[33m1a003f5[m add put and get healthprofile
+[33m6f59b20[m add post ho so suc khoe
+[33meb79cae[m add chuc nang post
+[33m77ad9e5[m Update README.md
+[33m1f37ba0[m Update README.md
+[33md332587[m setup backend
+[33m22fba2d[m add backend folder
+[33m68d8e24[m Add comprehensive .gitignore
+[33ma489966[m Merge branch 'main' of https://github.com/Naammmdz/SWP391_School-Medical-Management-System
+[33mfd2180f[m update
+[33maec1f7e[m Merge pull request #2 from Naammmdz/develop
+[33m2a256c8[m Add .gitignore for node_modules
+[33m8814c90[m Merge pull request #1 from Naammmdz/main
+[33mcb21b14[m Add package.json configuration
+[33m9ca256b[m setup
+[33m3a738a5[m Initial commit
