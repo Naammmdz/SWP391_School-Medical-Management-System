@@ -87,11 +87,21 @@ public class UserController {
         }
     }
 
-    // 4. Admin lấy thông tin của tất cả user
+    // 4. Admin lấy thông tin của tất cả user (có bộ lọc, phân trang, sắp xếp)
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    public ResponseEntity<List<UserResponse>> getAllUsers() {
-        return ResponseEntity.ok(userService.getAllUsers());
+    public ResponseEntity<List<UserResponse>> getAllUsers(
+            @RequestParam(required = false) String fullName,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String phone,
+            @RequestParam(required = false) String role,
+            @RequestParam(required = false) Boolean isActive,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "userId,asc") String sort
+    ) {
+        List<UserResponse> users = userService.getAllUsers(fullName, email, phone, role, isActive, page, size, sort);
+        return ResponseEntity.ok(users);
     }
 
     // 5. User lấy thông tin tài khoản của mình

@@ -40,14 +40,14 @@ public class ExcelService {
         sampleRow1.createCell(1).setCellValue("vana@example.com");
         sampleRow1.createCell(2).setCellValue("0987654321");
         sampleRow1.createCell(3).setCellValue("Password1");
-        sampleRow1.createCell(4).setCellValue("USER");
+        sampleRow1.createCell(4).setCellValue("PARENT");
 
         Row sampleRow2 = sheet.createRow(2);
         sampleRow2.createCell(0).setCellValue("Le Thi B");
         sampleRow2.createCell(1).setCellValue("thib@example.com");
         sampleRow2.createCell(2).setCellValue("0912345678");
         sampleRow2.createCell(3).setCellValue("Password2");
-        sampleRow2.createCell(4).setCellValue("TEACHER");
+        sampleRow2.createCell(4).setCellValue("NURSE");
 
         for (int i = 0; i < headers.length; i++) {
             sheet.autoSizeColumn(i);
@@ -105,8 +105,8 @@ public class ExcelService {
                 newUser.setPasswordHash(passwordEncoder.encode(password));
                 newUser.setRole(switch (role.toUpperCase()) {
                     case "ADMIN" -> UserRole.ADMIN;
-                    case "TEACHER" -> UserRole.PARENT;
-                    case "STUDENT" -> UserRole.NURSE;
+                    case "PARENT" -> UserRole.PARENT;
+                    case "NURSE" -> UserRole.NURSE;
                     default -> UserRole.PARENT; // Default to USER if role is unknown
                 });
 

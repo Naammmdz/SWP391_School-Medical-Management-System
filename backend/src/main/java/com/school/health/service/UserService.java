@@ -9,6 +9,11 @@ import com.school.health.repository.UserRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.crossstore.ChangeSetPersister;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,6 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -61,9 +67,55 @@ public class UserService {
         return userRepository.findByUserId(id);
     }
 
-    public List<UserResponse> getAllUsers() {
-        List<User> users = userRepository.findAll();
-        return users.stream().map(this::convertToDto).toList();
+    public List<UserResponse> getAllUsers(String fullName, String email, String phone,
+                                          String roleStr, Boolean isActive,
+                                          int pageNum, int pageSize, String sortStr) {
+        Specification<User> spec = Specification.where(null);
+        if (fullName != null && !fullName.isEmpty()) {
+            spec = spec.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.like(criteriaBuilder.
+                            lower(root.get("fullName")), "%" + fullName.toLowerCase() + "%"));
+        }
+        if (email != null && !email.isEmpty()) {
+            spec = spec.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.equal(criteriaBuilder.
+                            lower(root.get("email")), email.toLowerCase()));
+        }
+        if (phone != null && !phone.isEmpty()) {
+            spec = spec.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.equal(criteriaBuilder.
+                            lower(root.get("phone")), phone.toLowerCase()));
+        }
+        if (roleStr != null && !roleStr.isEmpty()) {
+            UserRole role = UserRole.valueOf(roleStr.toUpperCase());
+            spec = spec.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.equal(root.get("role"), role));
+        }
+        if (isActive != null) {
+            spec = spec.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.equal(root.get("isActive"), isActive));
+        }
+
+        // Phân trang và sắp xếp
+        String[] sortDetails = sortStr.split(",");
+        String sortByProperty = sortDetails[0];
+        Sort.Direction sortDirection = Sort.Direction.ASC;
+
+        if (sortDetails.length > 1 && "desc".equalsIgnoreCase(sortDetails[1])) {
+            sortDirection = Sort.Direction.DESC;
+        }
+        Sort sort = Sort.by(sortDirection, sortByProperty);
+
+        // Tạo đối tượng Pageable
+        Pageable pageable = PageRequest.of(pageNum, pageSize, sort);
+
+        // Truy vấn repository với Specification và Pageable
+        Page<User> userPage = userRepository.findAll(spec, pageable);
+
+        // Chuyển đổi Page<User> sang List<UserResponse>
+        return userPage.getContent().stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
     }
 
     private UserResponse convertToDto(User user) {
