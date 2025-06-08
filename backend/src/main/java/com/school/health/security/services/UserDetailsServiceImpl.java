@@ -1,6 +1,7 @@
 package com.school.health.security.services;
 
 import com.school.health.entity.User;
+
 import com.school.health.repository.UserRepository;
 import com.school.health.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,5 +31,4 @@ public class UserDetailsServiceImpl implements UserDetailsService {
           }
           return UserDetailsImpl.build(user);
      }
-
 }

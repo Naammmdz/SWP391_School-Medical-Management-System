@@ -10,4 +10,5 @@ public class SchoolHealthManagementApplication {
 		SpringApplication.run(SchoolHealthManagementApplication.class, args);
 	}
 
+
 }

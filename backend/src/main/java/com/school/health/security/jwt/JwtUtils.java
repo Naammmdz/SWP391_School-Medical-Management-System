@@ -22,14 +22,17 @@ public class JwtUtils {
     private String jwtSecretString;
 
     @Value("${school.health.jwtExpirationMs}")
-    private int jwtExpiryTime;
+
+    private Long jwtExpiryTime;
+
 
     @Value("${school.health.jwtRefreshExpirationMs}")
-    private int jwtRefreshExpiryTime;
+    private Long jwtRefreshExpiryTime;
 
     private SecretKey secretKey;
 
     @PostConstruct
+
     public void init() {
         this.secretKey = Keys.hmacShaKeyFor(jwtSecretString.getBytes());
     }
@@ -38,11 +41,17 @@ public class JwtUtils {
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
 
         return Jwts.builder()
-                .setSubject((userPrincipal.getUsername()))
+                .setSubject(userPrincipal.getUsername())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date((new Date()).getTime() + jwtExpiryTime))
                 .signWith(secretKey, SignatureAlgorithm.HS256)
                 .compact();
+        // giải thích từng thành phần:
+        // setSubject: đặt tên người dùng làm chủ đề của token
+        // setIssuedAt: đặt thời điểm token được phát hành
+        // setExpiration: đặt thời gian hết hạn cho token
+        // signWith: sử dụng khóa bí mật để ký token
+        // compact: tạo ra token dưới dạng chuỗi
     }
 
     public String generateRefreshToken(Authentication authentication) {
@@ -95,3 +104,4 @@ public class JwtUtils {
         return false;
     }
 }
+

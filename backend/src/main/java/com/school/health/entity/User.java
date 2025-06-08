@@ -1,5 +1,18 @@
 package com.school.health.entity;
 
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.school.health.enums.UserRole;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
+import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDate;
+import java.util.List;
+
+
 import com.school.health.enums.UserRole;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -20,10 +33,12 @@ import java.time.LocalDate;
 @ToString
 public class User {
 
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "UserId")
     private Integer userId;
+
 
     @Column(name = "FullName", nullable = false, length = 100)
     private String fullName;
@@ -40,6 +55,7 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "Role", nullable = false, length = 20)
+
     private UserRole role;
 
     @CreationTimestamp
@@ -47,6 +63,15 @@ public class User {
     private LocalDate createdAt;
 
     @Column(name = "IsActive")
-    private boolean isActive = true;
+    private Boolean isActive = true;
 
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
+    private List<Student> students;
+
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDate.now();
+    }
 }
+

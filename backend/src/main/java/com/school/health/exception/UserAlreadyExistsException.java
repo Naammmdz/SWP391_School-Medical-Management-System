@@ -12,3 +12,4 @@ public class UserAlreadyExistsException extends RuntimeException {
         return field;
     }
 }
+

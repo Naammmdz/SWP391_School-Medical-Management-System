@@ -6,3 +6,4 @@ public enum UserRole {
     ADMIN,
     PRINCIPAL
 }
+

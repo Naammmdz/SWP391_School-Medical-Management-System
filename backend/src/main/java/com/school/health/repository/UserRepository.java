@@ -2,6 +2,7 @@ package com.school.health.repository;
 
 import com.school.health.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
