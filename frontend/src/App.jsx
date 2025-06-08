@@ -21,6 +21,13 @@ import NursePages from './pages/nurse/NursePages';
 import Blog from './pages/home/Blog/Blog';
 import UpdateUser from './pages/user/UpdateUser';
 import UpdatePassword from './pages/user/UpdatePassword';
+import CreateStudent from './pages/student/CreateStudent';
+import CreateUser from './pages/user/CreateUser';
+import UpdateUserByAdmin from './pages/user/UpdateUserByAdmin';
+import UserList from './pages/user/UserList';
+import BlockUser from './pages/user/BlockUser';
+import StudentList from './pages/student/StudentList';
+import UpdateStudent from './pages/student/UpdateStudent';
 
 // Component ProtectedRoute
 const ProtectedRoute = ({ element, requiredRole }) => {
@@ -58,7 +65,14 @@ function App() {
         <Route path="/kiemtradinhky" element={<HealthCheck/>}/>
         <Route path="/capnhatthongtin" element={<UpdateUser/>}/>
         <Route path="/doimatkhau" element={<UpdatePassword/>}/>
-        
+        <Route path="/taomoihocsinh" element={<CreateStudent/>}/>
+        <Route path="/taomoinguoidung" element={<CreateUser/>}/>
+        <Route path="/capnhatnguoidung/:userId" element={<UpdateUserByAdmin/>}/>
+        <Route path="/danhsachnguoidung" element={<UserList/>}/>
+        <Route path="/khoanguoidung/:userId" element={<BlockUser />} />
+        <Route path="/danhsachhocsinh" element={<StudentList/>}/>
+        <Route path="/capnhathocsinh/:studentId" element={<UpdateStudent/>}/>
+
 
         <Route path="/parent" element={<ProtectedRoute element={<ParentPages/>} requiredRole="ROLE_PARENT" />} />
         <Route path="/nurse" element={<ProtectedRoute element={<NursePages/>} requiredRole="ROLE_NURSE" />} />

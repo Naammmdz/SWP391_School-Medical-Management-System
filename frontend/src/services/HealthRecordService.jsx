@@ -19,12 +19,15 @@ class HealthRecordService {
         // Nếu backend dùng PUT cho update, POST cho tạo mới, bạn có thể tách hàm
         return axios.put(`${PR_URL}/${studentId}/health-profile`, healthRecord,config);
     }
-    getAllHealthRecord(healthRecordList) {
-        return axios.get(`${HEALTH_RE}/health-profile/all`, healthRecordList)
+    getAllHealthRecord(config) {
+        return axios.get(`${HEALTH_RE}/health-profile/all`, config)
     }
     
     getStudentByParentID(parentId, config) {
         return axios.get(`${HEALTH_RE}/admin/students/${parentId}`,config)
+    }
+    filterHealthRecord(config) {
+        return axios.post(`${HEALTH_RE}/admin/students/filter`, config)
     }
 }
 

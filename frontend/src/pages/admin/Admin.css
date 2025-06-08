@@ -7,11 +7,11 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 32px;
 }
 
 .admin-header h1 {
-  font-size: 24px;
+  font-size: 28px;
   font-weight: 600;
   color: #333;
   margin: 0;
@@ -247,7 +247,8 @@
 /* Responsive styles */
 @media (max-width: 768px) {
   .admin-page {
-    padding: 1rem;
+    padding: 16px;
+    padding-top: 100px;
   }
   
   .users-table {
@@ -263,6 +264,14 @@
   .cancel-btn {
     width: 100%;
     justify-content: center;
+  }
+
+  .management-sections {
+    grid-template-columns: 1fr;
+  }
+
+  .management-card {
+    padding: 20px;
   }
 }
 
@@ -369,4 +378,78 @@
 .modal-footer .confirm-btn:hover {
   background-color: #c82333;
   border-color: #bd2130;
+}
+
+.view-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.view-btn:hover {
+  background-color: #218838;
+}
+
+.management-sections {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  padding: 20px 0;
+}
+
+.management-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.management-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.card-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #f0f7ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  color: #2196f3;
+}
+
+.management-card:nth-child(2) .card-icon {
+  background: #f0fff4;
+  color: #4caf50;
+}
+
+.card-content h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 8px 0;
+}
+
+.card-content p {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+  line-height: 1.5;
 } 

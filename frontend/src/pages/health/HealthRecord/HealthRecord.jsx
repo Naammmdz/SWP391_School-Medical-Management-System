@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
+import { Search, XCircle } from 'lucide-react';
 import Header from '../../../components/Header';
 
 import './HealthRecord.css';
@@ -44,28 +45,83 @@ const HealthRecord = () => {
   const [updateSuccess, setUpdateSuccess] = useState(false);
   const [selectedStudentId, setSelectedStudentId] = useState(null);
 
-  // Lấy tất cả hồ sơ nếu là nurse/admin
-  useEffect(() => {
+  // Search states for Nurse/Admin
+  const [searchFullName, setSearchFullName] = useState('');
+  const [searchClassName, setSearchClassName] = useState('');
+  const [availableClasses, setAvailableClasses] = useState([]);
+
+  // Fetch all health records for the table display (unfiltered)
+  const fetchAllHealthRecords = useCallback(async () => {
     setIsLoading(true);
     setError(null);
-
-    if (isNurseOrAdmin) {
-      HealthRecordService.getAllHealthRecord({
+    try {
+      const token = localStorage.getItem('token');
+      const config = {
         headers: {
-          Authorization: `Bearer ${accessToken}`,
+          Authorization: `Bearer ${token}`,
         },
-      })
-        .then((res) => {
-          setHealthRecords(res.data || []);
-          setIsLoading(false);
-        })
-        .catch(() => {
-          setError('Không thể tải danh sách hồ sơ sức khỏe!');
-          setIsLoading(false);
-        });
+      };
+      const res = await HealthRecordService.getAllHealthRecord(config);
+      setHealthRecords(res.data || []);
+    } catch (err) {
+      console.error("Error fetching all health records:", err);
+      setError('Không thể tải danh sách hồ sơ sức khỏe!');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [accessToken]);
+
+  // Fetch health records with optional filters for the table display
+  const fetchFilteredHealthRecords = useCallback(async (filters = {}) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem('token');
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        params: {
+          fullName: filters.fullName || '',
+          className: filters.className || '',
+        },
+      };
+      // Use filterHealthRecord with params for filtered results
+      const res = await HealthRecordService.filterHealthRecord(config.params, config);
+      setHealthRecords(res.data || []);
+    } catch (err) {
+      console.error("Error fetching filtered health records:", err);
+      setError('Không thể tải danh sách hồ sơ sức khỏe!');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [accessToken]);
+
+  // Fetch all classes for the dropdown independently
+  const fetchAllClasses = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+      // Call getAllHealthRecord to get all records, then extract classes
+      const res = await HealthRecordService.getAllHealthRecord(config); 
+      const classes = new Set(res.data.map(record => record.studentClass).filter(Boolean));
+      setAvailableClasses(Array.from(classes));
+    } catch (err) {
+      console.error("Error fetching all classes:", err);
+      // Optionally set an error specifically for the dropdown if needed
+    }
+  }, [accessToken]);
+
+  useEffect(() => {
+    if (isNurseOrAdmin) {
+      fetchAllHealthRecords(); // Initial load for the table (unfiltered)
+      fetchAllClasses(); // Populate classes dropdown from all available records
     } else if (isParent) {
       // Lấy danh sách học sinh của phụ huynh
-    
       HealthRecordService.getStudentByParentID(user.userId, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -75,7 +131,6 @@ const HealthRecord = () => {
           const list = Array.isArray(res.data) ? res.data : [];
           setStudentList(list);
           setIsLoading(false);
-          console.log(res.data);
         })
         .catch(() => {
           setError('Không thể tải danh sách học sinh!');
@@ -120,7 +175,7 @@ const HealthRecord = () => {
       setError('Không tìm thấy thông tin học sinh!');
       setIsLoading(false);
     }
-  }, [reset, isNurseOrAdmin, isParent, studentId, accessToken, formSubmitted, user.userId]);
+  }, [reset, isNurseOrAdmin, isParent, studentId, accessToken, formSubmitted, user.userId, fetchAllHealthRecords, fetchAllClasses]);
 
   // Khi phụ huynh chọn học sinh để xem/cập nhật hồ sơ
   useEffect(() => {
@@ -173,8 +228,7 @@ const HealthRecord = () => {
       await HealthRecordService.updateHealthRecord(
         idToUpdate,
         data,
-        {
-          headers: {
+        {   headers: {
             Authorization: `Bearer ${accessToken}`,
           },
         }
@@ -189,7 +243,22 @@ const HealthRecord = () => {
     setIsLoading(false);
   };
 
-  if (isLoading) {
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (searchFullName || searchClassName) {
+      fetchFilteredHealthRecords({ fullName: searchFullName, className: searchClassName });
+    } else {
+      fetchAllHealthRecords(); // If no filters are applied, show all records
+    }
+  };
+
+  const handleClearSearch = () => {
+    setSearchFullName('');
+    setSearchClassName('');
+    fetchAllHealthRecords(); // Fetch all records again
+  };
+
+  if (isLoading && (!isNurseOrAdmin || (isNurseOrAdmin && healthRecords.length === 0 && !error))) {
     return <div>Đang tải...</div>;
   }
   return (
@@ -207,55 +276,103 @@ const HealthRecord = () => {
 
         {/* Y tá/admin xem danh sách */}
         {isNurseOrAdmin ? (
-          healthRecords.length === 0 ? (
-            <div>Không có hồ sơ sức khỏe nào.</div>
-          ) : (
-            <table className="table health-record-table">
-              <thead>
-                <tr>
-                  <th>STT</th>
-                  <th>Họ và tên</th>
-                  <th>Lớp</th>
-                  <th>Giới tính</th>
-                  <th>Dị ứng</th>
-                  <th>Bệnh mãn tính</th>
-                  <th>Lịch sử điều trị</th>
-                  <th>Thị lực</th>
-                  <th>Thính lực</th>
-                  <th>Nhóm máu</th>
-                  <th>Cân nặng (kg)</th>
-                  <th>Chiều cao (cm)</th>
-                  <th>Ghi chú</th>
-                  <th>Cập nhật</th>
-                </tr>
-              </thead>
-              <tbody>
-                {healthRecords.map((record, idx) => (
-                  <tr key={record.profileId || idx}>
-                    <td>{idx + 1}</td>
-                    <td>{record.studentName}</td>
-                    <td>{record.studentClass}</td>
-                    <td>{record.studentGender}</td>
-                    <td>{record.allergies}</td>
-                    <td>{record.chronicDiseases}</td>
-                    <td>{record.treatmentHistory}</td>
-                    <td>{record.eyesight}</td>
-                    <td>{record.hearing}</td>
-                    <td>{record.bloodType}</td>
-                    <td>{record.weight}</td>
-                    <td>{record.height}</td>
-                    <td>{record.notes}</td>
-                    <td>
-                      {/* Có thể thêm nút cập nhật ở đây nếu muốn */}
-                    </td>
+          <>
+            <div className="search-form-container">
+              <form onSubmit={handleSearchSubmit} className="health-record-search-form">
+                <div className="form-group">
+                  <label htmlFor="searchFullName">Tìm theo tên học sinh:</label>
+                  <input
+                    type="text"
+                    id="searchFullName"
+                    value={searchFullName}
+                    onChange={(e) => setSearchFullName(e.target.value)}
+                    placeholder="Nhập tên học sinh"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="searchClassName">Chọn lớp:</label>
+                  <select
+                    id="searchClassName"
+                    value={searchClassName}
+                    onChange={(e) => setSearchClassName(e.target.value)}
+                  >
+                    <option value="">Tất cả các lớp</option>
+                    {availableClasses.map(className => (
+                      <option key={className} value={className}>
+                        {className}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="search-buttons">
+                  <button type="submit" className="search-btn">
+                    <Search size={16} />
+                    Tìm kiếm
+                  </button>
+                  {(searchFullName || searchClassName) && (
+                    <button type="button" className="clear-search-btn" onClick={handleClearSearch}>
+                      <XCircle size={16} />
+                      Xóa tìm kiếm
+                    </button>
+                  )}
+                </div>
+              </form>
+            </div>
+
+            {isLoading ? (
+              <div>Đang tải...</div>
+            ) : (healthRecords.length === 0 && (searchFullName || searchClassName)) ? (
+              <div className="no-results">Không tìm thấy hồ sơ sức khỏe nào phù hợp với điều kiện tìm kiếm.</div>
+            ) : healthRecords.length === 0 ? (
+              <div className="no-results">Chưa có hồ sơ sức khỏe nào trong hệ thống.</div>
+            ) : (
+              <table className="table health-record-table">
+                <thead>
+                  <tr>
+                    <th>STT</th>
+                    <th>Họ và tên</th>
+                    <th>Lớp</th>
+                    <th>Giới tính</th>
+                    <th>Dị ứng</th>
+                    <th>Bệnh mãn tính</th>
+                    <th>Lịch sử điều trị</th>
+                    <th>Thị lực</th>
+                    <th>Thính lực</th>
+                    <th>Nhóm máu</th>
+                    <th>Cân nặng (kg)</th>
+                    <th>Chiều cao (cm)</th>
+                    <th>Ghi chú</th>
+                    <th>Cập nhật</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )
+                </thead>
+                <tbody>
+                  {healthRecords.map((record, idx) => (
+                    <tr key={record.profileId || idx}>
+                      <td>{idx + 1}</td>
+                      <td>{record.studentName}</td>
+                      <td>{record.studentClass}</td>
+                      <td>{record.studentGender}</td>
+                      <td>{record.allergies}</td>
+                      <td>{record.chronicDiseases}</td>
+                      <td>{record.treatmentHistory}</td>
+                      <td>{record.eyesight}</td>
+                      <td>{record.hearing}</td>
+                      <td>{record.bloodType}</td>
+                      <td>{record.weight}</td>
+                      <td>{record.height}</td>
+                      <td>{record.notes}</td>
+                      <td>
+                        {/* Có thể thêm nút cập nhật ở đây nếu muốn */}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </>
         ) : isParent ? (
           <>
-            {/* Phụ huynh chọn học sinh để xem/cập nhật */}
+            {/* Phụ huynh chọn học sinh để xem/cập nhật hồ sơ */}
             <div className="form-group">
               <label>Chọn học sinh</label>
               <select

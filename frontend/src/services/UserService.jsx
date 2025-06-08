@@ -29,8 +29,10 @@ const userService = {
     },
     changePassword: (user,config) => {
         return axios.put(USER_URL+`/user/me/change-password`, user, config);
+    },
+    filterStudentHealthProfile: (student, config) => {
+        return axios.post(USER_URL+`/admin/students/filter`)
     }
-  
     
     
 }
