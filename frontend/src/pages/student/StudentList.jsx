@@ -21,6 +21,7 @@ const StudentList = () => {
     try {
       const token = localStorage.getItem('token');
       const config = {
+        params : { size: 1000 }, 
         headers: {
           Authorization: `Bearer ${token}`
         }

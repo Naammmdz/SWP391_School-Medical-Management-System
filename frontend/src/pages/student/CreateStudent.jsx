@@ -24,6 +24,7 @@ const CreateStudent = () => {
     try {
       const token = localStorage.getItem('token');
       const response = await userService.getAllUsers({
+        params: {size:1000},
         headers: {
           Authorization: `Bearer ${token}`
         }

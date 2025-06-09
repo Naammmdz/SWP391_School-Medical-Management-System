@@ -26,9 +26,9 @@ import CreateUser from './pages/user/CreateUser';
 import UpdateUserByAdmin from './pages/user/UpdateUserByAdmin';
 import UserList from './pages/user/UserList';
 import BlockUser from './pages/user/BlockUser';
-import StudentList from './pages/student/StudentList';
-import UpdateStudent from './pages/student/UpdateStudent';
 
+import UpdateStudent from './pages/student/UpdateStudent';
+import StudentList from './pages/student/StudentList';
 // Component ProtectedRoute
 const ProtectedRoute = ({ element, requiredRole }) => {
   const user = JSON.parse(localStorage.getItem('user'));
@@ -65,15 +65,15 @@ function App() {
         <Route path="/kiemtradinhky" element={<HealthCheck/>}/>
         <Route path="/capnhatthongtin" element={<UpdateUser/>}/>
         <Route path="/doimatkhau" element={<UpdatePassword/>}/>
-        <Route path="/taomoihocsinh" element={<CreateStudent/>}/>
-        <Route path="/admin/taomoinguoidung" element={<CreateUser/>}/>
-        <Route path="/admin/capnhatnguoidung/:userId" element={<UpdateUserByAdmin/>}/>
-        <Route path="/admin/danhsachnguoidung" element={<UserList/>}/>
-        <Route path="/admin/khoanguoidung/:userId" element={<BlockUser />} />
+        <Route path="/taomoihocsinh" element={<CreateStudent/>} requiredRole="ROLE_ADMIN" />
+        <Route path="/admin/taomoinguoidung" element={<CreateUser/>} requiredRole="ROLE_ADMIN" />
+        <Route path="/admin/capnhatnguoidung/:userId" element={<UpdateUserByAdmin/>} requiredRole="ROLE_ADMIN" />
+        <Route path="/admin/danhsachnguoidung" element={<UserList/>} />
+        <Route path="/admin/khoanguoidung/:userId" element={<BlockUser />} requiredRole="ROLE_ADMIN" />
         <Route path="/danhsachhocsinh" element={<StudentList/>}/>
         <Route path="/capnhathocsinh/:studentId" element={<UpdateStudent/>}/>
 
-
+           
         <Route path="/parent" element={<ProtectedRoute element={<ParentPages/>} requiredRole="ROLE_PARENT" />} />
         <Route path="/nurse" element={<ProtectedRoute element={<NursePages/>} requiredRole="ROLE_NURSE" />} />
         <Route path='/admin' element={<ProtectedRoute element={<Admin/>} requiredRole="ROLE_ADMIN" />} />

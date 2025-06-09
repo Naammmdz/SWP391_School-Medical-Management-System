@@ -215,7 +215,7 @@ const UserList = () => {
             <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
         </select>
-        <button type="submit" className="filter-btn">Lọc</button>
+        <button type="submit" className="filter-btn">Tìm kiếm</button>
         <button type="button" className="clear-btn" onClick={handleClearFilter}>Xóa lọc</button>
       </form>
 

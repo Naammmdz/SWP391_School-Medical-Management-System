@@ -9,7 +9,7 @@ const Footer = () => {
           &copy; {new Date().getFullYear()} Y Tế Học Đường. All rights reserved.
         </span>
         <span className="footer-links">
-          <a href="/" className="footer-link">Trang chủ</a>
+          
           <a href="/blog" className="footer-link">Blog</a>
           <a href="/lien-he" className="footer-link">Liên hệ</a>
         </span>
