@@ -1,0 +1,399 @@
+/* HomePage Styles */
+
+/* Base styles */
+.home-page {
+  margin-top: 90px;
+  font-family: 'Roboto', Arial, sans-serif;
+  color: #333;
+  line-height: 1.6;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.section {
+  padding: 60px 0;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.section-header h2 {
+  font-size: 32px;
+  color: #1e7e34;
+  margin-bottom: 10px;
+  position: relative;
+  padding-bottom: 15px;
+}
+
+.section-header h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 3px;
+  background-color: #28a745;
+}
+
+.section-header p {
+  font-size: 18px;
+  color: #6c757d;
+}
+
+/* Buttons */
+.btn {
+  display: inline-block;
+  padding: 10px 25px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.btn-primary {
+  background-color: #28a745;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #218838;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: #5a6268;
+}
+
+.btn-sm {
+  padding: 6px 15px;
+  font-size: 14px;
+}
+
+/* Hero Section */
+.hero {
+  background-size: 100% auto;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-color: #666;
+  color: white;
+  text-align: center;
+  padding: 120px 0;
+  position: relative;
+}
+.hero h1 {
+  font-size: 48px;
+  margin-bottom: 20px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.hero p {
+  font-size: 24px;
+  margin-bottom: 30px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+/* School Intro Section */
+.school-intro {
+  background-color: #f8f9fa;
+}
+
+.intro-content {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+}
+
+.intro-text {
+  flex: 1;
+}
+
+.intro-image {
+  flex: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.intro-image img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.stats {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 30px;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 20px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  flex: 1;
+  margin: 0 10px;
+}
+
+.stat-number {
+  display: block;
+  font-size: 36px;
+  font-weight: 700;
+  color: #28a745;
+  margin-bottom: 5px;
+}
+
+.stat-label {
+  font-size: 16px;
+  color: #6c757d;
+}
+
+/* Health Resources Section */
+.health-resources {
+  background-color: white;
+}
+
+.resources-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 30px;
+  margin-bottom: 40px;
+}
+
+.resource-card {
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.resource-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.resource-thumbnail {
+  position: relative;
+}
+
+.resource-thumbnail img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+.resource-type {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.resource-type.guide {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.resource-type.document {
+  background-color: #cce5ff;
+  color: #004085;
+}
+
+.resource-info {
+  padding: 20px;
+}
+
+.resource-info h3 {
+  margin-bottom: 10px;
+  font-size: 18px;
+  height: 50px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.resource-date {
+  color: #6c757d;
+  font-size: 14px;
+  margin-bottom: 15px;
+}
+
+.resources-footer {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.resources-login-prompt {
+  text-align: center;
+  background-color: #f8f9fa;
+  padding: 30px;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+.resources-login-prompt p {
+  margin-bottom: 15px;
+}
+
+/* Contact Section */
+.contact-section {
+  background-color: white;
+}
+
+.contact-content {
+  display: flex;
+  gap: 40px;
+  align-items: flex-start;
+}
+
+.contact-info, .contact-form {
+  flex: 1;
+}
+
+.contact-info h2 {
+  color: #1e7e34;
+  margin-bottom: 20px;
+}
+
+.contact-details {
+  list-style: none;
+  padding: 0;
+  margin: 30px 0;
+}
+
+.contact-details li {
+  padding: 10px 0;
+  display: flex;
+  align-items: center;
+}
+
+.contact-details i {
+  margin-right: 10px;
+  color: #28a745;
+  font-size: 18px;
+}
+
+.contact-form h3 {
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 16px;
+  transition: border-color 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  border-color: #28a745;
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+/* Loading state */
+.loading {
+  text-align: center;
+  padding: 40px;
+  font-size: 18px;
+  color: #6c757d;
+  font-style: italic;
+}
+
+/* No data state */
+.no-data {
+  text-align: center;
+  padding: 30px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  font-size: 16px;
+  color: #6c757d;
+  grid-column: 1 / -1; /* For grid layouts */
+  margin: 20px 0;
+}
+
+/* Responsive styles */
+@media (max-width: 992px) {
+  .intro-content {
+    flex-direction: column;
+  }
+  
+  .contact-content {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero h1 {
+    font-size: 36px;
+  }
+  
+  .hero p {
+    font-size: 18px;
+  }
+  
+  .section {
+    padding: 40px 0;
+  }
+  
+  .stats {
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .stat-item {
+    margin: 0;
+  }
+  
+  .resources-grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  }
+}
+
+@media (max-width: 576px) {
+  .hero-buttons {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .section-header h2 {
+    font-size: 28px;
+  }
+  
+  .section-header p {
+    font-size: 16px;
+  }
+} 
