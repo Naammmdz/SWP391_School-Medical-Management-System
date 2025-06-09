@@ -200,10 +200,7 @@ public class HealthProfileServiceImpl implements HealthProfileService {
                 predicate = cb.and(predicate, cb.equal(cb.lower(root.get("student").get("gender")),
                         filterRequest.getGender().toLowerCase()));
             }
-
             return predicate;
-
-
         };
         List<HealthProfile> healthProfiles = healthProfileRepository.findAll(specification);
         return healthProfiles.stream()

@@ -11,7 +11,6 @@ public class HealthProfileMapper {
         if (healthProfile == null) {
             return null;
         }
-
         HealthProfileResponseDTO dto = new HealthProfileResponseDTO();
         dto.setProfileId(healthProfile.getProfileId());
         dto.setStudentId(healthProfile.getStudent() != null ? healthProfile.getStudent().getStudentId() : null);
