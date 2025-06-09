@@ -1,4 +1,4 @@
-package com.school.health.service;
+package com.school.health.service.impl;
 
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;

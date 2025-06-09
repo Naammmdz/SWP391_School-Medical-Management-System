@@ -9,7 +9,6 @@ import com.school.health.exception.DuplicateResourceException;
 import com.school.health.exception.ResourceNotFoundException;
 import com.school.health.repository.*;
 import com.school.health.service.HealthProfileService;
-import com.school.health.service.MailService;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
