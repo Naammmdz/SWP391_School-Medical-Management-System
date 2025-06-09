@@ -71,31 +71,30 @@ const HealthRecord = () => {
     }
   }, [accessToken]);
 
-  // Fetch health records with optional filters for the table display
+
   const fetchFilteredHealthRecords = useCallback(async (filters = {}) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const token = localStorage.getItem('token');
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        params: {
-          fullName: filters.fullName || '',
-          className: filters.className || '',
-        },
-      };
-      // Use filterHealthRecord with params for filtered results
-      const res = await HealthRecordService.filterHealthRecord(config.params, config);
-      setHealthRecords(res.data || []);
-    } catch (err) {
-      console.error("Error fetching filtered health records:", err);
-      setError('Không thể tải danh sách hồ sơ sức khỏe!');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [accessToken]);
+  setIsLoading(true);
+  setError(null);
+  try {
+    const token = localStorage.getItem('token');
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+    // Chỉ gửi các trường có giá trị, không bắt buộc phải có cả name và className
+    const body = {};
+    if (filters.fullName) body.name = filters.fullName;
+    if (filters.className) body.className = filters.className;
+    const res = await HealthRecordService.filterHealthRecord(body, config);
+    setHealthRecords(res.data || []);
+  } catch (err) {
+    console.error("Error fetching filtered health records:", err);
+    setError('Không thể tải danh sách hồ sơ sức khỏe!');
+  } finally {
+    setIsLoading(false);
+  }
+}, [accessToken]);
 
   // Fetch all classes for the dropdown independently
   const fetchAllClasses = useCallback(async () => {
@@ -138,7 +137,7 @@ const HealthRecord = () => {
         });
 
     } else if (studentId) {
-      // Nếu là học sinh thì chỉ lấy hồ sơ của mình
+      
       HealthRecordService.getHealthRecordByStudentId(studentId, {
         headers: {
           Authorization: `Bearer ${accessToken}`,

@@ -66,10 +66,10 @@ function App() {
         <Route path="/capnhatthongtin" element={<UpdateUser/>}/>
         <Route path="/doimatkhau" element={<UpdatePassword/>}/>
         <Route path="/taomoihocsinh" element={<CreateStudent/>}/>
-        <Route path="/taomoinguoidung" element={<CreateUser/>}/>
-        <Route path="/capnhatnguoidung/:userId" element={<UpdateUserByAdmin/>}/>
-        <Route path="/danhsachnguoidung" element={<UserList/>}/>
-        <Route path="/khoanguoidung/:userId" element={<BlockUser />} />
+        <Route path="/admin/taomoinguoidung" element={<CreateUser/>}/>
+        <Route path="/admin/capnhatnguoidung/:userId" element={<UpdateUserByAdmin/>}/>
+        <Route path="/admin/danhsachnguoidung" element={<UserList/>}/>
+        <Route path="/admin/khoanguoidung/:userId" element={<BlockUser />} />
         <Route path="/danhsachhocsinh" element={<StudentList/>}/>
         <Route path="/capnhathocsinh/:studentId" element={<UpdateStudent/>}/>
 

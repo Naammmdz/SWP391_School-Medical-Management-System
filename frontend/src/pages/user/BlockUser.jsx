@@ -48,7 +48,7 @@ const BlockUser = () => {
       setSuccessMessage('Vô hiệu hóa người dùng thành công!');
       setTimeout(() => {
         setSuccessMessage(null);
-        navigate('/danhsachnguoidung');
+        navigate('/admin/danhsachnguoidung');
       }, 2000);
     } catch (error) {
       setError('Failed to block user');
@@ -113,7 +113,7 @@ const BlockUser = () => {
         <h3>Xác nhận vô hiệu hóa</h3>
         <p>Bạn có chắc chắn muốn vô hiệu hóa người dùng này?</p>
         <div className="action-buttons">
-          <button onClick={() => navigate('/danhsachnguoidung')} className="cancel-btn">
+          <button onClick={() => navigate('/admin/danhsachnguoidung')} className="cancel-btn">
             <X size={16} />
             Hủy
           </button>
