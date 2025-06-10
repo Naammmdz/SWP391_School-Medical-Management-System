@@ -28,6 +28,7 @@ public class MedicineSubmission {
     @JoinColumn(name = "ParentId", referencedColumnName = "UserId", nullable = false)
     private User parent;
 
+    @CreationTimestamp
     @Column(name = "SubmissionDate", nullable = false)
     private LocalDate submissionDate;
 
@@ -58,7 +59,7 @@ public class MedicineSubmission {
     private LocalDate approvedAt;
 
     @CreationTimestamp
-    @Column(name = "CreatedAt", nullable = false, updatable = false)
+    @Column(name = "CreatedAt")
     private LocalDate createdAt;
 
     @OneToMany(mappedBy = "medicineSubmission", cascade = CascadeType.ALL, orphanRemoval = true)

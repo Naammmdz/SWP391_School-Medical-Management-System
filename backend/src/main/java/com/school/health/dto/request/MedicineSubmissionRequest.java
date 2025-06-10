@@ -12,9 +12,6 @@ public class MedicineSubmissionRequest {
     @NotNull
     private Integer studentId;
 
-    @NotNull
-    private Integer parentId;
-
     @NotBlank
     @Size(max = 255)
     private String instruction;
