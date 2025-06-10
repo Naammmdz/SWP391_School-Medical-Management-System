@@ -19,13 +19,8 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-    /**
-     * Handle exception when validate data
-     *
-     * @param e
-     * @param request
-     * @return errorResponse
-     */
+
+    // Handle exception when the data is invalid
     @ExceptionHandler({ConstraintViolationException.class,
             MissingServletRequestParameterException.class, MethodArgumentNotValidException.class})
     @ResponseStatus(BAD_REQUEST)
@@ -74,13 +69,7 @@ public class GlobalExceptionHandler {
     }
 
 
-    /**
-     * Handle exception when the request not found data
-     *
-     * @param e
-     * @param request
-     * @return
-     */
+    // Handle exception when the request not found data
     @ExceptionHandler(ResourceNotFoundException.class)
     @ResponseStatus(NOT_FOUND)
     @ApiResponses(value = {
@@ -111,13 +100,7 @@ public class GlobalExceptionHandler {
         return errorResponse;
     }
 
-    /**
-     * Handle exception when the data is conflicted
-     *
-     * @param e
-     * @param request
-     * @return
-     */
+    // Handle exception when the data is conflicted
     @ExceptionHandler(InvalidDataException.class)
     @ResponseStatus(CONFLICT)
     @ApiResponses(value = {
@@ -148,13 +131,7 @@ public class GlobalExceptionHandler {
         return errorResponse;
     }
 
-    /**
-     * Handle exception when internal server error
-     *
-     * @param e
-     * @param request
-     * @return error
-     */
+    // Handle exception when internal server error
     @ExceptionHandler(Exception.class)
     @ResponseStatus(INTERNAL_SERVER_ERROR)
     @ApiResponses(value = {

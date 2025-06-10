@@ -55,7 +55,6 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "Role", nullable = false, length = 20)
-
     private UserRole role;
 
     @CreationTimestamp
