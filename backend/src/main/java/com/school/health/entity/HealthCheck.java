@@ -2,6 +2,7 @@ package com.school.health.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.*;
 
@@ -36,6 +37,7 @@ public class HealthCheck {
     private boolean parentConfirmation;
     @Column(name = "Notes")
     private String notes;
+    @CreationTimestamp
     @Column(name = "CreatedAt")
     private LocalDateTime createdAt;
 

@@ -2,6 +2,8 @@ package com.school.health.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+
 import java.time.*;
 
 @Entity
@@ -21,10 +23,17 @@ public class Vaccination {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "CampaignId")
     private VaccinationCampaign campaign;
+    @Column(name = "VaccineName")
     private String vaccineName;
+    @Column(name = "Date")
     private LocalDate date;
+    @Column(name = "Result")
     private String result;
+    @Column(name = "ParentConfirmation")
     private boolean parentConfirmation;
+    @Column(name = "Notes")
     private String notes;
+    @Column(name = "CreatedAt")
+    @CreationTimestamp
     private LocalDateTime createdAt;
 }

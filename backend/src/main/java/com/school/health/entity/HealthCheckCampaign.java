@@ -3,6 +3,7 @@ package com.school.health.entity;
 import com.school.health.enums.Status;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.*;
 
@@ -26,11 +27,13 @@ public class HealthCheckCampaign {
     private int createdBy;
     @Column(name = "ApprovedBy")
     private int approvedBy;
+    @CreationTimestamp
     @Column(name = "ApprovedAt")
     private LocalDateTime approvedAt;
     @Enumerated(EnumType.STRING)
     @Column(name = "Status")
     private Status status;
+    @CreationTimestamp
     @Column(name = "CreatedAt")
     private LocalDateTime createdAt;
 

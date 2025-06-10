@@ -4,6 +4,7 @@ import com.school.health.enums.Status;
 import jakarta.persistence.Entity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -31,10 +32,12 @@ public class VaccinationCampaign {
     @Column(name = "ApprovedBy")
     private int ApprovedBy;
     @Column(name = "ApprovedAt")
+    @CreationTimestamp
     private LocalDateTime approvedAt;
     @Enumerated(EnumType.STRING)
     @Column(name = "Status")
     private Status status;
     @Column(name = "CreatedAt")
+    @CreationTimestamp
     private LocalDateTime createdAt;
 }
