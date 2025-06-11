@@ -2,7 +2,10 @@ package com.school.health.service.impl;
 
 import com.school.health.dto.request.HealthCampaignRequestDTO;
 import com.school.health.dto.response.HealthCampaignResponseDTO;
+import com.school.health.dto.response.StudentResponseDTO;
+import com.school.health.entity.HealthCheck;
 import com.school.health.entity.HealthCheckCampaign;
+import com.school.health.entity.Student;
 import com.school.health.enums.Status;
 import com.school.health.repository.HealthCheckCampaignRepository;
 import com.school.health.service.HealthCheckCampaignService;
@@ -107,4 +110,25 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
         HealthCheckCampaign updatedCampaign = healthCheckCampaignRepository.save(existingCampaign);
         return mapToResponseDTO(updatedCampaign);
     }
+
+//    @Override
+//    public List<HealthCampaignResponseDTO> getStudentsRegistrations(int campaignId) {
+//        // Giả sử bạn có một phương thức trong repository để lấy danh sách học sinh đã đăng ký
+//        List<Student> campaigns = healthCheckCampaignRepository.findStudentWithParentConfirmationInCampaign(campaignId);
+//        return campaigns.stream()
+//                .map(student -> {
+//                    HealthCampaignResponseDTO responseDTO = new HealthCampaignResponseDTO();
+//                    responseDTO.setStudentId(student.getStudentId());
+//                    responseDTO.setFullName(student.getFullName());
+//                    responseDTO.setDob(student.getDob());
+//                    responseDTO.setGender(student.getGender());
+//                    responseDTO.setClassName(student.getClassName());
+//                    // Thêm các trường khác nếu cần
+//                    return responseDTO;
+//                })
+//                .collect(Collectors.toList());
+//    }
+
+    }
 }
+

@@ -6,6 +6,7 @@ import com.school.health.service.HealthProfileService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,12 +20,14 @@ public class HealthProfileParentController {
     private final HealthProfileService service;
 
     @GetMapping
+    @PreAuthorize("hasRole('PARENT')")
     public ResponseEntity<?> getHealthProfile(@PathVariable Integer studentId) {
         HealthProfileResponseDTO response = service.getHealthProfileByStudentId(studentId);
         return ResponseEntity.ok(response);
     }
 
     @PutMapping
+    @PreAuthorize("hasRole('PARENT')")
     public ResponseEntity<?> updateHealthProfile(@PathVariable Integer studentId, @RequestBody @Valid UpdateHealthProfileDTO healthProfile, @PathVariable Integer userId) {
         HealthProfileResponseDTO response = service.updateHealthProfile(studentId, healthProfile, userId);
         return ResponseEntity.ok(response);
