@@ -27,7 +27,6 @@ import java.util.stream.Collectors;
 public class HealthProfileServiceImpl implements HealthProfileService {
     private final HealthProfileRepository healthProfileRepository;
     private final StudentRepository studentRepository;
-    private final MailService mailService;
 
     @Override
     public HealthProfileResponseDTO createHealthProfile(Integer studentId, CreateHealthProfileDTO dto, Integer userId) {
@@ -66,9 +65,20 @@ public class HealthProfileServiceImpl implements HealthProfileService {
         // Lưu vào database
         HealthProfile updatedProfile = healthProfileRepository.save(existingProfile);
         return mapToResponseDTO(updatedProfile);
-    }
 
-    //Lấy hồ sơ sức khỏe theo student ID
+
+    }
+    // Ở đây phải có thêm @Transactional(readOnly = true) để đảm bảo rằng phương thức này chỉ đọc dữ liệu và không thay đổi trạng thái của database
+    // Lấy hồ sơ sức khỏe của học sinh theo studentId
+    // Nếu không có hồ sơ sức khỏe thì sẽ ném ra ResourceNotFoundException
+    // Nếu có thì sẽ trả về HealthProfileResponseDTO
+    // Phương thức này sẽ được gọi khi cần lấy thông tin hồ sơ sức khỏe của một học sinh cụ thể
+    // Ví dụ: khi cần hiển thị thông tin hồ sơ sức khỏe trên trang web hoặc trong ứng dụng di động
+    // Phương thức này sẽ trả về thông tin hồ sơ sức khỏe của học sinh theo studentId
+    // Vậy có nên đặt @Transactional(readOnly = true) cho tất cả phương thức trong 1 service không ?
+    // Câu trả lời là không, chỉ nên đặt @Transactional(readOnly = true) cho những phương thức chỉ đọc dữ liệu và không thay đổi trạng thái của database
+    // Nếu phương thức có thay đổi trạng thái của database thì không nên đặt @Transactional(readOnly = true)
+    // Bởi vì nếu đặt @Transactional(readOnly = true) thì sẽ không thể thay đổi trạng thái của database được
     @Override
     @Transactional(readOnly = true)
     public HealthProfileResponseDTO getHealthProfileByStudentId(Integer studentId) {

@@ -3,37 +3,109 @@ package com.school.health.service.impl;
 import com.school.health.dto.request.HealthCampaignRequestDTO;
 import com.school.health.dto.response.HealthCampaignResponseDTO;
 import com.school.health.entity.HealthCheckCampaign;
+import com.school.health.enums.Status;
 import com.school.health.repository.HealthCheckCampaignRepository;
 import com.school.health.service.HealthCheckCampaignService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignService {
+
     private final HealthCheckCampaignRepository healthCheckCampaignRepository;
 
     @Override
     public HealthCampaignResponseDTO createCampaign(HealthCampaignRequestDTO healthCampaignRequestDTO, int createdBy, int approvedBy) {
+        HealthCheckCampaign campaign = mapToEntity(healthCampaignRequestDTO);
+        campaign.setCreatedBy(createdBy);
+        campaign.setApprovedBy(approvedBy);
+        HealthCheckCampaign savedCampaign = healthCheckCampaignRepository.save(campaign);
+        return mapToResponseDTO(savedCampaign);
+    }
 
-        HealthCheckCampaign healthCheckCampaign = new HealthCheckCampaign();
-        healthCheckCampaign.setCampaignName(healthCampaignRequestDTO.getCampaignName());
-        healthCheckCampaign.setDescription(healthCampaignRequestDTO.getDescription());
-        healthCheckCampaign.setScheduledDate(healthCampaignRequestDTO.getScheduledDate());
-        healthCheckCampaign.setStatus(healthCampaignRequestDTO.getStatus());
-        healthCheckCampaign.setCreatedBy(createdBy);
-        healthCheckCampaign.setApprovedBy(approvedBy);
+    public HealthCheckCampaign mapToEntity(HealthCampaignRequestDTO requestDTO) {
+        HealthCheckCampaign campaign = new HealthCheckCampaign();
+        campaign.setCampaignName(requestDTO.getCampaignName());
+        campaign.setDescription(requestDTO.getDescription());
+        campaign.setScheduledDate(requestDTO.getScheduledDate());
+        campaign.setStatus(requestDTO.getStatus());
+        return campaign;
+    }
 
-        HealthCheckCampaign savedCampaign = healthCheckCampaignRepository.save(healthCheckCampaign);
-
+    public HealthCampaignResponseDTO mapToResponseDTO(HealthCheckCampaign campaign) {
         HealthCampaignResponseDTO responseDTO = new HealthCampaignResponseDTO();
-        responseDTO.setCampaignName(savedCampaign.getCampaignName());
-        responseDTO.setDescription(savedCampaign.getDescription());
-        responseDTO.setScheduledDate(savedCampaign.getScheduledDate());
-        responseDTO.setCreatedBy(savedCampaign.getCreatedBy());
-        responseDTO.setApprovedBy(savedCampaign.getApprovedBy());
-        responseDTO.setStatus(savedCampaign.getStatus());
-
+        responseDTO.setCampaignId(campaign.getCampaignId());
+        responseDTO.setCampaignName(campaign.getCampaignName());
+        responseDTO.setDescription(campaign.getDescription());
+        responseDTO.setScheduledDate(campaign.getScheduledDate());
+        responseDTO.setCreatedBy(campaign.getCreatedBy());
+        responseDTO.setApprovedBy(campaign.getApprovedBy());
+        responseDTO.setStatus(campaign.getStatus());
+        responseDTO.setCreatedAt(campaign.getCreatedAt());
         return responseDTO;
+    }
+
+    @Override
+    public List<HealthCampaignResponseDTO> getAllCampaigns() {
+        return healthCheckCampaignRepository.findAll().stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+        // giải thích đoạn return ở đây
+        // Dòng này lấy tất cả các chiến dịch sức khỏe từ cơ sở dữ liệu,
+        // chuyển đổi từng chiến dịch thành đối tượng HealthCampaignResponseDTO
+        // và trả về danh sách các đối tượng này.
+        // Sử dụng stream để thực hiện việc chuyển đổi và thu thập kết quả vào một danh sách.
+        // .map là một phương thức trong Stream API của Java
+        // được sử dụng để chuyển đổi từng phần tử trong stream thành một giá trị khác.
+        // .collect là một phương thức trong Stream API của Java
+        // được sử dụng để thu thập các phần tử trong stream thành một danh sách (hoặc một cấu trúc dữ liệu khác).
+    }
+
+    @Override
+    public HealthCampaignResponseDTO getCampaignById(int campaignId) {
+        HealthCheckCampaign campaign = healthCheckCampaignRepository.findById(campaignId)
+                .orElseThrow(() -> new RuntimeException("Campaign not found with ID: " + campaignId));
+        return mapToResponseDTO(campaign);
+    }
+
+    @Override
+    public HealthCampaignResponseDTO updateCampaign(int campaignId, HealthCampaignRequestDTO healthCampaignRequestDTO) {
+        HealthCheckCampaign existingCampaign = healthCheckCampaignRepository.findById(campaignId)
+                .orElseThrow(() -> new RuntimeException("Campaign not found with ID: " + campaignId));
+
+        existingCampaign.setCampaignName(healthCampaignRequestDTO.getCampaignName());
+        existingCampaign.setDescription(healthCampaignRequestDTO.getDescription());
+        existingCampaign.setScheduledDate(healthCampaignRequestDTO.getScheduledDate());
+        existingCampaign.setStatus(healthCampaignRequestDTO.getStatus());
+
+        HealthCheckCampaign updatedCampaign = healthCheckCampaignRepository.save(existingCampaign);
+        return mapToResponseDTO(updatedCampaign);
+    }
+
+    @Override
+    public HealthCampaignResponseDTO approveCampaign(int campaignId, int approvedBy) {
+        HealthCheckCampaign existingCampaign = healthCheckCampaignRepository.findById(campaignId)
+                .orElseThrow(() -> new RuntimeException("Campaign not found with ID: " + campaignId));
+
+        existingCampaign.setApprovedBy(approvedBy);
+        existingCampaign.setStatus(Status.APPROVED); // Assuming status is set to APPROVED when approved
+
+        HealthCheckCampaign updatedCampaign = healthCheckCampaignRepository.save(existingCampaign);
+        return mapToResponseDTO(updatedCampaign);
+    }
+
+    @Override
+    public HealthCampaignResponseDTO updateCampaignStatus(int campaignId, Status status) {
+        HealthCheckCampaign existingCampaign = healthCheckCampaignRepository.findById(campaignId)
+                .orElseThrow(() -> new RuntimeException("Campaign not found with ID: " + campaignId));
+
+        existingCampaign.setStatus(status);
+
+        HealthCheckCampaign updatedCampaign = healthCheckCampaignRepository.save(existingCampaign);
+        return mapToResponseDTO(updatedCampaign);
     }
 }
