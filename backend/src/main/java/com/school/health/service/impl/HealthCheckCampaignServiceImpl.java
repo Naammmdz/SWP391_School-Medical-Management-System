@@ -19,10 +19,9 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
     private final HealthCheckCampaignRepository healthCheckCampaignRepository;
 
     @Override
-    public HealthCampaignResponseDTO createCampaign(HealthCampaignRequestDTO healthCampaignRequestDTO, int createdBy, int approvedBy) {
+    public HealthCampaignResponseDTO createCampaign(HealthCampaignRequestDTO healthCampaignRequestDTO, int createdBy) {
         HealthCheckCampaign campaign = mapToEntity(healthCampaignRequestDTO);
         campaign.setCreatedBy(createdBy);
-        campaign.setApprovedBy(approvedBy);
         HealthCheckCampaign savedCampaign = healthCheckCampaignRepository.save(campaign);
         return mapToResponseDTO(savedCampaign);
     }
@@ -92,7 +91,7 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
                 .orElseThrow(() -> new RuntimeException("Campaign not found with ID: " + campaignId));
 
         existingCampaign.setApprovedBy(approvedBy);
-        existingCampaign.setStatus(Status.APPROVED); // Assuming status is set to APPROVED when approved
+        existingCampaign.setStatus(Status.APPROVED); // Set status thành approved
 
         HealthCheckCampaign updatedCampaign = healthCheckCampaignRepository.save(existingCampaign);
         return mapToResponseDTO(updatedCampaign);

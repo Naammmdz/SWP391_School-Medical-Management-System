@@ -10,8 +10,7 @@ import java.util.List;
 
 public interface HealthCheckCampaignService {
     HealthCampaignResponseDTO createCampaign(HealthCampaignRequestDTO healthCampaignRequestDTO,
-                                             int createdBy,
-                                             int approvedBy);
+                                             int createdBy);
     List<HealthCampaignResponseDTO> getAllCampaigns();
     HealthCampaignResponseDTO getCampaignById(int campaignId);
     HealthCampaignResponseDTO updateCampaign(int campaignId, HealthCampaignRequestDTO healthCampaignRequestDTO);

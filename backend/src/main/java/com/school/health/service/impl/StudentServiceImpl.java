@@ -27,8 +27,8 @@ public class StudentServiceImpl implements StudentService {
      * Lấy danh sách học sinh theo parent ID
      */
     public List<StudentResponseDTO> getStudentsByParentId(Integer parentId) {
-        List<Student> students = studentRepository.findByParentUserId(parentId);
 
+        List<Student> students = studentRepository.findByParentUserId(parentId);
         return students.stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());

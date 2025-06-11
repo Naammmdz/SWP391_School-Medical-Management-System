@@ -19,10 +19,10 @@ import org.springframework.web.bind.annotation.*;
 public class CampaignAdminNurseController {
     private final HealthCheckCampaignServiceImpl healthCheckCampaignServiceImpl;
 
-    @PostMapping("/{createdBy}/{appovedBy}")
+    @PostMapping("/{createdBy}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> createCampaign(@RequestBody HealthCampaignRequestDTO healthCampaignRequestDTO, @PathVariable int createdBy, @PathVariable int appovedBy) {
-        HealthCampaignResponseDTO healthCampaignResponseDTO = healthCheckCampaignServiceImpl.createCampaign(healthCampaignRequestDTO, createdBy, appovedBy);
+    public ResponseEntity<?> createCampaign(@RequestBody HealthCampaignRequestDTO healthCampaignRequestDTO, @PathVariable int createdBy) {
+        HealthCampaignResponseDTO healthCampaignResponseDTO = healthCheckCampaignServiceImpl.createCampaign(healthCampaignRequestDTO, createdBy);
         return ResponseEntity.ok(healthCampaignResponseDTO);
     }
 
