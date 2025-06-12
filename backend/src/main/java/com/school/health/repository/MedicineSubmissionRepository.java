@@ -16,7 +16,15 @@ public interface MedicineSubmissionRepository extends JpaRepository<MedicineSubm
     List<MedicineSubmission> findByParent_UserIdAndStudent_StudentIdAndSubmissionStatus(Integer parentId, Integer studentId, MedicineSubmissionStatus status);
     List<MedicineSubmission> findByParent_UserIdAndStudent_StudentId(Integer parentId, Integer studentId);
     List<MedicineSubmission> findByParent_UserIdAndSubmissionStatus(Integer parentId, MedicineSubmissionStatus status);
+    List<MedicineSubmission> findByStudent_StudentIdAndSubmissionStatus(Integer studentId, MedicineSubmissionStatus status);
     long countByStudent_StudentIdAndSubmissionStatus(Integer studentId, MedicineSubmissionStatus status);
+    List<MedicineSubmission> findByStudent_StudentId(Integer studentId);
+
+
+    List<MedicineSubmission> findBySubmissionStatus(MedicineSubmissionStatus status);
+
+    @Query("SELECT m FROM MedicineSubmission m ORDER BY m.submissionDate DESC")
+    List<MedicineSubmission> findAllOrderBySubmissionDateDesc();
 
     @Query("SELECT m FROM MedicineSubmission m ORDER BY m.submissionStatus ASC, m.startDate DESC")
     List<MedicineSubmission> findAllOrderByStatusAndDate();
@@ -38,4 +46,6 @@ public interface MedicineSubmissionRepository extends JpaRepository<MedicineSubm
     // Đếm số đơn thuốc sắp hết hạn (trong 3 ngày tới)
     @Query("SELECT COUNT(m) FROM MedicineSubmission m WHERE m.endDate <= :date AND m.submissionStatus = 'APPROVED'")
     long countExpiringSubmissions(@Param("date") LocalDate date);
+
+    long countBySubmissionDate(LocalDate submissionDate);
 }

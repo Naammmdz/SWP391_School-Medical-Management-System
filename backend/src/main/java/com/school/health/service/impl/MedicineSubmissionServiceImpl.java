@@ -9,6 +9,7 @@ import com.school.health.enums.MedicineSubmissionStatus;
 import com.school.health.exception.AccessDeniedException;
 import com.school.health.exception.BadRequestException;
 import com.school.health.exception.ResourceNotFoundException;
+import com.school.health.repository.MedicineLogRepository;
 import com.school.health.repository.MedicineSubmissionRepository;
 import com.school.health.repository.StudentRepository;
 import com.school.health.repository.UserRepository;
@@ -27,6 +28,9 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
 
     @Autowired
     private MedicineSubmissionRepository medicineSubmissionRepository;
+
+    @Autowired
+    private MedicineLogRepository medicineLogRepository;
 
     @Autowired
     private StudentRepository studentRepository;
@@ -153,32 +157,6 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
     }
 
     @Override
-    public List<MedicineSubmissionResponse> getAllForAdmin(Integer studentId, Integer parentId, String status) {
-        return List.of();
-    }
-
-    @Override
-    public AdminDashboardResponse getAdminDashboard() {
-        return null;
-    }
-
-    @Override
-    public MedicineSubmissionResponse getById(Integer id) {
-        return null;
-    }
-
-
-    @Override
-    public MedicineSubmissionResponse updateStatus(Integer id, StatusUpdateRequest request) {
-        return null;
-    }
-
-    @Override
-    public void delete(Integer id) {
-
-    }
-
-    @Override
     public void deleteByParent(Integer id, Integer parentId) {
         MedicineSubmission submission = medicineSubmissionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn thuốc: " + id));
@@ -193,6 +171,81 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
 
         medicineSubmissionRepository.deleteById(id);
     }
+
+    // ===== ADMIN OPERATIONS =====
+    @Override
+    public List<MedicineSubmissionResponse> getAllForAdmin(Integer studentId, Integer parentId, String status) {
+        List<MedicineSubmission> submissions;
+
+        MedicineSubmissionStatus statusEnum = null;
+        if (status != null) {
+            try {
+                statusEnum = MedicineSubmissionStatus.valueOf(status);
+            } catch (IllegalArgumentException e) {
+                throw new BadRequestException("Invalid status: " + status);
+            }
+        }
+
+        if (studentId != null && parentId != null && status != null) {
+            submissions = medicineSubmissionRepository.findByParent_UserIdAndStudent_StudentIdAndSubmissionStatus(parentId, studentId, statusEnum);
+        } else if (studentId != null && parentId != null) {
+            submissions = medicineSubmissionRepository.findByParent_UserIdAndStudent_StudentId(parentId, studentId);
+        } else if (studentId != null && status != null) {
+            submissions = medicineSubmissionRepository.findByStudent_StudentIdAndSubmissionStatus(studentId, statusEnum);
+        } else if (parentId != null && status != null) {
+            submissions = medicineSubmissionRepository.findByParent_UserIdAndSubmissionStatus(parentId, statusEnum);
+        } else if (studentId != null) {
+            submissions = medicineSubmissionRepository.findByStudent_StudentId(studentId);
+        } else if (parentId != null) {
+            submissions = medicineSubmissionRepository.findByParent_UserId(parentId);
+        } else if (status != null) {
+            submissions = medicineSubmissionRepository.findBySubmissionStatus(statusEnum);
+        } else {
+            submissions = medicineSubmissionRepository.findAllOrderBySubmissionDateDesc();
+        }
+
+        return submissions.stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public AdminDashboardResponse getAdminDashboard() {
+        AdminDashboardResponse response = new AdminDashboardResponse();
+
+        response.setTotalSubmissions(medicineSubmissionRepository.count());
+        response.setPendingSubmissions(medicineSubmissionRepository.countBySubmissionStatus(MedicineSubmissionStatus.PENDING));
+        response.setApprovedSubmissions(medicineSubmissionRepository.countBySubmissionStatus(MedicineSubmissionStatus.APPROVED));
+        response.setRejectedSubmissions(medicineSubmissionRepository.countBySubmissionStatus(MedicineSubmissionStatus.REJECTED));
+
+        LocalDate today = LocalDate.now();
+        response.setTodaySubmissions(medicineSubmissionRepository.countBySubmissionDate(today));
+
+        return response;
+    }
+
+
+    // ===== COMMON OPERATIONS =====
+    @Override
+    public MedicineSubmissionResponse getById(Integer id) {
+        MedicineSubmission submission = medicineSubmissionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Submission not found: " + id));
+
+        return toResponse(submission);
+    }
+
+
+    @Override
+    public MedicineSubmissionResponse updateStatus(Integer id, StatusUpdateRequest request) {
+        return null;
+    }
+
+    @Override
+    public void delete(Integer id) {
+
+    }
+
+
 
 
     // ===== NURSE OPERATIONS =====
@@ -265,5 +318,16 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
         medicineLogRepository.save(log);
 
         return toLogResponse(log);
+    }
+
+    private MedicineLogResponse toLogResponse(MedicineLog log) {
+        MedicineLogResponse response = new MedicineLogResponse();
+        response.setId(log.getMedicineLogId());
+        response.setSubmissionId(log.getMedicineSubmission().getMedicineSubmissionId());
+        response.setGivenByUserId(log.getGivenBy().getUserId());
+        response.setGivenByName(log.getGivenBy().getFullName());
+        response.setGivenAt(log.getGivenAt());
+        response.setNotes(log.getNotes());
+        return response;
     }
 }
