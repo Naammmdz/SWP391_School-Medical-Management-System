@@ -6,19 +6,18 @@ import com.school.health.enums.Status;
 import com.school.health.security.services.UserDetailsImpl;
 import com.school.health.service.impl.HealthCheckCampaignServiceImpl;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-@RequestMapping("/api/admin/healthcheck-campaigns")
+@RequestMapping("/api/healthcheck-campaigns")
 @RestController
 @Validated
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*", maxAge = 3600) // Cho phép React frontend gọi API
-public class CampaignAdminNurseController {
+public class HealthCheckCampaignController {
     private final HealthCheckCampaignServiceImpl healthCheckCampaignServiceImpl;
 
     @PostMapping
@@ -68,7 +67,7 @@ public class CampaignAdminNurseController {
     // Endpoint để lấy danh sách đăng ký của học sinh trong chiến dịch sức khỏe
     // Tức là danh sách học sinh đã được parentConfirmation với bit status = 1
     @GetMapping("{campaignId}/students-registrations")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE')")
     public ResponseEntity<?> getStudentsRegistrations(@PathVariable int campaignId) {
         return ResponseEntity.ok(healthCheckCampaignServiceImpl.getStudentsRegistrations(campaignId));
     }

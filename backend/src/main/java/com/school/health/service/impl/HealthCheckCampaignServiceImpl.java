@@ -114,6 +114,9 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
     // Phương thức này có thể được sử dụng để lấy danh sách học sinh đã đăng ký trong chiến dịch sức khỏe
     @Override
     public List<StudentResponseDTO> getStudentsRegistrations(int campaignId) {
+        // Kiểm tra xem chiến dịch có tồn tại không
+        HealthCheckCampaign campaign = healthCheckCampaignRepository.findById(campaignId)
+                .orElseThrow(() -> new RuntimeException("Campaign not found with ID: " + campaignId));
         List<Student> students = healthCheckCampaignRepository.findStudentWithParentConfirmationInCampaign(campaignId);
         return students.stream()
                 .map(student -> {
