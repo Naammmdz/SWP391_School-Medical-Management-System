@@ -149,7 +149,7 @@ const Header = () => {
                 <Link to="/thongbaotiemchung" className="dropdown-item" onClick={() => setMedicalEventsOpen(false)}>
                   Thông Báo Tiêm Chủng
                 </Link>
-                <Link to="/kiemtradinhky" className="dropdown-item" onClick={() => setMedicalEventsOpen(false)}>
+                <Link to="/danhsachkiemtradinhky" className="dropdown-item" onClick={() => setMedicalEventsOpen(false)}>
                   Kiểm Tra Định Kỳ
                 </Link>
               </div>

@@ -3,6 +3,7 @@ import { Edit, Trash2, X, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import userService from '../../services/UserService';
 import './UserList.css';
+import studentService from '../../services/StudentService';
 
 const roles = [
   { value: '', label: 'Vai trò' },
@@ -34,6 +35,7 @@ const UserList = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
+  const user = JSON.parse(localStorage.getItem('user')) || {};
 
   // Filter states
   const [filter, setFilter] = useState({
@@ -177,6 +179,17 @@ const UserList = () => {
         <Plus size={16} />
         Thêm mới
       </button>
+      
+      {user.userRole === 'ROLE_PARENT' && (
+        <button
+          className="add-btn"
+          style={{ marginLeft: 12, background: '#4caf50' }}
+          onClick={() => navigate('/taomoihocsinh')}
+        >
+          <Plus size={16} />
+          Thêm mới học sinh
+        </button>
+      )}
       {/* Filter Form */}
       <form className="user-filter-form" onSubmit={handleFilterSubmit}>
         <input
@@ -237,52 +250,64 @@ const UserList = () => {
       ) : (
         <table className="users-table">
           <thead>
-            <tr>
-              <th>Họ và tên</th>
-              <th>Số điện thoại</th>
-              <th>Email</th>
-              <th>Trạng thái</th>
-              <th>Vai trò</th>
-              <th>Hành động</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.length === 0 ? (
-              <tr>
-                <td colSpan={6}>Không có người dùng nào.</td>
-              </tr>
-            ) : (
-              users.map(user => (
-                <tr key={user.id}>
-                  <td>{user.fullName}</td>
-                  <td>{user.phone}</td>
-                  <td>{user.email}</td>
-                  <td>
-                    {user.isActive === true || user.isActive === "true"
-                      ? "Đang hoạt động"
-                      : "Ngừng hoạt động"}
-                  </td>
-                  <td>
-                    {roles.find(role => role.value === user.role)?.label}
-                  </td>
-                  <td className="actions">
-                    <button
-                      className="edit-btn"
-                      onClick={() => navigateToUpdateUser(user.id)}
-                    >
-                      <Edit size={16} />
-                    </button>
-                    <button
-                      className="delete-btn"
-                      onClick={() => navigateToBlockUser(user.id)}
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
+  <tr>
+    <th>Họ và tên</th>
+    <th>Số điện thoại</th>
+    <th>Email</th>
+    <th>Trạng thái</th>
+    <th>Vai trò</th>
+    <th>Thao tác học sinh</th>
+    <th>Hành động</th>
+  </tr>
+</thead>
+        <tbody>
+  {users.length === 0 ? (
+    <tr>
+      <td colSpan={7}>Không có người dùng nào.</td>
+    </tr>
+  ) : (
+    users.map(userItem => (
+      <tr key={userItem.id}>
+        <td>{userItem.fullName}</td>
+        <td>{userItem.phone}</td>
+        <td>{userItem.email}</td>
+        <td>
+          {userItem.isActive === true || userItem.isActive === "true"
+            ? "Đang hoạt động"
+            : "Ngừng hoạt động"}
+        </td>
+        <td>
+          {roles.find(role => role.value === userItem.role)?.label}
+        </td>
+        {/* Nếu userItem là PARENT thì hiển thị nút thêm học sinh */}
+        <td>
+  {(userItem.role === 'PARENT' || userItem.role === 'ROLE_PARENT') && (
+    <button
+      className="add-student-btn"
+      onClick={() => navigate('/taomoihocsinh', { state: { parentId: userItem.id } })}
+    >
+      <Plus size={14} /> Thêm học sinh
+    </button>
+  )}
+</td>
+        <td className="actions">
+          <button
+            className="edit-btn"
+            onClick={() => navigateToUpdateUser(userItem.id)}
+          >
+            <Edit size={16} />
+          </button>
+          <button
+            className="delete-btn"
+            onClick={() => navigateToBlockUser(userItem.id)}
+          >
+            <Trash2 size={16} />
+          </button>
+        </td>
+      </tr>
+    ))
+  )}
+</tbody>
         </table>
       )}
 

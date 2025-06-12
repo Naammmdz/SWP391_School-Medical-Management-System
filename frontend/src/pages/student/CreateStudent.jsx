@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, X } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import userService from '../../services/UserService';
 import studentService from '../../services/StudentService';
+import { useLocation } from 'react-router-dom';
 import './CreateStudent.css';
 
 const CreateStudent = () => {
-  const [users, setUsers] = useState([]);
+  const location = useLocation();
+  const parentId = location.state?.parentId || '';
+  const [parent, setParent] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
@@ -13,92 +16,65 @@ const CreateStudent = () => {
     fullName: '',
     yob: '',
     gender: '',
-    className: '',
-    parentId: ''
+    className: ''
   });
 
-  // Fetch users from API
-  const fetchUsers = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const token = localStorage.getItem('token');
-      const response = await userService.getAllUsers({
-        params: {size:1000},
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      setUsers(response.data);
-    } catch (error) {
-      setError('Failed to fetch users');
-    }
-    setLoading(false);
-  };
+  // Lấy thông tin phụ huynh từ parentId
+  useEffect(() => {
+    const fetchParent = async () => {
+      if (!parentId) return;
+      setLoading(true);
+      setError(null);
+      try {
+        const token = localStorage.getItem('token');
+        const res = await userService.getUserById(parentId, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setParent(res.data);
+      } catch (err) {
+        setError('Không tìm thấy thông tin phụ huynh!');
+      }
+      setLoading(false);
+    };
+    fetchParent();
+  }, [parentId]);
 
   const handleStudentInputChange = (e) => {
     const { name, value } = e.target;
     setStudentForm({ ...studentForm, [name]: value });
   };
 
-  // Create new student
-  const createStudent = async (userData) => {
+  // Tạo mới học sinh
+  const handleStudentSubmit = async (e) => {
+    e.preventDefault();
+    if (!parentId) {
+      setError('Không xác định được phụ huynh!');
+      return;
+    }
     try {
       const token = localStorage.getItem('token');
-      // Find parentId from users list (role is PARENT)
-      const parentUser = users.find(u => u.role === 'PARENT' && u.email === userData.parentEmail);
-      if (!parentUser) {
-        setError('Không tìm thấy phụ huynh phù hợp!');
-        return;
-      }
       const createRequest = {
-        fullName: userData.fullName,
-        yob: userData.yob,
-        gender: userData.gender,
-        className: userData.className,
-        parentId: parentUser.id
+        ...studentForm,
+        parentId
       };
-
       await studentService.createStudent(createRequest, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
-
-      await fetchUsers();
       setSuccessMessage('Tạo học sinh thành công!');
       setTimeout(() => setSuccessMessage(null), 2000);
-      // Reset form after successful creation
       setStudentForm({
         fullName: '',
         yob: '',
         gender: '',
-        className: '',
-        parentId: ''
+        className: ''
       });
     } catch (err) {
       setError('Tạo học sinh thất bại!');
     }
   };
-
-  const handleStudentSubmit = async (e) => {
-    e.preventDefault();
-    // Find parent by id
-    const parentUser = users.find(u => u.role === 'PARENT' && String(u.id) === String(studentForm.parentId));
-    if (!parentUser) {
-      setError('Vui lòng chọn phụ huynh hợp lệ!');
-      return;
-    }
-    await createStudent({
-      ...studentForm,
-      parentEmail: parentUser.email
-    });
-  };
-
-  useEffect(() => {
-    fetchUsers();
-  }, []);
 
   return (
     <div className="create-student-page">
@@ -166,21 +142,13 @@ const CreateStudent = () => {
           </div>
           <div className="form-group">
             <label>Phụ huynh</label>
-            <select
-              name="parentId"
-              value={studentForm.parentId}
-              onChange={handleStudentInputChange}
-              required
-            >
-              <option value="">Chọn phụ huynh</option>
-              {users
-                .filter(u => u.role === 'PARENT')
-                .map(parent => (
-                  <option key={parent.id} value={parent.id}>
-                    {parent.fullName}
-                  </option>
-                ))}
-            </select>
+            <input
+              type="text"
+              value={parent ? parent.fullName : ''}
+              disabled
+              readOnly
+              style={{ background: '#f5f5f5' }}
+            />
           </div>
           <div className="form-actions">
             <button type="submit" className="submit-btn">

@@ -20,8 +20,6 @@ const HealthRecord = () => {
 
   // State cho danh sách hồ sơ (nurse/admin)
   const [healthRecords, setHealthRecords] = useState([]);
-  // State cho danh sách học sinh của phụ huynh
-  const [studentList, setStudentList] = useState([]);
   // State cho 1 hồ sơ (student/parent)
   const { register, handleSubmit, setValue, formState: { errors }, reset } = useForm({
     defaultValues: {
@@ -43,12 +41,14 @@ const HealthRecord = () => {
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [hasRecord, setHasRecord] = useState(false);
   const [updateSuccess, setUpdateSuccess] = useState(false);
-  const [selectedStudentId, setSelectedStudentId] = useState(null);
 
   // Search states for Nurse/Admin
   const [searchFullName, setSearchFullName] = useState('');
   const [searchClassName, setSearchClassName] = useState('');
   const [availableClasses, setAvailableClasses] = useState([]);
+
+  // Lấy id học sinh đã chọn từ localStorage (dành cho phụ huynh)
+  const selectedStudentId = isParent ? localStorage.getItem('selectedStudentId') : null;
 
   // Fetch all health records for the table display (unfiltered)
   const fetchAllHealthRecords = useCallback(async () => {
@@ -71,30 +71,28 @@ const HealthRecord = () => {
     }
   }, [accessToken]);
 
-
   const fetchFilteredHealthRecords = useCallback(async (filters = {}) => {
-  setIsLoading(true);
-  setError(null);
-  try {
-    const token = localStorage.getItem('token');
-    const config = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    };
-    // Chỉ gửi các trường có giá trị, không bắt buộc phải có cả name và className
-    const body = {};
-    if (filters.fullName) body.name = filters.fullName;
-    if (filters.className) body.className = filters.className;
-    const res = await HealthRecordService.filterHealthRecord(body, config);
-    setHealthRecords(res.data || []);
-  } catch (err) {
-    console.error("Error fetching filtered health records:", err);
-    setError('Không thể tải danh sách hồ sơ sức khỏe!');
-  } finally {
-    setIsLoading(false);
-  }
-}, [accessToken]);
+    setIsLoading(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem('token');
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+      const body = {};
+      if (filters.fullName) body.name = filters.fullName;
+      if (filters.className) body.className = filters.className;
+      const res = await HealthRecordService.filterHealthRecord(body, config);
+      setHealthRecords(res.data || []);
+    } catch (err) {
+      console.error("Error fetching filtered health records:", err);
+      setError('Không thể tải danh sách hồ sơ sức khỏe!');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [accessToken]);
 
   // Fetch all classes for the dropdown independently
   const fetchAllClasses = useCallback(async () => {
@@ -105,39 +103,61 @@ const HealthRecord = () => {
           Authorization: `Bearer ${token}`,
         },
       };
-      // Call getAllHealthRecord to get all records, then extract classes
       const res = await HealthRecordService.getAllHealthRecord(config); 
       const classes = new Set(res.data.map(record => record.studentClass).filter(Boolean));
       setAvailableClasses(Array.from(classes));
     } catch (err) {
       console.error("Error fetching all classes:", err);
-      // Optionally set an error specifically for the dropdown if needed
     }
   }, [accessToken]);
 
   useEffect(() => {
     if (isNurseOrAdmin) {
-      fetchAllHealthRecords(); // Initial load for the table (unfiltered)
-      fetchAllClasses(); // Populate classes dropdown from all available records
+      fetchAllHealthRecords();
+      fetchAllClasses();
     } else if (isParent) {
-      // Lấy danh sách học sinh của phụ huynh
-      HealthRecordService.getStudentByParentID(user.userId, {
+      // Nếu chưa chọn học sinh thì không fetch hồ sơ
+      if (!selectedStudentId) {
+        setIsLoading(false);
+        setError('Vui lòng chọn học sinh để xem hồ sơ sức khỏe!');
+        reset();
+        return;
+      }
+      setIsLoading(true);
+      HealthRecordService.getHealthRecordByStudentId(selectedStudentId, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
       })
         .then((res) => {
-          const list = Array.isArray(res.data) ? res.data : [];
-          setStudentList(list);
+          if (res.data && Object.keys(res.data).length > 0) {
+            setHasRecord(true);
+            reset({
+              studentName: res.data.studentName || '',
+              studentClass: res.data.studentClass || '',
+              allergies: res.data.allergies || '',
+              chronicDiseases: res.data.chronicDiseases || '',
+              treatmentHistory: res.data.treatmentHistory || '',
+              eyesight: res.data.eyesight || '',
+              hearing: res.data.hearing || '',
+              bloodType: res.data.bloodType || '',
+              weight: res.data.weight || '',
+              height: res.data.height || '',
+              notes: res.data.notes || ''
+            });
+          } else {
+            setHasRecord(false);
+            reset();
+          }
           setIsLoading(false);
         })
         .catch(() => {
-          setError('Không thể tải danh sách học sinh!');
+          setHasRecord(false);
           setIsLoading(false);
+          setError('Không thể tải hồ sơ sức khỏe của học sinh!');
+          reset();
         });
-
     } else if (studentId) {
-      
       HealthRecordService.getHealthRecordByStudentId(studentId, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -174,46 +194,17 @@ const HealthRecord = () => {
       setError('Không tìm thấy thông tin học sinh!');
       setIsLoading(false);
     }
-  }, [reset, isNurseOrAdmin, isParent, studentId, accessToken, formSubmitted, user.userId, fetchAllHealthRecords, fetchAllClasses]);
-
-  // Khi phụ huynh chọn học sinh để xem/cập nhật hồ sơ
-  useEffect(() => {
-    if (isParent && selectedStudentId) {
-      setIsLoading(true);
-      HealthRecordService.getHealthRecordByStudentId(selectedStudentId, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      })
-        .then((res) => {
-          if (res.data && Object.keys(res.data).length > 0) {
-            setHasRecord(true);
-            reset({
-              studentName: res.data.studentName || '',
-              studentClass: res.data.studentClass || '',
-              allergies: res.data.allergies || '',
-              chronicDiseases: res.data.chronicDiseases || '',
-              treatmentHistory: res.data.treatmentHistory || '',
-              eyesight: res.data.eyesight || '',
-              hearing: res.data.hearing || '',
-              bloodType: res.data.bloodType || '',
-              weight: res.data.weight || '',
-              height: res.data.height || '',
-              notes: res.data.notes || ''
-            });
-          } else {
-            setHasRecord(false);
-            reset();
-          }
-          setIsLoading(false);
-        })
-        .catch(() => {
-          setHasRecord(false);
-          setIsLoading(false);
-          reset();
-        });
-    }
-  }, [selectedStudentId, isParent, reset, accessToken]);
+  }, [
+    reset,
+    isNurseOrAdmin,
+    isParent,
+    studentId,
+    accessToken,
+    formSubmitted,
+    fetchAllHealthRecords,
+    fetchAllClasses,
+    selectedStudentId
+  ]);
 
   // Xử lý submit cho học sinh/phụ huynh
   const onSubmit = async (data) => {
@@ -247,14 +238,14 @@ const HealthRecord = () => {
     if (searchFullName || searchClassName) {
       fetchFilteredHealthRecords({ fullName: searchFullName, className: searchClassName });
     } else {
-      fetchAllHealthRecords(); // If no filters are applied, show all records
+      fetchAllHealthRecords();
     }
   };
 
   const handleClearSearch = () => {
     setSearchFullName('');
     setSearchClassName('');
-    fetchAllHealthRecords(); // Fetch all records again
+    fetchAllHealthRecords();
   };
 
   if (isLoading && (!isNurseOrAdmin || (isNurseOrAdmin && healthRecords.length === 0 && !error))) {
@@ -371,24 +362,8 @@ const HealthRecord = () => {
           </>
         ) : isParent ? (
           <>
-            {/* Phụ huynh chọn học sinh để xem/cập nhật hồ sơ */}
-            <div className="form-group">
-              <label>Chọn học sinh</label>
-              <select
-                value={selectedStudentId || ''}
-                onChange={e => setSelectedStudentId(e.target.value)}
-                className="form-control"
-              >
-                <option value="">-- Chọn học sinh --</option>
-                {Array.isArray(studentList) && studentList.map(student => (
-                  <option key={student.studentId} value={student.studentId}>
-                    {student.fullName} - {student.className}
-                  </option>
-                ))}
-              </select>
-
-            </div>
-            {selectedStudentId && (
+            {/* Không còn dropdown chọn học sinh ở đây nữa */}
+            {selectedStudentId ? (
               <>
                 {formSubmitted && (
                   <div className="success-message">
@@ -454,6 +429,10 @@ const HealthRecord = () => {
                   </div>
                 </form>
               </>
+            ) : (
+              <div className="text-danger mb-2">
+                Vui lòng chọn học sinh ở trang chính để xem hồ sơ sức khỏe!
+              </div>
             )}
           </>
         ) : (

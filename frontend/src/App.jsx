@@ -15,7 +15,7 @@ import MedicalSupplies from './pages/medical/MedicalSupplies/MedicalSupplies';
 import NursePrescription from './pages/nurse/NursePrescription';
 import HealthRecord from './pages/health/HealthRecord/HealthRecord';
 import DashboardPage from './pages/dashboardPage/DashboardPage';
-import HealthCheck from './pages/health/HealthCheck/HealthCheck';
+import HealthCheck from './pages/health/HealthCheck/CreateHealthCheck';
 import ParentPages from './pages/parent/ParentPages';
 import NursePages from './pages/nurse/NursePages';
 import Blog from './pages/home/Blog/Blog';
@@ -29,6 +29,8 @@ import BlockUser from './pages/user/BlockUser';
 
 import UpdateStudent from './pages/student/UpdateStudent';
 import StudentList from './pages/student/StudentList';
+import HealthCheckList from './pages/health/HealthCheck/HealthCheckList';
+import UpdateHealthCheck from './pages/health/HealthCheck/UpdateHealthCheck';
 // Component ProtectedRoute
 const ProtectedRoute = ({ element, requiredRole }) => {
   const user = JSON.parse(localStorage.getItem('user'));
@@ -63,6 +65,8 @@ function App() {
         <Route path="/donthuoc" element={<NursePrescription/>}/>
         <Route path="/thongke" element={<DashboardPage/>}/>
         <Route path="/kiemtradinhky" element={<HealthCheck/>}/>
+        <Route path="/danhsachkiemtradinhky" element={<HealthCheckList />} />
+        <Route path="/capnhatkiemtradinhky" element={<UpdateHealthCheck />} />
         <Route path="/capnhatthongtin" element={<UpdateUser/>}/>
         <Route path="/doimatkhau" element={<UpdatePassword/>}/>
         <Route path="/taomoihocsinh" element={<CreateStudent/>} requiredRole="ROLE_ADMIN" />

@@ -1,0 +1,200 @@
+.health-check-list-container {
+  padding: 24px;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+  margin-top: 50px;
+  font-family: 'Roboto', 'Segoe UI', 'Arial', sans-serif;
+}
+
+.health-check-list-container h2 {
+  color: #2c3e50;
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 24px;
+  padding: 16px 24px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(76, 175, 80, 0.2);
+  font-size: 14px;
+}
+
+.btn-primary:hover {
+  background-color: #45a049;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+}
+
+.health-check-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 24px;
+}
+
+.health-check-table th,
+.health-check-table td {
+  padding: 16px 20px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.health-check-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #2c3e50;
+  text-transform: uppercase;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+}
+
+.health-check-table tr:last-child td {
+  border-bottom: none;
+}
+
+.health-check-table tr:hover {
+  background-color: #f8f9fa;
+  transition: background-color 0.3s ease;
+}
+
+.btn-warning {
+  padding: 8px 16px;
+  background-color: #ffc107;
+  color: #000;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  font-size: 13px;
+  box-shadow: 0 2px 4px rgba(255, 193, 7, 0.2);
+}
+
+.btn-warning:hover {
+  background-color: #ffb300;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(255, 193, 7, 0.3);
+}
+
+.text-danger {
+  color: #dc3545;
+  background-color: #f8d7da;
+  padding: 16px 24px;
+  border-radius: 8px;
+  margin: 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.1);
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Status styles */
+.health-check-table td:nth-child(5) {
+  font-weight: 500;
+}
+
+.health-check-table td:nth-child(5):contains('ACTIVE') {
+  color: #28a745;
+}
+
+.health-check-table td:nth-child(5):contains('COMPLETED') {
+  color: #17a2b8;
+}
+
+.health-check-table td:nth-child(5):contains('CANCELLED') {
+  color: #dc3545;
+}
+
+/* Loading state */
+.health-check-list-container > div:contains('Đang tải...') {
+  text-align: center;
+  padding: 32px;
+  color: #666;
+  font-size: 16px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin: 24px 0;
+}
+
+/* Empty state */
+.health-check-table td[colspan="8"] {
+  text-align: center;
+  padding: 32px;
+  color: #666;
+  font-size: 15px;
+  background-color: #f8f9fa;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .health-check-list-container {
+    padding: 16px;
+  }
+
+  .health-check-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .health-check-table th,
+  .health-check-table td {
+    padding: 12px 16px;
+  }
+
+  .btn-primary {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Vietnamese text styling for campaign name and description */
+.health-check-table td:nth-child(2),
+.health-check-table td:nth-child(3) {
+  font-family: 'Roboto', 'Segoe UI', 'Arial', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #2c3e50;
+}
+
+.health-check-table td:nth-child(2) {
+  font-weight: 500;
+}
+
+.health-check-table td:nth-child(3) {
+  color: #666;
+  max-width: 300px;
+  white-space: normal;
+  word-wrap: break-word;
+}
