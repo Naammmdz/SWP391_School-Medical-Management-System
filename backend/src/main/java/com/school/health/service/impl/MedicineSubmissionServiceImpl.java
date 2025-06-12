@@ -1,14 +1,12 @@
 package com.school.health.service.impl;
 
+import com.school.health.dto.request.MedicineLogRequest;
 import com.school.health.dto.request.MedicineSubmissionRequest;
 import com.school.health.dto.request.StatusUpdateRequest;
-import com.school.health.dto.response.MedicineDetailResponse;
-import com.school.health.dto.response.MedicineSubmissionResponse;
-import com.school.health.entity.MedicineDetail;
-import com.school.health.entity.MedicineSubmission;
-import com.school.health.entity.Student;
-import com.school.health.entity.User;
+import com.school.health.dto.response.*;
+import com.school.health.entity.*;
 import com.school.health.enums.MedicineSubmissionStatus;
+import com.school.health.exception.AccessDeniedException;
 import com.school.health.exception.BadRequestException;
 import com.school.health.exception.ResourceNotFoundException;
 import com.school.health.repository.MedicineSubmissionRepository;
@@ -18,6 +16,7 @@ import com.school.health.service.MedicineSubmissionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -35,6 +34,8 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
     @Autowired
     private UserRepository userRepository;
 
+
+    // ===== PARENT OPERATIONS =====
     @Override
     public MedicineSubmissionResponse createMedicineSubmission(MedicineSubmissionRequest request, Integer parentId) {
         //Validate the request: ngay ket thuc >= ngay bat dau
@@ -107,15 +108,65 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
         return resp;
     }
 
+
     @Override
-    public List<MedicineSubmissionResponse> getAllMedicineSubmissions(Integer studentId, Integer parentId, Integer submissionStatus) {
+    public List<MedicineSubmissionResponse> getAllByParent(Integer parentId, Integer studentId, String status) {
+        List<MedicineSubmission> submissions;
+
+        MedicineSubmissionStatus statusEnum = null;
+        if (status != null) {
+            try {
+                statusEnum = MedicineSubmissionStatus.valueOf(status);
+            } catch (IllegalArgumentException e) {
+                throw new BadRequestException("Invalid status: " + status);
+            }
+        }
+
+        if (studentId != null && status != null) {
+            submissions = medicineSubmissionRepository.findByParent_UserIdAndStudent_StudentIdAndSubmissionStatus(parentId, studentId, statusEnum);
+        } else if (studentId != null) {
+            submissions = medicineSubmissionRepository.findByParent_UserIdAndStudent_StudentId(parentId, studentId);
+        } else if (status != null) {
+            submissions = medicineSubmissionRepository.findByParent_UserIdAndSubmissionStatus(parentId, statusEnum);
+        } else {
+            submissions = medicineSubmissionRepository.findByParent_UserId(parentId);
+        }
+
+        return submissions.stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<StudentSummaryResponse> getChildrenByParent(Integer parentId) {
+        List<Student> students = studentRepository.findByParentUserId(parentId);
+        return students.stream().map(student -> {
+            StudentSummaryResponse summary = new StudentSummaryResponse();
+            summary.setStudentId(student.getStudentId());
+            summary.setFullName(student.getFullName());
+            summary.setClassName(student.getClassName());
+            summary.setPendingSubmissions(medicineSubmissionRepository.countByStudent_StudentIdAndSubmissionStatus(student.getStudentId(), MedicineSubmissionStatus.PENDING));
+            summary.setApprovedSubmissions(medicineSubmissionRepository.countByStudent_StudentIdAndSubmissionStatus(student.getStudentId(), MedicineSubmissionStatus.APPROVED));
+
+            return summary;
+        }).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<MedicineSubmissionResponse> getAllForAdmin(Integer studentId, Integer parentId, String status) {
         return List.of();
     }
 
     @Override
-    public MedicineSubmissionResponse getMedicineSubmissionById(Integer submissionId) {
+    public AdminDashboardResponse getAdminDashboard() {
         return null;
     }
+
+    @Override
+    public MedicineSubmissionResponse getById(Integer id) {
+        return null;
+    }
+
 
     @Override
     public MedicineSubmissionResponse updateStatus(Integer id, StatusUpdateRequest request) {
@@ -123,7 +174,96 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
     }
 
     @Override
-    public void deleteMedicineSubmission(Integer submissionId) {
+    public void delete(Integer id) {
 
+    }
+
+    @Override
+    public void deleteByParent(Integer id, Integer parentId) {
+        MedicineSubmission submission = medicineSubmissionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn thuốc: " + id));
+
+        if (!submission.getParent().getUserId().equals(parentId)) {
+            throw new AccessDeniedException("Bạn chỉ có thể xóa đơn thuốc của chính mình");
+        }
+
+        if (submission.getSubmissionStatus() != MedicineSubmissionStatus.PENDING) {
+            throw new BadRequestException("Chỉ có thể xóa các đơn thuốc đang chờ duyệt");
+        }
+
+        medicineSubmissionRepository.deleteById(id);
+    }
+
+
+    // ===== NURSE OPERATIONS =====
+    @Override
+    public List<MedicineSubmissionResponse> getAllForNurse(Integer studentId, Integer parentId, String status) {
+        List<MedicineSubmission> submissions;
+        MedicineSubmissionStatus statusEnum = null;
+        if (status != null) {
+            try {
+                statusEnum = MedicineSubmissionStatus.valueOf(status);
+            } catch (IllegalArgumentException e) {
+                throw new BadRequestException("Invalid status: " + status);
+            }
+        }
+        if (status == null) {
+            // Mặc định xem PENDING trước
+            submissions = medicineSubmissionRepository.findAllOrderByStatusAndDate();
+        } else {
+            submissions = medicineSubmissionRepository.findByStatusOrderByDate(statusEnum);
+        }
+
+        // Apply filters
+        if (studentId != null) {
+            submissions = submissions.stream()
+                    .filter(s -> s.getStudent().getStudentId().equals(studentId))
+                    .collect(Collectors.toList());
+        }
+        if (parentId != null) {
+            submissions = submissions.stream()
+                    .filter(s -> s.getParent().getUserId().equals(parentId))
+                    .collect(Collectors.toList());
+        }
+
+        return submissions.stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public HealthDashboardResponse getHealthDashboard() {
+        HealthDashboardResponse response = new HealthDashboardResponse();
+
+        LocalDate today = LocalDate.now();
+        response.setPendingApproval(medicineSubmissionRepository.countBySubmissionStatus(MedicineSubmissionStatus.PENDING));
+        response.setTodayMedicineLogs(medicineSubmissionRepository.countByGivenAt(today));
+        response.setActiveSubmissions(medicineSubmissionRepository.countActiveSubmissions(today));
+        response.setExpiringSubmissions(medicineSubmissionRepository.countExpiringSubmissions(today.plusDays(3)));
+
+        return response;
+    }
+
+    @Override
+    public MedicineLogResponse markMedicineTaken(Integer submissionId, MedicineLogRequest request) {
+        MedicineSubmission submission = medicineSubmissionRepository.findById(submissionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Submission not found: " + submissionId));
+
+        if (submission.getSubmissionStatus() != MedicineSubmissionStatus.APPROVED) {
+            throw new BadRequestException("Only approved submissions can be logged");
+        }
+
+        User givenBy = userRepository.findById(request.getGivenByUserId())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + request.getGivenByUserId()));
+
+        MedicineLog log = new MedicineLog();
+        log.setMedicineSubmission(submission);
+        log.setGivenBy(givenBy);
+        log.setGivenAt(request.getGivenAt());
+        log.setNotes(request.getNotes());
+
+        medicineLogRepository.save(log);
+
+        return toLogResponse(log);
     }
 }
