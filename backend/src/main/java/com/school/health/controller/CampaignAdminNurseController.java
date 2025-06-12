@@ -70,6 +70,7 @@ public class CampaignAdminNurseController {
     @GetMapping("{campaignId}/students-registrations")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> getStudentsRegistrations(@PathVariable int campaignId) {
-        return ResponseEntity.ok("Chưa làm xong !! ");
+        return ResponseEntity.ok(healthCheckCampaignServiceImpl.getStudentsRegistrations(campaignId));
     }
+
 }

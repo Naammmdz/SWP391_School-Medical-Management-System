@@ -111,24 +111,23 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
         return mapToResponseDTO(updatedCampaign);
     }
 
-//    @Override
-//    public List<HealthCampaignResponseDTO> getStudentsRegistrations(int campaignId) {
-//        // Giả sử bạn có một phương thức trong repository để lấy danh sách học sinh đã đăng ký
-//        List<Student> campaigns = healthCheckCampaignRepository.findStudentWithParentConfirmationInCampaign(campaignId);
-//        return campaigns.stream()
-//                .map(student -> {
-//                    HealthCampaignResponseDTO responseDTO = new HealthCampaignResponseDTO();
-//                    responseDTO.setStudentId(student.getStudentId());
-//                    responseDTO.setFullName(student.getFullName());
-//                    responseDTO.setDob(student.getDob());
-//                    responseDTO.setGender(student.getGender());
-//                    responseDTO.setClassName(student.getClassName());
-//                    // Thêm các trường khác nếu cần
-//                    return responseDTO;
-//                })
-//                .collect(Collectors.toList());
-//    }
-
+    // Phương thức này có thể được sử dụng để lấy danh sách học sinh đã đăng ký trong chiến dịch sức khỏe
+    @Override
+    public List<StudentResponseDTO> getStudentsRegistrations(int campaignId) {
+        List<Student> students = healthCheckCampaignRepository.findStudentWithParentConfirmationInCampaign(campaignId);
+        return students.stream()
+                .map(student -> {
+                    StudentResponseDTO dto = new StudentResponseDTO();
+                    dto.setStudentId(student.getStudentId());
+                    dto.setFullName(student.getFullName());
+                    dto.setDob(student.getDob());
+                    dto.setGender(student.getGender());
+                    dto.setClassName(student.getClassName());
+                    // Add more fields if needed
+                    return dto;
+                })
+                .collect(Collectors.toList());
     }
+
 }
 
