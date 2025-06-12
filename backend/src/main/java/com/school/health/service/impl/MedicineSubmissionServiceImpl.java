@@ -237,12 +237,34 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
 
     @Override
     public MedicineSubmissionResponse updateStatus(Integer id, StatusUpdateRequest request) {
-        return null;
+        MedicineSubmission submission = medicineSubmissionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Submission not found: " + id));
+
+        if (!"APPROVED".equals(request.getSubmissionStatus()) && !"REJECTED".equals(request.getSubmissionStatus())) {
+            throw new BadRequestException("Invalid status: " + request.getSubmissionStatus());
+        }
+
+        if (submission.getSubmissionStatus() != MedicineSubmissionStatus.PENDING) {
+            throw new BadRequestException("Only pending submissions can be updated");
+        }
+
+        User approvedBy = userRepository.findById(request.getApprovedBy())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + request.getApprovedBy()));
+
+        submission.setSubmissionStatus(MedicineSubmissionStatus.valueOf(request.getSubmissionStatus()));
+        submission.setApprovedBy(approvedBy);
+        submission.setApprovedAt(request.getApprovedAt());
+
+        medicineSubmissionRepository.save(submission);
+        return toResponse(submission);
     }
 
     @Override
     public void delete(Integer id) {
-
+        if (!medicineSubmissionRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Submission not found: " + id);
+        }
+        medicineSubmissionRepository.deleteById(id);
     }
 
 
