@@ -147,7 +147,7 @@ public class MedicineSubmissionController {
         return ResponseEntity.ok(dashboard);
     }
 
-    // API chấm công uống thuốc - TEACHER và HEALTH_STAFF
+    // API chấm công uống thuốc - NURSE
     @PostMapping("/{id}/mark-taken")
     @PreAuthorize("hasAnyRole('NURSE')")
     public ResponseEntity<MedicineLogResponse> markMedicineTaken(
