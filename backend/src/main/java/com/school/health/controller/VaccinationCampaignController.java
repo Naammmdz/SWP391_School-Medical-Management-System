@@ -1,6 +1,7 @@
 package com.school.health.controller;
 
 import com.school.health.dto.request.VaccinationCampaignRequestDTO;
+import com.school.health.dto.request.VaccinationRequestDTO;
 import com.school.health.enums.Status;
 import com.school.health.security.services.UserDetailsImpl;
 import com.school.health.service.impl.VaccinationCampaignServiceImpl;
@@ -24,7 +25,7 @@ public class VaccinationCampaignController {
     public ResponseEntity<?> createVaccinationCampaign(@RequestBody VaccinationCampaignRequestDTO vaccine, Authentication authentication) {
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
         Integer userId = userPrincipal.getId();
-        return ResponseEntity.ok(vaccinationCampaignService.createVaccinationCampaign(vaccine,userId));
+        return ResponseEntity.ok(vaccinationCampaignService.createVaccinationCampaign(vaccine, userId));
     }
 
     @GetMapping
@@ -72,4 +73,20 @@ public class VaccinationCampaignController {
         return ResponseEntity.ok(vaccinationCampaignService.getApprovedVaccination());
     }
 
+    // Đăng ký học sinh tham gia chiến dịch tiêm chủng. Tức là phụ huynh sẽ đăng ký cho con mình tham gia chiến dịch tiêm chủng
+    @PostMapping("/{campaignId}/student/{studentId}/register")
+    @PreAuthorize("hasRole('PARENT') or hasRole('NURSE') or hasRole('ADMIN')")
+    public ResponseEntity<?> registerStudentForVaccinationCampaign(@PathVariable int campaignId, @PathVariable int studentId, Authentication authentication) {
+        UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
+        Integer userId = userPrincipal.getId();
+//        if (!vaccinationCampaignService.isParentOfStudent(userId, studentId)) {
+//            return ResponseEntity.status(403).body("Bạn không có quyền đăng ký cho học sinh này.");
+//        } else
+        {
+            VaccinationRequestDTO request = new VaccinationRequestDTO();
+            request.setCampaignId(campaignId);
+            request.setStudentId(studentId);
+            return ResponseEntity.ok(vaccinationCampaignService.registerStudentVaccine(request));
+        }
+    }
 }

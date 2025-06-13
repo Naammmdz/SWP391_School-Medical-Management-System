@@ -1,5 +1,6 @@
 package com.school.health.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -18,6 +19,7 @@ public class Vaccination {
     @Column(name = "VaccinationId")
     private int vaccinationId;
     @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnore
     @JoinColumn(name = "StudentId")
     private Student student;
     @ManyToOne(fetch = FetchType.LAZY)

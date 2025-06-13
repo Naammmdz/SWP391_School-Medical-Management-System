@@ -1,6 +1,7 @@
 package com.school.health.controller;
 
 import com.school.health.dto.request.HealthCampaignRequestDTO;
+import com.school.health.dto.request.HealthCheckRequestDTO;
 import com.school.health.dto.response.HealthCampaignResponseDTO;
 import com.school.health.enums.Status;
 import com.school.health.security.services.UserDetailsImpl;
@@ -77,6 +78,18 @@ public class HealthCheckCampaignController {
     @PreAuthorize("hasRole('PARENT')")
     public ResponseEntity<?> getApprovedCampaign() {
         return ResponseEntity.ok(healthCheckCampaignServiceImpl.getApprovedCampaigns());
+    }
+
+    // Phụ huynh đăng ký cho học sinh tham gia chiến dịch sức khỏe
+    @PostMapping("/{campaignId}/student/{studentId}/register")
+    @PreAuthorize("hasRole('PARENT') or hasRole('NURSE') or hasRole('ADMIN')")
+    public ResponseEntity<?> registerStudentForHealthCampaign(@PathVariable int campaignId, @PathVariable int studentId, Authentication authentication) {
+        UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
+        Integer userId = userPrincipal.getId();
+        HealthCheckRequestDTO dto = new HealthCheckRequestDTO();
+        dto.setCampaignId(campaignId);
+        dto.setStudentId(studentId);
+        return ResponseEntity.ok(healthCheckCampaignServiceImpl.registerStudentHealthCheck(dto));
     }
 
 }

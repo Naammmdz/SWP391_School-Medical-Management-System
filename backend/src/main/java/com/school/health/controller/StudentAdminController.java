@@ -30,7 +30,7 @@ public class StudentAdminController {
     }
 
 
-    @GetMapping("/")
+    @GetMapping
     public ResponseEntity<?> getAllStudents() {
         return ResponseEntity.ok(studentService.getAllStudents());
     }

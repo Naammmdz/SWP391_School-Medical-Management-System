@@ -41,6 +41,7 @@ public class Student {
     // Parent
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ParentId", nullable = false)
+    @JsonIgnore // ✅ Thêm dòng này để không serialize Parent nữa
     private User parent;
 
     @OneToOne(mappedBy = "student", cascade = CascadeType.ALL)

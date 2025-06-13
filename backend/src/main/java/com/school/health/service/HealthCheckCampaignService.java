@@ -1,7 +1,9 @@
 package com.school.health.service;
 
 import com.school.health.dto.request.HealthCampaignRequestDTO;
+import com.school.health.dto.request.HealthCheckRequestDTO;
 import com.school.health.dto.response.HealthCampaignResponseDTO;
+import com.school.health.dto.response.HealthCheckResponseDTO;
 import com.school.health.dto.response.StudentResponseDTO;
 import com.school.health.entity.Student;
 import com.school.health.enums.Status;
@@ -27,4 +29,6 @@ public interface HealthCheckCampaignService {
     List<StudentResponseDTO> getStudentsRegistrations(int campaignId);
 
     List<HealthCampaignResponseDTO> getApprovedCampaigns();
+
+    HealthCheckResponseDTO registerStudentHealthCheck(HealthCheckRequestDTO request);
 }
