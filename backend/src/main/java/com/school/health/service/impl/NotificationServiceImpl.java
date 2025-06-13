@@ -47,9 +47,12 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public NotificationResponseDTO mapToNotificationResponseDto(Notification notification) {
         NotificationResponseDTO notificationResponseDTO = new NotificationResponseDTO();
+        notificationResponseDTO.setId(notification.getId());
+        notificationResponseDTO.setUserId(notificationResponseDTO.getUserId());
         notificationResponseDTO.setTitle(notification.getTitle());
         notificationResponseDTO.setMessage(notification.getMessage());
-        notificationResponseDTO.setDateTime(notification.getCreatedAt());
+        notificationResponseDTO.setIsRead(notification.isRead());
+        notificationResponseDTO.setCreatedAt(notification.getCreatedAt());
         return notificationResponseDTO;
     }
 }
