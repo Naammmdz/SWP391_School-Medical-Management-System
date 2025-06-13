@@ -30,25 +30,35 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public void markRead(Long notificationId, Long userId) {
+    public NotificationResponseDTO markRead(int notificationId) {
+        Notification notification = notificationRepository.getNotificationById(notificationId);
+        notification.setRead(true);
+        notificationRepository.save(notification);
+        return mapToNotificationResponseDto(notification);
+    }
+
+    @Override
+    public List<NotificationResponseDTO>  markAllRead(int userId) {
+        List<Notification> notificationList = notificationRepository.getNotificationsIsNotReaded(userId);
+        notificationList.forEach(notification -> {notification.setRead(true);
+            notificationRepository.save(notification);
+        } );
+        return notificationList.stream().map(notification -> mapToNotificationResponseDto(notification)).collect(Collectors.toList());
+
 
     }
 
     @Override
-    public void markAllRead(Long userId) {
-
-    }
-
-    @Override
-    public long countUnread(Long userId) {
-        return 0;
+    public int countUnread(int userId) {
+        List<Notification> notificationList = notificationRepository.getNotificationsIsNotReaded(userId);
+        return notificationList.size();
     }
 
     @Override
     public NotificationResponseDTO mapToNotificationResponseDto(Notification notification) {
         NotificationResponseDTO notificationResponseDTO = new NotificationResponseDTO();
         notificationResponseDTO.setId(notification.getId());
-        notificationResponseDTO.setUserId(notificationResponseDTO.getUserId());
+        notificationResponseDTO.setUserId(notification.getToUserId().getUserId());
         notificationResponseDTO.setTitle(notification.getTitle());
         notificationResponseDTO.setMessage(notification.getMessage());
         notificationResponseDTO.setIsRead(notification.isRead());

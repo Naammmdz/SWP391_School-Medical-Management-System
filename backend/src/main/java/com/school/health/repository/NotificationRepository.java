@@ -11,5 +11,12 @@ import java.util.List;
 public interface NotificationRepository extends JpaRepository<Notification, Integer> {
     @Query ("Select n from Notification n where n.toUserId.userId = :userID")
     List<Notification> getNotificationsById(@Param("userID") int id);
+    @Query ("Select n from Notification n where n.id = :id")
+    Notification getNotificationById(@Param("id") int id);
+
+
+    @Query ("Select n from Notification n where n.isRead = false and n.toUserId.userId = :userID")
+    List<Notification> getNotificationsIsNotReaded(@Param("userID") int id);
+
 
 }

@@ -9,9 +9,9 @@ import java.util.List;
 public interface NotificationService {
         void createNotification(int toUserId, String title, String message, String type, Long relatedItemId);
         List<NotificationResponseDTO> getByUserId(int userId);
-        void markRead(Long notificationId, Long userId);
-        void markAllRead(Long userId);
-        long countUnread(Long userId);
+        NotificationResponseDTO markRead(int notificationId);
+        List<NotificationResponseDTO> markAllRead(int userId);
+        int countUnread(int userId);
         public NotificationResponseDTO mapToNotificationResponseDto (Notification notification);
     }
 

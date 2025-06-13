@@ -30,8 +30,25 @@ public class NotificationController {
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
         Integer userId = userPrincipal.getId();
        List<NotificationResponseDTO> list = notificationService.getByUserId(userId);
-        System.out.println(list);
+
         return ResponseEntity.ok(list);
+    }
+    @PostMapping ("/api/notifications/{notificationId}/read")
+    public ResponseEntity<NotificationResponseDTO> readNotification(@PathVariable Integer notificationId, Authentication authentication) {
+
+        return ResponseEntity.ok(notificationService.markRead(notificationId));
+    }
+    @PostMapping ("/api/notifications/mark-all-read")
+    public ResponseEntity<List<NotificationResponseDTO>> markAllReadNotifications(Authentication authentication) {
+        UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
+        Integer userId = userPrincipal.getId();
+        return ResponseEntity.ok(notificationService.markAllRead(userId));
+    }
+    @GetMapping ("/api/notifications/unread-count")
+    public ResponseEntity<Integer> getUnreadNotifications(Authentication authentication) {
+        UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
+        Integer userId = userPrincipal.getId();
+        return ResponseEntity.ok(notificationService.countUnread(userId));
     }
 }
 
