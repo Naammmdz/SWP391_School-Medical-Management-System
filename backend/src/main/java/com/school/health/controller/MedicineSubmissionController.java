@@ -118,7 +118,9 @@ public class MedicineSubmissionController {
             // NURSE can delete any submission
             medicineSubmissionService.delete(id);
         }
-        
+
         return ResponseEntity.noContent().build();
     }
+
+    
 }
