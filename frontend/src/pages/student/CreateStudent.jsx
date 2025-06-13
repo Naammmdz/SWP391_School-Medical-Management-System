@@ -27,7 +27,7 @@ const CreateStudent = () => {
       setError(null);
       try {
         const token = localStorage.getItem('token');
-        const res = await userService.getUserById(parentId, {
+        const res = await userService.getParentId(parentId, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setParent(res.data);
@@ -63,14 +63,15 @@ const CreateStudent = () => {
           'Content-Type': 'application/json'
         }
       });
-      setSuccessMessage('Tạo học sinh thành công!');
-      setTimeout(() => setSuccessMessage(null), 2000);
+     
+      setTimeout(() => setSuccessMessage(null), 8000);
       setStudentForm({
         fullName: '',
         yob: '',
         gender: '',
         className: ''
       });
+       setSuccessMessage('Tạo học sinh thành công!');
     } catch (err) {
       setError('Tạo học sinh thất bại!');
     }
