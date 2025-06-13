@@ -9,6 +9,7 @@ import com.school.health.service.impl.NotificationServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.*;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +19,7 @@ import java.util.Map;
 
 
 @RestController
-@RequestMapping("/api/user/notifications")
+@RequestMapping("/api/notifications")
 @CrossOrigin(origins = "*")
 @Validated
 @RequiredArgsConstructor
@@ -33,22 +34,30 @@ public class NotificationController {
 
         return ResponseEntity.ok(list);
     }
-    @PostMapping ("/api/notifications/{notificationId}/read")
+    @PostMapping ("/{notificationId}/read")
     public ResponseEntity<NotificationResponseDTO> readNotification(@PathVariable Integer notificationId, Authentication authentication) {
 
         return ResponseEntity.ok(notificationService.markRead(notificationId));
     }
-    @PostMapping ("/api/notifications/mark-all-read")
+    @PostMapping ("/mark-all-read")
     public ResponseEntity<List<NotificationResponseDTO>> markAllReadNotifications(Authentication authentication) {
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
         Integer userId = userPrincipal.getId();
         return ResponseEntity.ok(notificationService.markAllRead(userId));
     }
-    @GetMapping ("/api/notifications/unread-count")
+    @GetMapping ("/unread-count")
     public ResponseEntity<Integer> getUnreadNotifications(Authentication authentication) {
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
         Integer userId = userPrincipal.getId();
         return ResponseEntity.ok(notificationService.countUnread(userId));
+    }
+    @PostMapping ("/create/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<NotificationResponseDTO> createNotification(@PathVariable Integer userId, @RequestBody NotificationRequestDTO notificationRequestDTO) {
+//        Notification notification = new Notification();
+
+        return ResponseEntity.ok(notificationService.createNotification(userId,notificationRequestDTO.getTitle(),notificationRequestDTO.getMessage()));
+
     }
 }
 

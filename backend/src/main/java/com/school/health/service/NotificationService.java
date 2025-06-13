@@ -1,13 +1,14 @@
 package com.school.health.service;
 
 
+import com.school.health.dto.request.NotificationRequestDTO;
 import com.school.health.dto.response.NotificationResponseDTO;
 import com.school.health.entity.Notification;
 
 import java.util.List;
 
 public interface NotificationService {
-        void createNotification(int toUserId, String title, String message, String type, Long relatedItemId);
+        NotificationResponseDTO createNotification(int toUserId, String title, String message);
         List<NotificationResponseDTO> getByUserId(int userId);
         NotificationResponseDTO markRead(int notificationId);
         List<NotificationResponseDTO> markAllRead(int userId);

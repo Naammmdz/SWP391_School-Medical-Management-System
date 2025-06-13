@@ -2,7 +2,9 @@ package com.school.health.service.impl;
 
 import com.school.health.dto.response.NotificationResponseDTO;
 import com.school.health.entity.Notification;
+import com.school.health.entity.User;
 import com.school.health.repository.NotificationRepository;
+import com.school.health.repository.UserRepository;
 import com.school.health.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,8 +17,19 @@ import java.util.stream.Collectors;
 public class NotificationServiceImpl implements NotificationService {
     @Autowired
     NotificationRepository notificationRepository;
+    @Autowired
+    UserRepository userRepository;
     @Override
-    public void createNotification(int toUserId, String title, String message, String type, Long relatedItemId) {
+    public NotificationResponseDTO createNotification(int toUserId, String title, String message) {
+
+        User user = userRepository.findByUserId(toUserId).orElseThrow();
+        System.out.println("////"+user+"/////////");
+        Notification notification = new Notification();
+        notification.setTitle(title);
+        notification.setMessage(message);
+        notification.setToUserId(user);
+        notificationRepository.save(notification);
+        return mapToNotificationResponseDto(notification);
 
     }
 
