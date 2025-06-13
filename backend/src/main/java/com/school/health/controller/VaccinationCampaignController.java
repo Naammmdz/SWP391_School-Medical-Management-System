@@ -46,7 +46,7 @@ public class VaccinationCampaignController {
     }
 
     @PutMapping("/{campaignId}/approve")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE')")
+//    @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE')")
     public ResponseEntity<?> approveVaccinationCampaign(@PathVariable int campaignId, Authentication authentication) {
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
         Integer approvedBy = userPrincipal.getId();
@@ -65,4 +65,11 @@ public class VaccinationCampaignController {
     public ResponseEntity<?> getStudentsRegistrationsInCampaign(@PathVariable int campaignId) {
         return ResponseEntity.ok(vaccinationCampaignService.getStudentsRegistrations(campaignId));
     }
+
+    @GetMapping("/approved")
+    @PreAuthorize("hasRole('PARENT')")
+    public ResponseEntity<?> getApprovedVaccinationCampaigns() {
+        return ResponseEntity.ok(vaccinationCampaignService.getApprovedVaccination());
+    }
+
 }

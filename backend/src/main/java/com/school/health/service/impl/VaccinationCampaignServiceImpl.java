@@ -84,6 +84,7 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
                 .orElseThrow(() -> new RuntimeException("Campaign not found id :" + campaignId));
 
         campaign.setApprovedBy(approvedBy);
+        campaign.setStatus(Status.APPROVED);
         VaccinationCampaign approvedCampaign = vaccinationCampaignRepository.save(campaign);
         return mapToResponseDTO(approvedCampaign);
     }
@@ -117,6 +118,13 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
                     // Add more fields if needed
                     return dto;
                 })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<VaccinationCampaignResponseDTO> getApprovedVaccination() {
+        return vaccinationCampaignRepository.findByStatus(Status.APPROVED).stream()
+                .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
 }

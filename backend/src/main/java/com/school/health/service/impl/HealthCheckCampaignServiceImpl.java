@@ -132,5 +132,12 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<HealthCampaignResponseDTO> getApprovedCampaigns() {
+        List<HealthCheckCampaign> approvedCampaigns = healthCheckCampaignRepository.findByStatus(Status.APPROVED);
+        return approvedCampaigns.stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
 }
 

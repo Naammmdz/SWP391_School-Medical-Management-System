@@ -18,4 +18,5 @@ public interface VaccinationCampaignService {
     VaccinationCampaignResponseDTO approveVaccinationCampaign(Integer campaignId, int approvedBy);
     VaccinationCampaignResponseDTO updateVaccinationCampaignStatus(Integer campaignId, Status status);
     List<StudentResponseDTO> getStudentsRegistrations(Integer campaignId);
+    List<VaccinationCampaignResponseDTO> getApprovedVaccination();
 }

@@ -30,7 +30,7 @@ public class HealthCheckCampaignController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE') or hasRole('PRINCIPAL')")
     public ResponseEntity<?> getAllCampaigns() {
         return ResponseEntity.ok(healthCheckCampaignServiceImpl.getAllCampaigns());
     }
@@ -49,7 +49,7 @@ public class HealthCheckCampaignController {
     }
 
     @PutMapping("/{campaignId}/approve")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE') or hasRole('PRINCIPAL')")
     public ResponseEntity<?> approveCampaign(@PathVariable int campaignId, Authentication authentication) {
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
         Integer approvedBy = userPrincipal.getId();
@@ -58,7 +58,7 @@ public class HealthCheckCampaignController {
     }
 
     @PutMapping("/{campaignId}/status/{status}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE') or hasRole('PRINCIPAL')")
     public ResponseEntity<?> updateCampaignStatus(@PathVariable int campaignId, @PathVariable Status status) {
         HealthCampaignResponseDTO healthCampaignResponseDTO = healthCheckCampaignServiceImpl.updateCampaignStatus(campaignId, status);
         return ResponseEntity.ok(healthCampaignResponseDTO);
@@ -67,9 +67,16 @@ public class HealthCheckCampaignController {
     // Endpoint để lấy danh sách đăng ký của học sinh trong chiến dịch sức khỏe
     // Tức là danh sách học sinh đã được parentConfirmation với bit status = 1
     @GetMapping("{campaignId}/students-registrations")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE') or hasRole('PRINCIPAL')")
     public ResponseEntity<?> getStudentsRegistrations(@PathVariable int campaignId) {
         return ResponseEntity.ok(healthCheckCampaignServiceImpl.getStudentsRegistrations(campaignId));
+    }
+
+    // Xem danh sách chiến dịch đã được phê duyệt dành cho phụ huynh
+    @GetMapping("/approved")
+    @PreAuthorize("hasRole('PARENT')")
+    public ResponseEntity<?> getApprovedCampaign() {
+        return ResponseEntity.ok(healthCheckCampaignServiceImpl.getApprovedCampaigns());
     }
 
 }

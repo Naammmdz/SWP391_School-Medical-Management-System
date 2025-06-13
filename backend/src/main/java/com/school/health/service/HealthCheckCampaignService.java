@@ -25,4 +25,6 @@ public interface HealthCheckCampaignService {
     HealthCampaignResponseDTO updateCampaignStatus(int campaignId, Status status);
 
     List<StudentResponseDTO> getStudentsRegistrations(int campaignId);
+
+    List<HealthCampaignResponseDTO> getApprovedCampaigns();
 }
