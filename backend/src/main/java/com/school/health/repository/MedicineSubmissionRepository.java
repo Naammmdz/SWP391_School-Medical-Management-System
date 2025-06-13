@@ -26,7 +26,10 @@ public interface MedicineSubmissionRepository extends JpaRepository<MedicineSubm
     @Query("SELECT m FROM MedicineSubmission m ORDER BY m.submissionDate DESC")
     List<MedicineSubmission> findAllOrderBySubmissionDateDesc();
 
-    @Query("SELECT m FROM MedicineSubmission m ORDER BY m.submissionStatus ASC, m.startDate DESC")
+    @Query("SELECT m FROM MedicineSubmission m ORDER BY " +
+            "CASE WHEN m.submissionStatus = 'PENDING' THEN 0 " +
+            "WHEN m.submissionStatus = 'APPROVED' THEN 1 " +
+            "ELSE 2 END, m.startDate DESC")
     List<MedicineSubmission> findAllOrderByStatusAndDate();
 
     @Query("SELECT m FROM MedicineSubmission m WHERE m.submissionStatus = :status ORDER BY m.startDate DESC")

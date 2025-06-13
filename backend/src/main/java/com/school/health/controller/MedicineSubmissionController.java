@@ -2,10 +2,10 @@ package com.school.health.controller;
 
 
 import com.school.health.dto.request.MedicineDetailRequest;
+import com.school.health.dto.request.MedicineLogRequest;
 import com.school.health.dto.request.MedicineSubmissionRequest;
 import com.school.health.dto.request.StatusUpdateRequest;
-import com.school.health.dto.response.MedicineDetailResponse;
-import com.school.health.dto.response.MedicineSubmissionResponse;
+import com.school.health.dto.response.*;
 import com.school.health.entity.MedicineSubmission;
 import com.school.health.security.services.UserDetailsImpl;
 import com.school.health.service.MedicineSubmissionService;
@@ -122,5 +122,46 @@ public class MedicineSubmissionController {
         return ResponseEntity.noContent().build();
     }
 
-    
+    // API cho PARENT - Danh sách con
+    @GetMapping("/my-children")
+    @PreAuthorize("hasRole('PARENT')")
+    public ResponseEntity<List<StudentSummaryResponse>> getChildrenByParent(Authentication authentication) {
+        Integer parentId = authUtils.getCurrentUserId(authentication);
+        List<StudentSummaryResponse> childrenList = medicineSubmissionService.getChildrenByParent(parentId);
+        return ResponseEntity.ok(childrenList);
+    }
+
+    // API cho ADMIN - Dashboard
+    @GetMapping("/admin/dashboard")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<AdminDashboardResponse> getAdminDashboard() {
+        AdminDashboardResponse dashboard = medicineSubmissionService.getAdminDashboard();
+        return ResponseEntity.ok(dashboard);
+    }
+
+    // API cho NURSE - Dashboard
+    @GetMapping("/nurse/dashboard")
+    @PreAuthorize("hasRole('NURSE')")
+    public ResponseEntity<HealthDashboardResponse> getNurseDashboard() {
+        HealthDashboardResponse dashboard = medicineSubmissionService.getHealthDashboard();
+        return ResponseEntity.ok(dashboard);
+    }
+
+    // API chấm công uống thuốc - TEACHER và HEALTH_STAFF
+    @PostMapping("/{id}/mark-taken")
+    @PreAuthorize("hasAnyRole('NURSE')")
+    public ResponseEntity<MedicineLogResponse> markMedicineTaken(
+            @PathVariable Integer id,
+            @Valid @RequestBody MedicineLogRequest request,
+            Authentication authentication) {
+
+        Integer givenBy = authUtils.getCurrentUserId(authentication);
+        request.setGivenByUserId(givenBy);
+        request.setGivenAt(LocalDate.now());
+
+        MedicineLogResponse response = medicineSubmissionService.markMedicineTaken(id, request);
+        return ResponseEntity.status(201).body(response);
+    }
+
+
 }
