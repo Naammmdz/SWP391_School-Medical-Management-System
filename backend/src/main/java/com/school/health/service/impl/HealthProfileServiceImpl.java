@@ -197,6 +197,10 @@ public class HealthProfileServiceImpl implements HealthProfileService {
             if (filterRequest.getId() != null) {
                 predicate = cb.and(predicate, cb.equal(root.get("profileId"), filterRequest.getId()));
             }
+            if (filterRequest.getParentId() != null) {
+                predicate = cb.and(predicate, cb.equal(root.get("student").get("parent").get("userId"), filterRequest.getParentId()));
+            }
+
             if (filterRequest.getName() != null) {
                 predicate = cb.and(predicate, cb.like(cb.lower(root.get("student").get("fullName")),
                         "%" + filterRequest.getName().toLowerCase() + "%"));

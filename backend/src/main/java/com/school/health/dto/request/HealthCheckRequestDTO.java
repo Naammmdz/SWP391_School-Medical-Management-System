@@ -1,6 +1,8 @@
 package com.school.health.dto.request;
 
 import java.time.LocalDate;
+
+import jakarta.validation.constraints.Future;
 import lombok.*;
 
 @Getter
@@ -8,6 +10,8 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class HealthCheckRequestDTO {
+    // chỉ chọn ngày trong tương lai
+    @Future
     private LocalDate date;
     private String eyesight;
     private String hearing;

@@ -6,6 +6,7 @@ import com.school.health.dto.response.HealthCampaignResponseDTO;
 import com.school.health.enums.Status;
 import com.school.health.security.services.UserDetailsImpl;
 import com.school.health.service.impl.HealthCheckCampaignServiceImpl;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/healthcheck-campaigns")
 @RestController
 @Validated
+
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*", maxAge = 3600) // Cho phép React frontend gọi API
 public class HealthCheckCampaignController {
@@ -23,7 +25,7 @@ public class HealthCheckCampaignController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE')")
-    public ResponseEntity<?> createCampaign(@RequestBody HealthCampaignRequestDTO healthCampaignRequestDTO, Authentication authentication) {
+    public ResponseEntity<?> createCampaign(@Valid @RequestBody HealthCampaignRequestDTO healthCampaignRequestDTO, Authentication authentication) {
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
         Integer userId = userPrincipal.getId();
         HealthCampaignResponseDTO healthCampaignResponseDTO = healthCheckCampaignServiceImpl.createCampaign(healthCampaignRequestDTO, userId);
@@ -91,5 +93,4 @@ public class HealthCheckCampaignController {
         dto.setStudentId(studentId);
         return ResponseEntity.ok(healthCheckCampaignServiceImpl.registerStudentHealthCheck(dto));
     }
-
 }
