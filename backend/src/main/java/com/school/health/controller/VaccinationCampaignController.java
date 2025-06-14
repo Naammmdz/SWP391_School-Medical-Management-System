@@ -89,4 +89,18 @@ public class VaccinationCampaignController {
             return ResponseEntity.ok(vaccinationCampaignService.registerStudentVaccine(request));
         }
     }
+
+    @GetMapping("/me/students/{studentId}/campaigns")
+    @PreAuthorize("hasRole('PARENT')")
+    public ResponseEntity<?> getMyChildHealthCampaigns(@PathVariable int studentId, Authentication authentication) {
+        UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
+        Integer userId = userPrincipal.getId();
+        return ResponseEntity.ok(vaccinationCampaignService.getMyChildHealthCampaigns(userId, studentId));
+    }
+
+    @PostMapping("result/{campaignId}")
+    @PreAuthorize("hasRole('NURSE') or hasRole('ADMIN')")
+    public ResponseEntity<?> recordVaccination(@PathVariable int campaignId, @RequestBody VaccinationRequestDTO request) {
+        return ResponseEntity.ok(vaccinationCampaignService.recordVaccinationResult(campaignId, request));
+    }
 }

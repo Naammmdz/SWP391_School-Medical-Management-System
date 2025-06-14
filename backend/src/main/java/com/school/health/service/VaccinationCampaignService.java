@@ -7,6 +7,7 @@ import com.school.health.dto.response.VaccinationCampaignResponseDTO;
 import com.school.health.dto.response.VaccinationResponseDTO;
 import com.school.health.entity.Student;
 import com.school.health.entity.Vaccination;
+import com.school.health.entity.VaccinationCampaign;
 import com.school.health.enums.Status;
 
 import java.util.List;
@@ -33,4 +34,8 @@ public interface VaccinationCampaignService {
     VaccinationResponseDTO registerStudentVaccine(VaccinationRequestDTO request);
 
     boolean isParentOfStudent(Integer parentId, Integer studentId);
+
+    List<VaccinationCampaign> getMyChildHealthCampaigns(Integer parentId, Integer studentId);
+
+    VaccinationResponseDTO recordVaccinationResult(Integer campaignId, VaccinationRequestDTO requestDTO);
 }

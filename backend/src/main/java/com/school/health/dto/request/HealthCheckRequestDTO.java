@@ -11,7 +11,6 @@ import lombok.*;
 @AllArgsConstructor
 public class HealthCheckRequestDTO {
     // chỉ chọn ngày trong tương lai
-    @Future
     private LocalDate date;
     private String eyesight;
     private String hearing;

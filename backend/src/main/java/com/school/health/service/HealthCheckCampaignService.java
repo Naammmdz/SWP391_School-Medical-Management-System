@@ -5,6 +5,7 @@ import com.school.health.dto.request.HealthCheckRequestDTO;
 import com.school.health.dto.response.HealthCampaignResponseDTO;
 import com.school.health.dto.response.HealthCheckResponseDTO;
 import com.school.health.dto.response.StudentResponseDTO;
+import com.school.health.entity.HealthCheckCampaign;
 import com.school.health.entity.Student;
 import com.school.health.enums.Status;
 import org.springframework.stereotype.Service;
@@ -31,4 +32,8 @@ public interface HealthCheckCampaignService {
     List<HealthCampaignResponseDTO> getApprovedCampaigns();
 
     HealthCheckResponseDTO registerStudentHealthCheck(HealthCheckRequestDTO request);
+
+    List<HealthCheckCampaign> getMyChildHealthCampaigns(Integer parentId, Integer studentId);
+
+    HealthCheckResponseDTO recordHealthCheckResult(Integer campaignId, HealthCheckRequestDTO requestDTO);
 }

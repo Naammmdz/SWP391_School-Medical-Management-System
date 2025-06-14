@@ -175,5 +175,20 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
         responseDTO.setParentConfirmation(healthCheck.isParentConfirmation());
         return responseDTO;
     }
+
+    @Override
+    public List<HealthCheckCampaign> getMyChildHealthCampaigns(Integer parentId, Integer studentId) {
+       return healthCheckCampaignRepository.findCampaignsByStudentId(studentId);
+        // Chuyển đổi danh sách HealthCheck thành HealthCampaignResponseDTO
+    }
+
+    @Override
+    public HealthCheckResponseDTO recordHealthCheckResult(Integer campaignId, HealthCheckRequestDTO requestDTO) {
+        HealthCheckCampaign campaign = healthCheckCampaignRepository.findById(campaignId).orElseThrow(() -> new RuntimeException("Campaign not found with ID: " + campaignId));
+        HealthCheck healthCheck = maptoEntityCheck(requestDTO);
+        healthCheck.setCampaign(campaign);
+        healthCheckRepository.save(healthCheck);
+        return mapToHealthCheckResponseDTO(healthCheck);
+    }
 }
 

@@ -4,7 +4,6 @@ import com.school.health.enums.Status;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-
 import java.time.*;
 
 @Entity
@@ -14,7 +13,7 @@ import java.time.*;
 @AllArgsConstructor
 public class HealthCheckCampaign {
     @Id
-    @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "CampaignId")
     private int campaignId;
     @Column(name = "CampaignName")

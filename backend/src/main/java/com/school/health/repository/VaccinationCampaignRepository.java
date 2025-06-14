@@ -17,4 +17,7 @@ public interface VaccinationCampaignRepository extends JpaRepository<Vaccination
 
     @Query("SELECT v FROM VaccinationCampaign v WHERE v.status = :status")
     List<VaccinationCampaign> findByStatus(Status status);
+
+    @Query("SELECT v FROM VaccinationCampaign v JOIN Vaccination s ON v.campaignId = s.campaign.campaignId WHERE s.student.studentId = :studentId")
+    List<VaccinationCampaign> findCampaignsByStudentId(Integer studentId);
 }

@@ -93,4 +93,20 @@ public class HealthCheckCampaignController {
         dto.setStudentId(studentId);
         return ResponseEntity.ok(healthCheckCampaignServiceImpl.registerStudentHealthCheck(dto));
     }
+
+    // phụ huynh xem chiến dịch mà học sinh đã đăng ký
+    @GetMapping("/me/students/{studentId}/campaigns")
+    @PreAuthorize("hasRole('PARENT')")
+    public ResponseEntity<?> getMyChildHealthCampaigns(@PathVariable int studentId, Authentication authentication) {
+        UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
+        Integer userId = userPrincipal.getId();
+        return ResponseEntity.ok(healthCheckCampaignServiceImpl.getMyChildHealthCampaigns(userId, studentId));
+    }
+
+    // ghi nhận kết quả sức khỏe của học sinh trong chiến dịch sức khỏe
+    @PostMapping("/result/{campaignId}")
+    @PreAuthorize("hasRole('NURSE') or hasRole('ADMIN')")
+    public ResponseEntity<?> recordHealthCheckResult(@PathVariable int campaignId, @RequestBody @Valid HealthCheckRequestDTO healthCheckRequestDTO) {
+        return ResponseEntity.ok(healthCheckCampaignServiceImpl.recordHealthCheckResult(campaignId, healthCheckRequestDTO));
+    }
 }

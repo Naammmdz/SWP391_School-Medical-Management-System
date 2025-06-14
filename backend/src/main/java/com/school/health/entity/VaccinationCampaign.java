@@ -1,21 +1,16 @@
 package com.school.health.entity;
 
 import com.school.health.enums.Status;
-import jakarta.persistence.Entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.*;
 
 @Entity
-@Table(name = "VaccinationCampaign")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
 public class VaccinationCampaign {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,13 +26,13 @@ public class VaccinationCampaign {
     private int createdBy;
     @Column(name = "ApprovedBy")
     private int ApprovedBy;
-    @Column(name = "ApprovedAt")
     @CreationTimestamp
+    @Column(name = "ApprovedAt")
     private LocalDateTime approvedAt;
     @Enumerated(EnumType.STRING)
     @Column(name = "Status")
     private Status status;
-    @Column(name = "CreatedAt")
     @CreationTimestamp
+    @Column(name = "CreatedAt")
     private LocalDateTime createdAt;
 }

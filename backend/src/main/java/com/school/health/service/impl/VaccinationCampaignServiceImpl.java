@@ -167,6 +167,19 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
         return vaccinationRepository.existsByStudentStudentIdAndStudentParentUserId(parentId, studentId);
     }
 
+    @Override
+    public List<VaccinationCampaign> getMyChildHealthCampaigns(Integer parentId, Integer studentId) {
+        return vaccinationCampaignRepository.findCampaignsByStudentId(studentId);
+    }
+
+    @Override
+    public VaccinationResponseDTO recordVaccinationResult(Integer campaignId, VaccinationRequestDTO requestDTO) {
+        VaccinationCampaign campaign = vaccinationCampaignRepository.findById(campaignId).orElseThrow(() -> new RuntimeException("Campaign not found id :" + campaignId));
+        Vaccination vaccination = mapToEntityVaccine(requestDTO);
+        vaccination.setCampaign(campaign);
+        vaccinationRepository.save(vaccination);
+        return mapToResponseDTO(vaccination);
+    }
 }
 
 
