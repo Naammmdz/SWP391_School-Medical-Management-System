@@ -30,8 +30,14 @@ public class NotificationController {
     public ResponseEntity<List<NotificationResponseDTO>> getAllNotifications(Authentication authentication) {
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
         Integer userId = userPrincipal.getId();
-       List<NotificationResponseDTO> list = notificationService.getByUserId(userId);
-
+       List<NotificationResponseDTO> list = notificationService.getAllNoti(userId);
+        return ResponseEntity.ok(list);
+    }
+    @GetMapping("/me-unreaded")
+    public ResponseEntity<List<NotificationResponseDTO>> getAllNotificationsUnReaded(Authentication authentication) {
+        UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
+        Integer userId = userPrincipal.getId();
+        List<NotificationResponseDTO> list = notificationService.getAllNotiUnReaded(userId);
         return ResponseEntity.ok(list);
     }
     @PostMapping ("/{notificationId}/read")

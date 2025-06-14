@@ -6,6 +6,7 @@ import com.school.health.entity.User;
 import com.school.health.repository.NotificationRepository;
 import com.school.health.repository.UserRepository;
 import com.school.health.service.NotificationService;
+//import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,11 +20,11 @@ public class NotificationServiceImpl implements NotificationService {
     NotificationRepository notificationRepository;
     @Autowired
     UserRepository userRepository;
+
     @Override
     public NotificationResponseDTO createNotification(int toUserId, String title, String message) {
 
         User user = userRepository.findByUserId(toUserId).orElseThrow();
-        System.out.println("////"+user+"/////////");
         Notification notification = new Notification();
         notification.setTitle(title);
         notification.setMessage(message);
@@ -33,14 +34,6 @@ public class NotificationServiceImpl implements NotificationService {
 
     }
 
-    @Override
-    public List<NotificationResponseDTO> getByUserId(int userId) {
-        List<Notification> notificationList = notificationRepository.getNotificationsById(userId);
-        return  notificationList.stream().map(this::mapToNotificationResponseDto)
-                .collect(Collectors.toList());
-
-
-    }
 
     @Override
     public NotificationResponseDTO markRead(int notificationId) {
@@ -68,6 +61,20 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    public List<NotificationResponseDTO> getAllNoti(int userId) {
+        List<Notification> notificationList = notificationRepository.getNotificationsById(userId);
+        return  notificationList.stream().map(this::mapToNotificationResponseDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<NotificationResponseDTO> getAllNotiUnReaded(int userId) {
+        List<Notification> notificationList = notificationRepository.getNotificationsIsNotReaded(userId);
+        return  notificationList.stream().map(this::mapToNotificationResponseDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public NotificationResponseDTO mapToNotificationResponseDto(Notification notification) {
         NotificationResponseDTO notificationResponseDTO = new NotificationResponseDTO();
         notificationResponseDTO.setId(notification.getId());
@@ -78,4 +85,6 @@ public class NotificationServiceImpl implements NotificationService {
         notificationResponseDTO.setCreatedAt(notification.getCreatedAt());
         return notificationResponseDTO;
     }
+
+
 }

@@ -2,6 +2,7 @@ package com.school.health.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -26,6 +27,7 @@ public class Notification {
     private String message;
     @Column (name ="IsRead")
     private boolean isRead;
+    @CreationTimestamp
     @Column (name ="CreatedAt")
     private LocalDateTime createdAt;
 
