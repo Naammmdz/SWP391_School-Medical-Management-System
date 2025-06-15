@@ -29,14 +29,26 @@ public class HealthCheck {
     private double height;
     @Column(name = "Weight")
     private double weight;
-    @Column(name = "Eyesight")
-    private String eyesight;
-    @Column(name = "Hearing",columnDefinition = "NVARCHAR(255)")
-    private String hearing;
+    @Column(name = "EyesightLeft")
+    private String eyesightLeft;
+    @Column(name = "EyesightRight")
+    private String eyesightRight;
+    @Column(name = "BloodPressure")
+    private String bloodPressure; // huyết áp
+    @Column(name = "HearingLeft",columnDefinition = "NVARCHAR(255)")
+    private String hearingLeft;
+    @Column(name = "HearingRight",columnDefinition = "NVARCHAR(255)")
+    private String hearingRight;
+    @Column(name = "Temperature", columnDefinition = "NVARCHAR(50)")
+    private String temperature; // nhiệt độ
+    @Column(name = "ConsultationAppointment")
+    private boolean consultationAppointment; // true nếu muốn hẹn lịch khám để tư vấn, false nếu không muốn
     @Column(name = "ParentConfirmation")
     private boolean parentConfirmation;
     @Column(name = "Notes",columnDefinition = "NVARCHAR(255)")
     private String notes;
+    // thêm có muốn hẹn lịch khám để tư vấn hay không
+
     @CreationTimestamp
     @Column(name = "CreatedAt")
     private LocalDateTime createdAt;

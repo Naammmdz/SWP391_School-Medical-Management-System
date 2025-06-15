@@ -27,6 +27,15 @@ public class Vaccination {
     private VaccinationCampaign campaign;
     @Column(name = "VaccineName")
     private String vaccineName;
+    //
+    @Column(name = "DoseNumber")
+    private Integer doseNumber; // số mũi tiêm, ví dụ: 1, 2, 3
+    @Column(name = "AdverseReaction", columnDefinition = "NVARCHAR(255)")
+    private String adverseReaction; // phản ứng phụ nếu có
+    // check xem đã tiêm đợt trước chưa
+    @Column(name = "IsPreviousDose")
+    private boolean isPreviousDose; // true nếu đã tiêm đợt trước, false nếu đây là mũi đầu tiên
+    //
     @Column(name = "Date")
     private LocalDate date;
     @Column(name = "Result",columnDefinition = "NVARCHAR(255)")

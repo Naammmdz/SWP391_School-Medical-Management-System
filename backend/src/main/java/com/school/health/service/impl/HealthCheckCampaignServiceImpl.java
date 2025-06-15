@@ -95,6 +95,10 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
         existingCampaign.setDescription(healthCampaignRequestDTO.getDescription());
         existingCampaign.setScheduledDate(healthCampaignRequestDTO.getScheduledDate());
         existingCampaign.setStatus(healthCampaignRequestDTO.getStatus());
+        existingCampaign.setTargetGroup(healthCampaignRequestDTO.getTargetGroup());
+        existingCampaign.setType(healthCampaignRequestDTO.getType());
+        existingCampaign.setAddress(healthCampaignRequestDTO.getAddress());
+        existingCampaign.setOrganizer(healthCampaignRequestDTO.getOrganizer());
 
         HealthCheckCampaign updatedCampaign = healthCheckCampaignRepository.save(existingCampaign);
         return mapToResponseDTO(updatedCampaign);
@@ -160,8 +164,13 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
         healthcheck.setCampaign(healthCheckCampaignRepository.findById(request.getCampaignId()).orElseThrow(() -> new RuntimeException("Campaign not found with ID: " + request.getCampaignId())));
         healthcheck.setStudent(studentRepository.findById(request.getStudentId()).orElseThrow(() -> new RuntimeException("Student not found with ID: " + request.getStudentId())));
         healthcheck.setDate(request.getDate());
-        healthcheck.setEyesight(request.getEyesight());
-        healthcheck.setHearing(request.getHearing());
+        healthcheck.setEyesightLeft(request.getEyesightLeft());
+        healthcheck.setEyesightRight(request.getEyesightRight());
+        healthcheck.setHearingLeft(request.getHearingLeft());
+        healthcheck.setHearingRight(request.getHearingRight());
+        healthcheck.setBloodPressure(request.getBloodPressure());
+        healthcheck.setTemperature(request.getTemperature());
+        healthcheck.setConsultationAppointment(request.isConsultationAppointment());
         healthcheck.setHeight(request.getHeight());
         healthcheck.setWeight(request.getWeight());
         healthcheck.setNotes(request.getNotes());
@@ -171,23 +180,30 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
 
     }
 
+
     public HealthCheckResponseDTO mapToHealthCheckResponseDTO(HealthCheck healthCheck) {
         HealthCheckResponseDTO responseDTO = new HealthCheckResponseDTO();
         responseDTO.setCampaignId(healthCheck.getCampaign().getCampaignId());
         responseDTO.setStudentId(healthCheck.getStudent().getStudentId());
         responseDTO.setDate(healthCheck.getDate());
-        responseDTO.setEyesight(healthCheck.getEyesight());
-        responseDTO.setHearing(healthCheck.getHearing());
         responseDTO.setHeight(healthCheck.getHeight());
         responseDTO.setWeight(healthCheck.getWeight());
+        responseDTO.setEyesightLeft(healthCheck.getEyesightLeft());
+        responseDTO.setEyesightRight(healthCheck.getEyesightRight());
+        responseDTO.setHearingLeft(healthCheck.getHearingLeft());
+        responseDTO.setHearingRight(healthCheck.getHearingRight());
+        responseDTO.setBloodPressure(healthCheck.getBloodPressure());
+        responseDTO.setTemperature(healthCheck.getTemperature());
+        responseDTO.setConsultationAppointment(healthCheck.isConsultationAppointment());
         responseDTO.setNotes(healthCheck.getNotes());
         responseDTO.setParentConfirmation(healthCheck.isParentConfirmation());
         return responseDTO;
     }
 
+
     @Override
     public List<HealthCheckCampaign> getMyChildHealthCampaigns(Integer parentId, Integer studentId) {
-       return healthCheckCampaignRepository.findCampaignsByStudentId(studentId);
+        return healthCheckCampaignRepository.findCampaignsByStudentId(studentId);
         // Chuyển đổi danh sách HealthCheck thành HealthCampaignResponseDTO
     }
 

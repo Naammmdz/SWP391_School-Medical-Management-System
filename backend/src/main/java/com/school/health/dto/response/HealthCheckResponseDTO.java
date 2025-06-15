@@ -1,5 +1,6 @@
 package com.school.health.dto.response;
 
+import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,10 +14,15 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class HealthCheckResponseDTO {
     private LocalDate date;
-    private String eyesight;
-    private String hearing;
     private double height;
     private double weight;
+    private String eyesightLeft;
+    private String eyesightRight;
+    private String bloodPressure;
+    private String hearingLeft;
+    private String hearingRight;
+    private String temperature;
+    private boolean consultationAppointment;
     private String notes;
     private boolean parentConfirmation;
     private int studentId;

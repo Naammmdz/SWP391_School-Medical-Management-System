@@ -13,6 +13,7 @@ import com.school.health.repository.StudentRepository;
 import com.school.health.repository.VaccinationCampaignRepository;
 import com.school.health.repository.VaccinationRepository;
 import com.school.health.service.VaccinationCampaignService;
+import jakarta.persistence.Column;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -86,6 +87,10 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
         existingCampaign.setDescription(vaccinationCampaignRequestDTO.getDescription());
         existingCampaign.setScheduledDate(vaccinationCampaignRequestDTO.getScheduledDate());
         existingCampaign.setStatus(vaccinationCampaignRequestDTO.getStatus());
+        existingCampaign.setTargetGroup(vaccinationCampaignRequestDTO.getTargetGroup());
+        existingCampaign.setType(vaccinationCampaignRequestDTO.getType());
+        existingCampaign.setAddress(vaccinationCampaignRequestDTO.getAddress());
+        existingCampaign.setOrganizer(vaccinationCampaignRequestDTO.getOrganizer());
 
         VaccinationCampaign updatedCampaign = vaccinationCampaignRepository.save(existingCampaign);
         return mapToResponseDTO(updatedCampaign);
@@ -154,6 +159,9 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
         vaccination.setVaccineName(requestDTO.getVaccineName());
         vaccination.setDate(requestDTO.getDate());
         vaccination.setNotes(requestDTO.getNotes());
+        vaccination.setDoseNumber(requestDTO.getDoseNumber());
+        vaccination.setAdverseReaction(requestDTO.getAdverseReaction());
+        vaccination.setPreviousDose(requestDTO.isPreviousDose());
         vaccination.setParentConfirmation(requestDTO.isParentConfirmation());
         vaccination.setResult(requestDTO.getResult());
         vaccinationRepository.save(vaccination);
@@ -166,11 +174,15 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
         responseDTO.setStudentId(vaccination.getStudent().getStudentId());
         responseDTO.setVaccineName(vaccination.getVaccineName());
         responseDTO.setDate(vaccination.getDate());
+        responseDTO.setDoseNumber(vaccination.getDoseNumber());
+        responseDTO.setAdverseReaction(vaccination.getAdverseReaction());
+        responseDTO.setPreviousDose(vaccination.isPreviousDose());
         responseDTO.setNotes(vaccination.getNotes());
         responseDTO.setParentConfirmation(vaccination.isParentConfirmation());
         responseDTO.setResult(vaccination.getResult());
         return responseDTO;
     }
+
 
     @Override
     public boolean isParentOfStudent(Integer parentId, Integer studentId) {
@@ -185,6 +197,8 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
     @Override
     public VaccinationResponseDTO recordVaccinationResult(Integer campaignId, VaccinationRequestDTO requestDTO) {
         VaccinationCampaign campaign = vaccinationCampaignRepository.findById(campaignId).orElseThrow(() -> new RuntimeException("Campaign not found id :" + campaignId));
+        Student student = studentRepository.findById(requestDTO.getStudentId()).orElseThrow(() -> new RuntimeException("Student not found id :" + requestDTO.getStudentId()));
+        // check học sinh đã tồn tại trong chiến dịch tiêm chủng chưa
         Vaccination vaccination = mapToEntityVaccine(requestDTO);
         vaccination.setCampaign(campaign);
         vaccinationRepository.save(vaccination);
