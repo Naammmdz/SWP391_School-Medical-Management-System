@@ -2,6 +2,7 @@ package com.school.health.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -29,9 +30,13 @@ public class Inventory {
     @Column(name = "Quantity")
     private int quantity;
 
+    @Column(name = "MinStockLevel")
+    private int minStockLevel;
+
     @Column(name = "ExpiryDate")
     private LocalDate expiryDate;
 
+    @CreationTimestamp
     @Column(name = "CreatedAt")
     private LocalDateTime createdAt;
 }

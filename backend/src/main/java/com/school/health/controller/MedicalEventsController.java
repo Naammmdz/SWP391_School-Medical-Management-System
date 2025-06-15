@@ -44,7 +44,6 @@ public class MedicalEventsController {
     //update medical event
     @PutMapping("/{eventId}")
     public ResponseEntity<MedicalEventsResponseDTO> updateMedicalEvent(@RequestBody MedicalEventsRequestDTO medicalEventsRequestDTO, @PathVariable Integer eventId) {
-
         return ResponseEntity.ok(medicalEventsService.updateMedicalEvents(eventId, medicalEventsRequestDTO));
     }
 

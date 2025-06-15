@@ -2,15 +2,16 @@ package com.school.health.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "InventoryUsageLog")
+@Table(name = "InventoryUsedLog")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class InventoryUsageLog {
+public class InventoryUsedLog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "UsageId", nullable = false)
@@ -23,6 +24,7 @@ public class InventoryUsageLog {
     @Column(name = "QuantityUsed")
     private int quantityUsed;
 
+    @CreationTimestamp
     @Column(name = "UsedAt")
     private LocalDateTime usedAt;
 

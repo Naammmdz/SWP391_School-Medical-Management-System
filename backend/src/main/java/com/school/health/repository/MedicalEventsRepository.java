@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface MedicalEventsRepository extends JpaRepository<MedicalEvent, Integer> {
@@ -22,4 +23,5 @@ public interface MedicalEventsRepository extends JpaRepository<MedicalEvent, Int
     """)
     List<MedicalEvent> findByFilter(LocalDateTime from, LocalDateTime to,String eventType, Integer stuId, Integer createBy);
 
+    Optional<MedicalEvent> findById(Integer id);
 }

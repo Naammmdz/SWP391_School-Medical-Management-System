@@ -6,6 +6,7 @@ import com.school.health.dto.response.MedicalEventsResponseDTO;
 import com.school.health.entity.MedicalEvent;
 import com.school.health.entity.Student;
 import com.school.health.entity.User;
+import com.school.health.exception.ResourceNotFoundException;
 import com.school.health.repository.MedicalEventsRepository;
 import com.school.health.repository.StudentRepository;
 import com.school.health.repository.UserRepository;
@@ -43,7 +44,7 @@ public class MedicalEventsServiceImpl implements MedicalEvents {
 
     @Override
     public MedicalEventsResponseDTO getMedicalEvents(int id) {
-        return mapToResponseDTO(medicalEventsRepository.getReferenceById(id));
+        return mapToResponseDTO(medicalEventsRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Medical Events Not Found")));
     }
 
     @Override
@@ -54,7 +55,7 @@ public class MedicalEventsServiceImpl implements MedicalEvents {
 
     @Override
     public MedicalEventsResponseDTO updateMedicalEvents(int id, MedicalEventsRequestDTO dto) {
-        MedicalEvent entity = medicalEventsRepository.getReferenceById(id);
+        MedicalEvent entity = medicalEventsRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Medical Event Not Found"));
 
         // Cập nhật có điều kiện
         if (dto.getStuId()!= 0) { // int mặc định là 0
