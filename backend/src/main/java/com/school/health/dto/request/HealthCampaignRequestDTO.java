@@ -16,6 +16,11 @@ import java.time.LocalDate;
 public class HealthCampaignRequestDTO {
     @NotBlank(message = "Tên chiến dịch không được để trống")
     private String campaignName;
+    // thêm field đối tượng áp dụng nữa ví dụ : lớp 3A 3B 3C hay theo khối ...
+    private String targetGroup;
+    private String type;
+    private String address; // địa điểm tổ chức khám
+    private String organizer; // người thực hiện chiến dịch
     private String description;
     @NotNull(message = "Ngày khám không được để trống")
     @Future(message = "Ngày khám phải là ngày trong tương lai")

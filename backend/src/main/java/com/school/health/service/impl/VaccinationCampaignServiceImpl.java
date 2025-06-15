@@ -41,6 +41,12 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
         campaign.setDescription(requestDTO.getDescription());
         campaign.setScheduledDate(requestDTO.getScheduledDate());
         campaign.setStatus(requestDTO.getStatus());
+        campaign.setTargetGroup(requestDTO.getTargetGroup());
+        campaign.setType(requestDTO.getType());
+        campaign.setAddress(requestDTO.getAddress());
+        campaign.setOrganizer(requestDTO.getOrganizer());
+
+
         return campaign;
     }
 
@@ -54,6 +60,10 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
         responseDTO.setApprovedBy(campaign.getApprovedBy());
         responseDTO.setStatus(campaign.getStatus());
         responseDTO.setCreatedAt(campaign.getCreatedAt());
+        responseDTO.setTargetGroup(campaign.getTargetGroup());
+        responseDTO.setType(campaign.getType());
+        responseDTO.setAddress(campaign.getAddress());
+        responseDTO.setOrganizer(campaign.getOrganizer());
         return responseDTO;
     }
 

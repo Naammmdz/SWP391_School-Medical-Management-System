@@ -13,6 +13,7 @@ import com.school.health.repository.HealthCheckCampaignRepository;
 import com.school.health.repository.HealthCheckRepository;
 import com.school.health.repository.StudentRepository;
 import com.school.health.service.HealthCheckCampaignService;
+import jakarta.persistence.Column;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -42,6 +43,10 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
         campaign.setDescription(requestDTO.getDescription());
         campaign.setScheduledDate(requestDTO.getScheduledDate());
         campaign.setStatus(requestDTO.getStatus());
+        campaign.setTargetGroup(requestDTO.getTargetGroup());
+        campaign.setType(requestDTO.getType());
+        campaign.setAddress(requestDTO.getAddress());
+        campaign.setOrganizer(requestDTO.getOrganizer());
         return campaign;
     }
 
@@ -55,6 +60,10 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
         responseDTO.setApprovedBy(campaign.getApprovedBy());
         responseDTO.setStatus(campaign.getStatus());
         responseDTO.setCreatedAt(campaign.getCreatedAt());
+        responseDTO.setTargetGroup(campaign.getTargetGroup());
+        responseDTO.setType(campaign.getType());
+        responseDTO.setAddress(campaign.getAddress());
+        responseDTO.setOrganizer(campaign.getOrganizer());
         return responseDTO;
     }
 

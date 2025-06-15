@@ -13,6 +13,10 @@ import java.time.LocalDateTime;
 public class VaccinationCampaignResponseDTO {
     private int campaignId;
     private String campaignName;
+    private String targetGroup;
+    private String type;
+    private String address; // địa điểm tổ chức khám
+    private String organizer; // người thực hiện chiến dịch
     private String description;
     private LocalDate scheduledDate;
     private int createdBy;

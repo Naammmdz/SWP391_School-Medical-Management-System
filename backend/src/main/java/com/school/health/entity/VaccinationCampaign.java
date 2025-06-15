@@ -18,6 +18,14 @@ public class VaccinationCampaign {
     private int campaignId;
     @Column(name = "CampaignName",columnDefinition = "NVARCHAR(255)")
     private String campaignName;
+    @Column(name = "TargetGroup", columnDefinition = "NVARCHAR(255)")
+    private String targetGroup;
+    @Column(name = "Type", columnDefinition = "NVARCHAR(255)")
+    private String type;
+    @Column(name = "Address", columnDefinition = "NVARCHAR(255)")
+    private String address; // địa điểm tổ chức khám
+    @Column(name = "Organizer", columnDefinition = "NVARCHAR(255)")
+    private String organizer; // người thực hiện chiến dịch
     @Column(name = "Description",columnDefinition = "NVARCHAR(255)")
     private String description;
     @Column(name = "ScheduledDate")
