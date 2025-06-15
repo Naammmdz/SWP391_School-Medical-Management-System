@@ -9,7 +9,11 @@ const HealthCheckList = () => {
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
+ const users = JSON.parse(localStorage.getItem('users') || '[]');
+const getUserNameById = (id) => {
+  const user = users.find(u => String(u.id) === String(id));
+  return user ? user.fullName : id;
+};
   useEffect(() => {
     const fetchCampaigns = async () => {
       setLoading(true);
@@ -75,7 +79,7 @@ const HealthCheckList = () => {
                   <td>{c.description}</td>
                   <td>{c.scheduledDate}</td>
                   <td>{c.status}</td>
-                  <td>{c.createdBy}</td>
+                  <td>{getUserNameById(c.createdBy)}</td>
                   <td>{c.createdAt}</td>
                   <td>
                     <button

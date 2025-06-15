@@ -47,7 +47,7 @@ const HealthCheck = () => {
 
   return (
     <div className="health-check-container">
-      {nurse.userRole === 'ROLE_NURSE' && (
+      {nurse.userRole === 'ROLE_NURSE' || 'ROLE_ADMIN' &&  (
         <div className="campaign-form-section">
           <h2>Tạo chiến dịch kiểm tra sức khỏe</h2>
           <form onSubmit={handleSubmit} className="campaign-form">

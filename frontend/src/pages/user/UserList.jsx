@@ -76,6 +76,9 @@ const UserList = () => {
       });
       // Nếu backend trả về mảng, tự tính tổng trang
       setUsers(response.data);
+      
+      localStorage.setItem('users', JSON.stringify(response.data));
+      
       if (Array.isArray(response.data)) {
         setTotalPages(response.data.length < PAGE_SIZE ? page + 1 : page + 2); // Ước lượng, nên backend trả về tổng số trang
       } else if (response.data.totalPages) {
@@ -86,7 +89,7 @@ const UserList = () => {
     }
     setLoading(false);
   };
-
+ 
   // Delete (vô hiệu hóa) user
   const deleteUser = async (id) => {
     setUserToDelete(id);

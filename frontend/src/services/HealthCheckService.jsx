@@ -38,8 +38,16 @@ const HealthCheckService = {
       console.error('Error fetching health check campaign by ID:', error);
       throw error;
     }
+  },
+  approveHealthCheckCampaign: async (id, config) => {
+    try {
+      const response = await axios.put(`${API_URL}/${id}/approve`, {}, config);
+      return response.data;
+    } catch (error) {
+      console.error('Error approving health check campaign:', error);
+      throw error;
+    }
   }
-
 };
 
 export default HealthCheckService;

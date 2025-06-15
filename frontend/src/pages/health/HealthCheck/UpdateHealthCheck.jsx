@@ -5,8 +5,8 @@ import './UpdateHealthCheck.css';
 
 const UpdateHealthCheck = () => {
   const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user') || '{}'); // Lấy user từ localStorage
   const navigate = useNavigate();
-  // Lấy id từ localStorage thay vì useParams
   const campaignId = localStorage.getItem('selectedCampaignId');
   const [form, setForm] = useState({
     campaignName: '',
@@ -58,13 +58,10 @@ const UpdateHealthCheck = () => {
     setSuccessMsg('');
     setErrorMsg('');
     try {
-      console.log('ID gửi lên backend:', campaignId);
-      console.log('Form gửi lên backend:', form);
       await HealthCheckService.updateHealthCheckCampaign(
         campaignId,
         form,
         { headers: { Authorization: `Bearer ${token}` } },
-
       );
       setSuccessMsg('Cập nhật chiến dịch thành công!');
       setTimeout(() => navigate(-1), 1200);
@@ -74,6 +71,10 @@ const UpdateHealthCheck = () => {
   };
 
   if (loading) return <div>Đang tải...</div>;
+
+  // Chỉ ADMIN hoặc PRINCIPAL mới được sửa trạng thái
+  const canEditStatus =
+    user.userRole === 'ROLE_ADMIN' || user.userRole === 'ROLE_PRINCIPAL';
 
   return (
     <div className="update-health-check-container">
@@ -110,13 +111,23 @@ const UpdateHealthCheck = () => {
         </div>
         <div className="form-group">
           <label>Trạng thái</label>
-          <input
-            type="text"
+          <select
             name="status"
             value={form.status}
             onChange={handleInputChange}
             required
-          />
+            disabled={!canEditStatus}
+          >
+            <option value="CRAFT">CRAFT</option>
+            <option value="PENDING">PENDING</option>
+            <option value="APPROVED">APPROVED</option>
+            <option value="CANCELLED">CANCELLED</option>
+          </select>
+          {!canEditStatus && (
+            <div className="text-muted" style={{ fontSize: 13, marginTop: 4 }}>
+              {/* Chỉ hiệu trưởng mới được thay đổi trạng thái. */}
+            </div>
+          )}
         </div>
         <button type="submit" className="btn btn-primary">Cập nhật</button>
         {successMsg && <div className="success-message">{successMsg}</div>}
