@@ -14,6 +14,6 @@ public interface NotificationService {
         List<NotificationResponseDTO> markAllRead(int userId);
         int countUnread(int userId);
         public NotificationResponseDTO mapToNotificationResponseDto (Notification notification);
-        List<NotificationResponseDTO> getAllNotiUnReaded(int userId);
+        List<NotificationResponseDTO> getAllNotiUnread(int userId);
     }
 

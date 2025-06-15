@@ -4,6 +4,7 @@ package com.school.health.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -20,14 +21,14 @@ public class MedicalEvent {
 
     @OneToOne
     @JoinColumn(name = "StudentId", nullable = false)
-    private User student;
+    private Student student;
 
     @Column(name = "EventType", columnDefinition = "NVARCHAR(50)")
     private String eventType;
 
     @Column(name = "Description", columnDefinition = "NVARCHAR(255)")
     private String description;
-
+    @CreationTimestamp
     @Column(name = "CreatedAt")
     private LocalDateTime createdAt;
 

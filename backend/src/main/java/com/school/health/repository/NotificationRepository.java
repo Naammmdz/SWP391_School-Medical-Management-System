@@ -14,8 +14,8 @@ public interface NotificationRepository extends JpaRepository<Notification, Inte
     @Query ("Select n from Notification n where n.id = :id")
     Notification getNotificationById(@Param("id") int id);
 
-
+// khi ma ghi dung theo thu tu va noi dung
     @Query ("Select n from Notification n where n.isRead = false and n.toUserId.userId = :userID")
-    List<Notification> getNotificationsIsNotReaded(@Param("userID") int id);
+    List<Notification> getNotificationsUnread(@Param("userID") int id);
 
 }

@@ -45,7 +45,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public List<NotificationResponseDTO>  markAllRead(int userId) {
-        List<Notification> notificationList = notificationRepository.getNotificationsIsNotReaded(userId);
+        List<Notification> notificationList = notificationRepository.getNotificationsUnread(userId);
         notificationList.forEach(notification -> {notification.setRead(true);
             notificationRepository.save(notification);
         } );
@@ -56,7 +56,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public int countUnread(int userId) {
-        List<Notification> notificationList = notificationRepository.getNotificationsIsNotReaded(userId);
+        List<Notification> notificationList = notificationRepository.getNotificationsUnread(userId);
         return notificationList.size();
     }
 
@@ -68,8 +68,8 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public List<NotificationResponseDTO> getAllNotiUnReaded(int userId) {
-        List<Notification> notificationList = notificationRepository.getNotificationsIsNotReaded(userId);
+    public List<NotificationResponseDTO> getAllNotiUnread(int userId) {
+        List<Notification> notificationList = notificationRepository.getNotificationsUnread(userId);
         return  notificationList.stream().map(this::mapToNotificationResponseDto)
                 .collect(Collectors.toList());
     }

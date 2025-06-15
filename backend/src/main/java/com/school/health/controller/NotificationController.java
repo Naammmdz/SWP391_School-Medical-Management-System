@@ -33,11 +33,11 @@ public class NotificationController {
        List<NotificationResponseDTO> list = notificationService.getAllNoti(userId);
         return ResponseEntity.ok(list);
     }
-    @GetMapping("/me-unreaded")
-    public ResponseEntity<List<NotificationResponseDTO>> getAllNotificationsUnReaded(Authentication authentication) {
+    @GetMapping("/me-unread")
+    public ResponseEntity<List<NotificationResponseDTO>> getAllNotificationsUnRead(Authentication authentication) {
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
         Integer userId = userPrincipal.getId();
-        List<NotificationResponseDTO> list = notificationService.getAllNotiUnReaded(userId);
+        List<NotificationResponseDTO> list = notificationService.getAllNotiUnread(userId);
         return ResponseEntity.ok(list);
     }
     @PostMapping ("/{notificationId}/read")
