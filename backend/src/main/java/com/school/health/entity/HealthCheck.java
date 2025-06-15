@@ -31,11 +31,11 @@ public class HealthCheck {
     private double weight;
     @Column(name = "Eyesight")
     private String eyesight;
-    @Column(name = "Hearing")
+    @Column(name = "Hearing",columnDefinition = "NVARCHAR(255)")
     private String hearing;
     @Column(name = "ParentConfirmation")
     private boolean parentConfirmation;
-    @Column(name = "Notes")
+    @Column(name = "Notes",columnDefinition = "NVARCHAR(255)")
     private String notes;
     @CreationTimestamp
     @Column(name = "CreatedAt")

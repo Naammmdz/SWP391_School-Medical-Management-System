@@ -19,7 +19,7 @@ public class Vaccination {
     @Column(name = "VaccinationId")
     private int vaccinationId;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JsonIgnore
+    @JsonIgnore // thêm đoạn code này để tránh vòng lặp vô hạn khi serialize bởi vì nó sẽ bị vòng lặp với Student
     @JoinColumn(name = "StudentId")
     private Student student;
     @ManyToOne(fetch = FetchType.LAZY)
@@ -29,11 +29,11 @@ public class Vaccination {
     private String vaccineName;
     @Column(name = "Date")
     private LocalDate date;
-    @Column(name = "Result")
+    @Column(name = "Result",columnDefinition = "NVARCHAR(255)")
     private String result;
     @Column(name = "ParentConfirmation")
     private boolean parentConfirmation;
-    @Column(name = "Notes")
+    @Column(name = "Notes",columnDefinition = "NVARCHAR(255)")
     private String notes;
     @Column(name = "CreatedAt")
     @CreationTimestamp

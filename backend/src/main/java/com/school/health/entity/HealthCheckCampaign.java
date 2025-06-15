@@ -16,9 +16,9 @@ public class HealthCheckCampaign {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "CampaignId")
     private int campaignId;
-    @Column(name = "CampaignName")
+    @Column(name = "CampaignName",columnDefinition = "NVARCHAR(255)")
     private String campaignName;
-    @Column(name = "Description")
+    @Column(name = "Description",columnDefinition = "NVARCHAR(255)")
     private String description;
     @Column(name = "ScheduledDate")
     private LocalDate scheduledDate;

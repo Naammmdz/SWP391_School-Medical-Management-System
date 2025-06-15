@@ -23,7 +23,7 @@ public class Student {
     private Integer studentId;
 
     @NotBlank(message = "Họ tên học sinh không được để trống")
-    @Column(name = "FullName", length = 100, nullable = false)
+    @Column(name = "FullName", length = 100, nullable = false,columnDefinition = "NVARCHAR(255)")
     private String fullName;
 
     @NotNull(message = "Ngày sinh không được để trống")
@@ -32,7 +32,7 @@ public class Student {
     private LocalDate dob;
 
     @Pattern(regexp = "^(Nam|Nữ)$", message = "Giới tính chỉ có thể là Nam hoặc Nữ")
-    @Column(name = "Gender", length = 10)
+    @Column(name = "Gender", length = 10,columnDefinition = "NVARCHAR(255)")
     private String gender;
 
     @Column(name = "ClassName", length = 50)
@@ -41,7 +41,7 @@ public class Student {
     // Parent
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ParentId", nullable = false)
-    @JsonIgnore // ✅ Thêm dòng này để không serialize Parent nữa
+    @JsonIgnore //Thêm dòng này để không serialize Parent nữa
     private User parent;
 
     @OneToOne(mappedBy = "student", cascade = CascadeType.ALL)
