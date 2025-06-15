@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Search, Plus, Edit, Trash2, FileText, Send, AlertTriangle, CheckCircle, X } from 'lucide-react';
 import "./VaccinationManagement.css";
-
+import { useNavigate } from 'react-router-dom';
+import VaccinationService from '../../../services/VaccinationService';
 
 // Vaccine types options
 const vaccineTypes = [
@@ -36,19 +37,14 @@ const VaccinationManagement = () => {
     doseAmount: '',
     requiredDocuments: ''
   });
-  
-  // State for tracking students who need to receive the vaccine
   const [selectedStudents, setSelectedStudents] = useState([]);
-  
-  // States for UI control
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [responseModalOpen, setResponseModalOpen] = useState(false);
   const [currentStudentResponses, setCurrentStudentResponses] = useState([]);
-  
-  // State for filters
+  const navigate = useNavigate();
   const [filters, setFilters] = useState({
     searchTerm: '',
     status: '',
@@ -56,8 +52,6 @@ const VaccinationManagement = () => {
     toDate: '',
     vaccineType: ''
   });
-  
-  // State for notification creation
   const [notificationModalOpen, setNotificationModalOpen] = useState(false);
   const [notification, setNotification] = useState({
     eventId: null,
@@ -69,85 +63,41 @@ const VaccinationManagement = () => {
     specificClass: ''
   });
 
-  // Fetch vaccination events from API
+  // Fetch vaccination events from backend API
   const fetchVaccinationEvents = async () => {
     setLoading(true);
     try {
-      // API call would go here
-      // const response = await fetch('api/vaccination-events');
-      // const data = await response.json();
-      
-      // Mock data for now
-      const mockData = [
-        {
-          id: 1,
-          title: 'Tiêm phòng cúm học kỳ 1',
-          vaccineType: 'Cúm',
-          description: 'Chương trình tiêm phòng cúm định kỳ cho học sinh',
-          scheduledDate: '2023-09-15',
-          scheduledTime: '09:00',
-          location: 'Phòng y tế trường',
-          targetClass: 'Khối 10, 11, 12',
-          status: 'Hoàn thành',
-          notes: 'Học sinh mang theo phiếu xác nhận phụ huynh',
-          vaccineBatch: 'FL2023091',
-          manufacturer: 'Sanofi',
-          doseAmount: '0.5ml',
-          requiredDocuments: 'Phiếu đồng ý của phụ huynh, sổ tiêm chủng',
-          responses: {
-            total: 150,
-            confirmed: 135,
-            declined: 10,
-            pending: 5
-          }
-        },
-        {
-          id: 2,
-          title: 'Tiêm vắc xin HPV cho học sinh nữ',
-          vaccineType: 'HPV',
-          description: 'Chương trình tiêm chủng HPV cho học sinh nữ lớp 10',
-          scheduledDate: '2023-10-20',
-          scheduledTime: '13:30',
-          location: 'Phòng y tế trường',
-          targetClass: 'Lớp 10 (nữ)',
-          status: 'Sắp tới',
-          notes: 'Mũi tiêm thứ nhất trong quy trình 3 mũi',
-          vaccineBatch: 'HPV2023102',
-          manufacturer: 'Merck',
-          doseAmount: '0.5ml',
-          requiredDocuments: 'Phiếu đồng ý của phụ huynh, giấy khám sức khỏe',
-          responses: {
-            total: 75,
-            confirmed: 60,
-            declined: 5,
-            pending: 10
-          }
-        },
-        {
-          id: 3,
-          title: 'Tiêm nhắc Covid-19',
-          vaccineType: 'Covid-19',
-          description: 'Tiêm mũi nhắc cho học sinh đủ điều kiện',
-          scheduledDate: '2023-11-05',
-          scheduledTime: '08:30',
-          location: 'Hội trường trường',
-          targetClass: 'Tất cả các lớp',
-          status: 'Đã hủy',
-          notes: 'Chương trình tạm hoãn theo chỉ đạo Sở Y tế',
-          vaccineBatch: 'CVD2023115',
-          manufacturer: 'Pfizer',
-          doseAmount: '0.3ml',
-          requiredDocuments: 'Phiếu đồng ý của phụ huynh, giấy xác nhận tiêm mũi trước đó',
-          responses: {
-            total: 300,
-            confirmed: 0,
-            declined: 0,
-            pending: 300
-          }
+      const token = localStorage.getItem('token');
+      const response = await VaccinationService.getAllVaccinationCampaigns({
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      // Giả sử backend trả về mảng các chiến dịch tiêm chủng
+      // Nếu cần map lại dữ liệu cho phù hợp với form mẫu thì xử lý ở đây
+      const data = Array.isArray(response.data) ? response.data : response.data.content || [];
+      // Map dữ liệu backend sang đúng định dạng form mẫu nếu cần
+      const mappedData = data.map((item, idx) => ({
+        id: item.id || item.campaignId || idx + 1,
+        title: item.campaignName || '',
+        vaccineType: item.vaccineType || '',
+        description: item.description || '',
+        scheduledDate: item.scheduledDate || '',
+        scheduledTime: item.scheduledTime || '09:00',
+        location: item.location || 'Phòng y tế trường',
+        targetClass: item.targetClass || '',
+        status: item.status || 'Sắp tới',
+        notes: item.notes || '',
+        vaccineBatch: item.vaccineBatch || '',
+        manufacturer: item.manufacturer || '',
+        doseAmount: item.doseAmount || '',
+        requiredDocuments: item.requiredDocuments || '',
+        responses: item.responses || {
+          total: 0,
+          confirmed: 0,
+          declined: 0,
+          pending: 0
         }
-      ];
-      
-      setVaccinationEvents(mockData);
+      }));
+      setVaccinationEvents(mappedData);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching vaccination events:', error);
@@ -155,47 +105,10 @@ const VaccinationManagement = () => {
     }
   };
   
-  // Create new vaccination event
-  const createVaccinationEvent = async (event) => {
-    setLoading(true);
-    try {
-      // API call would go here
-      // const response = await fetch('api/vaccination-events', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(event)
-      // });
-      // const data = await response.json();
-      
-      // Mock response
-      const newEvent = {
-        ...event,
-        id: vaccinationEvents.length + 1,
-        responses: {
-          total: 0,
-          confirmed: 0,
-          declined: 0,
-          pending: 0
-        }
-      };
-      
-      setVaccinationEvents([...vaccinationEvents, newEvent]);
-      setModalOpen(false);
-      resetForm();
-      setFormSubmitted(true);
-      
-      // Hide success message after 3 seconds
-      setTimeout(() => {
-        setFormSubmitted(false);
-      }, 3000);
-      
-      setLoading(false);
-    } catch (error) {
-      console.error('Error creating vaccination event:', error);
-      setLoading(false);
-    }
-  };
   
+    useEffect(() => {
+    fetchVaccinationEvents();
+  }, []);
   // Update vaccination event
   const updateVaccinationEvent = async (id, updatedEvent) => {
     setLoading(true);
@@ -470,17 +383,12 @@ const VaccinationManagement = () => {
       </div>
       
       {/* Add vaccination event button */}
-      <button 
-        className="add-event-btn"
-        onClick={() => {
-          setEditing(false);
-          resetForm();
-          setModalOpen(true);
-        }}
-      >
-        <Plus size={16} />
-        Tạo sự kiện tiêm chủng
-      </button>
+     <button
+  className="btn btn-primary"
+  onClick={() => navigate('/taosukientiemchung')}
+>
+  Tạo sự kiện tiêm chủng
+</button>
       
       {/* Vaccination events table */}
       {loading ? (

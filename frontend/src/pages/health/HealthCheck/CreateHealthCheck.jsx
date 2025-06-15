@@ -38,7 +38,7 @@ const HealthCheck = () => {
         campaignName: '',
         description: '',
         scheduledDate: '',
-        status: 'CRAFT' // Đổi từ 'DRAFT' sang 'CRAFT'
+        status: 'CRAFT' 
       });
     } catch (err) {
       setErrorMsg('Tạo chiến dịch thất bại!');

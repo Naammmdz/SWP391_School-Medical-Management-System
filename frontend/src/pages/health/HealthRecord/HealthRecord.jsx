@@ -376,51 +376,66 @@ const HealthRecord = () => {
                   </div>
                 )}
                 <form onSubmit={handleSubmit(onSubmit)} className="health-record-form">
-                  <div className="form-group">
-                    <label>Họ và tên</label>
-                    <input type="text" className="form-control" {...register("studentName", { required: true })} />
-                    {errors.studentName && <span className="text-danger">Vui lòng nhập họ tên</span>}
-                  </div>
-                  <div className="form-group">
-                    <label>Lớp</label>
-                    <input type="text" className="form-control" {...register("studentClass", { required: true })} />
-                    {errors.studentClass && <span className="text-danger">Vui lòng nhập lớp</span>}
-                  </div>
-                  <div className="form-group">
-                    <label>Dị ứng</label>
-                    <input type="text" className="form-control" {...register("allergies")} />
-                  </div>
-                  <div className="form-group">
-                    <label>Bệnh mãn tính</label>
-                    <input type="text" className="form-control" {...register("chronicDiseases")} />
-                  </div>
-                  <div className="form-group">
-                    <label>Lịch sử điều trị</label>
-                    <input type="text" className="form-control" {...register("treatmentHistory")} />
-                  </div>
-                  <div className="form-group">
-                    <label>Thị lực</label>
-                    <input type="text" className="form-control" {...register("eyesight")} />
-                  </div>
-                  <div className="form-group">
-                    <label>Thính lực</label>
-                    <input type="text" className="form-control" {...register("hearing")} />
-                  </div>
-                  <div className="form-group">
-                    <label>Nhóm máu</label>
-                    <input type="text" className="form-control" {...register("bloodType")} />
-                  </div>
-                  <div className="form-group">
-                    <label>Cân nặng (kg)</label>
-                    <input type="number" step="0.1" className="form-control" {...register("weight")} />
-                  </div>
-                  <div className="form-group">
-                    <label>Chiều cao (cm)</label>
-                    <input type="number" step="0.1" className="form-control" {...register("height")} />
-                  </div>
-                  <div className="form-group">
-                    <label>Ghi chú</label>
-                    <textarea className="form-control" {...register("notes")} />
+                  <div className="form-container">
+                    <div className="student-info-column">
+                      <div className="info-card">
+                        <h3>Thông tin học sinh</h3>
+                        <div className="form-group">
+                          <label>Họ và tên</label>
+                          <input type="text" className="form-control" {...register("studentName", { required: true })} />
+                          {errors.studentName && <span className="text-danger">Vui lòng nhập họ tên</span>}
+                        </div>
+                        <div className="form-group">
+                          <label>Lớp</label>
+                          <input type="text" className="form-control" {...register("studentClass", { required: true })} />
+                          {errors.studentClass && <span className="text-danger">Vui lòng nhập lớp</span>}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="health-info-column">
+                      <div className="info-card">
+                        <h3>Thông tin sức khỏe</h3>
+                        <div className="health-info-grid">
+                          <div className="form-group">
+                            <label>Dị ứng</label>
+                            <input type="text" className="form-control" {...register("allergies")} />
+                          </div>
+                          <div className="form-group">
+                            <label>Bệnh mãn tính</label>
+                            <input type="text" className="form-control" {...register("chronicDiseases")} />
+                          </div>
+                          <div className="form-group">
+                            <label>Lịch sử điều trị</label>
+                            <input type="text" className="form-control" {...register("treatmentHistory")} />
+                          </div>
+                          <div className="form-group">
+                            <label>Thị lực</label>
+                            <input type="text" className="form-control" {...register("eyesight")} />
+                          </div>
+                          <div className="form-group">
+                            <label>Thính lực</label>
+                            <input type="text" className="form-control" {...register("hearing")} />
+                          </div>
+                          <div className="form-group">
+                            <label>Nhóm máu</label>
+                            <input type="text" className="form-control" {...register("bloodType")} />
+                          </div>
+                          <div className="form-group">
+                            <label>Cân nặng (kg)</label>
+                            <input type="number" step="0.1" className="form-control" {...register("weight")} />
+                          </div>
+                          <div className="form-group">
+                            <label>Chiều cao (cm)</label>
+                            <input type="number" step="0.1" className="form-control" {...register("height")} />
+                          </div>
+                        </div>
+                        <div className="form-group notes-section">
+                          <label>Ghi chú</label>
+                          <textarea className="form-control" {...register("notes")} />
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   <div className="form-actions">
                     <button type="submit" className="btn btn-primary" disabled={isLoading}>
@@ -449,51 +464,66 @@ const HealthRecord = () => {
               </div>
             )}
             <form onSubmit={handleSubmit(onSubmit)} className="health-record-form">
-              <div className="form-group">
-                <label>Họ và tên</label>
-                <input type="text" className="form-control" {...register("studentName", { required: true })} />
-                {errors.studentName && <span className="text-danger">Vui lòng nhập họ tên</span>}
-              </div>
-              <div className="form-group">
-                <label>Lớp</label>
-                <input type="text" className="form-control" {...register("studentClass", { required: true })} />
-                {errors.studentClass && <span className="text-danger">Vui lòng nhập lớp</span>}
-              </div>
-              <div className="form-group">
-                <label>Dị ứng</label>
-                <input type="text" className="form-control" {...register("allergies")} />
-              </div>
-              <div className="form-group">
-                <label>Bệnh mãn tính</label>
-                <input type="text" className="form-control" {...register("chronicDiseases")} />
-              </div>
-              <div className="form-group">
-                <label>Lịch sử điều trị</label>
-                <input type="text" className="form-control" {...register("treatmentHistory")} />
-              </div>
-              <div className="form-group">
-                <label>Thị lực</label>
-                <input type="text" className="form-control" {...register("eyesight")} />
-              </div>
-              <div className="form-group">
-                <label>Thính lực</label>
-                <input type="text" className="form-control" {...register("hearing")} />
-              </div>
-              <div className="form-group">
-                <label>Nhóm máu</label>
-                <input type="text" className="form-control" {...register("bloodType")} />
-              </div>
-              <div className="form-group">
-                <label>Cân nặng (kg)</label>
-                <input type="number" step="0.1" className="form-control" {...register("weight")} />
-              </div>
-              <div className="form-group">
-                <label>Chiều cao (cm)</label>
-                <input type="number" step="0.1" className="form-control" {...register("height")} />
-              </div>
-              <div className="form-group">
-                <label>Ghi chú</label>
-                <textarea className="form-control" {...register("notes")} />
+              <div className="form-container">
+                <div className="student-info-column">
+                  <div className="info-card">
+                    <h3>Thông tin học sinh</h3>
+                    <div className="form-group">
+                      <label>Họ và tên</label>
+                      <input type="text" className="form-control" {...register("studentName", { required: true })} />
+                      {errors.studentName && <span className="text-danger">Vui lòng nhập họ tên</span>}
+                    </div>
+                    <div className="form-group">
+                      <label>Lớp</label>
+                      <input type="text" className="form-control" {...register("studentClass", { required: true })} />
+                      {errors.studentClass && <span className="text-danger">Vui lòng nhập lớp</span>}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="health-info-column">
+                  <div className="info-card">
+                    <h3>Thông tin sức khỏe</h3>
+                    <div className="health-info-grid">
+                      <div className="form-group">
+                        <label>Dị ứng</label>
+                        <input type="text" className="form-control" {...register("allergies")} />
+                      </div>
+                      <div className="form-group">
+                        <label>Bệnh mãn tính</label>
+                        <input type="text" className="form-control" {...register("chronicDiseases")} />
+                      </div>
+                      <div className="form-group">
+                        <label>Lịch sử điều trị</label>
+                        <input type="text" className="form-control" {...register("treatmentHistory")} />
+                      </div>
+                      <div className="form-group">
+                        <label>Thị lực</label>
+                        <input type="text" className="form-control" {...register("eyesight")} />
+                      </div>
+                      <div className="form-group">
+                        <label>Thính lực</label>
+                        <input type="text" className="form-control" {...register("hearing")} />
+                      </div>
+                      <div className="form-group">
+                        <label>Nhóm máu</label>
+                        <input type="text" className="form-control" {...register("bloodType")} />
+                      </div>
+                      <div className="form-group">
+                        <label>Cân nặng (kg)</label>
+                        <input type="number" step="0.1" className="form-control" {...register("weight")} />
+                      </div>
+                      <div className="form-group">
+                        <label>Chiều cao (cm)</label>
+                        <input type="number" step="0.1" className="form-control" {...register("height")} />
+                      </div>
+                    </div>
+                    <div className="form-group notes-section">
+                      <label>Ghi chú</label>
+                      <textarea className="form-control" {...register("notes")} />
+                    </div>
+                  </div>
+                </div>
               </div>
               <div className="form-actions">
                 <button type="submit" className="btn btn-primary" disabled={isLoading}>

@@ -8,8 +8,11 @@ import Footer from './components/Footer';
 import MedicalEvents from './pages/medical/MedicalEvent/MedicalEvents';
 import MedicineDeclarations from './pages/health/MedicineDeclaration/MedicineDeclarations';
 import Pharmaceutical from './pages/medical/Pharmaceutical/Pharmaceutical'; 
+
+import CreateVaccinationCampaign from './pages/health/Vaccination/CreateVaccinationCampaign';
 import VaccinationManagement from './pages/health/Vaccination/VaccinationManagement';
 import VaccinationNotifications from './pages/health/Vaccination/VaccinationNotifications';
+
 import Admin from './pages/admin/Admin';
 import MedicalSupplies from './pages/medical/MedicalSupplies/MedicalSupplies';
 import NursePrescription from './pages/nurse/NursePrescription';
@@ -31,6 +34,7 @@ import UpdateStudent from './pages/student/UpdateStudent';
 import StudentList from './pages/student/StudentList';
 import HealthCheckList from './pages/health/HealthCheck/HealthCheckList';
 import UpdateHealthCheck from './pages/health/HealthCheck/UpdateHealthCheck';
+import Dashboard from './pages/parent/dashboard/Dashboard';
 // Component ProtectedRoute
 const ProtectedRoute = ({ element, requiredRole }) => {
   const user = JSON.parse(localStorage.getItem('user'));
@@ -61,27 +65,36 @@ function App() {
         <Route path="/quanlythuoc" element={<Pharmaceutical/>}/>
         <Route path="/quanlytiemchung" element={<VaccinationManagement/>}/>
         <Route path="/thongbaotiemchung" element={<VaccinationNotifications/>}/>
+
         <Route path="/login" element={<Login />} />
+
         <Route path="/donthuoc" element={<NursePrescription/>}/>
+
         <Route path="/thongke" element={<DashboardPage/>}/>
+
         <Route path="/kiemtradinhky" element={<HealthCheck/>}/>
         <Route path="/danhsachkiemtradinhky" element={<HealthCheckList />} />
         <Route path="/capnhatkiemtradinhky" element={<UpdateHealthCheck />} />
+
         <Route path="/capnhatthongtin" element={<UpdateUser/>}/>
         <Route path="/doimatkhau" element={<UpdatePassword/>}/>
-        <Route path="/taomoihocsinh" element={<CreateStudent/>} requiredRole="ROLE_ADMIN" />
         <Route path="/admin/taomoinguoidung" element={<CreateUser/>} requiredRole="ROLE_ADMIN" />
         <Route path="/admin/capnhatnguoidung/:userId" element={<UpdateUserByAdmin/>} requiredRole="ROLE_ADMIN" />
         <Route path="/admin/danhsachnguoidung" element={<UserList/>} />
         <Route path="/admin/khoanguoidung/:userId" element={<BlockUser />} requiredRole="ROLE_ADMIN" />
+         
+        <Route path="/hocsinh" element={ <Dashboard/>}/>
+      
+        <Route path="/taomoihocsinh" element={<CreateStudent/>} requiredRole="ROLE_ADMIN" />
         <Route path="/danhsachhocsinh" element={<StudentList/>}/>
         <Route path="/capnhathocsinh/:studentId" element={<UpdateStudent/>}/>
-
+         
+        <Route path ="/taosukientiemchung" element={<CreateVaccinationCampaign/>} />
            
         <Route path="/parent" element={<ProtectedRoute element={<ParentPages/>} requiredRole="ROLE_PARENT" />} />
         <Route path="/nurse" element={<ProtectedRoute element={<NursePages/>} requiredRole="ROLE_NURSE" />} />
         <Route path='/admin' element={<ProtectedRoute element={<Admin/>} requiredRole="ROLE_ADMIN" />} />
-      
+       
 
         <Route path='/blog' element={<Blog/>}/>
       </Routes>

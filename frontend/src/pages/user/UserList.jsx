@@ -13,8 +13,7 @@ const roles = [
 ];
 
 const sortOptions = [
-  { value: 'fullName,asc', label: 'Tên (A-Z)' },
-  { value: 'fullName,desc', label: 'Tên (Z-A)' },
+ 
   { value: 'role,asc', label: 'Vai trò (A-Z)' },
   { value: 'role,desc', label: 'Vai trò (Z-A)' }
 ];
@@ -44,7 +43,7 @@ const UserList = () => {
     phone: '',
     role: '',
     isActive: '',
-    sort: 'fullName,asc'
+   
   });
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -59,7 +58,7 @@ const UserList = () => {
         ...filter,
         page,
         size: PAGE_SIZE,
-        sort: filter.sort
+         sort: 'createdAt,desc'
       };
       // Remove empty params
       Object.keys(params).forEach(
@@ -155,7 +154,7 @@ const UserList = () => {
       phone: '',
       role: '',
       isActive: '',
-      sort: 'fullName,asc'
+      
     });
     setPage(0);
   };
@@ -168,9 +167,9 @@ const UserList = () => {
   useEffect(() => {
     fetchUsers();
     // eslint-disable-next-line
-  }, [page, filter.sort]);
+  }, [page]);
 
-  return (
+   return (
     <div className="user-list-page">
       <div className="user-list-header">
         <h1>Danh sách người dùng</h1>
@@ -223,11 +222,7 @@ const UserList = () => {
             <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
         </select>
-        <select name="sort" value={filter.sort} onChange={handleFilterChange}>
-          {sortOptions.map(opt => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
-          ))}
-        </select>
+        {/* Bỏ select sort */}
         <button type="submit" className="filter-btn">Tìm kiếm</button>
         <button type="button" className="clear-btn" onClick={handleClearFilter}>Xóa lọc</button>
       </form>
@@ -250,64 +245,63 @@ const UserList = () => {
       ) : (
         <table className="users-table">
           <thead>
-  <tr>
-    <th>Họ và tên</th>
-    <th>Số điện thoại</th>
-    <th>Email</th>
-    <th>Trạng thái</th>
-    <th>Vai trò</th>
-    <th>Thao tác học sinh</th>
-    <th>Hành động</th>
-  </tr>
-</thead>
-        <tbody>
-  {users.length === 0 ? (
-    <tr>
-      <td colSpan={7}>Không có người dùng nào.</td>
-    </tr>
-  ) : (
-    users.map(userItem => (
-      <tr key={userItem.id}>
-        <td>{userItem.fullName}</td>
-        <td>{userItem.phone}</td>
-        <td>{userItem.email}</td>
-        <td>
-          {userItem.isActive === true || userItem.isActive === "true"
-            ? "Đang hoạt động"
-            : "Ngừng hoạt động"}
-        </td>
-        <td>
-          {roles.find(role => role.value === userItem.role)?.label}
-        </td>
-        {/* Nếu userItem là PARENT thì hiển thị nút thêm học sinh */}
-        <td>
-  {(userItem.role === 'PARENT' || userItem.role === 'ROLE_PARENT') && (
-    <button
-      className="add-student-btn"
-      onClick={() => navigate('/taomoihocsinh', { state: { parentId: userItem.id } })}
-    >
-      <Plus size={14} /> Thêm học sinh
-    </button>
-  )}
-</td>
-        <td className="actions">
-          <button
-            className="edit-btn"
-            onClick={() => navigateToUpdateUser(userItem.id)}
-          >
-            <Edit size={16} />
-          </button>
-          <button
-            className="delete-btn"
-            onClick={() => navigateToBlockUser(userItem.id)}
-          >
-            <Trash2 size={16} />
-          </button>
-        </td>
-      </tr>
-    ))
-  )}
-</tbody>
+            <tr>
+              <th>Họ và tên</th>
+              <th>Số điện thoại</th>
+              <th>Email</th>
+              <th>Trạng thái</th>
+              <th>Vai trò</th>
+              <th>Thao tác học sinh</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.length === 0 ? (
+              <tr>
+                <td colSpan={7}>Không có người dùng nào.</td>
+              </tr>
+            ) : (
+              users.map(userItem => (
+                <tr key={userItem.id}>
+                  <td>{userItem.fullName}</td>
+                  <td>{userItem.phone}</td>
+                  <td>{userItem.email}</td>
+                  <td>
+                    {userItem.isActive === true || userItem.isActive === "true"
+                      ? "Đang hoạt động"
+                      : "Ngừng hoạt động"}
+                  </td>
+                  <td>
+                    {roles.find(role => role.value === userItem.role)?.label}
+                  </td>
+                  <td>
+                    {(userItem.role === 'PARENT' || userItem.role === 'ROLE_PARENT') && (
+                      <button
+                        className="add-student-btn"
+                        onClick={() => navigate('/taomoihocsinh', { state: { parentId: userItem.id } })}
+                      >
+                        <Plus size={14} /> Thêm học sinh
+                      </button>
+                    )}
+                  </td>
+                  <td className="actions">
+                    <button
+                      className="edit-btn"
+                      onClick={() => navigateToUpdateUser(userItem.id)}
+                    >
+                      <Edit size={16} />
+                    </button>
+                    <button
+                      className="delete-btn"
+                      onClick={() => navigateToBlockUser(userItem.id)}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
         </table>
       )}
 

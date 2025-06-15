@@ -161,12 +161,7 @@ export default function ParentPages() {
       </div>
       {selectedStudentId && (
         <div style={{ marginTop: 12 }}>
-          <button
-            className="btn btn-primary"
-            onClick={() => navigate("/hososuckhoe")}
-          >
-            Xem hồ sơ sức khỏe
-          </button>
+         
         </div>
       )}
     </div>

@@ -72,6 +72,7 @@ const CreateStudent = () => {
         className: ''
       });
        setSuccessMessage('Tạo học sinh thành công!');
+       
     } catch (err) {
       setError('Tạo học sinh thất bại!');
     }
