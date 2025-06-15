@@ -67,9 +67,9 @@ public class InventoryUsedServiceImpl implements InventoryUsedLogService {
 
         item.setQuantity(item.getQuantity() - dto.getQuantityUsed());
         if(item.getQuantity()<=item.getMinStockLevel()){
-           List<User> users = userRepo.findAllByRole();
+           List<User> users = userRepo.findAllAdminAndNurse();
             users.forEach(user -> {
-                notificationService.createNotification(user.getUserId(),item.getName()," sắp hết trong kho");
+                notificationService.createNotification(user.getUserId(),"Vật phẩm/thuốc trong kho đang sắp hết",item.getName() +" đang sắp hết trong kho, vui lòng nhập thêm hàng để tránh việc thiếu sót vật tư khi xử lí các sự kiện y tế!!");
             });
         }
         return inventoryRepo.save(item);

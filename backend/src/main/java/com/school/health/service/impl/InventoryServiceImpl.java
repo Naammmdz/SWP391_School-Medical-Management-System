@@ -3,10 +3,14 @@ package com.school.health.service.impl;
 import com.school.health.dto.request.InventoryRequestDTO;
 import com.school.health.dto.response.InventoryResponseDTO;
 import com.school.health.entity.Inventory;
+import com.school.health.entity.User;
 import com.school.health.exception.ResourceNotFoundException;
 import com.school.health.repository.InventoryRepo;
+import com.school.health.repository.UserRepository;
 import com.school.health.service.InventoryService;
+import com.school.health.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -17,6 +21,10 @@ import java.util.stream.Collectors;
 public class InventoryServiceImpl implements InventoryService {
     @Autowired
     InventoryRepo inventoryRepo;
+    @Autowired
+    NotificationService notificationService;
+    @Autowired
+    UserRepository userRepository;
     @Override
     public List<InventoryResponseDTO> getAllInventoryItems() {
         List<Inventory> inventoryList = inventoryRepo.findAll();
@@ -70,5 +78,17 @@ public class InventoryServiceImpl implements InventoryService {
     public List<InventoryResponseDTO> getInventoryIntemsExpiringSoon() {
         LocalDate today = LocalDate.now();
         return inventoryRepo.getInventoryExpiringSoon(today.plusDays(30)).stream().map(inventory -> mapToDTO(inventory)).collect(Collectors.toList());
+    }
+    // Chạy mỗi ngày lúc 6:30 giờ sáng
+    @Scheduled(cron = "0 30 6 * * ?")
+    public void checkExpiredInventory() {
+        LocalDate today = LocalDate.now();
+
+        List<Inventory> expiredItems = inventoryRepo.findByExpiryDateBefore(today);
+        for (Inventory item : expiredItems) {
+            String message = "Mặt hàng '" + item.getName() + "' đã hết hạn sử dụng vào " + item.getExpiryDate();
+            List<User> list = userRepository.findAllAdminAndNurse();
+            list.forEach(listUser -> { notificationService.createNotification(listUser.getUserId(),"Vật phẩm/thuốc trong kho hết hạn",message);});
+        }
     }
 }

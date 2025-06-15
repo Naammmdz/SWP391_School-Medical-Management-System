@@ -21,4 +21,6 @@ public interface InventoryRepo extends JpaRepository<Inventory, Integer> {
     List<Inventory> getAllInventoryLowStock();
     @Query("Select i from Inventory i where i.expiryDate <= :day")
     List<Inventory> getInventoryExpiringSoon(@Param("day") LocalDate a);
+    @Query("select i from Inventory i where i.expiryDate <= :date")
+    List<Inventory> findByExpiryDateBefore(LocalDate date);
 }

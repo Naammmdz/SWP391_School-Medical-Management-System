@@ -25,5 +25,5 @@ public interface UserRepository extends JpaRepository<User, Integer>, JpaSpecifi
 
     boolean existsByPhone(String phone);
     @Query("select u from User u where u.role='ADMIN' or u.role='NURSE'")
-    List<User> findAllByRole ();
+    List<User> findAllAdminAndNurse ();
 }
