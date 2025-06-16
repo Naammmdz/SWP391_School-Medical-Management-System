@@ -22,26 +22,29 @@ import java.util.List;
 @RequestMapping("/api/inventory")
 public class InventoryController {
     @Autowired private InventoryService inventoryService;
+    //Lấy hết Inventory
     @GetMapping("")
     public ResponseEntity<List<InventoryResponseDTO>> getAllInventory() {
         return ResponseEntity.ok( inventoryService.getAllInventoryItems());
 
     }
-    //create Item
+    //create Item (Tạo Inventory)
     @PostMapping ("/items")
     public ResponseEntity<InventoryResponseDTO> createInventory(@RequestBody @Valid InventoryRequestDTO inventoryRequestDTO) {
         return  ResponseEntity.ok( inventoryService.createInventoryItem(inventoryRequestDTO));
     }
-
+    // chỉnh sửa, update Inventory
     @PutMapping  ("/items/{itemId}")
     public ResponseEntity<InventoryResponseDTO> updateInventory(@PathVariable Integer itemId, @RequestBody @Valid InventoryRequestDTO inventoryRequestDTO) {
 
         return  ResponseEntity.ok( inventoryService.updateInventoryItem(itemId,inventoryRequestDTO));
     }
+    // lấy hết các inventory sắp hết trong kho
     @GetMapping ("/low-stock")
     public ResponseEntity<List<InventoryResponseDTO>> getLowStockInventory() {
         return ResponseEntity.ok(inventoryService.getInventoryIntemsLowStock());
     }
+    // lấy hết các inventory cận date trong kho
     @GetMapping ("/expiring-soon")
     public ResponseEntity<List<InventoryResponseDTO>> getExpiringSoonInventory() {
         return ResponseEntity.ok(inventoryService.getInventoryIntemsExpiringSoon());

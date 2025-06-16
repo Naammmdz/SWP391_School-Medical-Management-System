@@ -25,7 +25,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class NotificationController {
     private final NotificationServiceImpl notificationService;
-
+    //Lấy hết thông báo của người dùng hiện tại
     @GetMapping("/me")
     public ResponseEntity<List<NotificationResponseDTO>> getAllNotifications(Authentication authentication) {
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
@@ -33,6 +33,7 @@ public class NotificationController {
        List<NotificationResponseDTO> list = notificationService.getAllNoti(userId);
         return ResponseEntity.ok(list);
     }
+    //Lấy hết thông báo chưa đọc
     @GetMapping("/me-unread")
     public ResponseEntity<List<NotificationResponseDTO>> getAllNotificationsUnRead(Authentication authentication) {
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
@@ -40,25 +41,29 @@ public class NotificationController {
         List<NotificationResponseDTO> list = notificationService.getAllNotiUnread(userId);
         return ResponseEntity.ok(list);
     }
+    //Đánh dấu đã đọc thông báo có notificationId
     @PostMapping ("/{notificationId}/read")
     public ResponseEntity<NotificationResponseDTO> readNotification(@PathVariable Integer notificationId, Authentication authentication) {
 
         return ResponseEntity.ok(notificationService.markRead(notificationId));
     }
+    //Đánh dấu đã đọc hết tất cả thông báo
     @PostMapping ("/mark-all-read")
     public ResponseEntity<List<NotificationResponseDTO>> markAllReadNotifications(Authentication authentication) {
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
         Integer userId = userPrincipal.getId();
         return ResponseEntity.ok(notificationService.markAllRead(userId));
     }
+    //Đếm số lượng có bao nhiêu thông báo chưa đọc
     @GetMapping ("/unread-count")
     public ResponseEntity<Integer> getUnreadNotifications(Authentication authentication) {
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
         Integer userId = userPrincipal.getId();
         return ResponseEntity.ok(notificationService.countUnread(userId));
     }
+    //Tạo thông báo gửi đến người dùng có ID là UserID
     @PostMapping ("/create/{userId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('NURSE') or hasRole('ADMIN')")
     public ResponseEntity<NotificationResponseDTO> createNotification(@PathVariable Integer userId, @RequestBody NotificationRequestDTO notificationRequestDTO) {
 //        Notification notification = new Notification();
 

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/inventory")
 public class InventoryUsedController {
     @Autowired private InventoryUsedServiceImpl inventoryUsedService;
+    // Tạo ra cái Inventory nào đã được sử dụng
     @PostMapping("/items/{itemId}/usage")
     public ResponseEntity<InventoryUsedResponseDTO> addInventoryUsedLog(@PathVariable int itemId, @RequestBody InventoryUsedRequestDTO requestDTO) {
         return ResponseEntity.ok(inventoryUsedService.createInventoryUsed(itemId, requestDTO));

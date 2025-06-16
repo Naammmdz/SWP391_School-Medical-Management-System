@@ -79,6 +79,7 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
 
         //Save the MedicineSubmission entity
         medicineSubmissionRepository.save(medicineSubmission);
+        userRepository.findAllAdminAndNurse().forEach(user -> {notificationService.createNotification(user.getUserId(),"Có đơn thuốc chờ bạn xử lí", "Có đơn gửi thuốc từ phụ huynh "+ medicineSubmission.getParent().getFullName()+ " xin vui lòng kiểm tra");});
         //Return the saved submission
         return toResponse(medicineSubmission);
     }
