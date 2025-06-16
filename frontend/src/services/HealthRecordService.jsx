@@ -23,12 +23,8 @@ class HealthRecordService {
         return axios.get(`${HEALTH_RE}/health-profile/all`, config)
     }
     
-    getStudentByParentID(parentId, config) {
-        return axios.get(`${HEALTH_RE}/admin/students/${parentId}`,config)
-    }
-    filterHealthRecord(body, config) {
-        return axios.post(`${HEALTH_RE}/admin/students/filter`,body, config)
-    }
+  
+   
 }
 
 export default new HealthRecordService();

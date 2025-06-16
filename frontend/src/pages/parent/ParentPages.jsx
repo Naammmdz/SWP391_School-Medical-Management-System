@@ -2,9 +2,10 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./ParentPages.css";
 import HomePageService from "../../services/HomePageService";
-import HealthRecordService from "../../services/HealthRecordService";
+
 import Blog from "../home/Blog/Blog";
 import heroImage from "../../assets/images/fpt.jpg";
+import studentService from "../../services/StudentService";
 
 export default function ParentPages() {
   const [healthResources, setHealthResources] = useState([]);
@@ -22,7 +23,7 @@ export default function ParentPages() {
   // Lấy danh sách con của phụ huynh
   useEffect(() => {
     if (user.userRole === "ROLE_PARENT") {
-      HealthRecordService.getStudentByParentID(user.userId, {
+      studentService.getStudentByParentID(user.userId, {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then((res) => {

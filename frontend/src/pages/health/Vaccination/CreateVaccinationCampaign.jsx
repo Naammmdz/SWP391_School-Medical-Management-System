@@ -2,19 +2,17 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import VaccinationService from '../../../services/VaccinationService';
 
-const statusOptions = [
-  { value: '', label: 'Chọn trạng thái' },
-  { value: 'CRAFT', label: 'Nháp' },
-  { value: 'APPROVED', label: 'Đã duyệt' },
-  { value: 'REJECTED', label: 'Từ chối' }
-];
-
 const CreateVaccinationCampaign = () => {
+  const nurse = JSON.parse(localStorage.getItem('user') || '{}');
   const [form, setForm] = useState({
     campaignName: '',
+    targetGroup: '',
+    type: '',
+    address: '',
+    organizer: nurse.id || '', // Lấy id người tạo từ localStorage
     description: '',
     scheduledDate: '',
-    status: ''
+    status: 'CRAFT' // Mặc định là nháp
   });
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -32,16 +30,18 @@ const CreateVaccinationCampaign = () => {
     e.preventDefault();
     setError('');
     setSuccessMsg('');
-    // Validate
-    if (!form.campaignName || !form.scheduledDate || !form.status) {
+    if (!form.campaignName || !form.scheduledDate) {
       setError('Vui lòng nhập đầy đủ thông tin bắt buộc.');
       return;
     }
     try {
       const token = localStorage.getItem('token');
-      // scheduledDate phải là LocalDate (yyyy-MM-dd)
       const data = {
         campaignName: form.campaignName,
+        targetGroup: form.targetGroup,
+        type: form.type,
+        address: form.address,
+        organizer: form.organizer,
         description: form.description,
         scheduledDate: form.scheduledDate,
         status: form.status
@@ -55,7 +55,7 @@ const CreateVaccinationCampaign = () => {
       setSuccessMsg('Tạo chiến dịch tiêm chủng thành công!');
       setTimeout(() => {
         setSuccessMsg('');
-        navigate('/quanlytiemchung'); 
+        navigate('/quanlytiemchung');
       }, 1500);
     } catch (err) {
       setError('Tạo chiến dịch thất bại!');
@@ -72,6 +72,26 @@ const CreateVaccinationCampaign = () => {
             type="text"
             name="campaignName"
             value={form.campaignName}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label>Đối tượng <span style={{color: 'red'}}>*</span></label>
+          <input
+            type="text"
+            name="targetGroup"
+            value={form.targetGroup}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label>Địa điểm <span style={{color: 'red'}}>*</span></label>
+          <input
+            type="text"
+            name="address"
+            value={form.address}
             onChange={handleChange}
             required
           />
@@ -95,18 +115,27 @@ const CreateVaccinationCampaign = () => {
             min={new Date().toISOString().split('T')[0]}
           />
         </div>
+        {/* Trạng thái mặc định là nháp, không cho nhập */}
         <div className="form-group">
-          <label>Trạng thái <span style={{color: 'red'}}>*</span></label>
-          <select
+          <label>Trạng thái</label>
+          <input
+            type="text"
             name="status"
-            value={form.status}
-            onChange={handleChange}
-            required
-          >
-            {statusOptions.map(opt => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
+            value="Nháp"
+            readOnly
+            disabled
+          />
+        </div>
+        {/* Organizer hiển thị tên người tạo, không cho nhập */}
+        <div className="form-group">
+          <label>Người tạo</label>
+          <input
+            type="text"
+            name="organizer"
+            value={nurse.fullName || ''}
+            readOnly
+            disabled
+          />
         </div>
         <button type="submit" className="btn btn-primary">Tạo chiến dịch</button>
         {successMsg && <div className="success-message">{successMsg}</div>}

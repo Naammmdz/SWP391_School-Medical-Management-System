@@ -16,10 +16,17 @@ const vaccineTypes = [
   { value: 'Khác', label: 'Khác' }
 ];
 
+const statusOptions = [
+  { value: 'PENDING', label: 'Chờ phê duyệt' },
+  { value: 'APPROVED', label: 'Chấp nhận' },
+  { value: 'CANCELLED', label: 'Hủy' }
+];
 const VaccinationManagement = () => {
   // State for vaccination events list
   const [vaccinationEvents, setVaccinationEvents] = useState([]);
-  
+   const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const isAdmin = user.userRole === 'ROLE_ADMIN';
+
   // State for current event form
   const [currentEvent, setCurrentEvent] = useState({
     id: null,
@@ -83,7 +90,7 @@ const VaccinationManagement = () => {
         scheduledDate: item.scheduledDate || '',
         scheduledTime: item.scheduledTime || '09:00',
         location: item.location || 'Phòng y tế trường',
-        targetClass: item.targetClass || '',
+        targetClass: item.targetGroup || '',
         status: item.status || 'Sắp tới',
         notes: item.notes || '',
         vaccineBatch: item.vaccineBatch || '',
@@ -109,7 +116,33 @@ const VaccinationManagement = () => {
     useEffect(() => {
     fetchVaccinationEvents();
   }, []);
+
+const approveVaccinationCampaign = async (event) => {
+    if (!window.confirm('Bạn có chắc muốn duyệt chiến dịch này?')) return;
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      // Gửi request approve tới backend
+      await VaccinationService.approveVaccinationCampaign(
+        event.id,
+        { status: 'APPROVED' },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      // Cập nhật trạng thái trên frontend
+      setVaccinationEvents((prev) =>
+        prev.map((e) =>
+          e.id === event.id ? { ...e, status: 'APPROVED' } : e
+        )
+      );
+    } catch (error) {
+      alert('Có lỗi khi duyệt chiến dịch!');
+    }
+    setLoading(false);
+  };
+
+
   // Update vaccination event
+
   const updateVaccinationEvent = async (id, updatedEvent) => {
     setLoading(true);
     try {
@@ -179,7 +212,7 @@ const VaccinationManagement = () => {
       scheduledDate: new Date().toISOString().split('T')[0],
       scheduledTime: '09:00',
       location: 'Phòng y tế trường',
-      targetClass: '',
+      targetGroup: '',
       status: 'Sắp tới',
       notes: '',
       vaccineBatch: '',
@@ -395,68 +428,80 @@ const VaccinationManagement = () => {
         <div className="loading">Đang tải dữ liệu...</div>
       ) : (
         <table className="events-table">
-          <thead>
-            <tr>
-              <th>Tiêu đề</th>
-              <th>Loại vắc-xin</th>
-              <th>Ngày tiêm</th>
-              <th>Đối tượng</th>
-              <th>Trạng thái</th>
-              <th>Phản hồi</th>
-              <th>Thao tác</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredEvents.length > 0 ? (
-              filteredEvents.map(event => (
-                <tr key={event.id}>
-                  <td>{event.title}</td>
-                  <td>{event.vaccineType}</td>
-                  <td>{new Date(event.scheduledDate).toLocaleDateString('vi-VN')} {event.scheduledTime}</td>
-                  <td>{event.targetClass}</td>
-                  <td>
-                    <span className={`status ${
-                      event.status === 'Hoàn thành' ? 'complete' : 
-                      event.status === 'Đã hủy' ? 'cancelled' : 'upcoming'
-                    }`}>
-                      {event.status}
-                    </span>
-                  </td>
-                  <td className="response-summary">
-                    <div className="response-counts">
-                      <span className="confirmed">{event.responses.confirmed}</span> / 
-                      <span className="declined">{event.responses.declined}</span> / 
-                      <span className="pending">{event.responses.pending}</span>
-                    </div>
-                    <div className="response-labels">
-                      <span className="confirmed-label">Xác nhận</span> /
-                      <span className="declined-label">Từ chối</span> / 
-                      <span className="pending-label">Chưa phản hồi</span>
-                    </div>
-                  </td>
-                  <td className="actions">
-                    <button className="edit-btn" onClick={() => editVaccinationEvent(event)}>
-                      <Edit size={16} />
+        <thead>
+          <tr>
+            <th>Tiêu đề</th>
+            <th>Loại vắc-xin</th>
+            <th>Ngày tiêm</th>
+            <th>Đối tượng</th>
+            <th>Trạng thái</th>
+            <th>Phản hồi</th>
+            <th>Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filteredEvents.length > 0 ? (
+            filteredEvents.map(event => (
+              <tr key={event.id}>
+                <td>{event.title}</td>
+                <td>{event.vaccineType}</td>
+                <td>{new Date(event.scheduledDate).toLocaleDateString('vi-VN')} {event.scheduledTime}</td>
+                <td>{event.targetGroup}</td>
+                <td>
+                  <span className={`status ${
+                    event.status === 'Hoàn thành' ? 'complete' : 
+                    event.status === 'Đã hủy' ? 'cancelled' : 
+                    event.status === 'APPROVED' ? 'approved' : 'upcoming'
+                  }`}>
+                    {event.status === 'APPROVED' ? 'Đã duyệt' : event.status}
+                  </span>
+                </td>
+                <td className="response-summary">
+                  <div className="response-counts">
+                    <span className="confirmed">{event.responses.confirmed}</span> / 
+                    <span className="declined">{event.responses.declined}</span> / 
+                    <span className="pending">{event.responses.pending}</span>
+                  </div>
+                  <div className="response-labels">
+                    <span className="confirmed-label">Xác nhận</span> /
+                    <span className="declined-label">Từ chối</span> / 
+                    <span className="pending-label">Chưa phản hồi</span>
+                  </div>
+                </td>
+                <td className="actions">
+                  <button className="edit-btn" onClick={() => editVaccinationEvent(event)}>
+                    <Edit size={16} />
+                  </button>
+                  <button className="delete-btn" onClick={() => deleteVaccinationEvent(event.id)}>
+                    <Trash2 size={16} />
+                  </button>
+                  <button className="send-btn" onClick={() => openNotificationModal(event)}>
+                    <Send size={16} />
+                  </button>
+                  <button className="view-btn" onClick={() => viewResponses(event)}>
+                    <FileText size={16} />
+                  </button>
+                  {/* Nút Chấp nhận chỉ hiển thị cho admin và khi chưa duyệt */}
+                  {isAdmin && event.status !== 'APPROVED' && (
+                    <button
+                      className="approve-btn"
+                      title="Chấp nhận"
+                      onClick={() => approveVaccinationCampaign(event)}
+                      style={{ marginLeft: 4, background: '#22c55e', color: '#fff', border: 'none', borderRadius: 4, padding: '4px 8px', cursor: 'pointer' }}
+                    >
+                      <CheckCircle size={16} style={{ verticalAlign: 'middle' }} /> Chấp nhận
                     </button>
-                    <button className="delete-btn" onClick={() => deleteVaccinationEvent(event.id)}>
-                      <Trash2 size={16} />
-                    </button>
-                    <button className="send-btn" onClick={() => openNotificationModal(event)}>
-                      <Send size={16} />
-                    </button>
-                    <button className="view-btn" onClick={() => viewResponses(event)}>
-                      <FileText size={16} />
-                    </button>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="7" className="no-data">Không có dữ liệu sự kiện tiêm chủng</td>
+                  )}
+                </td>
               </tr>
-            )}
-          </tbody>
-        </table>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="7" className="no-data">Không có dữ liệu sự kiện tiêm chủng</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
       )}
       
       {/* Vaccination Event Modal */}
