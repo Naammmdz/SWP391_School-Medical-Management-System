@@ -2,10 +2,11 @@ import axios from 'axios';
 
 const API_URL = 'http://localhost:8080/api/healthcheck-campaigns';
 
+
 const HealthCheckService = {
-  createHealthCheckCampaign: async (config, campaignData) => {
+  createHealthCheckCampaign: async (campaignData, config) => {
     try {
-      const response = await axios.post(API_URL, config, campaignData);
+      const response = await axios.post(API_URL, campaignData, config); // <-- sửa lại vị trí
       return response.data;
     } catch (error) {
       console.error('Error creating health check campaign:', error);

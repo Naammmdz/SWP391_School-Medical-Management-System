@@ -2,17 +2,22 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import HealthCheckService from '../../../services/HealthCheckService';
 import './UpdateHealthCheck.css';
+import { Input } from '../../../components/ui/input';
 
 const UpdateHealthCheck = () => {
   const token = localStorage.getItem('token');
-  const user = JSON.parse(localStorage.getItem('user') || '{}'); // Lấy user từ localStorage
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
   const navigate = useNavigate();
   const campaignId = localStorage.getItem('selectedCampaignId');
   const [form, setForm] = useState({
     campaignName: '',
+    targetGroup: '',
+    type: '',
+    address: '',
     description: '',
     scheduledDate: '',
-    status: 'CRAFT'
+    status: 'CRAFT',
+    organizer: user.id || ''
   });
   const [loading, setLoading] = useState(true);
   const [successMsg, setSuccessMsg] = useState('');
@@ -28,6 +33,10 @@ const UpdateHealthCheck = () => {
         );
         setForm({
           campaignName: data.campaignName || '',
+          targetGroup: data.targetGroup || '',
+          type: data.type || '',
+          address: data.address || '',
+          organizer: data.organizer || user.id || '',
           description: data.description || '',
           scheduledDate: data.scheduledDate || '',
           status: data.status || 'CRAFT'
@@ -43,7 +52,7 @@ const UpdateHealthCheck = () => {
       setErrorMsg('Không tìm thấy ID chiến dịch!');
       setLoading(false);
     }
-  }, [campaignId, token]);
+  }, [campaignId, token, user.id]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -72,7 +81,6 @@ const UpdateHealthCheck = () => {
 
   if (loading) return <div>Đang tải...</div>;
 
-  // Chỉ ADMIN hoặc PRINCIPAL mới được sửa trạng thái
   const canEditStatus =
     user.userRole === 'ROLE_ADMIN' || user.userRole === 'ROLE_PRINCIPAL';
 
@@ -82,11 +90,44 @@ const UpdateHealthCheck = () => {
       <form onSubmit={handleSubmit} className="campaign-form">
         <div className="form-group">
           <label>Tên chiến dịch</label>
-          <input
+          <Input
             type="text"
             name="campaignName"
             value={form.campaignName}
             onChange={handleInputChange}
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label>Đối tượng áp dụng</label>
+          <Input
+            type="text"
+            name="targetGroup"
+            value={form.targetGroup}
+            onChange={handleInputChange}
+            placeholder="VD: Lớp 3A, 3B, 3C hoặc Khối 3"
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label>Loại chiến dịch</label>
+          <Input
+            type="text"
+            name="type"
+            value={form.type}
+            onChange={handleInputChange}
+            placeholder="VD: Khám sức khỏe định kỳ"
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label>Địa điểm tổ chức</label>
+          <Input
+            type="text"
+            name="address"
+            value={form.address}
+            onChange={handleInputChange}
+            placeholder="VD: Phòng y tế, Hội trường"
             required
           />
         </div>
@@ -101,7 +142,7 @@ const UpdateHealthCheck = () => {
         </div>
         <div className="form-group">
           <label>Ngày dự kiến</label>
-          <input
+          <Input
             type="date"
             name="scheduledDate"
             value={form.scheduledDate}
@@ -125,9 +166,19 @@ const UpdateHealthCheck = () => {
           </select>
           {!canEditStatus && (
             <div className="text-muted" style={{ fontSize: 13, marginTop: 4 }}>
-              {/* Chỉ hiệu trưởng mới được thay đổi trạng thái. */}
+              {/* Chỉ hiệu trưởng hoặc quản trị viên mới được thay đổi trạng thái. */}
             </div>
           )}
+        </div>
+        <div className="form-group">
+          <label>Người thực hiện</label>
+          <Input
+            type="text"
+            name="organizer"
+            value={form.organizer}
+            readOnly
+            disabled
+          />
         </div>
         <button type="submit" className="btn btn-primary">Cập nhật</button>
         {successMsg && <div className="success-message">{successMsg}</div>}
