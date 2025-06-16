@@ -36,4 +36,7 @@ public interface HealthCheckCampaignService {
     List<HealthCheckCampaign> getMyChildHealthCampaigns(Integer parentId, Integer studentId);
 
     HealthCheckResponseDTO recordHealthCheckResult(Integer campaignId, HealthCheckRequestDTO requestDTO);
+
+    // update health check result
+    HealthCheckResponseDTO updateStudentHealthCampaign(Integer healthcheckId ,HealthCheckRequestDTO requestDTO);
 }

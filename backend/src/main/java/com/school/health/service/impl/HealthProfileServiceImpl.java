@@ -50,19 +50,14 @@ public class HealthProfileServiceImpl implements HealthProfileService {
     //Cập nhật hồ sơ sức khỏe
     @Override
     public HealthProfileResponseDTO updateHealthProfile(Integer studentId, UpdateHealthProfileDTO dto, Integer userId) {
-        // Tìm hồ sơ hiện tại
         HealthProfile existingProfile = healthProfileRepository.findByStudentStudentId(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ sức khỏe cho học sinh với ID: " + studentId));
-
-        // Cập nhật thông tin (chỉ cập nhật các field không null)
         updateEntityFromDTO(existingProfile, dto);
         if (userId != null) {
             User user = new User();
             user.setUserId(userId);
             existingProfile.setUpdatedBy(user);
         }
-        // Cập nhật người sửa
-        // Lưu vào database
         HealthProfile updatedProfile = healthProfileRepository.save(existingProfile);
         return mapToResponseDTO(updatedProfile);
 

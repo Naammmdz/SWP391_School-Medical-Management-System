@@ -16,6 +16,7 @@ import com.school.health.service.HealthCheckCampaignService;
 import jakarta.persistence.Column;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -215,5 +216,32 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
         healthCheckRepository.save(healthCheck);
         return mapToHealthCheckResponseDTO(healthCheck);
     }
+
+    @Override
+    public HealthCheckResponseDTO updateStudentHealthCampaign(Integer healthcheckId,HealthCheckRequestDTO requestDTO) {
+        HealthCheck healthCheck = healthCheckRepository.findById(healthcheckId).orElseThrow(() -> new RuntimeException("Health check not found with ID: " + healthcheckId));
+        HealthCheckCampaign campaign = healthCheckCampaignRepository.findById(requestDTO.getCampaignId()).orElseThrow(() -> new RuntimeException("Campaign not found with ID: " + requestDTO.getCampaignId()));
+        Student student = studentRepository.findById(requestDTO.getStudentId()).orElseThrow(() -> new RuntimeException("Student not found with ID: " + requestDTO.getStudentId()));
+        healthCheck.setDate(requestDTO.getDate());
+        healthCheck.setHeight(requestDTO.getHeight());
+        healthCheck.setWeight(requestDTO.getWeight());
+        healthCheck.setEyesightLeft(requestDTO.getEyesightLeft());
+        healthCheck.setEyesightRight(requestDTO.getEyesightRight());
+        healthCheck.setHearingLeft(requestDTO.getHearingLeft());
+        healthCheck.setHearingRight(requestDTO.getHearingRight());
+        healthCheck.setBloodPressure(requestDTO.getBloodPressure());
+        healthCheck.setTemperature(requestDTO.getTemperature());
+        healthCheck.setConsultationAppointment(requestDTO.isConsultationAppointment());
+        healthCheck.setNotes(requestDTO.getNotes());
+        healthCheck.setParentConfirmation(requestDTO.isParentConfirmation());
+        healthCheck.setCampaign(campaign);
+        healthCheck.setStudent(student);
+//        healthCheck = maptoEntityCheck(requestDTO);
+        // Cập nhật các trường khác nếu cần
+
+        healthCheckRepository.save(healthCheck);
+        return mapToHealthCheckResponseDTO(healthCheck);
+    }
+
 }
 

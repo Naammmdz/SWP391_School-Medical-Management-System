@@ -38,4 +38,6 @@ public interface VaccinationCampaignService {
     List<VaccinationCampaign> getMyChildHealthCampaigns(Integer parentId, Integer studentId);
 
     VaccinationResponseDTO recordVaccinationResult(Integer campaignId, VaccinationRequestDTO requestDTO);
+
+    VaccinationResponseDTO updateStudentVaccinationCampaign(Integer vaccinationId, VaccinationRequestDTO requestDTO);
 }

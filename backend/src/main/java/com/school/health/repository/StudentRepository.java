@@ -15,6 +15,9 @@ public interface StudentRepository extends JpaRepository<Student, Integer> {
     // Tìm học sinh theo parent ID
     List<Student> findByParentUserId(Integer parentUserId);
 
+    // Tìm học sinh theo parent ID và trạng thái hoạt động
+    List<Student> findByParentUserIdAndIsActive(Integer parentUserId, boolean isActive);
+
 
     // Tìm học sinh theo lớp
     List<Student> findByClassName(String className);

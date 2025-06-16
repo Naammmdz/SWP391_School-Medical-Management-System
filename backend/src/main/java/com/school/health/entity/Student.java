@@ -1,10 +1,8 @@
 package com.school.health.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -15,7 +13,10 @@ import java.time.LocalDate;
 
 @Entity
 @Table(name = "Students")
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Student {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -43,6 +44,11 @@ public class Student {
     @JoinColumn(name = "ParentId", nullable = false)
     @JsonIgnore //Thêm dòng này để không serialize Parent nữa
     private User parent;
+
+    // xóa student bằng cách isActive
+    // cascade = CascadeType.ALL tức là khi xóa Student thì sẽ xóa luôn HealthProfile
+    @Column(name = "IsActive", nullable = false)
+    private boolean isActive;
 
     @OneToOne(mappedBy = "student", cascade = CascadeType.ALL)
     private HealthProfile healthProfile;

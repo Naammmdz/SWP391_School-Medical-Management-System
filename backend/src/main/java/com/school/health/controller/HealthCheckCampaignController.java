@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 public class HealthCheckCampaignController {
     private final HealthCheckCampaignServiceImpl healthCheckCampaignServiceImpl;
 
+    // tạo chiến dịch sức khỏe
     @PostMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE')")
     public ResponseEntity<?> createCampaign(@Valid @RequestBody HealthCampaignRequestDTO healthCampaignRequestDTO, Authentication authentication) {
@@ -32,18 +33,22 @@ public class HealthCheckCampaignController {
         return ResponseEntity.ok(healthCampaignResponseDTO);
     }
 
+    // lấy full danh sách chiến dịch sức khỏe
     @GetMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE') or hasRole('PRINCIPAL')")
     public ResponseEntity<?> getAllCampaigns() {
         return ResponseEntity.ok(healthCheckCampaignServiceImpl.getAllCampaigns());
     }
 
+    // lấy danh sách chiến dịch sức khỏe đã được phê duyệt
     @GetMapping("/{campaignId}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE')")
     public ResponseEntity<?> getCampaignById(@PathVariable int campaignId) {
         return ResponseEntity.ok(healthCheckCampaignServiceImpl.getCampaignById(campaignId));
     }
 
+
+    // Cập nhật thông tin chiến dịch sức khỏe theo ID
     @PutMapping("/{campaignId}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE')")
     public ResponseEntity<?> updateCampaign(@PathVariable int campaignId, @RequestBody HealthCampaignRequestDTO healthCampaignRequestDTO) {
@@ -51,6 +56,8 @@ public class HealthCheckCampaignController {
         return ResponseEntity.ok(healthCampaignResponseDTO);
     }
 
+
+    // Cập nhật trạng thái thành APPROVED của chiến dịch sức khỏe
     @PutMapping("/{campaignId}/approve")
     @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE') or hasRole('PRINCIPAL')")
     public ResponseEntity<?> approveCampaign(@PathVariable int campaignId, Authentication authentication) {
@@ -60,6 +67,7 @@ public class HealthCheckCampaignController {
         return ResponseEntity.ok(healthCampaignResponseDTO);
     }
 
+    // Cập nhật trạng thái của chiến dịch sức khỏe
     @PutMapping("/{campaignId}/status/{status}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE') or hasRole('PRINCIPAL')")
     public ResponseEntity<?> updateCampaignStatus(@PathVariable int campaignId, @PathVariable Status status) {
@@ -75,7 +83,7 @@ public class HealthCheckCampaignController {
         return ResponseEntity.ok(healthCheckCampaignServiceImpl.getStudentsRegistrations(campaignId));
     }
 
-    // Xem danh sách chiến dịch đã được phê duyệt dành cho phụ huynh
+    // Xem danh sách các chiến dịch đã được phê duyệt APRROVED dành cho phụ huynh
     @GetMapping("/approved")
     @PreAuthorize("hasRole('PARENT')")
     public ResponseEntity<?> getApprovedCampaign() {
@@ -83,6 +91,7 @@ public class HealthCheckCampaignController {
     }
 
     // Phụ huynh đăng ký cho học sinh tham gia chiến dịch sức khỏe
+    // Tức là set trạng thái parentConfirmation = true và các trường khác sẽ được set mặc định
     @PostMapping("/{campaignId}/student/{studentId}/register")
     @PreAuthorize("hasRole('PARENT') or hasRole('NURSE') or hasRole('ADMIN')")
     public ResponseEntity<?> registerStudentForHealthCampaign(@PathVariable int campaignId, @PathVariable int studentId, Authentication authentication) {
@@ -94,6 +103,13 @@ public class HealthCheckCampaignController {
         return ResponseEntity.ok(healthCheckCampaignServiceImpl.registerStudentHealthCheck(dto));
     }
 
+    // Cập nhật kết quả cho học sinh tham gia chiến dịch sức khỏe = PUT
+    @PutMapping("/{healthcheckId}/update")
+    @PreAuthorize("hasRole('PARENT') or hasRole('NURSE') or hasRole('ADMIN')")
+    public ResponseEntity<?> updateStudentHealthCampaign(@PathVariable int healthcheckId, @RequestBody @Valid HealthCheckRequestDTO dto) {
+        return ResponseEntity.ok(healthCheckCampaignServiceImpl.updateStudentHealthCampaign(healthcheckId,dto));
+    }
+
     // phụ huynh xem chiến dịch mà học sinh đã đăng ký
     @GetMapping("/me/students/{studentId}/campaigns")
     @PreAuthorize("hasRole('PARENT')")
@@ -103,7 +119,7 @@ public class HealthCheckCampaignController {
         return ResponseEntity.ok(healthCheckCampaignServiceImpl.getMyChildHealthCampaigns(userId, studentId));
     }
 
-    // ghi nhận kết quả sức khỏe của học sinh trong chiến dịch sức khỏe
+    // ghi nhận kết quả sức khỏe của học sinh trong chiến dịch sức khỏe = POST
     @PostMapping("/result/{campaignId}")
     @PreAuthorize("hasRole('NURSE') or hasRole('ADMIN')")
     public ResponseEntity<?> recordHealthCheckResult(@PathVariable int campaignId, @RequestBody @Valid HealthCheckRequestDTO healthCheckRequestDTO) {

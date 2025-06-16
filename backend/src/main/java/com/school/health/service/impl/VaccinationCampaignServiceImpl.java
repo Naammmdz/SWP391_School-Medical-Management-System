@@ -13,10 +13,12 @@ import com.school.health.repository.StudentRepository;
 import com.school.health.repository.VaccinationCampaignRepository;
 import com.school.health.repository.VaccinationRepository;
 import com.school.health.service.VaccinationCampaignService;
-import jakarta.persistence.Column;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -153,9 +155,6 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
         Vaccination vaccination = new Vaccination();
         vaccination.setCampaign(vaccinationCampaignRepository.findById(requestDTO.getCampaignId()).orElseThrow(() -> new RuntimeException("Campaign not found id :" + requestDTO.getCampaignId())));
         vaccination.setStudent(studentRepository.findById(requestDTO.getStudentId()).orElseThrow(() -> new RuntimeException("Student not found id :" + requestDTO.getStudentId())));
-        if (vaccinationRepository.existStudent(requestDTO.getStudentId(), requestDTO.getCampaignId()) != null) {
-            throw new RuntimeException("Student already registered for this campaign");
-        }
         vaccination.setVaccineName(requestDTO.getVaccineName());
         vaccination.setDate(requestDTO.getDate());
         vaccination.setNotes(requestDTO.getNotes());
@@ -204,7 +203,25 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
         vaccinationRepository.save(vaccination);
         return mapToResponseDTO(vaccination);
     }
-}
 
+    @Override
+    public VaccinationResponseDTO updateStudentVaccinationCampaign(Integer vaccinationId, VaccinationRequestDTO requestDTO) {
+        Vaccination vaccination = vaccinationRepository.findById(vaccinationId).orElseThrow(() -> new RuntimeException("Vaccination not found id :" + vaccinationId));
+        VaccinationCampaign campaign = vaccinationCampaignRepository.findById(requestDTO.getCampaignId()).orElseThrow(() -> new RuntimeException("Campaign not found id :" + requestDTO.getCampaignId()));
+        Student student = studentRepository.findById(requestDTO.getStudentId()).orElseThrow(() -> new RuntimeException("Student not found id :" + requestDTO.getStudentId()));
+        vaccination.setDate(requestDTO.getDate());
+        vaccination.setDoseNumber(requestDTO.getDoseNumber());
+        vaccination.setAdverseReaction(requestDTO.getAdverseReaction());
+        vaccination.setPreviousDose(requestDTO.isPreviousDose());
+        vaccination.setNotes(requestDTO.getNotes());
+        vaccination.setParentConfirmation(requestDTO.isParentConfirmation());
+        vaccination.setResult(requestDTO.getResult());
+        vaccination.setVaccineName(requestDTO.getVaccineName());
+        vaccination.setCampaign(campaign);
+        vaccination.setStudent(student);
+        vaccinationRepository.save(vaccination);
+        return mapToResponseDTO(vaccination);
+    }
+}
 
 
