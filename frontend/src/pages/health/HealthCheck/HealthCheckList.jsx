@@ -64,6 +64,7 @@ const getUserNameById = (id) => {
               <th>Tên chiến dịch</th>
               <th>Mô tả</th>
               <th>Ngày dự kiến</th>
+              <th>Địa điểm</th>
               <th>Trạng thái</th>
               <th>Người tạo</th>
               <th>Ngày tạo</th>
@@ -78,6 +79,7 @@ const getUserNameById = (id) => {
                   <td>{c.campaignName}</td>
                   <td>{c.description}</td>
                   <td>{c.scheduledDate}</td>
+                  <td>{c.address}</td>
                   <td>{c.status}</td>
                   <td>{getUserNameById(c.createdBy)}</td>
                   <td>{c.createdAt}</td>

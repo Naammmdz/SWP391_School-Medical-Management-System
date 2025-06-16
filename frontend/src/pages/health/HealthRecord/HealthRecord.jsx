@@ -451,7 +451,7 @@ const HealthRecord = () => {
             )}
           </>
         ) : (
-          // Học sinh xem và cập nhật hồ sơ của mình
+          // Phụ huynh xem và cập nhật hồ sơ của con mình
           <>
             {formSubmitted && (
               <div className="success-message">
@@ -465,7 +465,7 @@ const HealthRecord = () => {
             )}
             <form onSubmit={handleSubmit(onSubmit)} className="health-record-form">
               <div className="form-container">
-                <div className="student-info-column">
+                <div className="student-info-card">
                   <div className="info-card">
                     <h3>Thông tin học sinh</h3>
                     <div className="form-group">
