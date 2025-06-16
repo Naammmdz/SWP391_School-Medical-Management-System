@@ -106,7 +106,6 @@ public class HealthProfileServiceImpl implements HealthProfileService {
     @Override
     public List<HealthProfileResponseDTO> getStudentsWithChronicDiseases() {
         List<HealthProfile> profiles = healthProfileRepository.findProfilesWithChronicDiseases();
-
         return profiles.stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
