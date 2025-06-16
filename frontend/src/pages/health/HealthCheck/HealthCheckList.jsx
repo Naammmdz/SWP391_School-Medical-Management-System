@@ -30,7 +30,8 @@ const getUserNameById = (id) => {
     };
     if (
       user.userRole === 'ROLE_ADMIN' ||
-      user.userRole === 'ROLE_NURSE'
+      user.userRole === 'ROLE_NURSE' ||
+      user.userRole === 'ROLE_PRICIPAL' 
     ) {
       fetchCampaigns();
     }
@@ -38,7 +39,8 @@ const getUserNameById = (id) => {
 
   if (
     user.userRole !== 'ROLE_ADMIN' &&
-    user.userRole !== 'ROLE_NURSE'
+    user.userRole !== 'ROLE_NURSE' &&
+    user.userRole !== 'ROLE_PRICIPAL'
   ) {
     return <div>Bạn không có quyền truy cập trang này.</div>;
   }

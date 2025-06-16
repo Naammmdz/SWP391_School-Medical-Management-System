@@ -48,6 +48,15 @@ const HealthCheckService = {
       console.error('Error approving health check campaign:', error);
       throw error;
     }
+  },
+  getHealthCheckApproved: async (config) => {
+    try {
+      const response = await axios.get(`${API_URL}/approved`, config);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching approved health check campaigns:', error);
+      throw error;
+    }
   }
 };
 

@@ -9,10 +9,10 @@ const CreateVaccinationCampaign = () => {
     targetGroup: '',
     type: '',
     address: '',
-    organizer: nurse.id || '', // Lấy id người tạo từ localStorage
+    organizer: nurse.id || '',
     description: '',
     scheduledDate: '',
-    status: 'CRAFT' // Mặc định là nháp
+    status: 'CRAFT' // Mặc định là nháp khi nhập form
   });
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -36,15 +36,10 @@ const CreateVaccinationCampaign = () => {
     }
     try {
       const token = localStorage.getItem('token');
+      // Khi gửi đi, trạng thái là PENDING
       const data = {
-        campaignName: form.campaignName,
-        targetGroup: form.targetGroup,
-        type: form.type,
-        address: form.address,
-        organizer: form.organizer,
-        description: form.description,
-        scheduledDate: form.scheduledDate,
-        status: form.status
+        ...form,
+        status: 'PENDING'
       };
       await VaccinationService.createVaccinationCampaign(data, {
         headers: {

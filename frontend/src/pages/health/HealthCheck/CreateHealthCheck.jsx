@@ -5,7 +5,7 @@ import { Textarea } from '../../../components/ui/textarea';
 import { Button } from '../../../components/ui/button';
 import HealthCheckService from '../../../services/HealthCheckService';
 
-const HealthCheck = () => {
+const CreateHealthCheck = () => {
   const nurse = JSON.parse(localStorage.getItem('user') || '{}');
   const token = localStorage.getItem('token');
   const [form, setForm] = useState({
@@ -144,4 +144,4 @@ const HealthCheck = () => {
   );
 };
 
-export default HealthCheck;
+export default CreateHealthCheck;

@@ -227,7 +227,7 @@ export default function ParentPages() {
               <div className="resource-info">
                 <h3>Kiểm Tra Định Kỳ</h3>
                 <p className="resource-date">Xem và xác nhận lịch kiểm tra sức khỏe</p>
-                <Link to="/kiemtradinhky" className="btn btn-sm">
+                <Link to="/kiemtradinhkyhocsinh" className="btn btn-sm">
                   Xem chi tiết
                 </Link>
               </div>
