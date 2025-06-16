@@ -14,6 +14,7 @@ import com.school.health.repository.MedicineSubmissionRepository;
 import com.school.health.repository.StudentRepository;
 import com.school.health.repository.UserRepository;
 import com.school.health.service.MedicineSubmissionService;
+import com.school.health.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -37,6 +38,8 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private NotificationService notificationService;
 
 
     // ===== PARENT OPERATIONS =====
@@ -256,6 +259,8 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
         submission.setApprovedAt(request.getApprovedAt());
 
         medicineSubmissionRepository.save(submission);
+        String status = request.getSubmissionStatus().equals("APPROVED") ? "chấp nhận" : "từ chối";
+        notificationService.createNotification(submission.getParent().getUserId(),"Yêu cầu gửi thuốc của bạn đã có kết quả", "Yêu cầu gửi thuốc của bạn đã được "+ status + " bởi "+submission.getApprovedBy().getFullName()+" vào "+ submission.getApprovedAt());
         return toResponse(submission);
     }
 

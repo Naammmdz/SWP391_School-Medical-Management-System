@@ -20,11 +20,11 @@ import java.util.stream.Collectors;
 @Service
 public class InventoryServiceImpl implements InventoryService {
     @Autowired
-    InventoryRepo inventoryRepo;
+    private InventoryRepo inventoryRepo;
     @Autowired
-    NotificationService notificationService;
+    private NotificationService notificationService;
     @Autowired
-    UserRepository userRepository;
+    private UserRepository userRepository;
     @Override
     public List<InventoryResponseDTO> getAllInventoryItems() {
         List<Inventory> inventoryList = inventoryRepo.findAll();

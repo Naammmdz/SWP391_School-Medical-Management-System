@@ -17,9 +17,9 @@ import java.util.stream.Collectors;
 
 public class NotificationServiceImpl implements NotificationService {
     @Autowired
-    NotificationRepository notificationRepository;
+    private NotificationRepository notificationRepository;
     @Autowired
-    UserRepository userRepository;
+    private UserRepository userRepository;
 
     @Override
     public NotificationResponseDTO createNotification(int toUserId, String title, String message) {

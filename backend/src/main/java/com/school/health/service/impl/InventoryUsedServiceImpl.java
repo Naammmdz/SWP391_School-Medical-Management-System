@@ -23,15 +23,15 @@ import java.util.List;
 public class InventoryUsedServiceImpl implements InventoryUsedLogService {
 
     @Autowired
-    InventoryRepo inventoryRepo;
+    private InventoryRepo inventoryRepo;
     @Autowired
-    MedicalEventsRepository medicalEventsRepo;
+    private MedicalEventsRepository medicalEventsRepo;
     @Autowired
-    InventoryUsedRepo inventoryUsedRepo;
+    private InventoryUsedRepo inventoryUsedRepo;
     @Autowired
-    NotificationService notificationService;
+    private NotificationService notificationService;
     @Autowired
-    UserRepository userRepo;
+    private UserRepository userRepo;
     @Override
 
     public InventoryUsedResponseDTO createInventoryUsed(Integer id, InventoryUsedRequestDTO DTO) {
