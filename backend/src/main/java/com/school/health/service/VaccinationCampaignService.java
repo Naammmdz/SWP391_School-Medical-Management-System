@@ -40,4 +40,8 @@ public interface VaccinationCampaignService {
     VaccinationResponseDTO recordVaccinationResult(Integer campaignId, VaccinationRequestDTO requestDTO);
 
     VaccinationResponseDTO updateStudentVaccinationCampaign(Integer vaccinationId, VaccinationRequestDTO requestDTO);
+
+    List<VaccinationResponseDTO> getAllVaccinationResults();
+
+    List<VaccinationResponseDTO> getVaccinationResults(Integer campaignId);
 }

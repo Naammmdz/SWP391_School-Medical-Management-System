@@ -243,5 +243,19 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
         return mapToHealthCheckResponseDTO(healthCheck);
     }
 
+    @Override
+    public List<HealthCheckResponseDTO> getHealthCheckResults(Integer campaignId) {
+        return healthCheckRepository.findByCampaignId(campaignId).stream()
+                .map(this::mapToHealthCheckResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<HealthCheckResponseDTO> getAllHealthCheckResults() {
+        return healthCheckRepository.findAll().stream()
+                .map(this::mapToHealthCheckResponseDTO)
+//                .filter( name -> name.getCampaignId() > 1)
+                .collect(Collectors.toList());
+    }
 }
 

@@ -121,4 +121,18 @@ public class VaccinationCampaignController {
     public ResponseEntity<?> updateStudentHealthCampaign(@PathVariable int vaccinecheckId, @RequestBody @Valid VaccinationRequestDTO dto) {
         return ResponseEntity.ok(vaccinationCampaignService.updateStudentVaccinationCampaign(vaccinecheckId, dto));
     }
+
+    // Lấy kết quả của tất cả học sinh trong chiến dịch sức khỏe
+    @GetMapping("/{campaignId}/results")
+    @PreAuthorize("hasRole('NURSE') or hasRole('ADMIN')")
+    public ResponseEntity<?> getVaccinationResults(@PathVariable int campaignId) {
+        return ResponseEntity.ok(vaccinationCampaignService.getVaccinationResults(campaignId));
+    }
+
+    // lấy tất cả kết quả của chiến dịch sức khỏe
+    @GetMapping("/results-campaign/all")
+    @PreAuthorize("hasRole('NURSE') or hasRole('ADMIN')")
+    public ResponseEntity<?> getAllVaccinationResults() {
+        return ResponseEntity.ok(vaccinationCampaignService.getAllVaccinationResults());
+    }
 }

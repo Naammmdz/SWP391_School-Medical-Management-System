@@ -5,6 +5,7 @@ import com.school.health.dto.request.HealthCheckRequestDTO;
 import com.school.health.dto.response.HealthCampaignResponseDTO;
 import com.school.health.dto.response.HealthCheckResponseDTO;
 import com.school.health.dto.response.StudentResponseDTO;
+import com.school.health.entity.HealthCheck;
 import com.school.health.entity.HealthCheckCampaign;
 import com.school.health.entity.Student;
 import com.school.health.enums.Status;
@@ -39,4 +40,8 @@ public interface HealthCheckCampaignService {
 
     // update health check result
     HealthCheckResponseDTO updateStudentHealthCampaign(Integer healthcheckId ,HealthCheckRequestDTO requestDTO);
+
+    List<HealthCheckResponseDTO> getHealthCheckResults(Integer campaignId);
+
+    List<HealthCheckResponseDTO> getAllHealthCheckResults();
 }

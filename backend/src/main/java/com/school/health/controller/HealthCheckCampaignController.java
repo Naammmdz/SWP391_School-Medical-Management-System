@@ -125,4 +125,19 @@ public class HealthCheckCampaignController {
     public ResponseEntity<?> recordHealthCheckResult(@PathVariable int campaignId, @RequestBody @Valid HealthCheckRequestDTO healthCheckRequestDTO) {
         return ResponseEntity.ok(healthCheckCampaignServiceImpl.recordHealthCheckResult(campaignId, healthCheckRequestDTO));
     }
+
+    // Lấy kết quả của tất cả học sinh trong chiến dịch sức khỏe
+    @GetMapping("/{campaignId}/results")
+    @PreAuthorize("hasRole('NURSE') or hasRole('ADMIN')")
+    public ResponseEntity<?> getHealthCheckResults(@PathVariable int campaignId) {
+        return ResponseEntity.ok(healthCheckCampaignServiceImpl.getHealthCheckResults(campaignId));
+    }
+
+    // lấy tất cả kết quả của chiến dịch sức khỏe
+    @GetMapping("/results-campaign/all")
+    @PreAuthorize("hasRole('NURSE') or hasRole('ADMIN')")
+    public ResponseEntity<?> getAllHealthCheckResults() {
+        return ResponseEntity.ok(healthCheckCampaignServiceImpl.getAllHealthCheckResults());
+    }
+
 }

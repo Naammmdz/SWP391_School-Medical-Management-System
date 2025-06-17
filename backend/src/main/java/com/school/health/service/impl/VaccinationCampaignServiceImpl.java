@@ -222,6 +222,20 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
         vaccinationRepository.save(vaccination);
         return mapToResponseDTO(vaccination);
     }
+
+    @Override
+    public List<VaccinationResponseDTO> getAllVaccinationResults() {
+        return vaccinationRepository.findAll().stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<VaccinationResponseDTO> getVaccinationResults(Integer campaignId) {
+        return vaccinationRepository.findByCampaignId(campaignId).stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
 }
 
 
