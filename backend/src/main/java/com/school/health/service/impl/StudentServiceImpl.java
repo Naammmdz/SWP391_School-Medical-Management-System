@@ -27,8 +27,7 @@ public class StudentServiceImpl implements StudentService {
      * Lấy danh sách học sinh theo parent ID
      */
     public List<StudentResponseDTO> getStudentsByParentId(Integer parentId) {
-        List<Student> students = studentRepository.findByParentUserId(parentId);
-
+        List<Student> students = studentRepository.findByParentUserIdAndIsActive(parentId, true);
         return students.stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
@@ -87,6 +86,7 @@ public class StudentServiceImpl implements StudentService {
         dto.setParentId(student.getParent().getUserId());
         dto.setCreatedAt(student.getCreatedAt());
         dto.setHasHealthProfile(student.getHealthProfile() != null);
+        dto.setActive(student.isActive());
         return dto;
     }
 
@@ -102,7 +102,9 @@ public class StudentServiceImpl implements StudentService {
         student.setGender(dto.getGender());
         student.setClassName(dto.getClassName());
         student.setParent(parent); // Gán parent đã lấy ở bước 1
+        student.setActive(true);
         Student savedStudent = studentRepository.save(student);
+
         HealthProfile healthProfile = new HealthProfile();
         healthProfile.setStudent(student);
         healthProfileRepository.save(healthProfile);
@@ -149,11 +151,8 @@ public class StudentServiceImpl implements StudentService {
     public void deleteStudent(Integer studentId) {
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy học sinh với ID: " + studentId));
-        // Xóa hồ sơ sức khỏe nếu có
-        if (student.getHealthProfile() != null) {
-            healthProfileRepository.delete(student.getHealthProfile());
-        }
-        // Xóa học sinh
-        studentRepository.delete(student);
+        // Đánh dấu học sinh là không hoạt động thay vì xóa
+        student.setActive(false);
+        studentRepository.save(student);
     }
 }

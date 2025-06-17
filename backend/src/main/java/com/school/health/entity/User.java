@@ -40,7 +40,7 @@ public class User {
     private Integer userId;
 
 
-    @Column(name = "FullName", nullable = false, length = 100)
+    @Column(name = "FullName", nullable = false, length = 100,columnDefinition = "NVARCHAR(255)")
     private String fullName;
 
     @Column(name = "Email", length = 100)
@@ -55,7 +55,6 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "Role", nullable = false, length = 20)
-
     private UserRole role;
 
     @CreationTimestamp
