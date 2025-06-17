@@ -11,6 +11,6 @@ public class HealthProfileFilterRequest {
     private String name;
     private String className;
     private String gender;
-    // parent
+    private String parentId;
 
 }
