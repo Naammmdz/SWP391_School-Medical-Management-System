@@ -52,6 +52,11 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
         Optional<User> parent = Optional.ofNullable(userRepository.findById(parentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Phụ huynh không tồn tại")));
 
+        // Validate parent-child relationship
+        if (!student.get().getParent().getUserId().equals(parentId)) {
+            throw new AccessDeniedException("You are not allowed to submit medicine for this student.");
+        }
+
         //Create a new MedicineSubmission entity
         MedicineSubmission medicineSubmission = new MedicineSubmission();
         medicineSubmission.setStudent(student.get());
@@ -238,18 +243,26 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
     @Override
     public MedicineSubmissionResponse updateStatus(Integer id, StatusUpdateRequest request) {
         MedicineSubmission submission = medicineSubmissionRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Submission not found: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn thuốc: " + id));
 
-        if (!"APPROVED".equals(request.getSubmissionStatus()) && !"REJECTED".equals(request.getSubmissionStatus())) {
-            throw new BadRequestException("Invalid status: " + request.getSubmissionStatus());
-        }
-
-        if (submission.getSubmissionStatus() != MedicineSubmissionStatus.PENDING) {
-            throw new BadRequestException("Only pending submissions can be updated");
+        // Kiểm tra trạng thái hiện tại và quy tắc chuyển đổi
+        if (submission.getSubmissionStatus() == MedicineSubmissionStatus.PENDING) {
+            // Nếu đang PENDING thì chỉ có thể chuyển sang APPROVED hoặc REJECTED
+            if (!"APPROVED".equals(request.getSubmissionStatus()) && !"REJECTED".equals(request.getSubmissionStatus())) {
+                throw new BadRequestException("Đơn thuốc đang chờ duyệt chỉ có thể được phê duyệt hoặc từ chối");
+            }
+        } else if (submission.getSubmissionStatus() == MedicineSubmissionStatus.APPROVED) {
+            // Nếu đang APPROVED thì chỉ có thể chuyển sang COMPLETE
+            if (!"COMPLETE".equals(request.getSubmissionStatus())) {
+                throw new BadRequestException("Đơn thuốc đã được phê duyệt chỉ có thể chuyển sang trạng thái hoàn thành");
+            }
+        } else {
+            // Các trạng thái khác không được phép cập nhật
+            throw new BadRequestException("Không thể cập nhật trạng thái của đơn thuốc này");
         }
 
         User approvedBy = userRepository.findById(request.getApprovedBy())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + request.getApprovedBy()));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng: " + request.getApprovedBy()));
 
         submission.setSubmissionStatus(MedicineSubmissionStatus.valueOf(request.getSubmissionStatus()));
         submission.setApprovedBy(approvedBy);
@@ -262,7 +275,7 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
     @Override
     public void delete(Integer id) {
         if (!medicineSubmissionRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Submission not found: " + id);
+            throw new ResourceNotFoundException("Không tìm thấy đơn thuốc: " + id);
         }
         medicineSubmissionRepository.deleteById(id);
     }
@@ -279,7 +292,7 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
             try {
                 statusEnum = MedicineSubmissionStatus.valueOf(status);
             } catch (IllegalArgumentException e) {
-                throw new BadRequestException("Invalid status: " + status);
+                throw new BadRequestException("Trạng thái không hợp lệ: " + status);
             }
         }
         if (status == null) {
@@ -325,7 +338,7 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
                 .orElseThrow(() -> new ResourceNotFoundException("Submission not found: " + submissionId));
 
         if (submission.getSubmissionStatus() != MedicineSubmissionStatus.APPROVED) {
-            throw new BadRequestException("Only approved submissions can be logged");
+            throw new BadRequestException("Chỉ có thể chấm công cho các đơn thuốc đã được phê duyệt");
         }
 
         User givenBy = userRepository.findById(request.getGivenByUserId())
