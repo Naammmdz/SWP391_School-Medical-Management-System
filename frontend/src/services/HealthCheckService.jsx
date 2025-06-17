@@ -57,7 +57,16 @@ const HealthCheckService = {
       console.error('Error fetching approved health check campaigns:', error);
       throw error;
     }
-  }
+  },
+  recordHealthCheckResult: async (id, config) => {
+    try {
+      const response = await axios.post(`${API_URL}/result/${id}`, config);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching health check result:', error);
+      throw error;
+    }
+  },
 };
 
 export default HealthCheckService;

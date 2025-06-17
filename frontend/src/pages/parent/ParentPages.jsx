@@ -232,6 +232,34 @@ export default function ParentPages() {
                 </Link>
               </div>
             </div>
+ 
+              <div className="resource-card">
+              <div className="resource-thumbnail">
+                <img src="https://th.bing.com/th/id/OIP.X-QvddXj6_0IDp9_nHVYswHaE7?w=265&h=180&c=7&r=0&o=7&dpr=2&pid=1.7&rm=3" alt="Khai Báo Thuốc" />
+                <span className="resource-type document">Thông báo</span>
+              </div>
+              <div className="resource-info">
+                <h3>Khai Báo Thuốc</h3>
+                <p className="resource-date">Khai Báo Thuốc cho nhà trường</p>
+                <Link to="/khaibaothuoc" className="btn btn-sm">
+                  Xem chi tiết
+                </Link>
+              </div>
+            </div>
+
+             <div className="resource-card">
+              <div className="resource-thumbnail">
+                <img src="https://th.bing.com/th/id/OIP.CPaKDsGbpbajJClRwMaLtwHaEm?w=263&h=180&c=7&r=0&o=5&cb=iwc2&dpr=2&pid=1.7" alt="Kiểm Tra Định Kỳ" />
+                <span className="resource-type document">Thông báo</span>
+              </div>
+              <div className="resource-info">
+                <h3>Kết Quả Kiểm Tra Định Kỳ</h3>
+                <p className="resource-date">Xem và xác nhận kết quả kiểm tra sức khỏe</p>
+                <Link to="/ketquakiemtradinhky" className="btn btn-sm">
+                  Xem chi tiết
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </section>
