@@ -9,7 +9,6 @@ import com.school.health.exception.DuplicateResourceException;
 import com.school.health.exception.ResourceNotFoundException;
 import com.school.health.repository.*;
 import com.school.health.service.HealthProfileService;
-import com.school.health.service.MailService;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +27,6 @@ import java.util.stream.Collectors;
 public class HealthProfileServiceImpl implements HealthProfileService {
     private final HealthProfileRepository healthProfileRepository;
     private final StudentRepository studentRepository;
-    private final MailService mailService;
 
     @Override
     public HealthProfileResponseDTO createHealthProfile(Integer studentId, CreateHealthProfileDTO dto, Integer userId) {
@@ -52,24 +50,30 @@ public class HealthProfileServiceImpl implements HealthProfileService {
     //Cập nhật hồ sơ sức khỏe
     @Override
     public HealthProfileResponseDTO updateHealthProfile(Integer studentId, UpdateHealthProfileDTO dto, Integer userId) {
-        // Tìm hồ sơ hiện tại
         HealthProfile existingProfile = healthProfileRepository.findByStudentStudentId(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ sức khỏe cho học sinh với ID: " + studentId));
-
-        // Cập nhật thông tin (chỉ cập nhật các field không null)
         updateEntityFromDTO(existingProfile, dto);
         if (userId != null) {
             User user = new User();
             user.setUserId(userId);
             existingProfile.setUpdatedBy(user);
         }
-        // Cập nhật người sửa
-        // Lưu vào database
         HealthProfile updatedProfile = healthProfileRepository.save(existingProfile);
         return mapToResponseDTO(updatedProfile);
-    }
 
-    //Lấy hồ sơ sức khỏe theo student ID
+
+    }
+    // Ở đây phải có thêm @Transactional(readOnly = true) để đảm bảo rằng phương thức này chỉ đọc dữ liệu và không thay đổi trạng thái của database
+    // Lấy hồ sơ sức khỏe của học sinh theo studentId
+    // Nếu không có hồ sơ sức khỏe thì sẽ ném ra ResourceNotFoundException
+    // Nếu có thì sẽ trả về HealthProfileResponseDTO
+    // Phương thức này sẽ được gọi khi cần lấy thông tin hồ sơ sức khỏe của một học sinh cụ thể
+    // Ví dụ: khi cần hiển thị thông tin hồ sơ sức khỏe trên trang web hoặc trong ứng dụng di động
+    // Phương thức này sẽ trả về thông tin hồ sơ sức khỏe của học sinh theo studentId
+    // Vậy có nên đặt @Transactional(readOnly = true) cho tất cả phương thức trong 1 service không ?
+    // Câu trả lời là không, chỉ nên đặt @Transactional(readOnly = true) cho những phương thức chỉ đọc dữ liệu và không thay đổi trạng thái của database
+    // Nếu phương thức có thay đổi trạng thái của database thì không nên đặt @Transactional(readOnly = true)
+    // Bởi vì nếu đặt @Transactional(readOnly = true) thì sẽ không thể thay đổi trạng thái của database được
     @Override
     @Transactional(readOnly = true)
     public HealthProfileResponseDTO getHealthProfileByStudentId(Integer studentId) {
@@ -187,6 +191,10 @@ public class HealthProfileServiceImpl implements HealthProfileService {
             if (filterRequest.getId() != null) {
                 predicate = cb.and(predicate, cb.equal(root.get("profileId"), filterRequest.getId()));
             }
+            if (filterRequest.getParentId() != null) {
+                predicate = cb.and(predicate, cb.equal(root.get("student").get("parent").get("userId"), filterRequest.getParentId()));
+            }
+
             if (filterRequest.getName() != null) {
                 predicate = cb.and(predicate, cb.like(cb.lower(root.get("student").get("fullName")),
                         "%" + filterRequest.getName().toLowerCase() + "%"));
@@ -199,10 +207,7 @@ public class HealthProfileServiceImpl implements HealthProfileService {
                 predicate = cb.and(predicate, cb.equal(cb.lower(root.get("student").get("gender")),
                         filterRequest.getGender().toLowerCase()));
             }
-
             return predicate;
-
-
         };
         List<HealthProfile> healthProfiles = healthProfileRepository.findAll(specification);
         return healthProfiles.stream()

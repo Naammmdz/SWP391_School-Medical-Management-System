@@ -10,6 +10,7 @@ public class StudentResponseDTO {
     private LocalDate dob;
     private String gender;
     private String className;
+    private boolean isActive;
     private Integer parentId;
     private LocalDateTime createdAt;
     private boolean hasHealthProfile;
