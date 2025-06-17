@@ -180,4 +180,19 @@ public class UserController {
         BulkImportResponse result = excelService.importUsersFromExcel(file);
         return ResponseEntity.ok(result);
     }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserResponse> getUserById(@PathVariable Integer id) {
+        User user = userService.getUserById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng với ID: " + id));
+        UserResponse response = new UserResponse();
+        response.setId(user.getUserId());
+        response.setFullName(user.getFullName());
+        response.setEmail(user.getEmail());
+        response.setPhone(user.getPhone());
+        response.setIsActive(user.isActive());
+        response.setRole(user.getRole().name());
+        return ResponseEntity.ok(response);
+    }
 }

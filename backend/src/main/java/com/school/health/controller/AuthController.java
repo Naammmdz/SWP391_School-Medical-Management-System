@@ -93,9 +93,9 @@ public class AuthController {
     public ResponseEntity<?> refreshAccessToken(@RequestBody RefreshRequest req) {
         String refreshToken = req.getRefreshToken();
         if (jwtUtils.validateJwtToken(refreshToken)) {
-            String username = jwtUtils.getUsernameFromJwtToken(refreshToken);
+            Integer userId = jwtUtils.getUserIdFromJwtToken(refreshToken);
             // Lấy UserDetails từ username
-            UserDetailsImpl userDetails = (UserDetailsImpl) userDetailsServiceImpl.loadUserByUsername(username);
+            UserDetailsImpl userDetails = (UserDetailsImpl) userDetailsServiceImpl.loadUserById(userId);
 
             Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
             String newAccessToken = jwtUtils.generateJwtToken(authentication);
