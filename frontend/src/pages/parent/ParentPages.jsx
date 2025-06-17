@@ -249,7 +249,7 @@ export default function ParentPages() {
 
              <div className="resource-card">
               <div className="resource-thumbnail">
-                <img src="https://th.bing.com/th/id/OIP.CPaKDsGbpbajJClRwMaLtwHaEm?w=263&h=180&c=7&r=0&o=5&cb=iwc2&dpr=2&pid=1.7" alt="Kiểm Tra Định Kỳ" />
+                <img src="https://img.freepik.com/premium-vector/customers-filling-up-survey-form-vector-illustration-flat_186332-1263.jpg?w=360" alt="Kiểm Tra Định Kỳ" />
                 <span className="resource-type document">Thông báo</span>
               </div>
               <div className="resource-info">

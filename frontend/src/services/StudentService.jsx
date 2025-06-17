@@ -12,9 +12,7 @@ const studentService = {
     createStudent: (data, config) => {
         return axios.post(`${STUDENT_URL}/create-students`, data, config);
     },
-     filterHealthRecord(body, config) {
-        return axios.post(`${STUDENT_URL}/filter`,body, config)
-    },
+   
     updateStudent: (id, data, config) => {
         return axios.put(`${STUDENT_URL}/${id}`, data, config);
     },

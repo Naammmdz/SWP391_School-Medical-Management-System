@@ -58,9 +58,9 @@ const HealthCheckService = {
       throw error;
     }
   },
-  recordHealthCheckResult: async (id, config) => {
+  recordHealthCheckResult: async (id, result ,config) => {
     try {
-      const response = await axios.post(`${API_URL}/result/${id}`, config);
+      const response = await axios.post(`${API_URL}/result/${id}`, result, config);
       return response.data;
     } catch (error) {
       console.error('Error fetching health check result:', error);
