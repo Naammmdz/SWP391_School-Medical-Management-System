@@ -16,6 +16,8 @@ const MedicineDeclarationsList = () => {
   const [loading, setLoading] = useState(true);
   const [viewDetail, setViewDetail] = useState(null);
   const [studentClassMap, setStudentClassMap] = useState({});
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const isParent = user.userRole === 'ROLE_PARENT';
 
   // Lấy thông tin lớp học từ localStorage
   useEffect(() => {
@@ -104,7 +106,7 @@ const updateStatus = async (id, status) => {
       title: 'Học sinh',
       dataIndex: 'studentName',
       key: 'studentName',
-      render: (text, record) => (
+      render: (text) => (
         <Space>
           <UserOutlined />
           <b>{text}</b>
@@ -178,7 +180,7 @@ const updateStatus = async (id, status) => {
       key: 'submissionStatus',
       render: (status) => (
         <Tag color={status === 'APPROVED' ? 'green' : status === 'PENDING' ? 'orange' : 'red'}>
-          {status === 'APPROVED' ? 'Đã duyệt' : status === 'PENDING' ? 'Chờ duyệt' : 'Từ chối'}
+          {status === 'APPROVED' ? 'Đã Nhận' : status === 'PENDING' ? 'Chờ duyệt' : 'Từ chối'}
         </Tag>
       ),
       width: 110
@@ -186,41 +188,64 @@ const updateStatus = async (id, status) => {
     {
       title: 'Thao tác',
       key: 'actions',
-      render: (_, record) => (
-        <Space>
-          <Button
-            icon={<CheckCircleOutlined />}
-            type="primary"
-            size="small"
-            onClick={() => updateStatus(record.id, 'APPROVED')}
-            disabled={record.submissionStatus === 'APPROVED'}
-          >
-            Duyệt
-          </Button>
-          <Button
-            icon={<EditOutlined />}
-            size="small"
-            onClick={() => updateStatus(record.id, 'REJECTED')}
-            disabled={record.submissionStatus === 'REJECTED'}
-          >
-            Từ chối
-          </Button>
-          <Popconfirm
-            title="Bạn chắc chắn muốn xóa đơn thuốc này?"
-            onConfirm={() => deleteSubmission(record.id)}
-            okText="Xóa"
-            cancelText="Hủy"
-          >
-            <Button
-              icon={<DeleteOutlined />}
-              danger
-              size="small"
+      render: (_, record) => {
+        if (isParent) {
+          return (
+            <Popconfirm
+              title="Bạn chắc chắn muốn xóa đơn thuốc này?"
+              onConfirm={() => deleteSubmission(record.id)}
+              okText="Xóa"
+              cancelText="Hủy"
+              disabled={record.submissionStatus !== 'PENDING'}
             >
-              Xóa
+              <Button
+                icon={<DeleteOutlined />}
+                danger
+                size="small"
+                disabled={record.submissionStatus !== 'PENDING'}
+              >
+                Xóa
+              </Button>
+            </Popconfirm>
+          );
+        }
+        // NURSE/ADMIN
+        return (
+          <Space>
+            <Button
+              icon={<CheckCircleOutlined />}
+              type="primary"
+              size="small"
+              onClick={() => updateStatus(record.id, 'APPROVED')}
+              disabled={record.submissionStatus === 'APPROVED'}
+            >
+              Xác nhận
             </Button>
-          </Popconfirm>
-        </Space>
-      ),
+            <Button
+              icon={<EditOutlined />}
+              size="small"
+              onClick={() => updateStatus(record.id, 'REJECTED')}
+              disabled={record.submissionStatus === 'REJECTED'}
+            >
+              Từ chối
+            </Button>
+            <Popconfirm
+              title="Bạn chắc chắn muốn xóa đơn thuốc này?"
+              onConfirm={() => deleteSubmission(record.id)}
+              okText="Xóa"
+              cancelText="Hủy"
+            >
+              <Button
+                icon={<DeleteOutlined />}
+                danger
+                size="small"
+              >
+                Xóa
+              </Button>
+            </Popconfirm>
+          </Space>
+        );
+      },
       width: 200
     }
   ];

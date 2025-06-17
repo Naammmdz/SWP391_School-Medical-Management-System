@@ -3,9 +3,12 @@ import { Send, Info } from 'lucide-react';
 import './MedicineDeclarations.css';
 import MedicineDeclarationService from '../../../services/MedicineDeclarationService';
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 
 const MedicineDeclarations = () => {
+  const navigate = useNavigate();
   // Lấy user và selectedStudentId từ localStorage
+
   const selectedStudentId = localStorage.getItem('selectedStudentId');
 
   // State cho thông tin học sinh
@@ -14,7 +17,7 @@ const MedicineDeclarations = () => {
     studentName: '',
     classroom: ''
   });
-
+  
   // Medicine detail mẫu
   const [medicineDetails, setMedicineDetails] = useState([
     { medicineName: '', medicineDosage: '' }
@@ -166,8 +169,25 @@ const token = localStorage.getItem('token');
     <div className="parent-page medicine-declaration-page">
       <div className="page-header">
         <h1>Khai Báo Thuốc</h1>
+       <button
+  className="view-sent-medicine-btn"
+  style={{
+    float: 'right',
+    marginTop: '-40px',
+    background: '#2563eb',
+    color: '#fff',
+    border: 'none',
+    borderRadius: 6,
+    padding: '8px 18px',
+    fontWeight: 600,
+    cursor: 'pointer'
+  }}
+  onClick={() => navigate('/donthuoc')}
+>
+  Xem Đơn Thuốc Đã Gửi
+</button>
       </div>
-
+       
       {submitSuccess && (
         <div className="success-message">
           <p>Khai báo thuốc đã được gửi thành công! Nhân viên y tế sẽ xem xét và liên hệ nếu cần thêm thông tin.</p>
@@ -315,6 +335,7 @@ const token = localStorage.getItem('token');
                 </>
               )}
             </button>
+          
           </div>
         </form>
       </div>

@@ -38,7 +38,7 @@ import UpdateHealthCheck from './pages/health/HealthCheck/UpdateHealthCheck';
 import HealthCheck from './pages/health/HealthCheck/HealthCheck';
 import CreateHealthCheck from './pages/health/HealthCheck/CreateHealthCheck';
 
-import Dashboard from './pages/parent/dashboard/Dashboard';
+
 import HealthCheckResult from './pages/health/HealthCheck/HealthCheckResult';
 
 // Component ProtectedRoute
@@ -91,7 +91,7 @@ function App() {
         <Route path="/admin/danhsachnguoidung" element={<UserList/>} />
         <Route path="/admin/khoanguoidung/:userId" element={<BlockUser />} requiredRole="ROLE_ADMIN" />
          
-        <Route path="/hocsinh" element={ <Dashboard/>}/>
+        
       
         <Route path="/taomoihocsinh" element={<CreateStudent/>} requiredRole="ROLE_ADMIN" />
         <Route path="/danhsachhocsinh" element={<StudentList/>}/>
