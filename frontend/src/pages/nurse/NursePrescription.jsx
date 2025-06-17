@@ -47,18 +47,43 @@ const MedicineDeclarationsList = () => {
   }, []);
 
   // Cập nhật trạng thái đơn thuốc
-  const updateStatus = async (id, status) => {
-    try {
-      const token = localStorage.getItem('token');
-      await MedicineDeclarationService.updateMedicineSubmissionStatus(id, status, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      message.success('Cập nhật trạng thái thành công!');
-      fetchData();
-    } catch (err) {
-      message.error('Cập nhật trạng thái thất bại!');
+const updateStatus = async (id, status) => {
+  try {
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+    // Validate dữ liệu đầu vào
+    if (!status) {
+      message.error("Trạng thái không hợp lệ!");
+      return;
     }
-  };
+
+    // Tạo đúng payload mà backend yêu cầu
+    const payload = {
+      submissionStatus: status.toUpperCase(), // ví dụ: 'APPROVED'
+      approvedBy: user.id || 0, // nếu backend dùng 0 hoặc lấy từ token cũng được
+      approvedAt: new Date().toISOString().split('T')[0], // format yyyy-MM-dd
+    };
+
+    await MedicineDeclarationService.updateMedicineSubmissionStatus(
+      id,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    message.success('Cập nhật trạng thái thành công!');
+    fetchData();
+  } catch (err) {
+    console.error("Chi tiết lỗi:", err.response?.data || err);
+    message.error('Cập nhật trạng thái thất bại!');
+  }
+};
+
 
   // Xóa đơn thuốc
   const deleteSubmission = async (id) => {
@@ -152,10 +177,8 @@ const MedicineDeclarationsList = () => {
       dataIndex: 'submissionStatus',
       key: 'submissionStatus',
       render: (status) => (
-        <Tag color={statusColors[status] || 'default'}>
-          {status === 'PENDING' && 'Chờ duyệt'}
-          {status === 'APPROVED' && 'Đã duyệt'}
-          {status === 'REJECTED' && 'Từ chối'}
+        <Tag color={status === 'APPROVED' ? 'green' : status === 'PENDING' ? 'orange' : 'red'}>
+          {status === 'APPROVED' ? 'Đã duyệt' : status === 'PENDING' ? 'Chờ duyệt' : 'Từ chối'}
         </Tag>
       ),
       width: 110
