@@ -30,6 +30,8 @@ const StudentList = () => {
       // Fetch students
       const studentsResponse = await studentService.getAllStudents(config);
       setStudents(studentsResponse.data);
+     
+      localStorage.setItem('students', JSON.stringify(studentsResponse.data)); 
 
       // Fetch users to get parent information
       const usersResponse = await userService.getAllUsers(config);

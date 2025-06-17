@@ -39,6 +39,7 @@ import HealthCheck from './pages/health/HealthCheck/HealthCheck';
 import CreateHealthCheck from './pages/health/HealthCheck/CreateHealthCheck';
 
 import Dashboard from './pages/parent/dashboard/Dashboard';
+import HealthCheckResult from './pages/health/HealthCheck/HealthCheckResult';
 
 // Component ProtectedRoute
 const ProtectedRoute = ({ element, requiredRole }) => {
@@ -81,6 +82,7 @@ function App() {
         <Route path="/danhsachkiemtradinhky" element={<HealthCheckList />} />
         <Route path="/capnhatkiemtradinhky" element={<UpdateHealthCheck />} />
         <Route path="/kiemtradinhkyhocsinh" element={<HealthCheck />} />
+        <Route path="/ketquakiemtradinhky" element={<HealthCheckResult />} />
 
         <Route path="/capnhatthongtin" element={<UpdateUser/>}/>
         <Route path="/doimatkhau" element={<UpdatePassword/>}/>
