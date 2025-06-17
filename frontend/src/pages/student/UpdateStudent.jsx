@@ -13,7 +13,7 @@ const UpdateStudent = () => {
   const [successMessage, setSuccessMessage] = useState(null);
   const [student, setStudent] = useState({
     fullName: '',
-    dob: '',
+    yob: '', // Sửa lại thành yob (năm sinh)
     gender: '',
     className: '',
     parentId: null
@@ -36,11 +36,12 @@ const UpdateStudent = () => {
       const studentData = response.data.find(s => s.studentId === parseInt(studentId));
       
       if (studentData) {
-        // Format date from YYYY-MM-DD to YYYY-MM-DD for input
-        const formattedDate = new Date(studentData.dob).toISOString().split('T')[0];
+        // Format date to YYYY-MM-DD for input, extract year for yob
+        const dateObj = new Date(studentData.dob || studentData.yob);
+        const year = dateObj.getFullYear();
         setStudent({
           ...studentData,
-          dob: formattedDate
+          yob: year ? year.toString() : '', // Lưu ý: backend nhận yob là năm (chuỗi hoặc số)
         });
 
         // Fetch parent name
@@ -59,6 +60,7 @@ const UpdateStudent = () => {
 
   useEffect(() => {
     fetchStudentData();
+    // eslint-disable-next-line
   }, [studentId]);
 
   const handleInputChange = (e) => {
@@ -83,12 +85,13 @@ const UpdateStudent = () => {
         }
       };
 
-      // Prepare update data
+      // Chuẩn hóa dữ liệu gửi lên backend
       const updateData = {
         fullName: student.fullName,
-        dob: student.dob,
+        yob: student.yob ? parseInt(student.yob) : null, // backend nhận năm sinh là số
         gender: student.gender,
-        className: student.className
+        className: student.className,
+        parentId: student.parentId
       };
 
       await studentService.updateStudent(studentId, updateData, config);
@@ -139,14 +142,16 @@ const UpdateStudent = () => {
         </div>
 
         <div className="form-group">
-          <label htmlFor="dob">Ngày sinh</label>
+          <label htmlFor="yob">Năm sinh</label>
           <input
-            type="date"
-            id="dob"
-            name="dob"
-            value={student.dob}
+            type="number"
+            id="yob"
+            name="yob"
+            value={student.yob}
             onChange={handleInputChange}
             required
+            min="1900"
+            max={new Date().getFullYear()}
           />
         </div>
 
@@ -160,8 +165,8 @@ const UpdateStudent = () => {
             required
           >
             <option value="">Chọn giới tính</option>
-            <option value="Male">Nam</option>
-            <option value="Female">Nữ</option>
+            <option value="Nam">Nam</option>
+            <option value="Nữ">Nữ</option>
           </select>
         </div>
 

@@ -32,6 +32,9 @@ const userService = {
     },
     filterStudentHealthProfile: (student, config) => {
         return axios.post(USER_URL+`/admin/students/filter`)
+    },
+    getParentId: (id, config) => {
+        return axios.get(USER_URL + `/user/${id}`, config);
     }
     
     

@@ -19,54 +19,163 @@
 }
 
 .health-record-form {
-  background-color: #fff;
-  border-radius: 0.5rem;
-  padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  max-width: 900px;
+  margin: 32px auto;
+  padding: 24px;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
 }
 
-/* Tabs */
-/*
-.form-tabs {
+.form-container {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
-  padding-bottom: 1rem;
+  gap: 32px;
+  justify-content: flex-start; 
+  align-items: flex-start;
 }
 
-.tab-button {
-  padding: 0.5rem 1rem;
-  background-color: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.375rem;
-  color: #4b5563;
-  font-size: 0.875rem;
+.info-card {
+  background: #f8fafc;
+  border-radius: 14px;
+  padding: 24px 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  margin-bottom: 24px;
+}
+
+.student-info-card {
+  max-width: 320px;
+  min-width: 220px;
+  flex: 0 0 320px; /* Giữ cố định chiều rộng bên trái */
+  margin-right: 0;
+  margin-bottom: 0;
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.student-info-card .form-group {
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.health-info-card {
+  flex: 1 1 500px;
+  min-width: 340px;
+  margin-left: 32px; /* Tạo khoảng cách bên phải */
+}
+
+.info-card h3 {
+  margin-bottom: 18px;
+  color: #2563eb;
+  font-weight: 600;
+  font-size: 1.2rem;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
   font-weight: 500;
+  margin-bottom: 6px;
+  display: block;
+  color: #22223b;
+}
+
+.form-control {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  font-size: 1rem;
+  transition: border 0.2s;
+}
+
+.form-control:focus {
+  border: 1.5px solid #2563eb;
+  outline: none;
+}
+
+.health-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 24px;
+}
+
+.notes-section textarea {
+  min-height: 60px;
+  resize: vertical;
+}
+
+.form-actions {
+  text-align: center;
+  margin-top: 24px;
+}
+
+.btn.btn-primary {
+  background: linear-gradient(90deg, #2563eb 60%, #38bdf8 100%);
+  color: #fff;
+  border: none;
+  padding: 12px 36px;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.2s;
 }
 
-.tab-button:hover {
-  background-color: #f3f4f6;
+.btn.btn-primary:disabled {
+  background: #a5b4fc;
+  cursor: not-allowed;
 }
 
-.tab-button.active {
-  background-color: #dcfce7;
-  border-color: #86efac;
-  color: #166534;
+.success-message {
+  background: #e0f7fa;
+  color: #00796b;
+  border-radius: 8px;
+  padding: 12px 20px;
+  margin-bottom: 18px;
+  text-align: center;
+  font-weight: 500;
+  font-size: 1.1rem;
 }
 
-.tab-content {
-  display: none;
-}
-
-.tab-content.active {
+.text-danger {
+  color: #e11d48;
+  font-size: 0.95em;
+  margin-top: 2px;
   display: block;
 }
-*/
 
+/* Responsive */
+@media (max-width: 900px) {
+  .form-container {
+    flex-direction: column;
+    gap: 0;
+  }
+  .student-info-card,
+  .health-info-card {
+    max-width: 100%;
+    min-width: unset;
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .health-record-form {
+    padding: 10px;
+  }
+  .info-card {
+    padding: 14px 8px;
+  }
+  .btn.btn-primary {
+    width: 100%;
+    padding: 12px 0;
+  }
+}
 /* Form elements */
 .section-title {
   color: #15803d;
@@ -86,10 +195,6 @@
   margin-bottom: 1.5rem;
 }
 
-.form-group {
-  margin-bottom: 1.25rem;
-}
-
 .form-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -102,15 +207,6 @@ label {
   font-size: 0.875rem;
   font-weight: 500;
   color: #374151;
-}
-
-.form-control {
-  width: 100%;
-  padding: 0.625rem;
-  font-size: 0.875rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  transition: border-color 0.15s;
 }
 
 .form-control:focus {
@@ -178,15 +274,6 @@ textarea.form-control {
   transition: all 0.15s;
 }
 
-.btn-primary {
-  background-color: #15803d;
-  color: white;
-}
-
-.btn-primary:hover {
-  background-color: #166534;
-}
-
 .btn-secondary {
   background-color: #f3f4f6;
   color: #4b5563;
@@ -218,15 +305,6 @@ textarea.form-control {
 
 .btn-remove:hover {
   background-color: #fee2e2;
-}
-
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
-  margin-top: 2rem;
-  padding-top: 1rem;
-  border-top: 1px solid #e5e7eb;
 }
 
 /* Success message */
@@ -331,4 +409,34 @@ textarea.form-control {
     padding: 6px 2px;
     font-size: 0.85rem;
   }
+}
+
+@media (max-width: 768px) {
+  .form-container {
+    flex-direction: column;
+  }
+  
+  .student-info-column {
+    flex-wrap: wrap;
+    max-width: 100%;
+  }
+  
+  .health-info-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.student-name-class-row {
+  display: block;
+  margin-bottom: 0;
+}
+
+.student-name-class-row .form-group {
+  margin-bottom: 20px;
+}
+
+.health-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
 }

@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { Plus, X, Save } from 'lucide-react';
 import userService from '../../services/UserService';
 import './CreateUser.css';
+import { useNavigate } from 'react-router-dom';
 
 const CreateUser = () => {
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+  const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState({
     id: null,
     fullName: '',
@@ -48,10 +50,12 @@ const CreateUser = () => {
           'Content-Type': 'application/json'
         }
       });
-
-      setSuccessMessage('Tạo người dùng thành công!');
-      setTimeout(() => setSuccessMessage(null), 2000);
       resetForm();
+      setSuccessMessage('Tạo người dùng thành công!');
+      setTimeout(() => {
+        setSuccessMessage(null);
+        navigate('/admin/danhsachnguoidung'); // hoặc đường dẫn UserList của bạn
+      }, 2000);
     } catch (error) {
       setError('Failed to create user');
     }
