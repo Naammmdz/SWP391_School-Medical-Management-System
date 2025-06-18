@@ -1,6 +1,6 @@
 package com.school.health.controller;
 
-import com.school.health.service.MailService;
+import com.school.health.service.impl.MailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

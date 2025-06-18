@@ -1,10 +1,8 @@
 package com.school.health.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -15,7 +13,10 @@ import java.time.LocalDate;
 
 @Entity
 @Table(name = "Students")
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Student {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,7 +24,7 @@ public class Student {
     private Integer studentId;
 
     @NotBlank(message = "Họ tên học sinh không được để trống")
-    @Column(name = "FullName", length = 100, nullable = false)
+    @Column(name = "FullName", length = 100, nullable = false,columnDefinition = "NVARCHAR(255)")
     private String fullName;
 
     @NotNull(message = "Ngày sinh không được để trống")
@@ -32,7 +33,7 @@ public class Student {
     private LocalDate dob;
 
     @Pattern(regexp = "^(Nam|Nữ)$", message = "Giới tính chỉ có thể là Nam hoặc Nữ")
-    @Column(name = "Gender", length = 10)
+    @Column(name = "Gender", length = 10,columnDefinition = "NVARCHAR(255)")
     private String gender;
 
     @Column(name = "ClassName", length = 50)
@@ -41,7 +42,13 @@ public class Student {
     // Parent
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ParentId", nullable = false)
+    @JsonIgnore //Thêm dòng này để không serialize Parent nữa
     private User parent;
+
+    // xóa student bằng cách isActive
+    // cascade = CascadeType.ALL tức là khi xóa Student thì sẽ xóa luôn HealthProfile
+    @Column(name = "IsActive", nullable = false)
+    private boolean isActive;
 
     @OneToOne(mappedBy = "student", cascade = CascadeType.ALL)
     private HealthProfile healthProfile;

@@ -155,7 +155,7 @@ public class MedicineSubmissionController {
             @Valid @RequestBody MedicineLogRequest request,
             Authentication authentication) {
 
-        Integer givenBy = authUtils.getCurrentUserId(authentication);
+         Integer givenBy = authUtils.getCurrentUserId(authentication);
         request.setGivenByUserId(givenBy);
         request.setGivenAt(LocalDate.now());
 
