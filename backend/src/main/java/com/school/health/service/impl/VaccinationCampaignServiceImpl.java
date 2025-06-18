@@ -5,6 +5,7 @@ import com.school.health.dto.request.VaccinationRequestDTO;
 import com.school.health.dto.response.StudentResponseDTO;
 import com.school.health.dto.response.VaccinationCampaignResponseDTO;
 import com.school.health.dto.response.VaccinationResponseDTO;
+import com.school.health.entity.HealthCheck;
 import com.school.health.entity.Student;
 import com.school.health.entity.Vaccination;
 import com.school.health.entity.VaccinationCampaign;
@@ -235,6 +236,16 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
         return vaccinationRepository.findByCampaignId(campaignId).stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public VaccinationResponseDTO getResultByStudentId(Integer studentId) {
+        List<Vaccination> vaccine = vaccinationRepository.findByStudentId(studentId);
+        if(vaccine.isEmpty()) {
+            throw new RuntimeException("No vaccination records found for student id: " + studentId);
+        }
+        Vaccination vaccination = vaccine.get(0); // Assuming you want the first record
+        return mapToResponseDTO(vaccination);
     }
 }
 

@@ -135,4 +135,10 @@ public class VaccinationCampaignController {
     public ResponseEntity<?> getAllVaccinationResults() {
         return ResponseEntity.ok(vaccinationCampaignService.getAllVaccinationResults());
     }
+
+    @GetMapping("/results-campaign/student/{studentId}")
+    @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN')")
+    public ResponseEntity<?> getResultByStudentId(@PathVariable int studentId) {
+        return ResponseEntity.ok(vaccinationCampaignService.getResultByStudentId(studentId));
+    }
 }

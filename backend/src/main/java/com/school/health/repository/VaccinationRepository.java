@@ -22,4 +22,7 @@ public interface VaccinationRepository extends JpaRepository<Vaccination, Intege
     @Query("SELECT v FROM Vaccination v WHERE v.campaign.campaignId = :campaignId")
     List<Vaccination> findByCampaignId(Integer campaignId);
 
+    @Query("SELECT v FROM Vaccination v WHERE v.student.studentId = :studentId")
+    List<Vaccination> findByStudentId(Integer studentId);
+
 }

@@ -140,4 +140,11 @@ public class HealthCheckCampaignController {
         return ResponseEntity.ok(healthCheckCampaignServiceImpl.getAllHealthCheckResults());
     }
 
+    // lấy kết quả chiến dịch bằng studentid
+    @GetMapping("/results-campaign/student/{studentId}")
+    @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN')")
+    public ResponseEntity<?> getResultByStudentId(@PathVariable int studentId) {
+        return ResponseEntity.ok(healthCheckCampaignServiceImpl.getResultByStudentId(studentId));
+    }
+
 }
