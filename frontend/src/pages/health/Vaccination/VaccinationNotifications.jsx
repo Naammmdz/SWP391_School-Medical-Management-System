@@ -17,6 +17,13 @@ const VaccinationNotifications = () => {
   const [responseSuccess, setResponseSuccess] = useState(false);
 
   const token = localStorage.getItem('token');
+  const users = JSON.parse(localStorage.getItem('users') || '[]');
+
+  // Hàm lấy tên người tổ chức từ id
+  const getOrganizerName = (userId) => {
+    const user = users.find(u => u.id === userId);
+    return user ? user.fullName : 'Không xác định';
+  };
 
   // Lấy danh sách chiến dịch tiêm chủng đã duyệt
   const fetchNotifications = async () => {
@@ -32,7 +39,7 @@ const VaccinationNotifications = () => {
         targetGroup: item.targetGroup,
         type: item.type,
         address: item.address,
-        organizer: item.organizer,
+        organizerId: item.approvedBy, // Lưu id người tổ chức
         description: item.description,
         date: item.scheduledDate,
         status: 'Chưa phản hồi',
@@ -238,7 +245,9 @@ const VaccinationNotifications = () => {
                     <div className="info-row">
                       <div className="info-group">
                         <label>Người tổ chức:</label>
-                        <span>{activeNotification.organizer}</span>
+                        <span>
+                          {getOrganizerName(activeNotification.organizerId)}
+                        </span>
                       </div>
                       <div className="info-group">
                         <label>Giấy tờ yêu cầu:</label>

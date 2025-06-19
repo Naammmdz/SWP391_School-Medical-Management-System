@@ -123,7 +123,7 @@ const CreateVaccinationCampaign = () => {
         </div>
         {/* Organizer hiển thị tên người tạo, không cho nhập */}
         <div className="form-group">
-          <label>Người tạo</label>
+          <label>Người tổ chức</label>
           <input
             type="text"
             name="organizer"

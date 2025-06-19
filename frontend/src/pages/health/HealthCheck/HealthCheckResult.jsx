@@ -1,11 +1,14 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Modal, Button, Input, Select, Checkbox, DatePicker, message, Table } from 'antd';
+import { useNavigate } from 'react-router-dom';
 import HealthCheckService from '../../../services/HealthCheckService';
 import dayjs from 'dayjs';
 
 const { Option } = Select;
 
 const HealthCheckResult = () => {
+  const navigate = useNavigate();
+
   // Lấy danh sách học sinh từ localStorage
   const students = JSON.parse(localStorage.getItem('students') || '[]');
   const users = JSON.parse(localStorage.getItem('users') || '[]'); // Giả sử đã lưu users để lấy tên phụ huynh
@@ -14,13 +17,12 @@ const HealthCheckResult = () => {
   const campaigns = JSON.parse(localStorage.getItem('healthCheckCampaigns') || '[]');
   // Map campaignId -> campaignName
   const campaignIdToName = useMemo(() => {
-  const map = {};
-  campaigns.forEach(c => {
-    map[c.campaignId] = c.campaignName;
-  });
-  return map;
-}, [campaigns]);
-console.log('Mapping campaignId -> campaignName:', campaignIdToName);
+    const map = {};
+    campaigns.forEach(c => {
+      map[c.campaignId] = c.campaignName;
+    });
+    return map;
+  }, [campaigns]);
 
   // Hàm lấy tên phụ huynh từ userId
   const getParentName = (parentId) => {
@@ -171,9 +173,6 @@ console.log('Mapping campaignId -> campaignName:', campaignIdToName);
     setLoading(false);
   };
 
-  // Xem kết quả kiểm tra sức khỏe
-
-
   // Cột cho bảng tất cả kết quả kiểm tra sức khỏe
   const columns = [
     { 
@@ -188,13 +187,12 @@ console.log('Mapping campaignId -> campaignName:', campaignIdToName);
       key: 'className',
       render: (studentId) => getStudentInfo(studentId).className
     },
-   {
-  title: 'Chiến dịch',
-  dataIndex: 'campaignId',
-  key: 'campaignId',
-  render: (campaignId) => campaignIdToName[campaignId] || `Mã: ${campaignId}`
-},
-
+    {
+      title: 'Chiến dịch',
+      dataIndex: 'campaignId',
+      key: 'campaignId',
+      render: (campaignId) => campaignIdToName[campaignId] || `Mã: ${campaignId}`
+    },
     { title: 'Ngày khám', dataIndex: 'date', key: 'date' },
     { title: 'Chiều cao (cm)', dataIndex: 'height', key: 'height' },
     { title: 'Cân nặng (kg)', dataIndex: 'weight', key: 'weight' },
@@ -205,6 +203,19 @@ console.log('Mapping campaignId -> campaignName:', campaignIdToName);
     { title: 'Thính lực phải', dataIndex: 'hearingRight', key: 'hearingRight' },
     { title: 'Nhiệt độ', dataIndex: 'temperature', key: 'temperature' },
     { title: 'Ghi chú', dataIndex: 'notes', key: 'notes' },
+    {
+      title: 'Cập nhật',
+      key: 'update',
+      render: (_, record) => (
+        <Button
+          type="dashed"
+          onClick={() => navigate('/capnhatketquakiemtra', { state: { result: record } })}
+        >
+          Cập nhật
+        </Button>
+      ),
+      width: 110
+    }
   ];
 
   return (
@@ -234,7 +245,6 @@ console.log('Mapping campaignId -> campaignName:', campaignIdToName);
                   <Button type="primary" onClick={() => openForm(student)}>
                     Ghi nhận kết quả kiểm tra
                   </Button>
-                 
                 </td>
               </tr>
             ))

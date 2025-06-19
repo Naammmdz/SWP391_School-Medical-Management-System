@@ -41,6 +41,7 @@ import CreateHealthCheck from './pages/health/HealthCheck/CreateHealthCheck';
 
 import HealthCheckResult from './pages/health/HealthCheck/HealthCheckResult';
 import HealthCheckResultStudent from './pages/health/HealthCheck/HealthCheckResultStudent';
+import UpdateHealthCheckResult from './pages/health/HealthCheck/UpdateHealthCheckResult';
 
 // Component ProtectedRoute
 const ProtectedRoute = ({ element, requiredRole }) => {
@@ -74,6 +75,7 @@ function App() {
         
         <Route path="/quanlytiemchung" element={<VaccinationManagement/>}/>
         <Route path="/thongbaotiemchung" element={<VaccinationNotifications/>}/>
+         <Route path ="/taosukientiemchung" element={<CreateVaccinationCampaign/>} />
 
         <Route path="/login" element={<Login />} />
 
@@ -87,6 +89,7 @@ function App() {
         <Route path="/kiemtradinhkyhocsinh" element={<HealthCheck />} />
         <Route path="/ketquakiemtradinhky" element={<HealthCheckResult />} />
         <Route path="/ketquakiemtradinhkyhocsinh" element={<HealthCheckResultStudent />} />
+        <Route path ="/capnhatketquakiemtra" element={<UpdateHealthCheckResult/>} />
 
         <Route path="/capnhatthongtin" element={<UpdateUser/>}/>
         <Route path="/doimatkhau" element={<UpdatePassword/>}/>
@@ -101,7 +104,6 @@ function App() {
         <Route path="/danhsachhocsinh" element={<StudentList/>}/>
         <Route path="/capnhathocsinh/:studentId" element={<UpdateStudent/>}/>
          
-        <Route path ="/taosukientiemchung" element={<CreateVaccinationCampaign/>} />
            
         <Route path="/parent" element={<ProtectedRoute element={<ParentPages/>} requiredRole="ROLE_PARENT" />} />
         <Route path="/nurse" element={<ProtectedRoute element={<NursePages/>} requiredRole="ROLE_NURSE" />} />

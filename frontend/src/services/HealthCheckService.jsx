@@ -94,6 +94,15 @@ const HealthCheckService = {
       throw error;
     }
   },
+  updateHealthCheckResult: async (id, result, config) => {
+    try {
+      const response = await axios.put(`${API_URL}/${id}/update`, result, config);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating health check result:', error);
+      throw error;
+    }
+  },
 };
 
 export default HealthCheckService;
