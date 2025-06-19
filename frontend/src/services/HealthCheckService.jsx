@@ -85,6 +85,15 @@ const HealthCheckService = {
       throw error;
     }
   },
+  getResultByStudentId: async (studentId, config) => {
+    try {
+      const response = await axios.get(`${API_URL}/results-campaign/student/${studentId}`, config);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching health check results by student ID:', error);
+      throw error;
+    }
+  },
 };
 
 export default HealthCheckService;

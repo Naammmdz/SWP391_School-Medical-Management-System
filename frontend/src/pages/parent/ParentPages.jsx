@@ -255,7 +255,7 @@ export default function ParentPages() {
               <div className="resource-info">
                 <h3>Kết Quả Kiểm Tra Định Kỳ</h3>
                 <p className="resource-date">Xem và xác nhận kết quả kiểm tra sức khỏe</p>
-                <Link to="/ketquakiemtradinhky" className="btn btn-sm">
+                <Link to="/ketquakiemtradinhkyhocsinh" className="btn btn-sm">
                   Xem chi tiết
                 </Link>
               </div>
