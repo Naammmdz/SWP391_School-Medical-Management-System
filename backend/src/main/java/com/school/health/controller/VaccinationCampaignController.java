@@ -80,7 +80,7 @@ public class VaccinationCampaignController {
 
     // Lấy danh sách chiến dịch tiêm chủng đã được phê duyệt
     @GetMapping("/approved")
-    @PreAuthorize("hasRole('PARENT')")
+    @PreAuthorize("hasRole('PARENT') or hasRole('NURSE')")
     public ResponseEntity<?> getApprovedVaccinationCampaigns() {
         return ResponseEntity.ok(vaccinationCampaignService.getApprovedVaccination());
     }

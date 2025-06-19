@@ -45,5 +45,5 @@ public interface HealthCheckCampaignService {
 
     List<HealthCheckResponseDTO> getAllHealthCheckResults();
 
-    HealthCheckResponseDTO getResultByStudentId(Integer studentId);
+    List<HealthCheckResponseDTO> getResultByStudentId(Integer studentId);
 }

@@ -239,13 +239,12 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
     }
 
     @Override
-    public VaccinationResponseDTO getResultByStudentId(Integer studentId) {
+    public List<VaccinationResponseDTO> getResultByStudentId(Integer studentId) {
         List<Vaccination> vaccine = vaccinationRepository.findByStudentId(studentId);
-        if(vaccine.isEmpty()) {
-            throw new RuntimeException("No vaccination records found for student id: " + studentId);
+        if(vaccine.isEmpty()){
+            throw new RuntimeException("Vaccination not found : " + studentId);
         }
-        Vaccination vaccination = vaccine.get(0); // Assuming you want the first record
-        return mapToResponseDTO(vaccination);
+        return vaccine.stream().map(this::mapToResponseDTO).collect(Collectors.toList());
     }
 }
 

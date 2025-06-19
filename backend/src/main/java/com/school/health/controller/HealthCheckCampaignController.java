@@ -85,7 +85,7 @@ public class HealthCheckCampaignController {
 
     // Xem danh sách các chiến dịch đã được phê duyệt APRROVED dành cho phụ huynh
     @GetMapping("/approved")
-    @PreAuthorize("hasRole('PARENT')")
+    @PreAuthorize("hasRole('PARENT') or hasRole('NURSE')")
     public ResponseEntity<?> getApprovedCampaign() {
         return ResponseEntity.ok(healthCheckCampaignServiceImpl.getApprovedCampaigns());
     }

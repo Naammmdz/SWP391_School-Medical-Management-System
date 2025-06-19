@@ -45,5 +45,5 @@ public interface VaccinationCampaignService {
 
     List<VaccinationResponseDTO> getVaccinationResults(Integer campaignId);
 
-    VaccinationResponseDTO getResultByStudentId(Integer studentId);
+    List<VaccinationResponseDTO> getResultByStudentId(Integer studentId);
 }

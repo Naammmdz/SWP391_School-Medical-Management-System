@@ -259,14 +259,13 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
     }
 
     @Override
-    public HealthCheckResponseDTO getResultByStudentId(Integer studentId) {
+    public List<HealthCheckResponseDTO> getResultByStudentId(Integer studentId) {
         List<HealthCheck> healthChecks = healthCheckRepository.findByStudentId(studentId);
         if (healthChecks.isEmpty()) {
             throw new RuntimeException("No health check results found for student with ID: " + studentId);
         }
-        // Assuming you want the latest health check result
-        HealthCheck latestHealthCheck = healthChecks.get(healthChecks.size() - 1);
-        return mapToHealthCheckResponseDTO(latestHealthCheck);
+
+        return healthChecks.stream().map(this::mapToHealthCheckResponseDTO).collect(Collectors.toList());
     }
 }
 
