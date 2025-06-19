@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Table, Tag, Button, Modal, Space, Typography, Popconfirm, message } from 'antd';
+import { Card, Table, Tag, Button, Modal, Space, Typography, Popconfirm, message, Input } from 'antd';
 import { CheckCircleOutlined, DeleteOutlined, EditOutlined, UserOutlined, TeamOutlined, InfoCircleOutlined, MedicineBoxOutlined } from '@ant-design/icons';
 import MedicineDeclarationService from '../../services/MedicineDeclarationService';
+import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
 
@@ -16,6 +17,11 @@ const MedicineDeclarationsList = () => {
   const [loading, setLoading] = useState(true);
   const [viewDetail, setViewDetail] = useState(null);
   const [studentClassMap, setStudentClassMap] = useState({});
+  const [markTakenLoading, setMarkTakenLoading] = useState(false);
+  const [markTakenNotes, setMarkTakenNotes] = useState('');
+  const [markTakenModal, setMarkTakenModal] = useState(false);
+  const [selectedSubmission, setSelectedSubmission] = useState(null);
+
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const isParent = user.userRole === 'ROLE_PARENT';
 
@@ -49,43 +55,36 @@ const MedicineDeclarationsList = () => {
   }, []);
 
   // Cập nhật trạng thái đơn thuốc
-const updateStatus = async (id, status) => {
-  try {
-    const token = localStorage.getItem('token');
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-
-    // Validate dữ liệu đầu vào
-    if (!status) {
-      message.error("Trạng thái không hợp lệ!");
-      return;
-    }
-
-    // Tạo đúng payload mà backend yêu cầu
-    const payload = {
-      submissionStatus: status.toUpperCase(), // ví dụ: 'APPROVED'
-      approvedBy: user.id || 0, // nếu backend dùng 0 hoặc lấy từ token cũng được
-      approvedAt: new Date().toISOString().split('T')[0], // format yyyy-MM-dd
-    };
-
-    await MedicineDeclarationService.updateMedicineSubmissionStatus(
-      id,
-      payload,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+  const updateStatus = async (id, status) => {
+    try {
+      const token = localStorage.getItem('token');
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      if (!status) {
+        message.error("Trạng thái không hợp lệ!");
+        return;
       }
-    );
-
-    message.success('Cập nhật trạng thái thành công!');
-    fetchData();
-  } catch (err) {
-    console.error("Chi tiết lỗi:", err.response?.data || err);
-    message.error('Cập nhật trạng thái thất bại!');
-  }
-};
-
+      const payload = {
+        submissionStatus: status.toUpperCase(),
+        approvedBy: user.id || 0,
+        approvedAt: new Date().toISOString().split('T')[0],
+      };
+      await MedicineDeclarationService.updateMedicineSubmissionStatus(
+        id,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      message.success('Cập nhật trạng thái thành công!');
+      fetchData();
+    } catch (err) {
+      console.error("Chi tiết lỗi:", err.response?.data || err);
+      message.error('Cập nhật trạng thái thất bại!');
+    }
+  };
 
   // Xóa đơn thuốc
   const deleteSubmission = async (id) => {
@@ -99,6 +98,32 @@ const updateStatus = async (id, status) => {
     } catch (err) {
       message.error('Xóa đơn thuốc thất bại!');
     }
+  };
+
+  // Gọi API markMedicineTaken
+  const handleMarkTaken = async () => {
+    if (!selectedSubmission) return;
+    setMarkTakenLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const nurse = JSON.parse(localStorage.getItem('user') || '{}');
+      const data = {
+        givenByUserId: nurse.id,
+        givenAt: dayjs().format('YYYY-MM-DD'),
+        notes: markTakenNotes
+      };
+      await MedicineDeclarationService.markMedicineTaken(selectedSubmission.id, data, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      message.success('Đã ghi nhận học sinh đã uống thuốc!');
+      setMarkTakenModal(false);
+      setMarkTakenNotes('');
+      setSelectedSubmission(null);
+      fetchData();
+    } catch (err) {
+      message.error('Ghi nhận uống thuốc thất bại!');
+    }
+    setMarkTakenLoading(false);
   };
 
   const columns = [
@@ -229,6 +254,18 @@ const updateStatus = async (id, status) => {
             >
               Từ chối
             </Button>
+            <Button
+              icon={<MedicineBoxOutlined />}
+              size="small"
+              type="dashed"
+              onClick={() => {
+                setSelectedSubmission(record);
+                setMarkTakenModal(true);
+              }}
+              disabled={record.submissionStatus !== 'APPROVED'}
+            >
+              Cho uống thuốc
+            </Button>
             <Popconfirm
               title="Bạn chắc chắn muốn xóa đơn thuốc này?"
               onConfirm={() => deleteSubmission(record.id)}
@@ -246,7 +283,7 @@ const updateStatus = async (id, status) => {
           </Space>
         );
       },
-      width: 200
+      width: 260
     }
   ];
 
@@ -305,6 +342,39 @@ const updateStatus = async (id, status) => {
             </ul>
           </div>
         )}
+      </Modal>
+
+      {/* Modal cho uống thuốc */}
+      <Modal
+        open={markTakenModal}
+        title={
+          <span>
+            <MedicineBoxOutlined /> Ghi nhận học sinh đã uống thuốc
+          </span>
+        }
+        onCancel={() => {
+          setMarkTakenModal(false);
+          setMarkTakenNotes('');
+          setSelectedSubmission(null);
+        }}
+        onOk={handleMarkTaken}
+        confirmLoading={markTakenLoading}
+        okText="Xác nhận đã uống"
+        cancelText="Hủy"
+        width={400}
+      >
+        <p>
+          <b>Học sinh:</b> {selectedSubmission?.studentName}
+        </p>
+        <p>
+          <b>Y tá cho uống thuốc:</b> {user.fullName}
+        </p>
+        <Input.TextArea
+          rows={3}
+          placeholder="Ghi chú (nếu có)"
+          value={markTakenNotes}
+          onChange={e => setMarkTakenNotes(e.target.value)}
+        />
       </Modal>
     </div>
   );

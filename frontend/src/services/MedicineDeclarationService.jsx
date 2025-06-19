@@ -40,6 +40,16 @@ updateMedicineSubmissionStatus: async (id, data, config) => {
     console.error("Error deleting medicine submission:", error);
     throw error;
   }
+ },
+
+ markMedicineTaken: async (id, data, config) => {
+  try {
+    const response = await axios.post(`${API_URL}/${id}/mark-taken`, data, config);
+    return response.data;
+  } catch (error) {
+    console.error("Error marking medicine as taken:", error.response?.data || error);
+    throw error;
+  }
  }
 
 }

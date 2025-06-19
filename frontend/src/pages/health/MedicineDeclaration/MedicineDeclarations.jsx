@@ -19,9 +19,9 @@ const MedicineDeclarations = () => {
   });
   
   // Medicine detail mẫu
-  const [medicineDetails, setMedicineDetails] = useState([
-    { medicineName: '', medicineDosage: '' }
-  ]);
+  // const [medicineDetails, setMedicineDetails] = useState([
+  //   { medicineName: '', medicineDosage: '' }
+  // ]);
 
   const [formData, setFormData] = useState({
     instruction: '',
@@ -50,21 +50,21 @@ const MedicineDeclarations = () => {
   }, [selectedStudentId]);
 
   // Medicine detail handlers
-  const handleMedicineDetailChange = (idx, e) => {
-    const { name, value } = e.target;
-    const newDetails = [...medicineDetails];
-    newDetails[idx][name] = value;
-    setMedicineDetails(newDetails);
-  };
+  // const handleMedicineDetailChange = (idx, e) => {
+  //   const { name, value } = e.target;
+  //   const newDetails = [...medicineDetails];
+  //   newDetails[idx][name] = value;
+  //   setMedicineDetails(newDetails);
+  // };
 
-  const addMedicineDetail = () => {
-    setMedicineDetails([...medicineDetails, { medicineName: '', medicineDosage: '' }]);
-  };
+  // const addMedicineDetail = () => {
+  //   setMedicineDetails([...medicineDetails, { medicineName: '', medicineDosage: '' }]);
+  // };
 
-  const removeMedicineDetail = (idx) => {
-    const newDetails = medicineDetails.filter((_, i) => i !== idx);
-    setMedicineDetails(newDetails);
-  };
+  // const removeMedicineDetail = (idx) => {
+  //   const newDetails = medicineDetails.filter((_, i) => i !== idx);
+  //   setMedicineDetails(newDetails);
+  // };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -75,37 +75,36 @@ const MedicineDeclarations = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (
-      !studentInfo.studentId ||
-      !formData.instruction ||
-      !formData.startDate ||
-      !formData.endDate ||
-      !medicineDetails.length ||
-      medicineDetails.some(md => !md.medicineName || !md.medicineDosage)
-    ) {
-      toast.error('Vui lòng nhập đầy đủ thông tin bắt buộc');
-      return;
-    }
+  // Không kiểm tra medicineDetails nữa
+  if (
+    !studentInfo.studentId ||
+    !formData.instruction ||
+    !formData.startDate ||
+    !formData.endDate
+  ) {
+    toast.error('Vui lòng nhập đầy đủ thông tin bắt buộc');
+    return;
+  }
 
-    const duration =
-      formData.startDate && formData.endDate
-        ? Math.max(
-            1,
-            Math.ceil(
-              (new Date(formData.endDate) - new Date(formData.startDate)) /
-                (1000 * 60 * 60 * 24) +
-                1
-            )
+  const duration =
+    formData.startDate && formData.endDate
+      ? Math.max(
+          1,
+          Math.ceil(
+            (new Date(formData.endDate) - new Date(formData.startDate)) /
+              (1000 * 60 * 60 * 24) +
+              1
           )
-        : 1;
+        )
+      : 1;
 
     // Chuẩn hóa medicineDetails chỉ lấy medicineName, medicineDosage
-    const medicineDetailsPayload = medicineDetails.map(md => ({
-      medicineName: md.medicineName,
-      medicineDosage: md.medicineDosage
-    }));
+    // const medicineDetailsPayload = medicineDetails.map(md => ({
+    //   medicineName: md.medicineName,
+    //   medicineDosage: md.medicineDosage
+    // }));
 
     // Chuẩn hóa payload đúng yêu cầu backend
     const payload = {
@@ -115,7 +114,7 @@ const MedicineDeclarations = () => {
       startDate: formData.startDate,
       endDate: formData.endDate,
       notes: formData.notes,
-      medicineDetails: medicineDetailsPayload
+      // medicineDetails: medicineDetailsPayload
     };
 const token = localStorage.getItem('token');
 
@@ -142,7 +141,7 @@ const token = localStorage.getItem('token');
       endDate: '',
       notes: ''
     });
-    setMedicineDetails([{ medicineName: '', medicineDosage: '' }]);
+    // setMedicineDetails([{ medicineName: '', medicineDosage: '' }]);
     setSubmitSuccess(true);
     toast.success('Khai báo thuốc đã được gửi thành công!');
     setTimeout(() => setSubmitSuccess(false), 5000);
@@ -286,7 +285,7 @@ const token = localStorage.getItem('token');
             ></textarea>
           </div>
 
-          <h2>Chi tiết thuốc <span className="required">*</span></h2>
+          {/* <h2>Chi tiết thuốc <span className="required">*</span></h2>
           {medicineDetails.map((md, idx) => (
             <div className="medicine-detail-row" key={idx}>
               <div className="form-row">
@@ -324,7 +323,7 @@ const token = localStorage.getItem('token');
           ))}
           <button type="button" className="add-medicine-btn" onClick={addMedicineDetail}>
             Thêm thuốc
-          </button>
+          </button> */}
 
           <div className="form-actions">
             <button type="submit" className="submit-button" disabled={isSubmitting}>
