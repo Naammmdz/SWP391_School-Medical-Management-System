@@ -5,6 +5,7 @@ import com.school.health.dto.request.HealthCheckRequestDTO;
 import com.school.health.dto.response.HealthCampaignResponseDTO;
 import com.school.health.enums.Status;
 import com.school.health.security.services.UserDetailsImpl;
+import com.school.health.service.HealthCheckCampaignService;
 import com.school.health.service.impl.HealthCheckCampaignServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+
 @RequestMapping("/api/healthcheck-campaigns")
 @RestController
 @Validated
@@ -22,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 @CrossOrigin(origins = "*", maxAge = 3600) // Cho phép React frontend gọi API
 public class HealthCheckCampaignController {
     private final HealthCheckCampaignServiceImpl healthCheckCampaignServiceImpl;
+    private final HealthCheckCampaignService healthCheckCampaignService;
 
     // tạo chiến dịch sức khỏe
     @PostMapping
@@ -107,7 +111,7 @@ public class HealthCheckCampaignController {
     @PutMapping("/{healthcheckId}/update")
     @PreAuthorize("hasRole('PARENT') or hasRole('NURSE') or hasRole('ADMIN')")
     public ResponseEntity<?> updateStudentHealthCampaign(@PathVariable @Valid int healthcheckId, @RequestBody @Valid HealthCheckRequestDTO dto) {
-        return ResponseEntity.ok(healthCheckCampaignServiceImpl.updateStudentHealthCampaign(healthcheckId,dto));
+        return ResponseEntity.ok(healthCheckCampaignServiceImpl.updateStudentHealthCampaign(healthcheckId, dto));
     }
 
     // phụ huynh xem chiến dịch mà học sinh đã đăng ký
@@ -145,6 +149,17 @@ public class HealthCheckCampaignController {
     @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN')")
     public ResponseEntity<?> getResultByStudentId(@PathVariable @Valid int studentId) {
         return ResponseEntity.ok(healthCheckCampaignServiceImpl.getResultByStudentId(studentId));
+    }
+
+    @GetMapping("/filter/result")
+    @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN') or hasRole('NURSE')")
+    public ResponseEntity<?> getResultWithFilter(@RequestParam(required = false) LocalDate startDate, @RequestParam(required = false) LocalDate endDate, @RequestParam(required = false) boolean consultationAppointment) {
+        if (startDate != null && endDate != null) {
+            if (startDate.isAfter(endDate)) {
+                throw new RuntimeException("startDate is after endDate");
+            }
+        }
+        return ResponseEntity.ok(healthCheckCampaignService.getResultWithFilterDate(startDate, endDate, consultationAppointment));
     }
 
 }

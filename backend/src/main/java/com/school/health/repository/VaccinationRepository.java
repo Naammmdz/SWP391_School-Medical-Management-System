@@ -1,5 +1,6 @@
 package com.school.health.repository;
 
+import com.school.health.entity.HealthCheck;
 import com.school.health.entity.Student;
 import com.school.health.entity.Vaccination;
 
@@ -7,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 
@@ -25,4 +27,6 @@ public interface VaccinationRepository extends JpaRepository<Vaccination, Intege
     @Query("SELECT v FROM Vaccination v WHERE v.student.studentId = :studentId")
     List<Vaccination> findByStudentId(Integer studentId);
 
+    @Query("SELECT hc FROM Vaccination hc WHERE :startDate <= hc.date AND hc.date <= :endDate")
+    List<Vaccination> findResultWithDate(LocalDate startDate, LocalDate endDate);
 }

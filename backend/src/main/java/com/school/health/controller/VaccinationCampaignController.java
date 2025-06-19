@@ -14,6 +14,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+
 @RestController
 @RequestMapping("/api/vaccination-campaigns")
 @CrossOrigin(origins = "*")
@@ -140,5 +142,16 @@ public class VaccinationCampaignController {
     @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN')")
     public ResponseEntity<?> getResultByStudentId(@PathVariable @Valid int studentId) {
         return ResponseEntity.ok(vaccinationCampaignService.getResultByStudentId(studentId));
+    }
+
+    @GetMapping("/filter/result")
+    @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN') or hasRole('NURSE')")
+    public ResponseEntity<?> getResultWithFilter(@RequestParam(required = false) LocalDate startDate, @RequestParam(required = false) LocalDate endDate) {
+        if (startDate != null && endDate != null) {
+            if (startDate.isAfter(endDate)) {
+                throw new RuntimeException("startDate is after endDate");
+            }
+        }
+        return ResponseEntity.ok(vaccinationCampaignService.getResultWithFilterDate(startDate, endDate));
     }
 }

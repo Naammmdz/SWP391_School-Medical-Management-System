@@ -264,8 +264,12 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
         if (healthChecks.isEmpty()) {
             throw new RuntimeException("No health check results found for student with ID: " + studentId);
         }
-
         return healthChecks.stream().map(this::mapToHealthCheckResponseDTO).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<HealthCheckResponseDTO> getResultWithFilterDate(LocalDate startDate, LocalDate endDate,boolean consultationAppointment) {
+        return healthCheckRepository.findResultWithDate( startDate, endDate , consultationAppointment).stream().map(this::mapToHealthCheckResponseDTO).collect(Collectors.toList());
     }
 }
 

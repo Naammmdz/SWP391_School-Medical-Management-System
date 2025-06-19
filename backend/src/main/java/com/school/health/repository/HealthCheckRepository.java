@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Repository
@@ -19,5 +20,8 @@ public interface HealthCheckRepository extends JpaRepository<HealthCheck, Intege
     // Lấy hết các HealthCheck của một học sinh theo studentId
     @Query("SELECT hc FROM HealthCheck hc WHERE hc.student.studentId = :studentId")
     List<HealthCheck> findByStudentId(Integer studentId);
+
+    @Query("SELECT hc FROM HealthCheck hc WHERE :startDate <= hc.date AND hc.date <= :endDate OR hc.consultationAppointment = :consultationAppointment")
+    List<HealthCheck> findResultWithDate(LocalDate startDate, LocalDate endDate,boolean consultationAppointment);
 }
 

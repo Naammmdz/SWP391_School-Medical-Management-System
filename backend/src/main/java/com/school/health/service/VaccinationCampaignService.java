@@ -2,6 +2,7 @@ package com.school.health.service;
 
 import com.school.health.dto.request.VaccinationCampaignRequestDTO;
 import com.school.health.dto.request.VaccinationRequestDTO;
+import com.school.health.dto.response.HealthCheckResponseDTO;
 import com.school.health.dto.response.StudentResponseDTO;
 import com.school.health.dto.response.VaccinationCampaignResponseDTO;
 import com.school.health.dto.response.VaccinationResponseDTO;
@@ -10,6 +11,7 @@ import com.school.health.entity.Vaccination;
 import com.school.health.entity.VaccinationCampaign;
 import com.school.health.enums.Status;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface VaccinationCampaignService {
@@ -46,4 +48,7 @@ public interface VaccinationCampaignService {
     List<VaccinationResponseDTO> getVaccinationResults(Integer campaignId);
 
     List<VaccinationResponseDTO> getResultByStudentId(Integer studentId);
+
+    List<VaccinationResponseDTO> getResultWithFilterDate(LocalDate startDate, LocalDate endDate);
+
 }

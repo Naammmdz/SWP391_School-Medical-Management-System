@@ -2,6 +2,7 @@ package com.school.health.service.impl;
 
 import com.school.health.dto.request.VaccinationCampaignRequestDTO;
 import com.school.health.dto.request.VaccinationRequestDTO;
+import com.school.health.dto.response.HealthCheckResponseDTO;
 import com.school.health.dto.response.StudentResponseDTO;
 import com.school.health.dto.response.VaccinationCampaignResponseDTO;
 import com.school.health.dto.response.VaccinationResponseDTO;
@@ -246,6 +247,11 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
             throw new RuntimeException("Vaccination not found : " + studentId);
         }
         return vaccine.stream().map(this::mapToResponseDTO).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<VaccinationResponseDTO> getResultWithFilterDate(LocalDate startDate, LocalDate endDate) {
+        return vaccinationRepository.findResultWithDate( startDate, endDate ).stream().map(this::mapToResponseDTO).collect(Collectors.toList());
     }
 }
 
