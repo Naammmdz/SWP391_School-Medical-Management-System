@@ -57,6 +57,7 @@ public class VaccinationCampaignController {
     // Cập nhật trạng thái thành APPROVED của chiến dịch tiêm chủng
     @PutMapping("/{campaignId}/approve")
 //    @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE')")
+    @PreAuthorize("hasRole('PRINCIPAL')")
     public ResponseEntity<?> approveVaccinationCampaign(@PathVariable int campaignId, Authentication authentication) {
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
         Integer approvedBy = userPrincipal.getId();

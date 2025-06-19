@@ -10,6 +10,7 @@ import com.school.health.entity.Vaccination;
 import com.school.health.entity.VaccinationCampaign;
 import com.school.health.enums.Status;
 import com.school.health.repository.StudentRepository;
+import com.school.health.repository.UserRepository;
 import com.school.health.repository.VaccinationCampaignRepository;
 import com.school.health.repository.VaccinationRepository;
 import com.school.health.service.VaccinationCampaignService;
@@ -19,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,6 +30,8 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
     private final VaccinationCampaignRepository vaccinationCampaignRepository;
     private final VaccinationRepository vaccinationRepository;
     private final StudentRepository studentRepository;
+    private final NotificationServiceImpl notificationService;
+    private final UserRepository userRepository;
 
     @Override
     public VaccinationCampaignResponseDTO createVaccinationCampaign(VaccinationCampaignRequestDTO vaccinationCampaignRequestDTO, int createdBy) {
@@ -104,7 +108,74 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
 
         campaign.setApprovedBy(approvedBy);
         campaign.setStatus(Status.APPROVED);
+
         VaccinationCampaign approvedCampaign = vaccinationCampaignRepository.save(campaign);
+        // Gửi đến yta/ admin đã tạo chiến dịch về tình trạng chiến dich
+        notificationService.createNotification(campaign.getCreatedBy(),"Chiến dịch: "+campaign.getCampaignName()+" đã được phê duyệt", "Chiến dịch: "+campaign.getCampaignName()+" đã được phê duyệt bởi "+userRepository.findByUserId(approvedBy).orElseThrow().getFullName()+" vui lòng kiểm tra!");
+        //Gửi noti đến người dùng có con trong target group
+        String[] targetGroup = campaign.getTargetGroup().split(",");
+       for (String group : targetGroup) {
+           group = group.trim();
+           if(group.length()==1){
+               List<Student> studentList = studentRepository.findByGrade(group);
+               for(Student student : studentList){
+                   notificationService.createNotification(student.getParent().getUserId(),"[THÔNG BÁO] Triển khai chiến dịch tiêm chủng tại trường!","Kính gửi Quý Phụ huynh,\n" +
+                           "\n" +
+                           "Nhằm tăng cường sức khỏe và phòng ngừa dịch bệnh cho học sinh, nhà trường phối hợp với Trung tâm Y tế địa phương tổ chức chiến dịch tiêm chủng định kỳ cho các em học sinh.\n" +
+                           "\n" +
+                           "Thông tin chi tiết như sau:\n" +
+                           "\n" +
+                           "Thời gian: "+campaign.getScheduledDate()+ "\n" +
+                           "\n" +
+                           "Địa điểm: "+campaign.getAddress()+"\n" +
+                           "\n" +
+                           "Một số thông tin khác: "+campaign.getDescription()+"\n" +
+                           "\n" +
+                           "Lưu ý:\n" +
+                           "\n" +
+                           "Phụ huynh vui lòng kiểm tra và xác nhận đồng ý tiêm chủng trước "+campaign.getScheduledDate().minusDays(2)+ "\n" +
+                           "\n" +
+                           "Đảm bảo học sinh ăn sáng đầy đủ trước khi tiêm.\n" +
+                           "\n" +
+                           "Học sinh cần mang theo sổ y bạ (nếu có).\n" +
+                           "\n" +
+                           "Sự phối hợp của Quý Phụ huynh sẽ góp phần quan trọng vào thành công của chương trình và sức khỏe của các em học sinh.\n" +
+                           "\n" +
+                           "Trân trọng cảm ơn!\n" +
+                           "\n" +
+                           "Ban Giám hiệu");
+               }
+           } else if(group.length()==2){
+               List<Student> studentList = studentRepository.findByClassName(group);
+               for(Student student : studentList){
+                   notificationService.createNotification(student.getParent().getUserId(),"[THÔNG BÁO] Triển khai chiến dịch tiêm chủng tại trường!","Kính gửi Quý Phụ huynh,\n" +
+                           "\n" +
+                           "Nhằm tăng cường sức khỏe và phòng ngừa dịch bệnh cho học sinh, nhà trường phối hợp với Trung tâm Y tế địa phương tổ chức chiến dịch tiêm chủng định kỳ cho các em học sinh.\n" +
+                           "\n" +
+                           "Thông tin chi tiết như sau:\n" +
+                           "\n" +
+                           "Thời gian: "+campaign.getScheduledDate()+ "\n" +
+                           "\n" +
+                           "Địa điểm: "+campaign.getAddress()+"\n" +
+                           "\n" +
+                           "Một số thông tin khác: "+campaign.getDescription()+"\n" +
+                           "\n" +
+                           "Lưu ý:\n" +
+                           "\n" +
+                           "Phụ huynh vui lòng kiểm tra và xác nhận đồng ý tiêm chủng trước "+campaign.getScheduledDate().minusDays(2)+ "\n" +
+                           "\n" +
+                           "Đảm bảo học sinh ăn sáng đầy đủ trước khi tiêm.\n" +
+                           "\n" +
+                           "Học sinh cần mang theo sổ y bạ (nếu có).\n" +
+                           "\n" +
+                           "Sự phối hợp của Quý Phụ huynh sẽ góp phần quan trọng vào thành công của chương trình và sức khỏe của các em học sinh.\n" +
+                           "\n" +
+                           "Trân trọng cảm ơn!\n" +
+                           "\n" +
+                           "Ban Giám hiệu");
+               }
+           }
+       }
         return mapToResponseDTO(approvedCampaign);
     }
 

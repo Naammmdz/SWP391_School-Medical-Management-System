@@ -22,6 +22,12 @@ public interface StudentRepository extends JpaRepository<Student, Integer> {
     // Tìm học sinh theo lớp
     List<Student> findByClassName(String className);
 
+    // Tìm học sinh theo khối
+    @Query("SELECT s FROM Student s WHERE s.className like '%:gradeNumber%'")
+    List<Student> findByGrade(@Param("gradeNumber") String gradeNumber);
+
+
+
     // Tìm học sinh theo tên (không phân biệt hoa thường)
     List<Student> findByFullNameContainingIgnoreCase(String fullName);
 
