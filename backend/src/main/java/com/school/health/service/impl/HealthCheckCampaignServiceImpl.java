@@ -184,6 +184,7 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
 
     public HealthCheckResponseDTO mapToHealthCheckResponseDTO(HealthCheck healthCheck) {
         HealthCheckResponseDTO responseDTO = new HealthCheckResponseDTO();
+        responseDTO.setHealthCheckId(healthCheck.getCheckId());
         responseDTO.setCampaignId(healthCheck.getCampaign().getCampaignId());
         responseDTO.setStudentId(healthCheck.getStudent().getStudentId());
         responseDTO.setDate(healthCheck.getDate());
@@ -254,7 +255,6 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
     public List<HealthCheckResponseDTO> getAllHealthCheckResults() {
         return healthCheckRepository.findAll().stream()
                 .map(this::mapToHealthCheckResponseDTO)
-//                .filter( name -> name.getCampaignId() > 1)
                 .collect(Collectors.toList());
     }
 

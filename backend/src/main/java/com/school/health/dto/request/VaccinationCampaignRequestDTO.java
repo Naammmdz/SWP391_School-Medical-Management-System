@@ -14,9 +14,13 @@ import java.time.LocalDate;
 public class VaccinationCampaignRequestDTO {
     @NotBlank(message = "Tên chiến dịch không được để trống")
     private String campaignName;
+    @NotBlank(message = "không được để trống")
     private String targetGroup;
+    @NotBlank(message = "không được để trống")
     private String type;
+    @NotBlank(message = "không được để trống")
     private String address; // địa điểm tổ chức khám
+    @NotBlank(message = "không được để trống")
     private String organizer; // người thực hiện chiến dịch
     private String description;
     @NotNull(message = "Ngày tiêm chủng không được để trống")

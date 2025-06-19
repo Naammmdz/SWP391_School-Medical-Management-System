@@ -19,12 +19,19 @@ public class HealthCheckRequestDTO {
     @Positive(message = "Cân nặng phải lớn hơn 0")
     private double weight;
     //
+    @NotBlank(message = "Không được để trống")
     private String eyesightLeft;
+    @NotBlank(message = "Không được để trống")
     private String eyesightRight;
+    @NotBlank(message = "Không được để trống")
     private String bloodPressure;
+    @NotBlank(message = "Không được để trống")
     private String hearingLeft;
+    @NotBlank(message = "Không được để trống")
     private String hearingRight;
+    @NotBlank(message = "Không được để trống")
     private String temperature;
+    @NotBlank(message = "Không được để trống")
     private boolean consultationAppointment;
     //
     private String notes;

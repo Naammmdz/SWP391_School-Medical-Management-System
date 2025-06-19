@@ -170,6 +170,7 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
 
     public VaccinationResponseDTO mapToResponseDTO(Vaccination vaccination) {
         VaccinationResponseDTO responseDTO = new VaccinationResponseDTO();
+        responseDTO.setVaccinationId(vaccination.getVaccinationId());
         responseDTO.setCampaignId(vaccination.getCampaign().getCampaignId());
         responseDTO.setStudentId(vaccination.getStudent().getStudentId());
         responseDTO.setVaccineName(vaccination.getVaccineName());

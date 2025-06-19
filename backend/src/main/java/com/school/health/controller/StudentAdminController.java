@@ -37,26 +37,26 @@ public class StudentAdminController {
 
     @GetMapping("list/{studentId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> getStudentById(@PathVariable Integer studentId) {
+    public ResponseEntity<?> getStudentById(@PathVariable @Valid Integer studentId) {
         return ResponseEntity.ok(studentService.getStudentById(studentId));
     }
 
     @PutMapping("/{studentId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> updateStudent(@PathVariable Integer studentId, @RequestBody @Valid StudentRequestDTO studentRequest) {
+    public ResponseEntity<?> updateStudent(@PathVariable @Valid Integer studentId, @RequestBody @Valid StudentRequestDTO studentRequest) {
         return ResponseEntity.ok(studentService.updateStudent(studentId, studentRequest));
     }
 
     @DeleteMapping("/{studentId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> deleteStudent(@PathVariable Integer studentId) {
+    public ResponseEntity<?> deleteStudent(@PathVariable @Valid Integer studentId) {
         studentService.deleteStudent(studentId);
         return ResponseEntity.ok("Xóa học sinh thành công");
     }
 
     @GetMapping("/{parentId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> getStudentsByParentId(@PathVariable Integer parentId) {
+    public ResponseEntity<?> getStudentsByParentId(@PathVariable @Valid Integer parentId) {
         return ResponseEntity.ok(studentService.getStudentsByParentId(parentId));
     }
 
