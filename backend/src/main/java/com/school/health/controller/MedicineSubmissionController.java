@@ -76,7 +76,16 @@ public class MedicineSubmissionController {
             @PathVariable Integer id,
             Authentication authentication) {
 
-        MedicineSubmissionResponse medicineSubmissionResponse = medicineSubmissionService.getById(id);
+        boolean includeLogsData = authUtils.hasRole(authentication, "NURSE");
+        MedicineSubmissionResponse medicineSubmissionResponse;
+
+        if (includeLogsData) {
+            medicineSubmissionResponse = medicineSubmissionService.getByIdForNurse(id);
+        } else {
+            medicineSubmissionResponse = medicineSubmissionService.getById(id);
+        }
+
+
         Integer currentUserId = authUtils.getCurrentUserId(authentication);
 
         // Kiểm tra quyền truy cập

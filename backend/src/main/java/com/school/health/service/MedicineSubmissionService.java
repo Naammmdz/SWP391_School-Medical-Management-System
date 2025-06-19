@@ -18,6 +18,7 @@ public interface MedicineSubmissionService {
     List<MedicineSubmissionResponse> getAllForNurse(Integer studentId, Integer parentId, String status);
     HealthDashboardResponse getHealthDashboard();
     MedicineLogResponse markMedicineTaken(Integer submissionId, MedicineLogRequest request);
+    MedicineSubmissionResponse getByIdForNurse(Integer id);
 
     // ADMIN operations
     List<MedicineSubmissionResponse> getAllForAdmin(Integer studentId, Integer parentId, String status);

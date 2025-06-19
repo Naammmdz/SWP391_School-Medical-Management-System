@@ -8,6 +8,7 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -29,7 +30,7 @@ public class MedicineSubmission {
     private User parent;
 
     @CreationTimestamp
-    @Column(name = "SubmissionDate", nullable = false)
+    @Column(name = "SubmissionDate", length = 1000,nullable = false)
     private LocalDate submissionDate;
 
     @Column(name = "Instruction", length = 255)
@@ -62,9 +63,22 @@ public class MedicineSubmission {
     @Column(name = "CreatedAt")
     private LocalDate createdAt;
 
-    @OneToMany(mappedBy = "medicineSubmission", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<MedicineDetail> medicineDetails;
+//    @OneToMany(mappedBy = "medicineSubmission", cascade = CascadeType.ALL, orphanRemoval = true)
+//    private List<MedicineDetail> medicineDetails;
 
     @OneToMany(mappedBy = "medicineSubmission", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MedicineLog> medicineLogs;
+
+    public void addMedicineLog(MedicineLog log) {
+        if (medicineLogs == null) {
+            medicineLogs = new ArrayList<>();
+        }
+        medicineLogs.add(log);
+        log.setMedicineSubmission(this);
+    }
+
+    public void removeMedicineLog(MedicineLog log) {
+        medicineLogs.remove(log);
+        log.setMedicineSubmission(null);
+    }
 }

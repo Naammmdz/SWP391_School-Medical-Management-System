@@ -14,11 +14,11 @@ public class MedicineSubmissionRequest {
     private Integer studentId;
 
     @NotBlank(message = "Hướng dẫn sử dụng không được để trống")
-    @Size(max = 255, message = "Hướng dẫn không được quá 255 ký tự")
+    @Size(max = 1000, message = "Hướng dẫn không được quá 255 ký tự")
     private String instruction;
 
-    @Min(value = 1, message = "Thời gian dùng thuốc phải là số dương")
-    private Integer duration;
+//    @Min(value = 1, message = "Thời gian dùng thuốc phải là số dương")
+//    private Integer duration;
 
     @NotNull
     @FutureOrPresent(message = "Ngày bắt đầu phải là ngày hiện tại hoặc tương lai")
@@ -30,6 +30,6 @@ public class MedicineSubmissionRequest {
     @Size(max = 500)
     private String notes;
 
-    @NotEmpty
-    private List<MedicineDetailRequest> medicineDetails;
+//    @NotEmpty
+//    private List<MedicineDetailRequest> medicineDetails;
 }

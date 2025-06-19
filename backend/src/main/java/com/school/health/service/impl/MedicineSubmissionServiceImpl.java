@@ -18,7 +18,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -57,27 +59,40 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
             throw new AccessDeniedException("You are not allowed to submit medicine for this student.");
         }
 
+        // Calculate duration based on start and end dates
+        int duration = (int) ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate()) + 1;
+
         //Create a new MedicineSubmission entity
         MedicineSubmission medicineSubmission = new MedicineSubmission();
         medicineSubmission.setStudent(student.get());
         medicineSubmission.setParent(parent.get());
         medicineSubmission.setInstruction(request.getInstruction());
-        medicineSubmission.setDuration(request.getDuration());
+        medicineSubmission.setDuration(duration);
         medicineSubmission.setStartDate(request.getStartDate());
         medicineSubmission.setEndDate(request.getEndDate());
         medicineSubmission.setNotes(request.getNotes());
         medicineSubmission.setSubmissionStatus(MedicineSubmissionStatus.PENDING);
 
         //Map the medicine details from request to entity
-        List<MedicineDetail> medicineDetails = request.getMedicineDetails().stream()
-                .map(detail -> {
-                    MedicineDetail medicineDetail = new MedicineDetail();
-                    medicineDetail.setMedicineName(detail.getMedicineName());
-                    medicineDetail.setMedicineDosage(detail.getMedicineDosage());
-                    medicineDetail.setMedicineSubmission(medicineSubmission);
-                    return medicineDetail;
-                }).collect(Collectors.toList());
-        medicineSubmission.setMedicineDetails(medicineDetails);
+//        List<MedicineDetail> medicineDetails = request.getMedicineDetails().stream()
+//                .map(detail -> {
+//                    MedicineDetail medicineDetail = new MedicineDetail();
+//                    medicineDetail.setMedicineName(detail.getMedicineName());
+//                    medicineDetail.setMedicineDosage(detail.getMedicineDosage());
+//                    medicineDetail.setMedicineSubmission(medicineSubmission);
+//                    return medicineDetail;
+//                }).collect(Collectors.toList());
+//        medicineSubmission.setMedicineDetails(medicineDetails);
+
+        // Create medicine logs for each day
+        LocalDate currentDate = request.getStartDate();
+        while (!currentDate.isAfter(request.getEndDate())) {
+            MedicineLog log = new MedicineLog();
+            log.setGivenAt(currentDate);
+            log.setStatus(false);
+            medicineSubmission.addMedicineLog(log);
+            currentDate = currentDate.plusDays(1);
+        }
 
         //Save the MedicineSubmission entity
         medicineSubmissionRepository.save(medicineSubmission);
@@ -85,7 +100,7 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
         return toResponse(medicineSubmission);
     }
 
-    private MedicineSubmissionResponse toResponse(MedicineSubmission submission) {
+    private MedicineSubmissionResponse toResponse(MedicineSubmission submission, boolean includeLogsData) {
         MedicineSubmissionResponse resp = new MedicineSubmissionResponse();
         resp.setId(submission.getMedicineSubmissionId());
         resp.setStudentId(submission.getStudent().getStudentId());
@@ -103,18 +118,31 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
             resp.setApprovedByName(submission.getApprovedBy().getFullName());
         }
         resp.setApprovedAt(submission.getApprovedAt());
-        resp.setMedicineDetails(
-                submission.getMedicineDetails() != null ?
-                        submission.getMedicineDetails().stream().map(detail -> {
-                            MedicineDetailResponse d = new MedicineDetailResponse();
-                            d.setId(detail.getId());
-                            d.setMedicineName(detail.getMedicineName());
-                            d.setMedicineDosage(detail.getMedicineDosage());
-                            return d;
-                        }).collect(Collectors.toList())
-                        : Collections.emptyList()
-        );
+//        resp.setMedicineDetails(
+//                submission.getMedicineDetails() != null ?
+//                        submission.getMedicineDetails().stream().map(detail -> {
+//                            MedicineDetailResponse d = new MedicineDetailResponse();
+//                            d.setId(detail.getId());
+//                            d.setMedicineName(detail.getMedicineName());
+//                            d.setMedicineDosage(detail.getMedicineDosage());
+//                            return d;
+//                        }).collect(Collectors.toList())
+//                        : Collections.emptyList()
+//        );
+
+        // Chỉ bao gồm logs cho NURSE
+        if (includeLogsData) {
+            resp.setMedicineLogs(submission.getMedicineLogs().stream()
+                    .map(this::toLogResponse)
+                    .sorted(Comparator.comparing(MedicineLogResponse::getGivenAt))
+                    .collect(Collectors.toList()));
+        }
+
         return resp;
+    }
+
+    private MedicineSubmissionResponse toResponse(MedicineSubmission submission) {
+        return toResponse(submission, false);
     }
 
 
@@ -344,11 +372,17 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
         User givenBy = userRepository.findById(request.getGivenByUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + request.getGivenByUserId()));
 
-        MedicineLog log = new MedicineLog();
-        log.setMedicineSubmission(submission);
+        // Find and update existing log for the given date
+        MedicineLog log = submission.getMedicineLogs().stream()
+                .filter(l -> l.getGivenAt().equals(request.getGivenAt()))
+                .findFirst()
+                .orElseThrow(() -> new BadRequestException("Không tìm thấy lịch uống thuốc cho ngày: " + request.getGivenAt()));
+
+        // Update the log details
         log.setGivenBy(givenBy);
-        log.setGivenAt(request.getGivenAt());
+//        log.setGivenAt(request.getGivenAt());
         log.setNotes(request.getNotes());
+        log.setStatus(true); // Mark as taken
 
         medicineLogRepository.save(log);
 
@@ -363,6 +397,15 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
         response.setGivenByName(log.getGivenBy().getFullName());
         response.setGivenAt(log.getGivenAt());
         response.setNotes(log.getNotes());
+        response.setStatus(log.isStatus());
         return response;
+    }
+
+    @Override
+    public MedicineSubmissionResponse getByIdForNurse(Integer id) {
+        MedicineSubmission submission = medicineSubmissionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Submission not found: " + id));
+
+        return toResponse(submission, true);
     }
 }

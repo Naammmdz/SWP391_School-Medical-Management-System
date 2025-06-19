@@ -1,5 +1,6 @@
 package com.school.health.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -21,5 +22,7 @@ public class MedicineSubmissionResponse {
     private Integer approvedBy;
     private String approvedByName;
     private LocalDate approvedAt;
-    private List<MedicineDetailResponse> medicineDetails;
+//    private List<MedicineDetailResponse> medicineDetails;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private List<MedicineLogResponse> medicineLogs;
 }

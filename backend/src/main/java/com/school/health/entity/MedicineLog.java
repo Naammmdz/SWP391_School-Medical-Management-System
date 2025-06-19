@@ -20,7 +20,7 @@ public class MedicineLog {
     private MedicineSubmission medicineSubmission;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "GivenByUserId", referencedColumnName = "UserId", nullable = false)
+    @JoinColumn(name = "GivenByUserId", referencedColumnName = "UserId", nullable = true)
     private User givenBy;
 
     @Column(name = "GivenAt", nullable = false)
@@ -28,4 +28,7 @@ public class MedicineLog {
 
     @Column(name = "Notes", length = 500)
     private String notes;
+
+    @Column(name = "Status", nullable = false)
+    private boolean status = false;
 }
