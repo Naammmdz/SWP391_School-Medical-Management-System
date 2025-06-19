@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import HealthCheckService from '../../../services/HealthCheckService';
 import './HealthCheckList.css';
+
 const HealthCheckList = () => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const token = localStorage.getItem('token');
@@ -9,11 +10,13 @@ const HealthCheckList = () => {
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
- const users = JSON.parse(localStorage.getItem('users') || '[]');
-const getUserNameById = (id) => {
-  const user = users.find(u => String(u.id) === String(id));
-  return user ? user.fullName : id;
-};
+  const users = JSON.parse(localStorage.getItem('users') || '[]');
+
+  const getUserNameById = (id) => {
+    const user = users.find(u => String(u.id) === String(id));
+    return user ? user.fullName : id;
+  };
+
   useEffect(() => {
     const fetchCampaigns = async () => {
       setLoading(true);
@@ -22,7 +25,15 @@ const getUserNameById = (id) => {
         const data = await HealthCheckService.getAllHealthCheckCampaign({
           headers: { Authorization: `Bearer ${token}` }
         });
+          console.log('Dữ liệu chiến dịch trả về từ backend:', data);
+          data.forEach(c => {
+  if (typeof c.campaignName !== 'string') {
+    console.warn('❗ Lỗi: campaignName không phải chuỗi:', c.campaignName);
+  }
+});
         setCampaigns(data);
+        localStorage.setItem('healthCheckCampaigns', JSON.stringify(data));
+
       } catch (err) {
         setError('Không thể tải danh sách chiến dịch!');
       }
@@ -31,7 +42,7 @@ const getUserNameById = (id) => {
     if (
       user.userRole === 'ROLE_ADMIN' ||
       user.userRole === 'ROLE_NURSE' ||
-      user.userRole === 'ROLE_PRICIPAL' 
+      user.userRole === 'ROLE_PRICIPAL'
     ) {
       fetchCampaigns();
     }
@@ -44,6 +55,13 @@ const getUserNameById = (id) => {
   ) {
     return <div>Bạn không có quyền truy cập trang này.</div>;
   }
+
+  // Hàm lưu thông tin chiến dịch vào localStorage
+  const handleUpdateClick = (campaign) => {
+    localStorage.setItem('selectedCampaignId', campaign.campaignId);
+    localStorage.setItem('selectedCampaign', JSON.stringify(campaign));
+    navigate('/capnhatkiemtradinhky');
+  };
 
   return (
     <div className="health-check-list-container">
@@ -88,10 +106,7 @@ const getUserNameById = (id) => {
                   <td>
                     <button
                       className="btn btn-warning btn-sm"
-                      onClick={() => {
-                        localStorage.setItem('selectedCampaignId', c.campaignId);
-                        navigate('/capnhatkiemtradinhky');
-                      }}
+                      onClick={() => handleUpdateClick(c)}
                     >
                       Update
                     </button>
@@ -100,7 +115,7 @@ const getUserNameById = (id) => {
               ))
             ) : (
               <tr>
-                <td colSpan={8}>Không có chiến dịch nào.</td>
+                <td colSpan={9}>Không có chiến dịch nào.</td>
               </tr>
             )}
           </tbody>

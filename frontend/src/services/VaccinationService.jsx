@@ -25,6 +25,10 @@ const VaccinationService = {
     }, 
     deleteVaccinationCampaign: (id, config) => {
         return axios.delete(`${vaccinationApiUrl}/${id}`, config);
-    }
+    },
+    getVaccinationCampaignApproved: (config) => {
+        return axios.get(`${vaccinationApiUrl}/approved`, config);
+    },
+
 }
 export default VaccinationService;

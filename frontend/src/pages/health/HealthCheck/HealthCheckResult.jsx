@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Modal, Button, Input, Select, Checkbox, DatePicker, message, Table } from 'antd';
 import HealthCheckService from '../../../services/HealthCheckService';
 import dayjs from 'dayjs';
@@ -10,10 +10,30 @@ const HealthCheckResult = () => {
   const students = JSON.parse(localStorage.getItem('students') || '[]');
   const users = JSON.parse(localStorage.getItem('users') || '[]'); // Giả sử đã lưu users để lấy tên phụ huynh
 
+  // Lấy danh sách chiến dịch đã duyệt từ localStorage (nếu có)
+  const campaigns = JSON.parse(localStorage.getItem('healthCheckCampaigns') || '[]');
+  // Map campaignId -> campaignName
+  const campaignIdToName = useMemo(() => {
+  const map = {};
+  campaigns.forEach(c => {
+    map[c.campaignId] = c.campaignName;
+  });
+  return map;
+}, [campaigns]);
+console.log('Mapping campaignId -> campaignName:', campaignIdToName);
+
   // Hàm lấy tên phụ huynh từ userId
   const getParentName = (parentId) => {
     const parent = users.find(u => u.id === parentId);
     return parent ? parent.fullName : 'Không xác định';
+  };
+
+  // Hàm lấy thông tin học sinh từ studentId
+  const getStudentInfo = (studentId) => {
+    const student = students.find(s => String(s.studentId) === String(studentId));
+    return student
+      ? { fullName: student.fullName, className: student.className }
+      : { fullName: 'Không xác định', className: 'Không xác định' };
   };
 
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -152,26 +172,29 @@ const HealthCheckResult = () => {
   };
 
   // Xem kết quả kiểm tra sức khỏe
-  const openResultModal = async (student, campaignId) => {
-    setHealthResult(null);
-    setSelectedStudent(student);
-    setSelectedCampaignId(campaignId);
-    setResultModalOpen(true);
-    try {
-      const token = localStorage.getItem('token');
-      const config = { headers: { Authorization: `Bearer ${token}` } };
-      const result = await HealthCheckService.getHealthCheckResult(student.studentId, campaignId, config);
-      setHealthResult(result);
-    } catch (err) {
-      setHealthResult({ error: 'Không tìm thấy kết quả.' });
-    }
-  };
+
 
   // Cột cho bảng tất cả kết quả kiểm tra sức khỏe
   const columns = [
-    { title: 'Học sinh', dataIndex: 'studentName', key: 'studentName' },
-    { title: 'Lớp', dataIndex: 'className', key: 'className' },
-    { title: 'Chiến dịch', dataIndex: 'campaignName', key: 'campaignName' },
+    { 
+      title: 'Học sinh', 
+      dataIndex: 'studentId', 
+      key: 'studentId',
+      render: (studentId) => getStudentInfo(studentId).fullName
+    },
+    { 
+      title: 'Lớp', 
+      dataIndex: 'studentId', 
+      key: 'className',
+      render: (studentId) => getStudentInfo(studentId).className
+    },
+   {
+  title: 'Chiến dịch',
+  dataIndex: 'campaignId',
+  key: 'campaignId',
+  render: (campaignId) => campaignIdToName[campaignId] || `Mã: ${campaignId}`
+},
+
     { title: 'Ngày khám', dataIndex: 'date', key: 'date' },
     { title: 'Chiều cao (cm)', dataIndex: 'height', key: 'height' },
     { title: 'Cân nặng (kg)', dataIndex: 'weight', key: 'weight' },
@@ -211,19 +234,7 @@ const HealthCheckResult = () => {
                   <Button type="primary" onClick={() => openForm(student)}>
                     Ghi nhận kết quả kiểm tra
                   </Button>
-                  <Select
-                    placeholder="Xem kết quả"
-                    style={{ width: 140, marginLeft: 8 }}
-                    onChange={(campaignId) => openResultModal(student, campaignId)}
-                    allowClear
-                    size="small"
-                  >
-                    {approvedCampaigns.map(c => (
-                      <Option key={c.campaignId} value={c.campaignId}>
-                        {c.campaignName}
-                      </Option>
-                    ))}
-                  </Select>
+                 
                 </td>
               </tr>
             ))
@@ -367,6 +378,9 @@ const HealthCheckResult = () => {
             <div style={{ color: 'red' }}>{healthResult.error}</div>
           ) : (
             <div>
+              <p><b>Họ tên:</b> {getStudentInfo(healthResult.studentId).fullName}</p>
+              <p><b>Lớp:</b> {getStudentInfo(healthResult.studentId).className}</p>
+              <p><b>Chiến dịch:</b> {campaignIdToName[healthResult.campaignId] || healthResult.campaignId}</p>
               <p><b>Ngày khám:</b> {healthResult.date}</p>
               <p><b>Chiều cao:</b> {healthResult.height} cm</p>
               <p><b>Cân nặng:</b> {healthResult.weight} kg</p>
