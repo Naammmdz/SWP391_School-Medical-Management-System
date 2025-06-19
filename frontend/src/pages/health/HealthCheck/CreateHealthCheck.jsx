@@ -30,30 +30,32 @@ const CreateHealthCheck = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSuccessMsg('');
-    setErrorMsg('');
-   try {
- await HealthCheckService.createHealthCheckCampaign(
-  form, // truyền body trước
-  { headers: { Authorization: `Bearer ${token}` } } // truyền config sau
-);
+  e.preventDefault();
+  setSuccessMsg('');
+  setErrorMsg('');
+  try {
+    // Gửi status là PENDING khi tạo chiến dịch
+    const submitData = { ...form, status: 'PENDING' };
+    await HealthCheckService.createHealthCheckCampaign(
+      submitData, // truyền body trước
+      { headers: { Authorization: `Bearer ${token}` } } // truyền config sau
+    );
 
-  setSuccessMsg('Tạo chiến dịch kiểm tra sức khỏe thành công!');
-  setForm({
-    campaignName: '',
-    targetGroup: '',
-    type: '',
-    address: '',
-    description: '',
-    scheduledDate: '',
-    status: 'CRAFT',
-    organizer: nurse.id || ''
-  });
-} catch (err) {
-  setErrorMsg('Tạo chiến dịch thất bại!');
-}
-  };
+    setSuccessMsg('Tạo chiến dịch kiểm tra sức khỏe thành công!');
+    setForm({
+      campaignName: '',
+      targetGroup: '',
+      type: '',
+      address: '',
+      description: '',
+      scheduledDate: '',
+      status: 'CRAFT',
+      organizer: nurse.id || ''
+    });
+  } catch (err) {
+    setErrorMsg('Tạo chiến dịch thất bại!');
+  }
+};
 
   return (
     <div className="health-check-container">

@@ -151,9 +151,9 @@ export default function NursePages() {
                   <span className="resource-type guide">Xem</span>
                 </div>
                 <div className="resource-info">
-                  <h3>Khai Báo Thuốc</h3>
+                  <h3>Xem đơn thuốc</h3>
                   <p className="resource-date">Xem khai báo thuốc từ phụ huynh</p>
-                  <Link to="/khaibaothuoc" className="btn btn-sm">
+                  <Link to="/donthuoc" className="btn btn-sm">
                     Xem chi tiết
                   </Link>
                 </div>
@@ -170,6 +170,21 @@ export default function NursePages() {
                   <h3>Sự Kiện Y Tế</h3>
                   <p className="resource-date">Quản lý và tạo sự kiện y tế</p>
                   <Link to="/sukienyte" className="btn btn-sm">
+                    Quản lý
+                  </Link>
+                </div>
+              </div>
+
+                <div className="resource-card">
+                <div className="resource-thumbnail">
+                <img src="https://img.freepik.com/premium-vector/customers-filling-up-survey-form-vector-illustration-flat_186332-1263.jpg?w=360" alt="Sự Kiện Y Tế" />
+
+                  <span className="resource-type document">Quản lý</span>
+                </div>
+                <div className="resource-info">
+                  <h3>Kết Quả Kiểm Tra Y Tế</h3>
+                  <p className="resource-date">Kết quả kiểm tra y tế</p>
+                  <Link to="/ketquakiemtradinhky" className="btn btn-sm">
                     Quản lý
                   </Link>
                 </div>

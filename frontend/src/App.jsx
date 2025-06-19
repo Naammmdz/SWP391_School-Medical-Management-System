@@ -69,6 +69,8 @@ function App() {
         <Route path="/sukienyte" element={<MedicalEvents/>}/>
         <Route path="/khaibaothuoc" element={<MedicineDeclarations/>}/>
         <Route path="/quanlythuoc" element={<Pharmaceutical/>}/>
+
+        
         <Route path="/quanlytiemchung" element={<VaccinationManagement/>}/>
         <Route path="/thongbaotiemchung" element={<VaccinationNotifications/>}/>
 
