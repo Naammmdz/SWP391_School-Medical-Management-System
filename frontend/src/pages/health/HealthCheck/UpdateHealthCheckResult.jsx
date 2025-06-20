@@ -14,6 +14,7 @@ const UpdateHealthCheckResult = () => {
       message.error('Không tìm thấy dữ liệu kết quả kiểm tra!');
       navigate('/ketquakiemtradinhky');
     }
+    console.log('Received result:', result);
   }, [result, navigate]);
 
   const [form] = Form.useForm();
@@ -63,7 +64,7 @@ const UpdateHealthCheckResult = () => {
       };
 
       const token = localStorage.getItem('token');
-      await HealthCheckService.updateHealthCheckResult(result.id, payload, {
+      await HealthCheckService.updateHealthCheckResult(result.healthCheckId, payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
       message.success('Cập nhật kết quả thành công!');

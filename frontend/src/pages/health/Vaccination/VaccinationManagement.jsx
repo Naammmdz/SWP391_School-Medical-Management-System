@@ -21,12 +21,19 @@ const statusOptions = [
   { value: 'APPROVED', label: 'Chấp nhận' },
   { value: 'CANCELLED', label: 'Hủy' }
 ];
+
 const VaccinationManagement = () => {
+  const navigate = useNavigate();
+  const users = JSON.parse(localStorage.getItem('users') || '[]');
   // State for vaccination events list
   const [vaccinationEvents, setVaccinationEvents] = useState([]);
-   const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
   const isAdmin = user.userRole === 'ROLE_ADMIN';
-
+  const getOrganizerName = (organizerId) => {
+    if (!organizerId) return '';
+    const user = users.find(u => u.id === organizerId || u.userId === organizerId);
+    return user ? user.fullName || user.name : organizerId;
+  };
   // State for current event form
   const [currentEvent, setCurrentEvent] = useState({
     id: null,
@@ -42,7 +49,8 @@ const VaccinationManagement = () => {
     vaccineBatch: '',
     manufacturer: '',
     doseAmount: '',
-    requiredDocuments: ''
+    requiredDocuments: '',
+    organizer: '',
   });
   const [selectedStudents, setSelectedStudents] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -51,7 +59,6 @@ const VaccinationManagement = () => {
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [responseModalOpen, setResponseModalOpen] = useState(false);
   const [currentStudentResponses, setCurrentStudentResponses] = useState([]);
-  const navigate = useNavigate();
   const [filters, setFilters] = useState({
     searchTerm: '',
     status: '',
@@ -78,10 +85,7 @@ const VaccinationManagement = () => {
       const response = await VaccinationService.getAllVaccinationCampaigns({
         headers: { Authorization: `Bearer ${token}` }
       });
-      // Giả sử backend trả về mảng các chiến dịch tiêm chủng
-      // Nếu cần map lại dữ liệu cho phù hợp với form mẫu thì xử lý ở đây
       const data = Array.isArray(response.data) ? response.data : response.data.content || [];
-      // Map dữ liệu backend sang đúng định dạng form mẫu nếu cần
       const mappedData = data.map((item, idx) => ({
         id: item.id || item.campaignId || idx + 1,
         title: item.campaignName || '',
@@ -96,6 +100,7 @@ const VaccinationManagement = () => {
         vaccineBatch: item.vaccineBatch || '',
         manufacturer: item.manufacturer || '',
         doseAmount: item.doseAmount || '',
+        organizer: item.organizer || item.approvedBy || '', // id người tổ chức
         requiredDocuments: item.requiredDocuments || '',
         responses: item.responses || {
           total: 0,
@@ -107,28 +112,24 @@ const VaccinationManagement = () => {
       setVaccinationEvents(mappedData);
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching vaccination events:', error);
       setLoading(false);
     }
   };
-  
-  
-    useEffect(() => {
+
+  useEffect(() => {
     fetchVaccinationEvents();
   }, []);
 
-const approveVaccinationCampaign = async (event) => {
+  const approveVaccinationCampaign = async (event) => {
     if (!window.confirm('Bạn có chắc muốn duyệt chiến dịch này?')) return;
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      // Gửi request approve tới backend
       await VaccinationService.approveVaccinationCampaign(
         event.id,
         { status: 'APPROVED' },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      // Cập nhật trạng thái trên frontend
       setVaccinationEvents((prev) =>
         prev.map((e) =>
           e.id === event.id ? { ...e, status: 'APPROVED' } : e
@@ -140,20 +141,10 @@ const approveVaccinationCampaign = async (event) => {
     setLoading(false);
   };
 
-
   // Update vaccination event
-
   const updateVaccinationEvent = async (id, updatedEvent) => {
     setLoading(true);
     try {
-      // API call would go here
-      // const response = await fetch(`api/vaccination-events/${id}`, {
-      //   method: 'PUT',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(updatedEvent)
-      // });
-      // const data = await response.json();
-      
       setVaccinationEvents(
         vaccinationEvents.map(event => 
           event.id === id ? {...updatedEvent, id, responses: event.responses} : event
@@ -163,29 +154,21 @@ const approveVaccinationCampaign = async (event) => {
       setEditing(false);
       resetForm();
       setFormSubmitted(true);
-      
-      // Hide success message after 3 seconds
       setTimeout(() => {
         setFormSubmitted(false);
       }, 3000);
-      
       setLoading(false);
     } catch (error) {
       console.error('Error updating vaccination event:', error);
       setLoading(false);
     }
   };
-  
+
   // Delete vaccination event
   const deleteVaccinationEvent = async (id) => {
     if (window.confirm('Bạn có chắc muốn xóa sự kiện tiêm chủng này?')) {
       setLoading(true);
       try {
-        // API call would go here
-        // await fetch(`api/vaccination-events/${id}`, {
-        //   method: 'DELETE'
-        // });
-        
         setVaccinationEvents(vaccinationEvents.filter(event => event.id !== id));
         setLoading(false);
       } catch (error) {
@@ -194,14 +177,12 @@ const approveVaccinationCampaign = async (event) => {
       }
     }
   };
-  
+
   // Open form to edit event
   const editVaccinationEvent = (event) => {
-    setEditing(true);
-    setCurrentEvent({...event});
-    setModalOpen(true);
+    navigate('/capnhatthongtintiemchung', { state: { event } });
   };
-  
+
   // Reset form fields
   const resetForm = () => {
     setCurrentEvent({
@@ -222,35 +203,33 @@ const approveVaccinationCampaign = async (event) => {
     });
     setSelectedStudents([]);
   };
-  
+
   // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setCurrentEvent({...currentEvent, [name]: value});
   };
-  
+
   // Handle filter changes
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters({...filters, [name]: value});
   };
-  
+
   // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
-    
     if (!currentEvent.title || !currentEvent.vaccineType || !currentEvent.scheduledDate) {
       alert('Vui lòng điền đầy đủ các trường bắt buộc');
       return;
     }
-    
     if (editing) {
       updateVaccinationEvent(currentEvent.id, currentEvent);
     } else {
       createVaccinationEvent(currentEvent);
     }
   };
-  
+
   // Open notification form modal
   const openNotificationModal = (event) => {
     setNotification({
@@ -264,30 +243,17 @@ const approveVaccinationCampaign = async (event) => {
     });
     setNotificationModalOpen(true);
   };
-  
+
   // Send notifications to parents
   const sendNotifications = async (e) => {
     e.preventDefault();
-    
     if (!notification.subject || !notification.message || !notification.deadlineDate) {
       alert('Vui lòng điền đầy đủ thông tin thông báo');
       return;
     }
-    
     setLoading(true);
     try {
-      // API call would go here
-      // const response = await fetch('api/vaccination-notifications', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(notification)
-      // });
-      // const data = await response.json();
-      
-      // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Update local state to reflect notifications sent
       const updatedEvents = vaccinationEvents.map(event => {
         if (event.id === notification.eventId) {
           return {
@@ -298,7 +264,6 @@ const approveVaccinationCampaign = async (event) => {
         }
         return event;
       });
-      
       setVaccinationEvents(updatedEvents);
       setNotificationModalOpen(false);
       alert('Thông báo đã được gửi thành công đến phụ huynh!');
@@ -309,10 +274,9 @@ const approveVaccinationCampaign = async (event) => {
       setLoading(false);
     }
   };
-  
+
   // Open responses modal to see parent responses
   const viewResponses = (event) => {
-    // Mock student responses for this event
     const mockResponses = [
       { id: 1, studentName: 'Nguyễn Văn A', className: '10A1', status: 'Xác nhận', parentNote: 'Con đã tiêm đầy đủ', responseDate: '2023-09-10' },
       { id: 2, studentName: 'Trần Thị B', className: '10A1', status: 'Từ chối', parentNote: 'Con bị dị ứng với thành phần vắc-xin', responseDate: '2023-09-11' },
@@ -320,11 +284,10 @@ const approveVaccinationCampaign = async (event) => {
       { id: 4, studentName: 'Phạm Thị D', className: '10A2', status: 'Chưa phản hồi', parentNote: '', responseDate: '' },
       { id: 5, studentName: 'Hoàng Văn E', className: '10A3', status: 'Xác nhận', parentNote: 'Cần theo dõi sau tiêm do có tiền sử dị ứng', responseDate: '2023-09-10' },
     ];
-    
     setCurrentStudentResponses(mockResponses);
     setResponseModalOpen(true);
   };
-  
+
   // Apply filters to the vaccination events list
   const filteredEvents = vaccinationEvents.filter(event => {
     return (
@@ -338,102 +301,24 @@ const approveVaccinationCampaign = async (event) => {
     );
   });
 
-  // Fetch data on component mount
-  useEffect(() => {
-    fetchVaccinationEvents();
-  }, []);
-
   // Handle notification input changes
   const handleNotificationChange = (e) => {
     const { name, value } = e.target;
     setNotification({...notification, [name]: value});
   };
-
   return (
     <div className="nurse-page vaccination-management-page">
       <h1 className="page-title">Quản lý tiêm chủng</h1>
       
       {/* Success message */}
-      {formSubmitted && (
-        <div className="success-message">
-          <p>{editing ? 'Cập nhật sự kiện tiêm chủng thành công!' : 'Tạo sự kiện tiêm chủng thành công!'}</p>
-        </div>
-      )}
-      
-      {/* Filters */}
-      <div className="filters-container">
-        <div className="search-box">
-          <input 
-            type="text"
-            name="searchTerm"
-            placeholder="Tìm kiếm theo tiêu đề hoặc loại vắc-xin"
-            value={filters.searchTerm}
-            onChange={handleFilterChange}
-          />
-          <Search size={20} className="search-icon" />
-        </div>
-        <div className="filter-options">
-          <select 
-            name="status" 
-            value={filters.status}
-            onChange={handleFilterChange}
-          >
-            <option value="">Tất cả trạng thái</option>
-            <option value="Sắp tới">Sắp tới</option>
-            <option value="Hoàn thành">Hoàn thành</option>
-            <option value="Đã hủy">Đã hủy</option>
-          </select>
-          
-          <select 
-            name="vaccineType" 
-            value={filters.vaccineType}
-            onChange={handleFilterChange}
-          >
-            <option value="">Tất cả loại vắc-xin</option>
-            {vaccineTypes.map(type => (
-              <option key={type.value} value={type.value}>{type.label}</option>
-            ))}
-          </select>
-          
-          <div className="date-filters">
-            <input 
-              type="date" 
-              name="fromDate"
-              value={filters.fromDate}
-              onChange={handleFilterChange}
-              placeholder="Từ ngày"
-            />
-            <span>đến</span>
-            <input 
-              type="date" 
-              name="toDate"
-              value={filters.toDate}
-              onChange={handleFilterChange}
-              placeholder="Đến ngày"
-            />
-          </div>
-        </div>
-      </div>
-      
-      {/* Add vaccination event button */}
-     <button
-  className="btn btn-primary"
-  onClick={() => navigate('/taosukientiemchung')}
->
-  Tạo sự kiện tiêm chủng
-</button>
-      
-      {/* Vaccination events table */}
-      {loading ? (
-        <div className="loading">Đang tải dữ liệu...</div>
-      ) : (
-        <table className="events-table">
+      <table className="events-table">
         <thead>
           <tr>
             <th>Tiêu đề</th>
             <th>Loại vắc-xin</th>
             <th>Ngày tiêm</th>
             <th>Đối tượng</th>
+            <th>Người tổ chức</th>
             <th>Trạng thái</th>
             <th>Phản hồi</th>
             <th>Thao tác</th>
@@ -446,7 +331,8 @@ const approveVaccinationCampaign = async (event) => {
                 <td>{event.title}</td>
                 <td>{event.vaccineType}</td>
                 <td>{new Date(event.scheduledDate).toLocaleDateString('vi-VN')} {event.scheduledTime}</td>
-                <td>{event.targetGroup}</td>
+                <td>{event.targetClass}</td>
+                <td>{getOrganizerName(event.organizer)}</td>
                 <td>
                   <span className={`status ${
                     event.status === 'Hoàn thành' ? 'complete' : 
@@ -481,7 +367,6 @@ const approveVaccinationCampaign = async (event) => {
                   <button className="view-btn" onClick={() => viewResponses(event)}>
                     <FileText size={16} />
                   </button>
-                  {/* Nút Chấp nhận chỉ hiển thị cho admin và khi chưa duyệt */}
                   {isAdmin && event.status !== 'APPROVED' && (
                     <button
                       className="approve-btn"
@@ -497,12 +382,12 @@ const approveVaccinationCampaign = async (event) => {
             ))
           ) : (
             <tr>
-              <td colSpan="7" className="no-data">Không có dữ liệu sự kiện tiêm chủng</td>
+              <td colSpan="8" className="no-data">Không có dữ liệu sự kiện tiêm chủng</td>
             </tr>
           )}
         </tbody>
       </table>
-      )}
+      
       
       {/* Vaccination Event Modal */}
       {modalOpen && (
