@@ -89,7 +89,7 @@ const VaccinationManagement = () => {
       const mappedData = data.map((item, idx) => ({
         id: item.id || item.campaignId || idx + 1,
         title: item.campaignName || '',
-        vaccineType: item.vaccineType || '',
+        vaccineType: item.type || '',
         description: item.description || '',
         scheduledDate: item.scheduledDate || '',
         scheduledTime: item.scheduledTime || '09:00',
@@ -109,6 +109,7 @@ const VaccinationManagement = () => {
           pending: 0
         }
       }));
+      console.log('Fetched vaccination events:', mappedData);
       setVaccinationEvents(mappedData);
       setLoading(false);
     } catch (error) {

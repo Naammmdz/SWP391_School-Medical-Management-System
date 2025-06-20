@@ -12,7 +12,10 @@ const UpdatetVaccination = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
-  // Lấy thông tin sự kiện từ danh sách mappedData giống như fetchVaccinationEvents
+  // Lấy tên người tổ chức từ localStorage (giả sử lưu user hiện tại)
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const organizerName = user.fullName || user.name || '';
+
   useEffect(() => {
     const fetchEventDetail = async () => {
       if (!event) {
@@ -33,10 +36,17 @@ const UpdatetVaccination = () => {
           targetGroup: item.targetGroup || '',
           type: item.type || '',
           address: item.address || '',
-          organizer: item.organizer || '',
+          organizer: item.organizer || organizerName,
           description: item.description || '',
           scheduledDate: item.scheduledDate || '',
           status: item.status || '',
+          // Các trường bị comment và không update
+          // vaccineType: item.vaccineType || '',
+          // notes: item.notes || '',
+          // vaccineBatch: item.vaccineBatch || '',
+          // manufacturer: item.manufacturer || '',
+          // doseAmount: item.doseAmount || '',
+          // requiredDocuments: item.requiredDocuments || '',
         }));
         // Tìm sự kiện theo id
         const found = mappedData.find(
@@ -81,14 +91,15 @@ const UpdatetVaccination = () => {
         organizer: values.organizer,
         description: values.description,
         scheduledDate: values.scheduledDate ? values.scheduledDate.format('YYYY-MM-DD') : '',
-        status: values.status,
+        status: values.status, // giữ nguyên, không cho chỉnh sửa
+        // Các trường đã comment sẽ không gửi lên backend
       };
       const token = localStorage.getItem('token');
       await VaccinationService.updateVaccinationCampaign(event.id || event.campaignId, payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
       message.success('Cập nhật thông tin tiêm chủng thành công!');
-      navigate('/danhsachtiemchung');
+      navigate('/quanlytiemchung');
     } catch (err) {
       message.error('Cập nhật thất bại!');
     }
@@ -109,14 +120,14 @@ const UpdatetVaccination = () => {
           <Form.Item label="Nhóm đối tượng" name="targetGroup" rules={[{ required: true, message: 'Vui lòng nhập nhóm đối tượng' }]}>
             <Input />
           </Form.Item>
-          <Form.Item label="Loại chiến dịch" name="type" rules={[{ required: true, message: 'Vui lòng nhập loại chiến dịch' }]}>
+          <Form.Item label="Loại Vaccin" name="type" rules={[{ required: true, message: 'Vui lòng nhập loại chiến dịch' }]}>
             <Input />
           </Form.Item>
           <Form.Item label="Địa điểm" name="address" rules={[{ required: true, message: 'Vui lòng nhập địa điểm' }]}>
             <Input />
           </Form.Item>
-          <Form.Item label="Người tổ chức" name="organizer" rules={[{ required: true, message: 'Vui lòng nhập người tổ chức' }]}>
-            <Input />
+          <Form.Item label="Người tổ chức" name="organizer">
+            <Input disabled />
           </Form.Item>
           <Form.Item label="Mô tả" name="description">
             <Input.TextArea rows={2} />
@@ -124,14 +135,35 @@ const UpdatetVaccination = () => {
           <Form.Item label="Ngày tiêm" name="scheduledDate" rules={[{ required: true, message: 'Vui lòng chọn ngày tiêm' }]}>
             <DatePicker format="YYYY-MM-DD" style={{ width: '100%' }} />
           </Form.Item>
-          <Form.Item label="Trạng thái" name="status" rules={[{ required: true, message: 'Vui lòng nhập trạng thái' }]}>
+          <Form.Item label="Trạng thái" name="status">
+            <Input disabled />
+          </Form.Item>
+          {/* Các trường đã comment và không update */}
+          {/* 
+          <Form.Item label="Loại vắc-xin" name="vaccineType">
             <Input />
           </Form.Item>
+          <Form.Item label="Ghi chú" name="notes">
+            <Input.TextArea rows={2} />
+          </Form.Item>
+          <Form.Item label="Lô vắc-xin" name="vaccineBatch">
+            <Input />
+          </Form.Item>
+          <Form.Item label="Nhà sản xuất" name="manufacturer">
+            <Input />
+          </Form.Item>
+          <Form.Item label="Liều lượng" name="doseAmount">
+            <Input />
+          </Form.Item>
+          <Form.Item label="Giấy tờ yêu cầu" name="requiredDocuments">
+            <Input />
+          </Form.Item>
+          */}
           <Form.Item>
             <Button type="primary" htmlType="submit" loading={loading}>
               Cập nhật
             </Button>
-            <Button style={{ marginLeft: 12 }} onClick={() => navigate('/danhsachtiemchung')}>
+            <Button style={{ marginLeft: 12 }} onClick={() => navigate('/quanlytiemchung')}>
               Hủy
             </Button>
           </Form.Item>
