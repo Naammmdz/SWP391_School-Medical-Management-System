@@ -69,7 +69,7 @@ const UpdateUserByAdmin = () => {
       setSuccessMessage('Cập nhật người dùng thành công!');
       setTimeout(() => {
         setSuccessMessage(null);
-        navigate('/danhsachnguoidung');
+        navigate('/admin/danhsachnguoidung');
       }, 2000);
     } catch (error) {
       setError('Failed to update user');
@@ -152,7 +152,7 @@ const UpdateUserByAdmin = () => {
           </div>
 
           <div className="form-actions">
-            <button type="button" onClick={() => navigate('/danhsachnguoidung')} className="cancel-btn">
+            <button type="button" onClick={() => navigate('/admin/danhsachnguoidung')} className="cancel-btn">
               <X size={16} />
               Hủy
             </button>

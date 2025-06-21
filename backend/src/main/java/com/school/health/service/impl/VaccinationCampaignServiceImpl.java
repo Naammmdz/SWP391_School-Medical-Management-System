@@ -2,9 +2,11 @@ package com.school.health.service.impl;
 
 import com.school.health.dto.request.VaccinationCampaignRequestDTO;
 import com.school.health.dto.request.VaccinationRequestDTO;
+import com.school.health.dto.response.HealthCheckResponseDTO;
 import com.school.health.dto.response.StudentResponseDTO;
 import com.school.health.dto.response.VaccinationCampaignResponseDTO;
 import com.school.health.dto.response.VaccinationResponseDTO;
+import com.school.health.entity.HealthCheck;
 import com.school.health.entity.Student;
 import com.school.health.entity.Vaccination;
 import com.school.health.entity.VaccinationCampaign;
@@ -240,6 +242,7 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
 
     public VaccinationResponseDTO mapToResponseDTO(Vaccination vaccination) {
         VaccinationResponseDTO responseDTO = new VaccinationResponseDTO();
+        responseDTO.setVaccinationId(vaccination.getVaccinationId());
         responseDTO.setCampaignId(vaccination.getCampaign().getCampaignId());
         responseDTO.setStudentId(vaccination.getStudent().getStudentId());
         responseDTO.setVaccineName(vaccination.getVaccineName());
@@ -306,6 +309,20 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
         return vaccinationRepository.findByCampaignId(campaignId).stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<VaccinationResponseDTO> getResultByStudentId(Integer studentId) {
+        List<Vaccination> vaccine = vaccinationRepository.findByStudentId(studentId);
+        if(vaccine.isEmpty()){
+            throw new RuntimeException("Vaccination not found : " + studentId);
+        }
+        return vaccine.stream().map(this::mapToResponseDTO).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<VaccinationResponseDTO> getResultWithFilterDate(LocalDate startDate, LocalDate endDate) {
+        return vaccinationRepository.findResultWithDate( startDate, endDate ).stream().map(this::mapToResponseDTO).collect(Collectors.toList());
     }
 }
 

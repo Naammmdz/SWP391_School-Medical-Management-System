@@ -13,6 +13,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class HealthCheckResponseDTO {
+    private int healthCheckId;
     private LocalDate date;
     private double height;
     private double weight;

@@ -149,7 +149,7 @@ const Header = () => {
                 <Link to="/thongbaotiemchung" className="dropdown-item" onClick={() => setMedicalEventsOpen(false)}>
                   Thông Báo Tiêm Chủng
                 </Link>
-                <Link to="/kiemtradinhky" className="dropdown-item" onClick={() => setMedicalEventsOpen(false)}>
+                <Link to="/danhsachkiemtradinhky" className="dropdown-item" onClick={() => setMedicalEventsOpen(false)}>
                   Kiểm Tra Định Kỳ
                 </Link>
               </div>
@@ -158,11 +158,11 @@ const Header = () => {
 
           <li><Link to="/quanlythuoc" onClick={closeDropdowns}>Quản Lý Thuốc</Link></li>
           <li><Link to="/donthuoc" onClick={closeDropdowns}>Đơn Thuốc</Link></li>
-          {!user ? (
-            <li><Link to="/login" onClick={closeDropdowns}>Đăng nhập</Link></li>
-          ) : (
-            <li><button onClick={handleLogout} className="logout-btn">Đăng xuất</button></li>
-          )}
+           {!user && (
+    <li>
+      <Link to="/login" onClick={closeDropdowns}>Đăng nhập</Link>
+    </li>
+  )}
         </ul>
       </nav>
 

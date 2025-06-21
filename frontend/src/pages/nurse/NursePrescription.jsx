@@ -1,34 +1,103 @@
-import React, { useState, useEffect } from 'react';
-import { Table, Button, Modal, Form, Input, Select, message, DatePicker, TimePicker } from 'antd';
-import { SearchOutlined, CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
-import './NursePrescription.css';
-import PrescriptionService from '../../services/PrescriptionService';
-import moment from 'moment';
+import React, { useEffect, useState } from 'react';
+import { Card, Table, Tag, Button, Modal, Space, Typography, Popconfirm, message } from 'antd';
+import { CheckCircleOutlined, DeleteOutlined, EditOutlined, UserOutlined, TeamOutlined, InfoCircleOutlined, MedicineBoxOutlined } from '@ant-design/icons';
+import MedicineDeclarationService from '../../services/MedicineDeclarationService';
 
-const { TextArea } = Input;
+const { Title, Text } = Typography;
 
-const NursePrescription = () => {
-  const [prescriptions, setPrescriptions] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [selectedPrescription, setSelectedPrescription] = useState(null);
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [form] = Form.useForm();
-  const [searchText, setSearchText] = useState('');
+const statusColors = {
+  PENDING: 'orange',
+  APPROVED: 'green',
+  REJECTED: 'red'
+};
 
+const MedicineDeclarationsList = () => {
+  const [submissions, setSubmissions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [viewDetail, setViewDetail] = useState(null);
+  const [studentClassMap, setStudentClassMap] = useState({});
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const isParent = user.userRole === 'ROLE_PARENT';
+
+  // Lấy thông tin lớp học từ localStorage
   useEffect(() => {
-    fetchPrescriptions();
+    const students = JSON.parse(localStorage.getItem('students') || '[]');
+    // Tạo map studentId -> className
+    const map = {};
+    students.forEach(s => {
+      map[s.studentId] = s.className;
+    });
+    setStudentClassMap(map);
   }, []);
 
-  const fetchPrescriptions = async () => {
+  // Fetch data
+  const fetchData = async () => {
     setLoading(true);
     try {
-      const data = await PrescriptionService.getPrescriptions();
-      setPrescriptions(data);
-    } catch (error) {
-      message.error('Không thể tải danh sách đơn thuốc');
-      console.error('Error fetching prescriptions:', error);
-    } finally {
-      setLoading(false);
+      const token = localStorage.getItem('token');
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      const data = await MedicineDeclarationService.getMedicineSubmissions(config);
+      setSubmissions(Array.isArray(data) ? data : []);
+    } catch (err) {
+      message.error('Không thể tải danh sách đơn thuốc!');
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  // Cập nhật trạng thái đơn thuốc
+const updateStatus = async (id, status) => {
+  try {
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+    // Validate dữ liệu đầu vào
+    if (!status) {
+      message.error("Trạng thái không hợp lệ!");
+      return;
+    }
+
+    // Tạo đúng payload mà backend yêu cầu
+    const payload = {
+      submissionStatus: status.toUpperCase(), // ví dụ: 'APPROVED'
+      approvedBy: user.id || 0, // nếu backend dùng 0 hoặc lấy từ token cũng được
+      approvedAt: new Date().toISOString().split('T')[0], // format yyyy-MM-dd
+    };
+
+    await MedicineDeclarationService.updateMedicineSubmissionStatus(
+      id,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    message.success('Cập nhật trạng thái thành công!');
+    fetchData();
+  } catch (err) {
+    console.error("Chi tiết lỗi:", err.response?.data || err);
+    message.error('Cập nhật trạng thái thất bại!');
+  }
+};
+
+
+  // Xóa đơn thuốc
+  const deleteSubmission = async (id) => {
+    try {
+      const token = localStorage.getItem('token');
+      await MedicineDeclarationService.deleteMedicineSubmission(id, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      message.success('Xóa đơn thuốc thành công!');
+      fetchData();
+    } catch (err) {
+      message.error('Xóa đơn thuốc thất bại!');
     }
   };
 
@@ -37,197 +106,203 @@ const NursePrescription = () => {
       title: 'Học sinh',
       dataIndex: 'studentName',
       key: 'studentName',
-      render: (text, record) => (
-        <div>
-          <div>{text}</div>
-          <div className="student-info">Mã: {record.studentId} - Lớp: {record.className}</div>
-        </div>
+      render: (text) => (
+        <Space>
+          <UserOutlined />
+          <b>{text}</b>
+        </Space>
       ),
-      filteredValue: searchText ? [searchText] : null,
-      onFilter: (value, record) => 
-        record.studentName.toLowerCase().includes(value.toLowerCase()) ||
-        record.studentId.toLowerCase().includes(value.toLowerCase()) ||
-        record.className.toLowerCase().includes(value.toLowerCase()),
+      width: 160
+    },
+    {
+      title: 'Lớp',
+      dataIndex: 'studentId',
+      key: 'className',
+      render: (studentId) => (
+        <Tag color="blue">{studentClassMap[studentId] || '---'}</Tag>
+      ),
+      width: 80
     },
     {
       title: 'Phụ huynh',
       dataIndex: 'parentName',
       key: 'parentName',
-      render: (text, record) => (
-        <div>
-          <div>{text}</div>
-          <div className="parent-info">SĐT: {record.parentPhone}</div>
-        </div>
+      render: (text) => (
+        <Space>
+          <TeamOutlined />
+          {text}
+        </Space>
       ),
+      width: 160
     },
     {
-      title: 'Ngày kê đơn',
-      dataIndex: 'prescriptionDate',
-      key: 'prescriptionDate',
-      render: (date) => moment(date).format('DD/MM/YYYY'),
+      title: 'Hướng dẫn sử dụng',
+      dataIndex: 'instruction',
+      key: 'instruction',
+      render: (text) => <Text>{text}</Text>,
+      width: 180
+    },
+    {
+      title: 'Thời gian dùng',
+      key: 'duration',
+      render: (_, record) => (
+        <span>
+          {record.startDate} → {record.endDate} <br />
+          <Tag color="purple">{record.duration} ngày</Tag>
+        </span>
+      ),
+      width: 140
+    },
+    {
+      title: 'Ghi chú',
+      dataIndex: 'notes',
+      key: 'notes',
+      render: (text) => <Text type="secondary">{text}</Text>,
+      width: 160
+    },
+    {
+      title: 'Chi tiết thuốc',
+      key: 'medicineDetails',
+      render: (_, record) => (
+        <Button
+          icon={<InfoCircleOutlined />}
+          size="small"
+          onClick={() => setViewDetail(record)}
+        >
+          Xem chi tiết
+        </Button>
+      ),
+      width: 120
     },
     {
       title: 'Trạng thái',
-      dataIndex: 'status',
-      key: 'status',
+      dataIndex: 'submissionStatus',
+      key: 'submissionStatus',
       render: (status) => (
-        <span className={`status-badge ${status}`}>
-          {status === 'pending' ? 'Chờ xử lý' : 
-           status === 'in_progress' ? 'Đang xử lý' : 
-           status === 'completed' ? 'Đã hoàn thành' : 'Đã hủy'}
-        </span>
+        <Tag color={status === 'APPROVED' ? 'green' : status === 'PENDING' ? 'orange' : 'red'}>
+          {status === 'APPROVED' ? 'Đã Nhận' : status === 'PENDING' ? 'Chờ duyệt' : 'Từ chối'}
+        </Tag>
       ),
+      width: 110
     },
     {
       title: 'Thao tác',
-      key: 'action',
-      render: (_, record) => (
-        <Button
-          type="primary"
-          icon={<CheckCircleOutlined />}
-          onClick={() => handleViewPrescription(record)}
-          disabled={record.status === 'completed' || record.status === 'cancelled'}
-        >
-          {record.status === 'pending' ? 'Xử lý' : 'Cập nhật'}
-        </Button>
-      ),
-    },
+      key: 'actions',
+      render: (_, record) => {
+        if (isParent) {
+          return (
+            <Popconfirm
+              title="Bạn chắc chắn muốn xóa đơn thuốc này?"
+              onConfirm={() => deleteSubmission(record.id)}
+              okText="Xóa"
+              cancelText="Hủy"
+              disabled={record.submissionStatus !== 'PENDING'}
+            >
+              <Button
+                icon={<DeleteOutlined />}
+                danger
+                size="small"
+                disabled={record.submissionStatus !== 'PENDING'}
+              >
+                Xóa
+              </Button>
+            </Popconfirm>
+          );
+        }
+        // NURSE/ADMIN
+        return (
+          <Space>
+            <Button
+              icon={<CheckCircleOutlined />}
+              type="primary"
+              size="small"
+              onClick={() => updateStatus(record.id, 'APPROVED')}
+              disabled={record.submissionStatus === 'APPROVED'}
+            >
+              Xác nhận
+            </Button>
+            <Button
+              icon={<EditOutlined />}
+              size="small"
+              onClick={() => updateStatus(record.id, 'REJECTED')}
+              disabled={record.submissionStatus === 'REJECTED'}
+            >
+              Từ chối
+            </Button>
+            <Popconfirm
+              title="Bạn chắc chắn muốn xóa đơn thuốc này?"
+              onConfirm={() => deleteSubmission(record.id)}
+              okText="Xóa"
+              cancelText="Hủy"
+            >
+              <Button
+                icon={<DeleteOutlined />}
+                danger
+                size="small"
+              >
+                Xóa
+              </Button>
+            </Popconfirm>
+          </Space>
+        );
+      },
+      width: 200
+    }
   ];
 
-  const handleViewPrescription = (prescription) => {
-    setSelectedPrescription(prescription);
-    form.setFieldsValue({
-      nurseNote: prescription.nurseNote || '',
-      medicationDate: prescription.medicationDate ? moment(prescription.medicationDate) : null,
-      medicationTime: prescription.medicationTime ? moment(prescription.medicationTime) : null,
-    });
-    setIsModalVisible(true);
-  };
-
-  const handleComplete = async (values) => {
-    try {
-      const updatedData = {
-        status: 'completed',
-        nurseNote: values.nurseNote,
-        medicationDate: values.medicationDate.format('YYYY-MM-DD'),
-        medicationTime: values.medicationTime.format('HH:mm:ss'),
-      };
-
-      await PrescriptionService.updatePrescriptionStatus(
-        selectedPrescription.id,
-        updatedData.status,
-        updatedData.nurseNote
-      );
-
-      // Thêm bản ghi cho học sinh uống thuốc
-      await PrescriptionService.addMedicationRecord(selectedPrescription.id, {
-        date: updatedData.medicationDate,
-        time: updatedData.medicationTime,
-        note: values.nurseNote
-      });
-
-      message.success('Đã cập nhật trạng thái đơn thuốc');
-      setIsModalVisible(false);
-      fetchPrescriptions(); // Refresh danh sách
-    } catch (error) {
-      message.error('Có lỗi xảy ra khi cập nhật đơn thuốc');
-      console.error('Error updating prescription:', error);
-    }
-  };
-
-  const handleSearch = (value) => {
-    setSearchText(value);
-  };
-
   return (
-    <div className="nurse-prescription-container">
-      <h1>Quản lý đơn thuốc</h1>
-      <div className="search-box">
-        <Input
-          placeholder="Tìm kiếm theo tên học sinh, mã học sinh hoặc lớp..."
-          prefix={<SearchOutlined />}
-          onChange={(e) => handleSearch(e.target.value)}
-          allowClear
-        />
-      </div>
-
-      <Table
-        columns={columns}
-        dataSource={prescriptions}
-        loading={loading}
-        rowKey="id"
-        pagination={{ pageSize: 10 }}
-      />
-
-      <Modal
-        title="Chi tiết đơn thuốc"
-        open={isModalVisible}
-        onCancel={() => setIsModalVisible(false)}
-        footer={null}
-        width={800}
+    <div className="medicine-declarations-list-page" style={{ maxWidth: 1200, margin: '32px auto' }}>
+      <Card
+        bordered={false}
+        style={{
+          borderRadius: 16,
+          boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
+          padding: 24,
+          background: '#f9fafb'
+        }}
       >
-        {selectedPrescription && (
-          <div className="prescription-detail">
-            <div className="student-info">
-              <h3>Thông tin học sinh</h3>
-              <p>Họ tên: {selectedPrescription.studentName}</p>
-              <p>Mã học sinh: {selectedPrescription.studentId}</p>
-              <p>Lớp: {selectedPrescription.className}</p>
-            </div>
+        <Title level={2} style={{ textAlign: 'center', marginBottom: 32, color: '#2563eb' }}>
+          Danh sách đơn thuốc từ phụ huynh
+        </Title>
+        <Table
+          columns={columns}
+          dataSource={submissions.map(s => ({ ...s, key: s.id }))}
+          loading={loading}
+          pagination={{ pageSize: 8 }}
+          bordered
+          scroll={{ x: 1200 }}
+          locale={{
+            emptyText: 'Không có đơn thuốc nào.'
+          }}
+        />
+      </Card>
 
-            <div className="medicine-list">
-              <h3>Thông tin đơn thuốc</h3>
-              <div className="prescription-info">
-                <p><strong>Tình trạng bệnh:</strong> {selectedPrescription.condition}</p>
-                <p><strong>Hướng dẫn sử dụng:</strong> {selectedPrescription.instructions}</p>
-                <p><strong>Thời gian:</strong> {moment(selectedPrescription.startDate).format('DD/MM/YYYY')} - {moment(selectedPrescription.endDate).format('DD/MM/YYYY')}</p>
-                {selectedPrescription.additionalNotes && (
-                  <p><strong>Ghi chú thêm:</strong> {selectedPrescription.additionalNotes}</p>
-                )}
-              </div>
-              {selectedPrescription.prescriptionImg && (
-                <div className="prescription-image">
-                  <h4>Hình ảnh đơn thuốc</h4>
-                  <img src={selectedPrescription.prescriptionImg} alt="Đơn thuốc" />
-                </div>
-              )}
-            </div>
-
-            <Form
-              form={form}
-              onFinish={handleComplete}
-              layout="vertical"
-            >
-              <Form.Item
-                name="medicationDate"
-                label="Ngày cho uống thuốc"
-                rules={[{ required: true, message: 'Vui lòng chọn ngày' }]}
-              >
-                <DatePicker style={{ width: '100%' }} />
-              </Form.Item>
-
-              <Form.Item
-                name="medicationTime"
-                label="Thời gian cho uống thuốc"
-                rules={[{ required: true, message: 'Vui lòng chọn thời gian' }]}
-              >
-                <TimePicker style={{ width: '100%' }} format="HH:mm" />
-              </Form.Item>
-
-              <Form.Item
-                name="nurseNote"
-                label="Ghi chú của y tá"
-                rules={[{ required: true, message: 'Vui lòng nhập ghi chú' }]}
-              >
-                <TextArea rows={4} placeholder="Nhập ghi chú về việc cho học sinh uống thuốc..." />
-              </Form.Item>
-
-              <Form.Item>
-                <Button type="primary" htmlType="submit" icon={<CheckCircleOutlined />}>
-                  Xác nhận đã cho uống thuốc
-                </Button>
-              </Form.Item>
-            </Form>
+      {/* Modal xem chi tiết thuốc */}
+      <Modal
+        open={!!viewDetail}
+        title={
+          <span>
+            <MedicineBoxOutlined /> Chi tiết thuốc cho học sinh: <b>{viewDetail?.studentName}</b>
+          </span>
+        }
+        onCancel={() => setViewDetail(null)}
+        footer={null}
+        width={500}
+      >
+        {viewDetail && (
+          <div>
+            <p><b>Phụ huynh:</b> {viewDetail.parentName}</p>
+            <p><b>Hướng dẫn sử dụng:</b> {viewDetail.instruction}</p>
+            <p><b>Thời gian dùng:</b> {viewDetail.startDate} → {viewDetail.endDate} ({viewDetail.duration} ngày)</p>
+            <p><b>Ghi chú:</b> {viewDetail.notes}</p>
+            <h4>Danh sách thuốc:</h4>
+            <ul>
+              {viewDetail.medicineDetails.map(md => (
+                <li key={md.id}>
+                  <b>{md.medicineName}</b> - Liều lượng: <Tag color="geekblue">{md.medicineDosage}</Tag>
+                </li>
+              ))}
+            </ul>
           </div>
         )}
       </Modal>
@@ -235,4 +310,4 @@ const NursePrescription = () => {
   );
 };
 
-export default NursePrescription;
+export default MedicineDeclarationsList;

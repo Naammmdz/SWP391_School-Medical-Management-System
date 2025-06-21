@@ -11,12 +11,12 @@ import com.school.health.entity.Student;
 import com.school.health.enums.Status;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 
 public interface HealthCheckCampaignService {
-    HealthCampaignResponseDTO createCampaign(HealthCampaignRequestDTO healthCampaignRequestDTO,
-                                             int createdBy);
+    HealthCampaignResponseDTO createCampaign(HealthCampaignRequestDTO healthCampaignRequestDTO, int createdBy);
 
     List<HealthCampaignResponseDTO> getAllCampaigns();
 
@@ -38,10 +38,13 @@ public interface HealthCheckCampaignService {
 
     HealthCheckResponseDTO recordHealthCheckResult(Integer campaignId, HealthCheckRequestDTO requestDTO);
 
-    // update health check result
     HealthCheckResponseDTO updateStudentHealthCampaign(Integer healthcheckId ,HealthCheckRequestDTO requestDTO);
 
     List<HealthCheckResponseDTO> getHealthCheckResults(Integer campaignId);
 
     List<HealthCheckResponseDTO> getAllHealthCheckResults();
+
+    List<HealthCheckResponseDTO> getResultByStudentId(Integer studentId);
+
+    List<HealthCheckResponseDTO> getResultWithFilterDate(LocalDate startDate, LocalDate endDate,boolean consultationAppointment);
 }

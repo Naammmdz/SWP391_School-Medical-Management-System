@@ -38,6 +38,7 @@ public class UserServiceImpl implements UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
+
     // Đăng kí user
     public User registerUser(String fullName, String email, String phone, String plainPassword, UserRole role) {
         // Check exits

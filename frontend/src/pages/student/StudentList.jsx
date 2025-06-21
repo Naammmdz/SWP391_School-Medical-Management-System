@@ -21,6 +21,7 @@ const StudentList = () => {
     try {
       const token = localStorage.getItem('token');
       const config = {
+        params : { size: 1000 }, 
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -29,6 +30,8 @@ const StudentList = () => {
       // Fetch students
       const studentsResponse = await studentService.getAllStudents(config);
       setStudents(studentsResponse.data);
+     
+      localStorage.setItem('students', JSON.stringify(studentsResponse.data)); 
 
       // Fetch users to get parent information
       const usersResponse = await userService.getAllUsers(config);
@@ -52,10 +55,7 @@ const StudentList = () => {
     return date.toLocaleDateString('vi-VN');
   };
 
-  // Navigate to create new student
-  const navigateToCreateStudent = () => {
-    navigate('/taomoihocsinh');
-  };
+ 
 
   // Navigate to update student
   const navigateToUpdateStudent = (studentId) => {
@@ -89,10 +89,7 @@ const StudentList = () => {
     <div className="student-list-page">
       <div className="student-list-header">
         <h1>Danh sách học sinh</h1>
-        <button className="add-btn" onClick={navigateToCreateStudent}>
-          <Plus size={16} />
-          Thêm học sinh mới
-        </button>
+       
       </div>
 
       {successMessage && (

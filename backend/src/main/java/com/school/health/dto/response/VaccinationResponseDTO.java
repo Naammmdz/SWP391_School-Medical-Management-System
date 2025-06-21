@@ -10,6 +10,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class VaccinationResponseDTO {
+    private int vaccinationId;
     private LocalDate date;
     private Integer doseNumber;
     private String adverseReaction;

@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import userService from '../../services/UserService';
 import './UpdateUser.css';
 
-
 const UpdateUser = () => {
     const navigate = useNavigate();
     const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm();
@@ -13,7 +12,7 @@ const UpdateUser = () => {
     const [updateSuccess, setUpdateSuccess] = useState(false);
 
     // Lấy accessToken từ localStorage
-    const accessToken = localStorage.getItem('token');
+    const [accessToken, setAccessToken] = useState(localStorage.getItem('token'));
 
     useEffect(() => {
         if (!accessToken) {
@@ -32,9 +31,7 @@ const UpdateUser = () => {
                 setValue('email', data.email || '');
                 setValue('phone', data.phone || '');
                 setValue('isActive', data.isActive ? 'true' : 'false');
-                
                 setIsLoading(false);
-                console.log(res.data);
             })
             .catch(() => {
                 setError('Không thể tải thông tin người dùng');
@@ -42,7 +39,6 @@ const UpdateUser = () => {
             });
     }, [setValue, accessToken]);
 
-    // ...existing code...
     const onSubmit = (data) => {
         if (!accessToken) {
             setError('Bạn chưa đăng nhập!');
@@ -61,14 +57,32 @@ const UpdateUser = () => {
                 }
             }
         )
-            .then(() => {
+            .then((res) => {
+                // Nếu backend trả về token mới trong res.data.token hoặc res.headers['authorization']
+                // Ưu tiên lấy từ headers nếu có
+                let newToken = null;
+                if (res.headers && res.headers['authorization']) {
+                    // Trường hợp backend trả về dạng "Bearer <token>"
+                    const authHeader = res.headers['authorization'];
+                    if (authHeader.startsWith('Bearer ')) {
+                        newToken = authHeader.substring(7);
+                    }
+                } else if (res.data && res.data.token) {
+                    newToken = res.data.token;
+                }
+                if (newToken) {
+                    localStorage.setItem('token', newToken);
+                    setAccessToken(newToken);
+                }
                 setUpdateSuccess(true);
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
             })
             .catch(() => {
                 setError('Cập nhật thông tin thất bại');
             });
     };
-
 
     if (isLoading) return <div>Loading...</div>;
     if (error) return <div className="error">{error}</div>;
@@ -104,7 +118,6 @@ const UpdateUser = () => {
                 </div>
                 <button type="submit">Cập nhật</button>
             </form>
-             
             {updateSuccess && <div className="success">Cập nhật thành công!</div>}
         </div>
     );

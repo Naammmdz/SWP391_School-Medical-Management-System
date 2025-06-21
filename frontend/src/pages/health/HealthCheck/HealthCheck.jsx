@@ -1,241 +1,191 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import HealthCheckService from '../../../services/HealthCheckService';
+import { Card, Table, Spin, Alert, Typography, Space, Tag } from 'antd';
+import { CalendarOutlined, UserOutlined, EnvironmentOutlined, TeamOutlined, FileTextOutlined } from '@ant-design/icons';
 import './HealthCheck.css';
-import { Button } from '../../../components/ui/button';
-import { Input } from '../../../components/ui/input';
-import { Textarea } from '../../../components/ui/textarea';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../../../components/ui/select';
+
+const { Title, Text } = Typography;
+
+const columns = [
+  {
+    title: 'Mã chiến dịch',
+    dataIndex: 'campaignId',
+    key: 'campaignId',
+    align: 'center',
+    width: 100,
+    render: (id) => <Tag color="blue">{id}</Tag>
+  },
+  {
+    title: 'Tên chiến dịch',
+    dataIndex: 'campaignName',
+    key: 'campaignName',
+    render: (name) => <b>{name}</b>,
+    width: 180,
+  },
+  {
+    title: 'Đối tượng',
+    dataIndex: 'targetGroup',
+    key: 'targetGroup',
+    width: 120,
+    render: (text) => (
+      <Space>
+        <TeamOutlined />
+        {text}
+      </Space>
+    ),
+  },
+  {
+    title: 'Loại',
+    dataIndex: 'type',
+    key: 'type',
+    width: 120,
+    render: (text) => (
+      <Space>
+        <FileTextOutlined />
+        {text}
+      </Space>
+    ),
+  },
+  {
+    title: 'Địa điểm',
+    dataIndex: 'address',
+    key: 'address',
+    width: 140,
+    render: (text) => (
+      <Space>
+        <EnvironmentOutlined />
+        {text}
+      </Space>
+    ),
+  },
+  {
+    title: 'Người thực hiện',
+    dataIndex: 'organizer',
+    key: 'organizer',
+    width: 140,
+    render: (text) => (
+      <Space>
+        <UserOutlined />
+        {text}
+      </Space>
+    ),
+  },
+  {
+    title: 'Mô tả',
+    dataIndex: 'description',
+    key: 'description',
+    width: 200,
+    ellipsis: true,
+  },
+  {
+    title: 'Ngày khám',
+    dataIndex: 'scheduledDate',
+    key: 'scheduledDate',
+    width: 120,
+    render: (date) => (
+      <Space>
+        <CalendarOutlined />
+        {date}
+      </Space>
+    ),
+  },
+  {
+    title: 'Người duyệt',
+    key: 'approvedBy',
+    width: 170,
+    render: () => (
+      <Space>
+        <UserOutlined />
+        Hiệu Trưởng: Nguyễn Thanh Lâm
+      </Space>
+    ),
+  },
+  {
+    title: 'Trạng thái',
+    dataIndex: 'status',
+    key: 'status',
+    width: 120,
+    render: (status) => (
+      <Tag color={status === 'APPROVED' ? 'green' : 'default'}>
+        {status === 'APPROVED' ? 'Đã duyệt' : status}
+      </Tag>
+    ),
+  },
+  {
+    title: 'Ngày tạo',
+    dataIndex: 'createdAt',
+    key: 'createdAt',
+    width: 140,
+    render: (date) =>
+      date ? new Date(date).toLocaleString('vi-VN') : '',
+  },
+];
 
 const HealthCheck = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedStudent, setSelectedStudent] = useState(null);
-  const [healthData, setHealthData] = useState({
-    height: '',
-    weight: '',
-    bmi: '',
-    vision: '',
-    hearing: '',
-    bloodPressure: '',
-    heartRate: '',
-    notes: '',
-    recommendations: ''
-  });
+  const [campaigns, setCampaigns] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // Mock data - replace with API call
-  const students = [
-    { id: 1, name: 'Nguyễn Văn A', class: '10A1', dob: '2008-05-15' },
-    { id: 2, name: 'Trần Thị B', class: '10A1', dob: '2008-08-20' },
-    // Add more mock data as needed
-  ];
-
-  const handleSearch = (e) => {
-    setSearchTerm(e.target.value);
-  };
-
-  const handleStudentSelect = (student) => {
-    setSelectedStudent(student);
-    // Here you would typically fetch the student's health records
-    // For now using mock data
-    setHealthData({
-      height: '170',
-      weight: '55',
-      bmi: '19.03',
-      vision: '10/10',
-      hearing: 'Bình thường',
-      bloodPressure: '120/80',
-      heartRate: '75',
-      notes: 'Sức khỏe tốt',
-      recommendations: 'Duy trì chế độ ăn uống và tập luyện hiện tại'
-    });
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setHealthData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const calculateBMI = () => {
-    const height = parseFloat(healthData.height) / 100; // Convert cm to m
-    const weight = parseFloat(healthData.weight);
-    if (height && weight) {
-      const bmi = (weight / (height * height)).toFixed(2);
-      setHealthData(prev => ({
-        ...prev,
-        bmi
-      }));
-    }
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Here you would typically send the data to your API
-    console.log('Submitting health check data:', {
-      studentId: selectedStudent?.id,
-      ...healthData
-    });
-    alert('Đã lưu kết quả kiểm tra sức khỏe!');
-  };
+  useEffect(() => {
+    const fetchApprovedCampaigns = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const token = localStorage.getItem('token');
+        const config = {
+          headers: { Authorization: `Bearer ${token}` }
+        };
+        const data = await HealthCheckService.getHealthCheckApproved(config);
+        setCampaigns(Array.isArray(data) ? data : []);
+      } catch (err) {
+        setError('Không thể tải danh sách chiến dịch đã duyệt!');
+      }
+      setLoading(false);
+    };
+    fetchApprovedCampaigns();
+  }, []);
 
   return (
-    <div className="health-check-container">
-      <div className="search-section">
-        <h2>Kiểm tra sức khỏe định kỳ</h2>
-        <div className="search-box">
-          <Input
-            type="text"
-            placeholder="Tìm kiếm học sinh theo tên hoặc lớp..."
-            value={searchTerm}
-            onChange={handleSearch}
+    <div className="approved-health-check-campaigns" style={{ maxWidth: 1200, margin: '32px auto' }}>
+      <Card
+        bordered={false}
+        style={{
+          borderRadius: 16,
+          boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
+          padding: 24,
+          background: '#f9fafb'
+        }}
+      >
+        <Title level={2} style={{ textAlign: 'center', marginBottom: 32, color: '#2563eb' }}>
+          Danh sách chiến dịch kiểm tra sức khỏe 
+        </Title>
+        {loading && (
+          <div style={{ textAlign: 'center', margin: '40px 0' }}>
+            <Spin size="large" />
+          </div>
+        )}
+        {error && (
+          <Alert
+            message={error}
+            type="error"
+            showIcon
+            style={{ marginBottom: 24 }}
           />
-        </div>
-        <div className="student-list">
-          {students
-            .filter(student => 
-              student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              student.class.toLowerCase().includes(searchTerm.toLowerCase())
-            )
-            .map(student => (
-              <div
-                key={student.id}
-                className={`student-item ${selectedStudent?.id === student.id ? 'selected' : ''}`}
-                onClick={() => handleStudentSelect(student)}
-              >
-                <div className="student-info">
-                  <h3>{student.name}</h3>
-                  <p>Lớp: {student.class}</p>
-                  <p>Ngày sinh: {student.dob}</p>
-                </div>
-              </div>
-            ))}
-        </div>
-      </div>
-
-      {selectedStudent && (
-        <div className="health-check-form">
-          <h3>Kết quả kiểm tra sức khỏe - {selectedStudent.name}</h3>
-          <form onSubmit={handleSubmit}>
-            <div className="form-grid">
-              <div className="form-group">
-                <label>Chiều cao (cm)</label>
-                <Input
-                  type="number"
-                  name="height"
-                  value={healthData.height}
-                  onChange={handleInputChange}
-                  onBlur={calculateBMI}
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Cân nặng (kg)</label>
-                <Input
-                  type="number"
-                  name="weight"
-                  value={healthData.weight}
-                  onChange={handleInputChange}
-                  onBlur={calculateBMI}
-                />
-              </div>
-
-              <div className="form-group">
-                <label>BMI</label>
-                <Input
-                  type="text"
-                  value={healthData.bmi}
-                  readOnly
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Thị lực</label>
-                <Select
-                  value={healthData.vision}
-                  onValueChange={(value) => setHealthData(prev => ({ ...prev, vision: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Chọn thị lực" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="10/10">10/10</SelectItem>
-                    <SelectItem value="9/10">9/10</SelectItem>
-                    <SelectItem value="8/10">8/10</SelectItem>
-                    <SelectItem value="7/10">7/10</SelectItem>
-                    <SelectItem value="6/10">6/10</SelectItem>
-                    <SelectItem value="5/10">5/10</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="form-group">
-                <label>Thính lực</label>
-                <Select
-                  value={healthData.hearing}
-                  onValueChange={(value) => setHealthData(prev => ({ ...prev, hearing: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Chọn thính lực" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Bình thường">Bình thường</SelectItem>
-                    <SelectItem value="Giảm nhẹ">Giảm nhẹ</SelectItem>
-                    <SelectItem value="Giảm trung bình">Giảm trung bình</SelectItem>
-                    <SelectItem value="Giảm nặng">Giảm nặng</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="form-group">
-                <label>Huyết áp</label>
-                <Input
-                  type="text"
-                  name="bloodPressure"
-                  value={healthData.bloodPressure}
-                  onChange={handleInputChange}
-                  placeholder="VD: 120/80"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Nhịp tim (bpm)</label>
-                <Input
-                  type="number"
-                  name="heartRate"
-                  value={healthData.heartRate}
-                  onChange={handleInputChange}
-                />
-              </div>
-            </div>
-
-            <div className="form-group full-width">
-              <label>Ghi chú</label>
-              <Textarea
-                name="notes"
-                value={healthData.notes}
-                onChange={handleInputChange}
-                placeholder="Nhập ghi chú về tình trạng sức khỏe..."
-              />
-            </div>
-
-            <div className="form-group full-width">
-              <label>Khuyến nghị</label>
-              <Textarea
-                name="recommendations"
-                value={healthData.recommendations}
-                onChange={handleInputChange}
-                placeholder="Nhập khuyến nghị cho học sinh..."
-              />
-            </div>
-
-            <div className="form-actions">
-              <Button type="submit" variant="primary">
-                Lưu kết quả
-              </Button>
-            </div>
-          </form>
-        </div>
-      )}
+        )}
+        {!loading && !error && (
+          <Table
+            columns={columns}
+            dataSource={campaigns.map(c => ({ ...c, key: c.campaignId }))}
+            pagination={{ pageSize: 8 }}
+            bordered
+            scroll={{ x: 1200 }}
+            className="health-check-table"
+            locale={{
+              emptyText: 'Không có chiến dịch nào đã được duyệt.'
+            }}
+          />
+        )}
+      </Card>
     </div>
   );
 };
