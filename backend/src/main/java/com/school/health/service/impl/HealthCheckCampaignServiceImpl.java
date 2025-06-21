@@ -13,10 +13,8 @@ import com.school.health.repository.HealthCheckCampaignRepository;
 import com.school.health.repository.HealthCheckRepository;
 import com.school.health.repository.StudentRepository;
 import com.school.health.service.HealthCheckCampaignService;
-import jakarta.persistence.Column;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -155,6 +153,16 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
         HealthCheckCampaign campaign = healthCheckCampaignRepository.findById(request.getCampaignId()).orElseThrow(() -> new RuntimeException("Campaign not found with ID: " + request.getCampaignId()));
         Student student = studentRepository.findById(request.getStudentId()).orElseThrow(() -> new RuntimeException("Student not found with ID: " + request.getStudentId()));
         request.setParentConfirmation(true);
+        HealthCheck healthCheckEntity = maptoEntityCheck(request);
+        HealthCheckResponseDTO responseDTO = mapToHealthCheckResponseDTO(healthCheckEntity);
+        return responseDTO;
+    }
+
+    @Override
+    public HealthCheckResponseDTO rejectStudentVaccine(HealthCheckRequestDTO request) {
+        HealthCheckCampaign campaign = healthCheckCampaignRepository.findById(request.getCampaignId()).orElseThrow(() -> new RuntimeException("Campaign not found with ID: " + request.getCampaignId()));
+        Student student = studentRepository.findById(request.getStudentId()).orElseThrow(() -> new RuntimeException("Student not found with ID: " + request.getStudentId()));
+        request.setParentConfirmation(false);
         HealthCheck healthCheckEntity = maptoEntityCheck(request);
         HealthCheckResponseDTO responseDTO = mapToHealthCheckResponseDTO(healthCheckEntity);
         return responseDTO;

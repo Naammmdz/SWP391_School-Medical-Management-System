@@ -2,11 +2,9 @@ package com.school.health.service.impl;
 
 import com.school.health.dto.request.VaccinationCampaignRequestDTO;
 import com.school.health.dto.request.VaccinationRequestDTO;
-import com.school.health.dto.response.HealthCheckResponseDTO;
 import com.school.health.dto.response.StudentResponseDTO;
 import com.school.health.dto.response.VaccinationCampaignResponseDTO;
 import com.school.health.dto.response.VaccinationResponseDTO;
-import com.school.health.entity.HealthCheck;
 import com.school.health.entity.Student;
 import com.school.health.entity.Vaccination;
 import com.school.health.entity.VaccinationCampaign;
@@ -15,8 +13,6 @@ import com.school.health.repository.StudentRepository;
 import com.school.health.repository.VaccinationCampaignRepository;
 import com.school.health.repository.VaccinationRepository;
 import com.school.health.service.VaccinationCampaignService;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -152,6 +148,17 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
         VaccinationResponseDTO responseDTO = mapToResponseDTO(vaccination);
         return responseDTO;
     }
+    // rejectStudentVaccine
+    @Override
+    public VaccinationResponseDTO rejectStudentVaccine(VaccinationRequestDTO vaccineRequest) {
+        VaccinationCampaign campaign = vaccinationCampaignRepository.findById(vaccineRequest.getCampaignId()).orElseThrow(() -> new RuntimeException("Campaign not found id :" + vaccineRequest.getCampaignId()));
+        Student student = studentRepository.findById(vaccineRequest.getStudentId()).orElseThrow(() -> new RuntimeException("Student not found id :" + vaccineRequest.getStudentId()));
+        vaccineRequest.setParentConfirmation(false);
+        Vaccination vaccination = mapToEntityVaccine(vaccineRequest);
+        VaccinationResponseDTO responseDTO = mapToResponseDTO(vaccination);
+        return responseDTO;
+    }
+
 
     public Vaccination mapToEntityVaccine(VaccinationRequestDTO requestDTO) {
         Vaccination vaccination = new Vaccination();

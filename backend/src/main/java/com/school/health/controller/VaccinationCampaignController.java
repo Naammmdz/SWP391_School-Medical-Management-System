@@ -1,6 +1,5 @@
 package com.school.health.controller;
 
-import com.school.health.dto.request.HealthCheckRequestDTO;
 import com.school.health.dto.request.VaccinationCampaignRequestDTO;
 import com.school.health.dto.request.VaccinationRequestDTO;
 import com.school.health.enums.Status;
@@ -100,6 +99,15 @@ public class VaccinationCampaignController {
         }
     }
 
+    @PostMapping("/{campaignId}/student/{studentId}/reject")
+    @PreAuthorize("hasRole('PARENT') or hasRole('NURSE') or hasRole('ADMIN')")
+    public ResponseEntity<?> rejectStudentForVaccinationCampaign(@PathVariable @Valid int campaignId, @PathVariable @Valid int studentId) {
+        VaccinationRequestDTO request = new VaccinationRequestDTO();
+        request.setCampaignId(campaignId);
+        request.setStudentId(studentId);
+        return ResponseEntity.ok(vaccinationCampaignService.rejectStudentVaccine(request));
+    }
+
     // Phụ huynh lấy danh sách chiến dịch tiêm chủng của con mình
     @GetMapping("/me/students/{studentId}/campaigns")
     @PreAuthorize("hasRole('PARENT')")
@@ -154,4 +162,6 @@ public class VaccinationCampaignController {
         }
         return ResponseEntity.ok(vaccinationCampaignService.getResultWithFilterDate(startDate, endDate));
     }
+
+
 }

@@ -1,9 +1,6 @@
 package com.school.health.repository;
 
-import com.school.health.entity.HealthCheck;
-import com.school.health.entity.Student;
 import com.school.health.entity.Vaccination;
-
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
