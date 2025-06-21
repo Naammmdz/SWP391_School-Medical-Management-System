@@ -40,10 +40,22 @@ public class MedicineSubmissionController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('PARENT')")
     public ResponseEntity<MedicineSubmissionResponse> createMedicineSubmission(
-            @Valid @RequestPart("data") MedicineSubmissionRequest request,
+            @RequestParam("studentId") Integer studentId,
+            @RequestParam("instruction") String instruction,
+            @RequestParam("startDate") String startDate,
+            @RequestParam("endDate") String endDate,
+            @RequestParam("notes") String notes,
             @RequestPart("image") MultipartFile image,
             Authentication authentication
     ) {
+        // Tạo request object từ các parameters
+        MedicineSubmissionRequest request = new MedicineSubmissionRequest();
+        request.setStudentId(studentId);
+        request.setInstruction(instruction);
+        request.setStartDate(LocalDate.parse(startDate));
+        request.setEndDate(LocalDate.parse(endDate));
+        request.setNotes(notes);
+
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
         Integer userId = userPrincipal.getId();
         MedicineSubmissionResponse medicineSubmissionResponse = medicineSubmissionService.createMedicineSubmission(request, image, userId);
