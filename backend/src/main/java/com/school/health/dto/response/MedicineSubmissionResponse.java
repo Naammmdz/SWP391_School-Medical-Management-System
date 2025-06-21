@@ -23,6 +23,7 @@ public class MedicineSubmissionResponse {
     private String approvedByName;
     private LocalDate approvedAt;
 //    private List<MedicineDetailResponse> medicineDetails;
+    private String imageData;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<MedicineLogResponse> medicineLogs;
 }

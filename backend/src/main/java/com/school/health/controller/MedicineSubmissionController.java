@@ -13,11 +13,13 @@ import com.school.health.util.AuthenticationUtils;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -35,12 +37,16 @@ public class MedicineSubmissionController {
     private AuthenticationUtils authUtils;
 
     //CREATE
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('PARENT')")
-    public ResponseEntity<MedicineSubmissionResponse> createMedicineSubmission(@Valid @RequestBody MedicineSubmissionRequest medicineSubmissionRequest, Authentication authentication) {
+    public ResponseEntity<MedicineSubmissionResponse> createMedicineSubmission(
+            @Valid @RequestPart("data") MedicineSubmissionRequest request,
+            @RequestPart("image") MultipartFile image,
+            Authentication authentication
+    ) {
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
         Integer userId = userPrincipal.getId();
-        MedicineSubmissionResponse medicineSubmissionResponse = medicineSubmissionService.createMedicineSubmission(medicineSubmissionRequest, userId);
+        MedicineSubmissionResponse medicineSubmissionResponse = medicineSubmissionService.createMedicineSubmission(request, image, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(medicineSubmissionResponse);
     }
 

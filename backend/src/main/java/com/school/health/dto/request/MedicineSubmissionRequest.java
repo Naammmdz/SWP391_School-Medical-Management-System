@@ -2,6 +2,7 @@ package com.school.health.dto.request;
 
 import jakarta.validation.constraints.*;
 import lombok.Data;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;

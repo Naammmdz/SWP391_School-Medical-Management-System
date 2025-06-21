@@ -69,6 +69,9 @@ public class MedicineSubmission {
     @OneToMany(mappedBy = "medicineSubmission", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MedicineLog> medicineLogs;
 
+    @Column(name = "ImageData", columnDefinition = "TEXT")
+    private String imageData; // Base64 encoded image
+
     public void addMedicineLog(MedicineLog log) {
         if (medicineLogs == null) {
             medicineLogs = new ArrayList<>();

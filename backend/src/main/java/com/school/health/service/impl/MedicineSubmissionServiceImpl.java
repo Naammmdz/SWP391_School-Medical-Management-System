@@ -16,13 +16,12 @@ import com.school.health.repository.UserRepository;
 import com.school.health.service.MedicineSubmissionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -43,7 +42,7 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
 
     // ===== PARENT OPERATIONS =====
     @Override
-    public MedicineSubmissionResponse createMedicineSubmission(MedicineSubmissionRequest request, Integer parentId) {
+    public MedicineSubmissionResponse createMedicineSubmission(MedicineSubmissionRequest request, MultipartFile image, Integer parentId) {
         //Validate the request: ngay ket thuc >= ngay bat dau
         if (request.getEndDate().isBefore(request.getStartDate())) {
             throw new BadRequestException("Ngày kết thúc phải sau hoặc bằng ngày bắt đầu");
@@ -62,6 +61,32 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
         // Calculate duration based on start and end dates
         int duration = (int) ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate()) + 1;
 
+        String encodedImage;
+        try {
+            if (image == null || image.isEmpty()) {
+                throw new BadRequestException("Ảnh không được để trống");
+            }
+
+            // Check file size (max 5MB)
+            if (image.getSize() > 5 * 1024 * 1024) {
+                throw new BadRequestException("Kích thước ảnh không được vượt quá 5MB");
+            }
+
+            // Check file type
+            List<String> allowedTypes = Arrays.asList("image/jpeg", "image/png", "image/jpg");
+            if (!allowedTypes.contains(image.getContentType())) {
+                throw new BadRequestException("Chỉ chấp nhận file ảnh (JPEG, PNG, JPG)");
+            }
+
+            // Convert to Base64
+            byte[] imageBytes = image.getBytes();
+            String contentType = image.getContentType();
+            encodedImage = "data:" + contentType + ";base64," + Base64.getEncoder().encodeToString(imageBytes);
+
+        } catch (IOException e) {
+            throw new BadRequestException("Lỗi xử lý ảnh: " + e.getMessage());
+        }
+
         //Create a new MedicineSubmission entity
         MedicineSubmission medicineSubmission = new MedicineSubmission();
         medicineSubmission.setStudent(student.get());
@@ -72,6 +97,7 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
         medicineSubmission.setEndDate(request.getEndDate());
         medicineSubmission.setNotes(request.getNotes());
         medicineSubmission.setSubmissionStatus(MedicineSubmissionStatus.PENDING);
+        medicineSubmission.setImageData(encodedImage);
 
         //Map the medicine details from request to entity
 //        List<MedicineDetail> medicineDetails = request.getMedicineDetails().stream()
@@ -129,7 +155,7 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
 //                        }).collect(Collectors.toList())
 //                        : Collections.emptyList()
 //        );
-
+        resp.setImageData(submission.getImageData());
         // Chỉ bao gồm logs cho NURSE
         if (includeLogsData) {
             resp.setMedicineLogs(submission.getMedicineLogs().stream()
