@@ -29,6 +29,11 @@ const VaccinationService = {
     getVaccinationCampaignApproved: (config) => {
         return axios.get(`${vaccinationApiUrl}/approved`, config);
     },
-
+    vaccinationResult: (id, data, config) => {
+        return axios.post(`${vaccinationApiUrl}/result/${id}`, data, config);
+    },
+    getAllVaccinationResults: ( config) => {
+        return axios.get(`${vaccinationApiUrl}/results-campaign/all`, config);
+    },
 }
 export default VaccinationService;

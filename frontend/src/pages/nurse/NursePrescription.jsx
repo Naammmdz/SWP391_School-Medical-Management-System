@@ -19,7 +19,6 @@ const MedicineDeclarationsList = () => {
   const [studentClassMap, setStudentClassMap] = useState({});
   const [markTakenLoading, setMarkTakenLoading] = useState(false);
   const [markTakenNotes, setMarkTakenNotes] = useState('');
-  const [markTakenModal, setMarkTakenModal] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState(null);
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -44,6 +43,7 @@ const MedicineDeclarationsList = () => {
       const config = { headers: { Authorization: `Bearer ${token}` } };
       const data = await MedicineDeclarationService.getMedicineSubmissions(config);
       setSubmissions(Array.isArray(data) ? data : []);
+      console.log('Fetched submissions:', data);
     } catch (err) {
       message.error('Không thể tải danh sách đơn thuốc!');
     }
@@ -102,7 +102,7 @@ const MedicineDeclarationsList = () => {
 
   // Gọi API markMedicineTaken
   const handleMarkTaken = async () => {
-    if (!selectedSubmission) return;
+    if (!viewDetail) return;
     setMarkTakenLoading(true);
     try {
       const token = localStorage.getItem('token');
@@ -112,13 +112,12 @@ const MedicineDeclarationsList = () => {
         givenAt: dayjs().format('YYYY-MM-DD'),
         notes: markTakenNotes
       };
-      await MedicineDeclarationService.markMedicineTaken(selectedSubmission.id, data, {
+      await MedicineDeclarationService.markMedicineTaken(viewDetail.id, data, {
         headers: { Authorization: `Bearer ${token}` }
       });
       message.success('Đã ghi nhận học sinh đã uống thuốc!');
-      setMarkTakenModal(false);
       setMarkTakenNotes('');
-      setSelectedSubmission(null);
+      setViewDetail(null);
       fetchData();
     } catch (err) {
       message.error('Ghi nhận uống thuốc thất bại!');
@@ -254,18 +253,6 @@ const MedicineDeclarationsList = () => {
             >
               Từ chối
             </Button>
-            <Button
-              icon={<MedicineBoxOutlined />}
-              size="small"
-              type="dashed"
-              onClick={() => {
-                setSelectedSubmission(record);
-                setMarkTakenModal(true);
-              }}
-              disabled={record.submissionStatus !== 'APPROVED'}
-            >
-              Cho uống thuốc
-            </Button>
             <Popconfirm
               title="Bạn chắc chắn muốn xóa đơn thuốc này?"
               onConfirm={() => deleteSubmission(record.id)}
@@ -283,7 +270,7 @@ const MedicineDeclarationsList = () => {
           </Space>
         );
       },
-      width: 260
+      width: 220
     }
   ];
 
@@ -314,7 +301,8 @@ const MedicineDeclarationsList = () => {
         />
       </Card>
 
-      {/* Modal xem chi tiết thuốc */}
+      {/* Modal xem chi tiết thuốc + cho uống thuốc */}
+      // ...existing code...
       <Modal
         open={!!viewDetail}
         title={
@@ -322,62 +310,61 @@ const MedicineDeclarationsList = () => {
             <MedicineBoxOutlined /> Chi tiết thuốc cho học sinh: <b>{viewDetail?.studentName}</b>
           </span>
         }
-        onCancel={() => setViewDetail(null)}
-        footer={null}
+        onCancel={() => {
+          setViewDetail(null);
+          setMarkTakenNotes('');
+        }}
+        footer={
+          !isParent && viewDetail?.submissionStatus === 'APPROVED' ? (
+            <Space>
+              <Input.TextArea
+                rows={2}
+                placeholder="Ghi chú (nếu có)"
+                value={markTakenNotes}
+                onChange={e => setMarkTakenNotes(e.target.value)}
+                style={{ width: 220 }}
+              />
+              <Button
+                icon={<MedicineBoxOutlined />}
+                type="primary"
+                loading={markTakenLoading}
+                onClick={handleMarkTaken}
+              >
+                Xác nhận đã uống thuốc
+              </Button>
+            </Space>
+          ) : null
+        }
         width={500}
       >
         {viewDetail && (
-          <div>
-            <p><b>Phụ huynh:</b> {viewDetail.parentName}</p>
-            <p><b>Hướng dẫn sử dụng:</b> {viewDetail.instruction}</p>
-            <p><b>Thời gian dùng:</b> {viewDetail.startDate} → {viewDetail.endDate} ({viewDetail.duration} ngày)</p>
-            <p><b>Ghi chú:</b> {viewDetail.notes}</p>
-            <h4>Danh sách thuốc:</h4>
-            <ul>
-              {viewDetail.medicineDetails.map(md => (
-                <li key={md.id}>
-                  <b>{md.medicineName}</b> - Liều lượng: <Tag color="geekblue">{md.medicineDosage}</Tag>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </Modal>
-
-      {/* Modal cho uống thuốc */}
-      <Modal
-        open={markTakenModal}
-        title={
-          <span>
-            <MedicineBoxOutlined /> Ghi nhận học sinh đã uống thuốc
-          </span>
-        }
-        onCancel={() => {
-          setMarkTakenModal(false);
-          setMarkTakenNotes('');
-          setSelectedSubmission(null);
+  <div>
+    <p><b>Phụ huynh:</b> {viewDetail.parentName}</p>
+    <p><b>Hướng dẫn sử dụng:</b> {viewDetail.instruction}</p>
+    <p><b>Thời gian dùng:</b> {viewDetail.startDate} → {viewDetail.endDate} ({viewDetail.duration} ngày)</p>
+    <p><b>Ghi chú:</b> {viewDetail.notes}</p>
+    <h4>Hình ảnh đơn thuốc:</h4>
+    {console.log('imageData:', viewDetail.imageData)}
+    {viewDetail.imageData ? (
+      <img
+        src={viewDetail.imageData}
+        alt="Đơn thuốc"
+        style={{
+          maxWidth: 350,
+          maxHeight: 250,
+          borderRadius: 8,
+          border: '1px solid #eee',
+          marginTop: 8
         }}
-        onOk={handleMarkTaken}
-        confirmLoading={markTakenLoading}
-        okText="Xác nhận đã uống"
-        cancelText="Hủy"
-        width={400}
-      >
-        <p>
-          <b>Học sinh:</b> {selectedSubmission?.studentName}
-        </p>
-        <p>
-          <b>Y tá cho uống thuốc:</b> {user.fullName}
-        </p>
-        <Input.TextArea
-          rows={3}
-          placeholder="Ghi chú (nếu có)"
-          value={markTakenNotes}
-          onChange={e => setMarkTakenNotes(e.target.value)}
-        />
+      />
+    ) : (
+      <p style={{ color: '#888' }}>Không có hình ảnh đơn thuốc.</p>
+    )}
+  </div>
+)}
+
       </Modal>
     </div>
   );
 };
-
 export default MedicineDeclarationsList;

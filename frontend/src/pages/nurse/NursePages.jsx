@@ -206,6 +206,22 @@ export default function NursePages() {
                 </div>
               </div>
 
+
+               <div className="resource-card">
+                <div className="resource-thumbnail">
+                <img src="https://th.bing.com/th/id/OIP.Ze3TuiOXtRqnq7qRQQKOzwHaEU?w=281&h=180&c=7&r=0&o=5&cb=iwc2&dpr=2&pid=1.7" alt="Tiêm Chủng" />
+
+                  <span className="resource-type document">Quản lý</span>
+                </div>
+                <div className="resource-info">
+                  <h3>Kết Quả Tiêm Chủng</h3>
+                  <p className="resource-date">Tạo và quản lý lịch tiêm chủng</p>
+                  <Link to="/ketquatiemchung" className="btn btn-sm">
+                    Quản lý
+                  </Link>
+                </div>
+              </div>
+
               {/* Health Check Management */}
               <div className="resource-card">
                 <div className="resource-thumbnail">

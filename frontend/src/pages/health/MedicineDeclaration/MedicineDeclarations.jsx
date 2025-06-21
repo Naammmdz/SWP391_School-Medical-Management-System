@@ -7,8 +7,6 @@ import { useNavigate } from 'react-router-dom';
 
 const MedicineDeclarations = () => {
   const navigate = useNavigate();
-  // Lấy user và selectedStudentId từ localStorage
-
   const selectedStudentId = localStorage.getItem('selectedStudentId');
 
   // State cho thông tin học sinh
@@ -17,11 +15,6 @@ const MedicineDeclarations = () => {
     studentName: '',
     classroom: ''
   });
-  
-  // Medicine detail mẫu
-  // const [medicineDetails, setMedicineDetails] = useState([
-  //   { medicineName: '', medicineDosage: '' }
-  // ]);
 
   const [formData, setFormData] = useState({
     instruction: '',
@@ -29,6 +22,8 @@ const MedicineDeclarations = () => {
     endDate: '',
     notes: ''
   });
+
+  const [imageFile, setImageFile] = useState(null);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
@@ -49,23 +44,6 @@ const MedicineDeclarations = () => {
     setIsLoading(false);
   }, [selectedStudentId]);
 
-  // Medicine detail handlers
-  // const handleMedicineDetailChange = (idx, e) => {
-  //   const { name, value } = e.target;
-  //   const newDetails = [...medicineDetails];
-  //   newDetails[idx][name] = value;
-  //   setMedicineDetails(newDetails);
-  // };
-
-  // const addMedicineDetail = () => {
-  //   setMedicineDetails([...medicineDetails, { medicineName: '', medicineDosage: '' }]);
-  // };
-
-  // const removeMedicineDetail = (idx) => {
-  //   const newDetails = medicineDetails.filter((_, i) => i !== idx);
-  //   setMedicineDetails(newDetails);
-  // };
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -74,84 +52,83 @@ const MedicineDeclarations = () => {
     });
   };
 
+  const handleImageChange = (e) => {
+    setImageFile(e.target.files[0] || null);
+  };
+
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  // Không kiểm tra medicineDetails nữa
-  if (
-    !studentInfo.studentId ||
-    !formData.instruction ||
-    !formData.startDate ||
-    !formData.endDate
-  ) {
-    toast.error('Vui lòng nhập đầy đủ thông tin bắt buộc');
-    return;
-  }
+    if (
+      !studentInfo.studentId ||
+      !formData.instruction ||
+      !formData.startDate ||
+      !formData.endDate
+    ) {
+      toast.error('Vui lòng nhập đầy đủ thông tin bắt buộc');
+      return;
+    }
 
-  const duration =
-    formData.startDate && formData.endDate
-      ? Math.max(
-          1,
-          Math.ceil(
-            (new Date(formData.endDate) - new Date(formData.startDate)) /
-              (1000 * 60 * 60 * 24) +
-              1
+    if (!imageFile) {
+      toast.error('Vui lòng chọn hình ảnh đơn thuốc!');
+      return;
+    }
+
+    const duration =
+      formData.startDate && formData.endDate
+        ? Math.max(
+            1,
+            Math.ceil(
+              (new Date(formData.endDate) - new Date(formData.startDate)) /
+                (1000 * 60 * 60 * 24) +
+                1
+            )
           )
-        )
-      : 1;
+        : 1;
 
-    // Chuẩn hóa medicineDetails chỉ lấy medicineName, medicineDosage
-    // const medicineDetailsPayload = medicineDetails.map(md => ({
-    //   medicineName: md.medicineName,
-    //   medicineDosage: md.medicineDosage
-    // }));
+    // Tạo formData để gửi multipart/form-data
+    const form = new FormData();
+    form.append('studentId', studentInfo.studentId);
+    form.append('instruction', formData.instruction);
+    form.append('duration', duration);
+    form.append('startDate', formData.startDate);
+    form.append('endDate', formData.endDate);
+    form.append('notes', formData.notes);
+    form.append('image', imageFile);
 
-    // Chuẩn hóa payload đúng yêu cầu backend
-    const payload = {
-      studentId: studentInfo.studentId,
-      instruction: formData.instruction,
-      duration,
-      startDate: formData.startDate,
-      endDate: formData.endDate,
-      notes: formData.notes,
-      // medicineDetails: medicineDetailsPayload
-    };
-const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token');
 
-  // Xem thông tin trước khi gửi
-  console.log('Payload gửi backend:', payload);
+    setIsSubmitting(true);
+    setSubmitError(null);
 
-  setIsSubmitting(true);
-  setSubmitError(null);
-
-  try {
-    await MedicineDeclarationService.createMedicineSubmission(
-      
-      payload,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`
+    try {
+      await MedicineDeclarationService.createMedicineSubmission(
+        form,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
         }
-      }
-    );
+      );
 
-    setFormData({
-      instruction: '',
-      startDate: '',
-      endDate: '',
-      notes: ''
-    });
-    // setMedicineDetails([{ medicineName: '', medicineDosage: '' }]);
-    setSubmitSuccess(true);
-    toast.success('Khai báo thuốc đã được gửi thành công!');
-    setTimeout(() => setSubmitSuccess(false), 5000);
-  } catch (err) {
-    setSubmitError('Có lỗi xảy ra khi gửi khai báo. Vui lòng thử lại sau.');
-    toast.error('Có lỗi xảy ra khi gửi khai báo. Vui lòng thử lại sau.');
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+      setFormData({
+        instruction: '',
+        startDate: '',
+        endDate: '',
+        notes: ''
+      });
+      setImageFile(null);
+      setSubmitSuccess(true);
+      toast.success('Khai báo thuốc đã được gửi thành công!');
+      setTimeout(() => setSubmitSuccess(false), 5000);
+    } catch (err) {
+      setSubmitError('Có lỗi xảy ra khi gửi khai báo. Vui lòng thử lại sau.');
+      toast.error('Có lỗi xảy ra khi gửi khai báo. Vui lòng thử lại sau.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -168,25 +145,25 @@ const token = localStorage.getItem('token');
     <div className="parent-page medicine-declaration-page">
       <div className="page-header">
         <h1>Khai Báo Thuốc</h1>
-       <button
-  className="view-sent-medicine-btn"
-  style={{
-    float: 'right',
-    marginTop: '-40px',
-    background: '#2563eb',
-    color: '#fff',
-    border: 'none',
-    borderRadius: 6,
-    padding: '8px 18px',
-    fontWeight: 600,
-    cursor: 'pointer'
-  }}
-  onClick={() => navigate('/donthuoc')}
->
-  Xem Đơn Thuốc Đã Gửi
-</button>
+        <button
+          className="view-sent-medicine-btn"
+          style={{
+            float: 'right',
+            marginTop: '-40px',
+            background: '#2563eb',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 6,
+            padding: '8px 18px',
+            fontWeight: 600,
+            cursor: 'pointer'
+          }}
+          onClick={() => navigate('/donthuoc')}
+        >
+          Xem Đơn Thuốc Đã Gửi
+        </button>
       </div>
-       
+
       {submitSuccess && (
         <div className="success-message">
           <p>Khai báo thuốc đã được gửi thành công! Nhân viên y tế sẽ xem xét và liên hệ nếu cần thêm thông tin.</p>
@@ -215,7 +192,7 @@ const token = localStorage.getItem('token');
           </div>
         </div>
 
-        <form className="declaration-form" onSubmit={handleSubmit}>
+        <form className="declaration-form" onSubmit={handleSubmit} encType="multipart/form-data">
           <h2>Thông tin học sinh</h2>
           <div className="form-row">
             <div className="form-group">
@@ -284,57 +261,35 @@ const token = localStorage.getItem('token');
               placeholder="Thông tin thêm mà nhân viên y tế cần biết"
             ></textarea>
           </div>
-
-          {/* <h2>Chi tiết thuốc <span className="required">*</span></h2>
-          {medicineDetails.map((md, idx) => (
-            <div className="medicine-detail-row" key={idx}>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Tên thuốc <span className="required">*</span></label>
-                  <input
-                    type="text"
-                    name="medicineName"
-                    value={md.medicineName}
-                    onChange={e => handleMedicineDetailChange(idx, e)}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Liều lượng <span className="required">*</span></label>
-                  <input
-                    type="text"
-                    name="medicineDosage"
-                    value={md.medicineDosage}
-                    onChange={e => handleMedicineDetailChange(idx, e)}
-                    required
-                  />
-                </div>
-                {medicineDetails.length > 1 && (
-                  <button
-                    type="button"
-                    className="remove-medicine-btn"
-                    onClick={() => removeMedicineDetail(idx)}
-                  >
-                    Xóa
-                  </button>
-                )}
+          <div className="form-group">
+            <label>Hình ảnh đơn thuốc <span className="required">*</span></label>
+            <input
+              type="file"
+              name="image"
+              accept="image/*"
+              onChange={handleImageChange}
+              required
+            />
+            {imageFile && (
+              <div style={{ marginTop: 8 }}>
+                <img
+                  src={URL.createObjectURL(imageFile)}
+                  alt="Preview"
+                  style={{ maxWidth: 200, maxHeight: 120, borderRadius: 6, border: '1px solid #eee' }}
+                />
               </div>
-            </div>
-          ))}
-          <button type="button" className="add-medicine-btn" onClick={addMedicineDetail}>
-            Thêm thuốc
-          </button> */}
+            )}
+          </div>
 
           <div className="form-actions">
             <button type="submit" className="submit-button" disabled={isSubmitting}>
               {isSubmitting ? 'Đang gửi...' : (
                 <>
                   <Send size={16} />
-                  Gửi khai báo
+                  Gửi Thuốc
                 </>
               )}
             </button>
-          
           </div>
         </form>
       </div>

@@ -111,6 +111,8 @@ const VaccinationManagement = () => {
       }));
       console.log('Fetched vaccination events:', mappedData);
       setVaccinationEvents(mappedData);
+      const approvedCampaigns = mappedData.filter(ev => ev.status === 'APPROVED');
+      localStorage.setItem('approvedCampaigns', JSON.stringify(approvedCampaigns));
       setLoading(false);
     } catch (error) {
       setLoading(false);
@@ -311,6 +313,27 @@ const VaccinationManagement = () => {
     <div className="nurse-page vaccination-management-page">
       <h1 className="page-title">Quản lý tiêm chủng</h1>
       
+       <div style={{ marginBottom: 20, textAlign: 'right' }}>
+        <button
+          className="create-event-btn"
+          style={{
+            background: '#22c55e',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 4,
+            padding: '8px 16px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6
+          }}
+          onClick={() => navigate('/taosukientiemchung')}
+        >
+          <Plus size={18} /> Tạo sự kiện tiêm chủng
+        </button>
+      </div>
+
       {/* Success message */}
       <table className="events-table">
         <thead>

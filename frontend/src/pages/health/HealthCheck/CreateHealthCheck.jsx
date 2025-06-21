@@ -1,147 +1,159 @@
-import React, { useState } from 'react';
-import './CreateHealthCheck.css';
-import { Input } from '../../../components/ui/input';
-import { Textarea } from '../../../components/ui/textarea';
-import { Button } from '../../../components/ui/button';
+import React, { useState, useEffect } from 'react';
+import { Form, Input, Button, DatePicker, Card, Typography, Alert, Spin } from 'antd';
+import {
+  NotificationOutlined,
+  TeamOutlined,
+  TagOutlined,
+  EnvironmentOutlined,
+  FileTextOutlined,
+  CalendarOutlined,
+  UserOutlined,
+} from '@ant-design/icons';
 import HealthCheckService from '../../../services/HealthCheckService';
+import moment from 'moment';
+
+const { Title } = Typography;
+const { TextArea } = Input;
 
 const CreateHealthCheck = () => {
-  const nurse = JSON.parse(localStorage.getItem('user') || '{}');
-  const token = localStorage.getItem('token');
-  const [form, setForm] = useState({
-    campaignName: '',
-    targetGroup: '',
-    type: '',
-    address: '',
-    description: '',
-    scheduledDate: '',
-    status: 'CRAFT',
-    organizer: nurse.id || '' 
-  });
+  const [form] = Form.useForm();
+  const [nurse, setNurse] = useState({});
+  const [token, setToken] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setForm(prev => ({
-      ...prev,
-      [name]: value
-    }));
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const storedToken = localStorage.getItem('token');
+    setNurse(user);
+    setToken(storedToken);
+    form.setFieldsValue({
+      organizer: user.fullName || '',
+    });
+  }, [form]);
+
+  const handleSubmit = async (values) => {
+    setLoading(true);
+    setSuccessMsg('');
+    setErrorMsg('');
+    try {
+      const submitData = {
+        ...values,
+        scheduledDate: values.scheduledDate.format('YYYY-MM-DD'),
+        organizer: nurse.id || '',
+        status: 'PENDING',
+      };
+
+      await HealthCheckService.createHealthCheckCampaign(submitData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setSuccessMsg('Tạo chiến dịch kiểm tra sức khỏe thành công!');
+      form.resetFields();
+      form.setFieldsValue({ organizer: nurse.fullName || '' });
+    } catch (err) {
+      setErrorMsg(err.message || 'Tạo chiến dịch thất bại! Vui lòng thử lại.');
+    }
+    setLoading(false);
   };
 
-  const handleSubmit = async (e) => {
-  e.preventDefault();
-  setSuccessMsg('');
-  setErrorMsg('');
-  try {
-    // Gửi status là PENDING khi tạo chiến dịch
-    const submitData = { ...form, status: 'PENDING' };
-    await HealthCheckService.createHealthCheckCampaign(
-      submitData, // truyền body trước
-      { headers: { Authorization: `Bearer ${token}` } } // truyền config sau
+  if (!nurse.userRole || (nurse.userRole !== 'ROLE_NURSE' && nurse.userRole !== 'ROLE_ADMIN')) {
+    return (
+      <div style={{ maxWidth: 800, margin: '32px auto', padding: '24px' }}>
+        <Alert
+          message="Không có quyền truy cập"
+          description="Bạn không có quyền thực hiện chức năng này."
+          type="error"
+          showIcon
+        />
+      </div>
     );
-
-    setSuccessMsg('Tạo chiến dịch kiểm tra sức khỏe thành công!');
-    setForm({
-      campaignName: '',
-      targetGroup: '',
-      type: '',
-      address: '',
-      description: '',
-      scheduledDate: '',
-      status: 'CRAFT',
-      organizer: nurse.id || ''
-    });
-  } catch (err) {
-    setErrorMsg('Tạo chiến dịch thất bại!');
   }
-};
 
   return (
-    <div className="health-check-container">
-      {(nurse.userRole === 'ROLE_NURSE' || nurse.userRole === 'ROLE_ADMIN') && (
-        <div className="campaign-form-section">
-          <h2>Tạo chiến dịch kiểm tra sức khỏe</h2>
-          <form onSubmit={handleSubmit} className="campaign-form">
-            <div className="form-group">
-              <label>Tên chiến dịch</label>
-              <Input
-                type="text"
-                name="campaignName"
-                value={form.campaignName}
-                onChange={handleInputChange}
-                required
+    <div style={{ maxWidth: 800, margin: '32px auto', padding: '24px', background: '#f4f8fb' }}>
+      <Card style={{ borderRadius: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+        <Title level={2} style={{ textAlign: 'center', color: '#1890ff', marginBottom: 24 }}>
+          Tạo chiến dịch kiểm tra sức khỏe
+        </Title>
+        <Spin spinning={loading} tip="Đang xử lý...">
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={handleSubmit}
+            initialValues={{ remember: true }}
+            autoComplete="off"
+          >
+            <Form.Item
+              name="campaignName"
+              label="Tên chiến dịch"
+              rules={[{ required: true, message: 'Vui lòng nhập tên chiến dịch!' }]}
+            >
+              <Input prefix={<NotificationOutlined />} placeholder="VD: Khám sức khỏe toàn trường đợt 1" />
+            </Form.Item>
+
+            <Form.Item
+              name="targetGroup"
+              label="Đối tượng áp dụng"
+              rules={[{ required: true, message: 'Vui lòng nhập đối tượng!' }]}
+            >
+              <Input prefix={<TeamOutlined />} placeholder="VD: Khối 1, Khối 2 hoặc Toàn trường" />
+            </Form.Item>
+
+            <Form.Item
+              name="type"
+              label="Loại chiến dịch"
+              rules={[{ required: true, message: 'Vui lòng nhập loại chiến dịch!' }]}
+            >
+              <Input prefix={<TagOutlined />} placeholder="VD: Khám tổng quát, Khám nha khoa" />
+            </Form.Item>
+
+            <Form.Item
+              name="address"
+              label="Địa điểm tổ chức"
+              rules={[{ required: true, message: 'Vui lòng nhập địa điểm!' }]}
+            >
+              <Input prefix={<EnvironmentOutlined />} placeholder="VD: Phòng y tế, Hội trường A" />
+            </Form.Item>
+
+            <Form.Item
+              name="description"
+              label="Mô tả chi tiết"
+              rules={[{ required: true, message: 'Vui lòng nhập mô tả!' }]}
+            >
+              <TextArea prefix={<FileTextOutlined />} rows={4} placeholder="Mô tả các hoạt động, mục tiêu của chiến dịch" />
+            </Form.Item>
+
+            <Form.Item
+              name="scheduledDate"
+              label="Ngày khám dự kiến"
+              rules={[{ required: true, message: 'Vui lòng chọn ngày khám!' }]}
+            >
+              <DatePicker
+                style={{ width: '100%' }}
+                prefix={<CalendarOutlined />}
+                format="DD/MM/YYYY"
+                placeholder="Chọn ngày"
+                disabledDate={(current) => current && current < moment().endOf('day')}
               />
-            </div>
-            <div className="form-group">
-              <label>Đối tượng áp dụng</label>
-              <Input
-                type="text"
-                name="targetGroup"
-                value={form.targetGroup}
-                onChange={handleInputChange}
-                placeholder="VD: Lớp 3A, 3B, 3C hoặc Khối 3"
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>Loại chiến dịch</label>
-              <Input
-                type="text"
-                name="type"
-                value={form.type}
-                onChange={handleInputChange}
-                placeholder="VD: Khám sức khỏe định kỳ"
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>Địa điểm tổ chức</label>
-              <Input
-                type="text"
-                name="address"
-                value={form.address}
-                onChange={handleInputChange}
-                placeholder="VD: Phòng y tế, Hội trường"
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>Mô tả</label>
-              <Textarea
-                name="description"
-                value={form.description}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>Ngày khám</label>
-              <Input
-                type="date"
-                name="scheduledDate"
-                value={form.scheduledDate}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-           
-            <div className="form-group">
-              <label>Người thực hiện</label>
-              <Input
-                type="text"
-                name="organizer"
-                value={nurse.fullName || ''}
-                readOnly
-                disabled
-              />
-            </div>
-            <Button type="submit" variant="primary">Tạo chiến dịch</Button>
-            {successMsg && <div className="success-message">{successMsg}</div>}
-            {errorMsg && <div className="error-message">{errorMsg}</div>}
-          </form>
-        </div>
-      )}
+            </Form.Item>
+
+            <Form.Item name="organizer" label="Người thực hiện">
+              <Input prefix={<UserOutlined />} readOnly disabled />
+            </Form.Item>
+
+            {successMsg && <Alert message={successMsg} type="success" showIcon style={{ marginBottom: 16 }} />}
+            {errorMsg && <Alert message={errorMsg} type="error" showIcon style={{ marginBottom: 16 }} />}
+
+            <Form.Item>
+              <Button type="primary" htmlType="submit" block size="large" loading={loading}>
+                Tạo chiến dịch kiểm tra sức khỏe
+              </Button>
+            </Form.Item>
+          </Form>
+        </Spin>
+      </Card>
     </div>
   );
 };
