@@ -302,7 +302,7 @@ const MedicineDeclarationsList = () => {
       </Card>
 
       {/* Modal xem chi tiết thuốc + cho uống thuốc */}
-      // ...existing code...
+     
       <Modal
         open={!!viewDetail}
         title={

@@ -56,5 +56,8 @@ const VaccinationService = {
     getVaccinationCampaignsByStudentId: (studentId, parentConfirmation, config) => {
         return axios.get(`${vaccinationApiUrl}/student/${studentId}/campaign-parentConfirmation/${parentConfirmation}`, config);
     },
+    getVaccinationParentConfirmation: (campaignId, config) => {
+        return axios.get(`${vaccinationApiUrl}/${campaignId}/students-registrations`, config);
+    }
 }
 export default VaccinationService;

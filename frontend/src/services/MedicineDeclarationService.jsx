@@ -14,7 +14,7 @@ const MedicineDeclarationService = {
 },
  getMedicineSubmissions: async (config) => {
   try {
-    const response = await axios.get(API_URL, config);
+    const response = await axios.get(`${API_URL}/nurse`, config);
     return response.data;
   } catch (error) {
     console.error("Error fetching medicine submissions:", error);
@@ -50,7 +50,23 @@ updateMedicineSubmissionStatus: async (id, data, config) => {
     console.error("Error marking medicine as taken:", error.response?.data || error);
     throw error;
   }
- }
+ },
+getMedicineSubmissionMyStudent: async (studentId, config) => {
+  try {
+    // Truyền params đúng chuẩn axios
+    const response = await axios.get(
+      `${API_URL}/parent`,
+      {
+        ...config,
+        params: studentId ? { studentId } : {}
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching medicine submission by ID:", error);
+    throw error;
+  }
+},
 
 }
 export default MedicineDeclarationService;

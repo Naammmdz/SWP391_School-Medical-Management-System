@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Form, Input, Button, DatePicker, Card, Select, Checkbox, message, List, Alert, Table, Tag } from 'antd';
+import React, { useState } from 'react';
+import { Card, Button, Modal, List, Form, Input, DatePicker, Select, Checkbox, message, Alert, Tag, Table, Spin } from 'antd';
 import VaccinationService from '../../../services/VaccinationService';
 import dayjs from 'dayjs';
-import { useWatch } from 'antd/es/form/Form';
 
 const { Option } = Select;
 
@@ -18,21 +17,8 @@ const resultLabel = {
   DELAYED: <Tag color="orange">Hoãn</Tag>,
 };
 
-const VaccinationResult = ({ onSuccess }) => {
-  const [form] = Form.useForm();
-  const [loading, setLoading] = useState(false);
-
-  // Thông báo trạng thái ghi nhận
-  const [submitStatus, setSubmitStatus] = useState(null); // 'success' | 'error' | null
-
-  // Lấy danh sách học sinh từ localStorage (ưu tiên studentId, fallback id)
-  const studentsRaw = JSON.parse(localStorage.getItem('students') || '[]');
-  const students = studentsRaw.map(s => ({
-    ...s,
-    studentId: s.studentId ?? s.id,
-  }));
-
-  // Lấy danh sách chiến dịch đã APPROVED từ localStorage (ưu tiên campaignId, fallback id)
+const VaccinationResult = () => {
+  // Lấy danh sách chiến dịch đã duyệt từ localStorage
   const campaignsRaw = JSON.parse(localStorage.getItem('approvedCampaigns') || '[]');
   const approvedCampaigns = campaignsRaw.map(c => ({
     ...c,
@@ -40,21 +26,23 @@ const VaccinationResult = ({ onSuccess }) => {
     campaignName: c.campaignName ?? c.title,
   }));
 
-  // State để xác định học sinh nào đang được ghi nhận kết quả
-  const [activeStudentId, setActiveStudentId] = useState(null);
+  // Modal state
+  const [openModal, setOpenModal] = useState(false);
+  const [selectedCampaign, setSelectedCampaign] = useState(null);
+  const [studentsInCampaign, setStudentsInCampaign] = useState([]);
+  const [loadingStudents, setLoadingStudents] = useState(false);
 
-  // Theo dõi campaignId trong form
-  const campaignId = useWatch('campaignId', form);
-  const selectedCampaign = approvedCampaigns.find(c => String(c.campaignId) === String(campaignId));
+  // Ghi nhận kết quả
+  const [activeStudent, setActiveStudent] = useState(null);
+  const [form] = Form.useForm();
+  const [loadingSubmit, setLoadingSubmit] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState(null);
 
-  // Lấy học sinh đang active
-  const activeStudent = students.find(s => String(s.studentId) === String(activeStudentId));
-
-  // State & fetch cho tất cả kết quả tiêm chủng
+  // Lấy tất cả kết quả tiêm chủng (giữ nguyên)
   const [allResults, setAllResults] = useState([]);
   const [allResultsLoading, setAllResultsLoading] = useState(false);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const fetchAllResults = async () => {
       setAllResultsLoading(true);
       try {
@@ -70,19 +58,37 @@ const VaccinationResult = ({ onSuccess }) => {
     fetchAllResults();
   }, []);
 
-  // Helper: lấy tên học sinh từ studentId
-  const getStudentName = (studentId) => {
-    const s = students.find(st => String(st.studentId) === String(studentId));
-    return s ? s.fullName || s.name : studentId;
-  };
-  // Helper: lấy tên chiến dịch từ campaignId
+  // Helper
   const getCampaignName = (campaignId) => {
     const c = approvedCampaigns.find(ca => String(ca.campaignId) === String(campaignId));
     return c ? c.campaignName : campaignId;
   };
 
+  // Hiển thị modal và load học sinh đã đăng ký chiến dịch
+  const handleOpenModal = async (campaign) => {
+    setSelectedCampaign(campaign);
+    setOpenModal(true);
+    setLoadingStudents(true);
+    setActiveStudent(null);
+    setSubmitStatus(null);
+    try {
+      const token = localStorage.getItem('token');
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      // Gọi API lấy danh sách học sinh đã đăng ký chiến dịch
+      const res = await VaccinationService.getVaccinationParentConfirmation(campaign.campaignId, config);
+       
+      setStudentsInCampaign(Array.isArray(res.data) ? res.data : []);
+      console.log("studentInCampaign:" ,res.data);
+    } catch (err) {
+      setStudentsInCampaign([]);
+      message.error("Không thể tải danh sách học sinh.");
+    }
+    setLoadingStudents(false);
+  };
+
+  // Ghi nhận kết quả tiêm chủng cho học sinh
   const handleSubmit = async (values) => {
-    setLoading(true);
+    setLoadingSubmit(true);
     setSubmitStatus(null);
     try {
       const payload = {
@@ -95,7 +101,7 @@ const VaccinationResult = ({ onSuccess }) => {
         result: values.result,
         vaccineName: values.vaccineName,
         studentId: activeStudent.studentId,
-        campaignId: values.campaignId,
+        campaignId: selectedCampaign.campaignId,
       };
       const token = localStorage.getItem('token');
       await VaccinationService.vaccinationResult(payload.campaignId, payload, {
@@ -104,12 +110,11 @@ const VaccinationResult = ({ onSuccess }) => {
 
       setSubmitStatus('success');
       form.resetFields();
-      setActiveStudentId(null);
-      if (onSuccess) onSuccess();
+      setActiveStudent(null);
     } catch (err) {
       setSubmitStatus('error');
     }
-    setLoading(false);
+    setLoadingSubmit(false);
   };
 
   // Cột cho bảng kết quả tiêm chủng
@@ -118,7 +123,10 @@ const VaccinationResult = ({ onSuccess }) => {
       title: 'Học sinh',
       dataIndex: 'studentId',
       key: 'studentId',
-      render: (studentId) => getStudentName(studentId),
+      render: (studentId) => {
+        const s = studentsInCampaign.find(st => String(st.studentId) === String(studentId));
+        return s ? s.fullName || s.name : studentId;
+      },
     },
     {
       title: 'Chiến dịch',
@@ -153,170 +161,172 @@ const VaccinationResult = ({ onSuccess }) => {
 
   return (
     <div style={{ maxWidth: 900, margin: '32px auto' }}>
-      <Card title="Danh sách học sinh" bordered style={{ marginBottom: 32 }}>
+      <Card title="Danh sách chiến dịch đã duyệt" bordered style={{ marginBottom: 32 }}>
         <List
-          dataSource={students}
-          renderItem={student => (
+          dataSource={approvedCampaigns}
+          renderItem={campaign => (
             <List.Item
               actions={[
                 <Button
                   type="primary"
-                  onClick={() => {
-                    setActiveStudentId(student.studentId);
-                    setSubmitStatus(null);
-                  }}
+                  onClick={() => handleOpenModal(campaign)}
                   key="record"
                 >
                   Ghi nhận kết quả
                 </Button>
               ]}
             >
-              <span>{student.fullName || student.name}</span>
+              <span>{campaign.campaignName}</span>
             </List.Item>
           )}
         />
       </Card>
 
-      {activeStudent && (
-        <Card
-          title={`Ghi nhận kết quả tiêm chủng cho: ${activeStudent.fullName || activeStudent.name}`}
-          bordered
+      {/* Modal ghi nhận kết quả cho từng học sinh trong chiến dịch */}
+      <Modal
+        open={openModal}
+        title={selectedCampaign ? `Ghi nhận kết quả cho chiến dịch: ${selectedCampaign.campaignName}` : ""}
+        onCancel={() => { setOpenModal(false); setActiveStudent(null); }}
+        footer={null}
+        width={700}
+      >
+        {loadingStudents ? (
+          <Spin />
+        ) : (
+          <>
+           {!activeStudent ? (
+  <>
+    {console.log("studentsInCampaign render:", studentsInCampaign)}
+    <List
+      dataSource={studentsInCampaign}
+      renderItem={student => (
+        <List.Item
+          actions={[
+            <Button
+              type="primary"
+              onClick={() => { setActiveStudent(student); setSubmitStatus(null); }}
+              key="record"
+            >
+              Ghi nhận kết quả
+            </Button>
+          ]}
         >
-          {submitStatus === 'success' && (
-            <Alert
-              message="Ghi nhận kết quả tiêm chủng thành công!"
-              type="success"
-              showIcon
-              style={{ marginBottom: 16 }}
-            />
-          )}
-          {submitStatus === 'error' && (
-            <Alert
-              message="Ghi nhận thất bại! Vui lòng kiểm tra lại thông tin."
-              type="error"
-              showIcon
-              style={{ marginBottom: 16 }}
-            />
-          )}
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={handleSubmit}
-            initialValues={{
-              date: dayjs(),
-              doseNumber: 1,
-              parentConfirmation: true,
-              previousDose: false,
-            }}
-          >
-            <Form.Item label="Tên học sinh">
-              <Input value={activeStudent.fullName || activeStudent.name} disabled />
-            </Form.Item>
-
-            <Form.Item
-              label="Chọn chiến dịch tiêm chủng"
-              name="campaignId"
-              rules={[{ required: true, message: 'Vui lòng chọn chiến dịch' }]}
-            >
-              <Select
-                showSearch
-                placeholder="Chọn chiến dịch"
-                filterOption={(input, option) =>
-                  (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
-                }
-              >
-                {approvedCampaigns.map(campaign => (
-                  <Option key={campaign.campaignId} value={campaign.campaignId}>
-                    {campaign.campaignName}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
-
-            {selectedCampaign && (
-              <Form.Item label="Tên chiến dịch">
-                <Input value={selectedCampaign.campaignName} disabled />
-              </Form.Item>
-            )}
-
-            <Form.Item
-              label="Ngày tiêm"
-              name="date"
-              rules={[{ required: true, message: 'Vui lòng chọn ngày tiêm' }]}
-            >
-              <DatePicker format="YYYY-MM-DD" style={{ width: '100%' }} />
-            </Form.Item>
-
-            <Form.Item
-              label="Tên vắc-xin"
-              name="vaccineName"
-              rules={[{ required: true, message: 'Vui lòng nhập tên vắc-xin' }]}
-            >
-              <Input />
-            </Form.Item>
-
-            <Form.Item
-              label="Số mũi tiêm"
-              name="doseNumber"
-              rules={[{ required: true, message: 'Vui lòng nhập số mũi tiêm' }]}
-            >
-              <Input type="number" min={1} />
-            </Form.Item>
-
-            <Form.Item
-              label="Phản ứng sau tiêm"
-              name="adverseReaction"
-              rules={[{ required: true, message: 'không được để trống' }]}
-            >
-              <Input.TextArea rows={2} placeholder="Ghi chú phản ứng nếu có" />
-            </Form.Item>
-
-            <Form.Item label="Ghi chú" name="notes">
-              <Input.TextArea rows={2} />
-            </Form.Item>
-
-            <Form.Item name="parentConfirmation" valuePropName="checked">
-              <Checkbox>Xác nhận của phụ huynh</Checkbox>
-            </Form.Item>
-
-            <Form.Item
-              label="Kết quả"
-              name="result"
-              rules={[{ required: true, message: 'Kết quả không được để trống' }]}
-            >
-              <Select placeholder="Chọn kết quả">
-                {resultOptions.map(opt => (
-                  <Option key={opt.value} value={opt.value}>{opt.label}</Option>
-                ))}
-              </Select>
-            </Form.Item>
-
-            <Form.Item name="previousDose" valuePropName="checked">
-              <Checkbox>Đã tiêm mũi trước</Checkbox>
-            </Form.Item>
-
-            <Form.Item>
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={loading}
-              >
-                Ghi nhận kết quả
-              </Button>
-              <Button
-                style={{ marginLeft: 12 }}
-                onClick={() => {
-                  setActiveStudentId(null);
-                  form.resetFields();
-                  setSubmitStatus(null);
-                }}
-              >
-                Hủy
-              </Button>
-            </Form.Item>
-          </Form>
-        </Card>
+          <span>{student.fullName || student.name}</span>
+        </List.Item>
       )}
+    />
+  </>
+) : (
+              <Card
+                title={`Ghi nhận kết quả cho: ${activeStudent.fullName || activeStudent.name}`}
+                bordered
+              >
+                {submitStatus === 'success' && (
+                  <Alert
+                    message="Ghi nhận kết quả tiêm chủng thành công!"
+                    type="success"
+                    showIcon
+                    style={{ marginBottom: 16 }}
+                  />
+                )}
+                {submitStatus === 'error' && (
+                  <Alert
+                    message="Ghi nhận thất bại! Vui lòng kiểm tra lại thông tin."
+                    type="error"
+                    showIcon
+                    style={{ marginBottom: 16 }}
+                  />
+                )}
+                <Form
+                  form={form}
+                  layout="vertical"
+                  onFinish={handleSubmit}
+                  initialValues={{
+                    date: dayjs(),
+                    doseNumber: 1,
+                    parentConfirmation: true,
+                    previousDose: false,
+                  }}
+                >
+                  <Form.Item label="Tên học sinh">
+                    <Input value={activeStudent.fullName || activeStudent.name} disabled />
+                  </Form.Item>
+                  <Form.Item label="Tên chiến dịch">
+                    <Input value={selectedCampaign.campaignName} disabled />
+                  </Form.Item>
+                  <Form.Item
+                    label="Ngày tiêm"
+                    name="date"
+                    rules={[{ required: true, message: 'Vui lòng chọn ngày tiêm' }]}
+                  >
+                    <DatePicker format="YYYY-MM-DD" style={{ width: '100%' }} />
+                  </Form.Item>
+                  <Form.Item
+                    label="Tên vắc-xin"
+                    name="vaccineName"
+                    rules={[{ required: true, message: 'Vui lòng nhập tên vắc-xin' }]}
+                  >
+                    <Input />
+                  </Form.Item>
+                  <Form.Item
+                    label="Số mũi tiêm"
+                    name="doseNumber"
+                    rules={[{ required: true, message: 'Vui lòng nhập số mũi tiêm' }]}
+                  >
+                    <Input type="number" min={1} />
+                  </Form.Item>
+                  <Form.Item
+                    label="Phản ứng sau tiêm"
+                    name="adverseReaction"
+                    rules={[{ required: true, message: 'không được để trống' }]}
+                  >
+                    <Input.TextArea rows={2} placeholder="Ghi chú phản ứng nếu có" />
+                  </Form.Item>
+                  <Form.Item label="Ghi chú" name="notes">
+                    <Input.TextArea rows={2} />
+                  </Form.Item>
+                  <Form.Item name="parentConfirmation" valuePropName="checked">
+                    <Checkbox>Xác nhận của phụ huynh</Checkbox>
+                  </Form.Item>
+                  <Form.Item
+                    label="Kết quả"
+                    name="result"
+                    rules={[{ required: true, message: 'Kết quả không được để trống' }]}
+                  >
+                    <Select placeholder="Chọn kết quả">
+                      {resultOptions.map(opt => (
+                        <Option key={opt.value} value={opt.value}>{opt.label}</Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                  <Form.Item name="previousDose" valuePropName="checked">
+                    <Checkbox>Đã tiêm mũi trước</Checkbox>
+                  </Form.Item>
+                  <Form.Item>
+                    <Button
+                      type="primary"
+                      htmlType="submit"
+                      loading={loadingSubmit}
+                    >
+                      Ghi nhận kết quả
+                    </Button>
+                    <Button
+                      style={{ marginLeft: 12 }}
+                      onClick={() => {
+                        setActiveStudent(null);
+                        form.resetFields();
+                        setSubmitStatus(null);
+                      }}
+                    >
+                      Hủy
+                    </Button>
+                  </Form.Item>
+                </Form>
+              </Card>
+            )}
+          </>
+        )}
+      </Modal>
 
       <Card title="Tất cả kết quả tiêm chủng" bordered style={{ marginTop: 40 }}>
         <Table
@@ -331,4 +341,5 @@ const VaccinationResult = ({ onSuccess }) => {
     </div>
   );
 };
+
 export default VaccinationResult;

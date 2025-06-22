@@ -301,7 +301,7 @@ const viewNotificationDetails = (notification) => {
                         <span>{activeNotification.targetGroup}</span>
                       </div>
                       <div className="info-group">
-                        <label>Loại chiến dịch:</label>
+                        <label>Loại Vắc Xin:</label>
                         <span>{activeNotification.type}</span>
                       </div>
                     </div>

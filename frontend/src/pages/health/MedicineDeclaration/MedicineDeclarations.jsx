@@ -158,7 +158,7 @@ const MedicineDeclarations = () => {
             fontWeight: 600,
             cursor: 'pointer'
           }}
-          onClick={() => navigate('/donthuoc')}
+          onClick={() => navigate('/donthuocdagui')}
         >
           Xem Đơn Thuốc Đã Gửi
         </button>
