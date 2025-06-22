@@ -231,6 +231,9 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
         HealthCheck healthCheck = healthCheckRepository.findById(healthcheckId).orElseThrow(() -> new RuntimeException("Health check not found with ID: " + healthcheckId));
         HealthCheckCampaign campaign = healthCheckCampaignRepository.findById(requestDTO.getCampaignId()).orElseThrow(() -> new RuntimeException("Campaign not found with ID: " + requestDTO.getCampaignId()));
         Student student = studentRepository.findById(requestDTO.getStudentId()).orElseThrow(() -> new RuntimeException("Student not found with ID: " + requestDTO.getStudentId()));
+        if(healthCheck.isParentConfirmation() == false) {
+            throw new RuntimeException("Parent confirmation is required to update health check results.");
+        }
         healthCheck.setDate(requestDTO.getDate());
         healthCheck.setHeight(requestDTO.getHeight());
         healthCheck.setWeight(requestDTO.getWeight());
@@ -245,7 +248,7 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
         healthCheck.setParentConfirmation(requestDTO.isParentConfirmation());
         healthCheck.setCampaign(campaign);
         healthCheck.setStudent(student);
-//        healthCheck = maptoEntityCheck(requestDTO);
+        // healthCheck = maptoEntityCheck(requestDTO);
         // Cập nhật các trường khác nếu cần
 
         healthCheckRepository.save(healthCheck);

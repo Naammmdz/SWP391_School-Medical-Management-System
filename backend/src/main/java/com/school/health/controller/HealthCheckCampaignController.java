@@ -44,7 +44,7 @@ public class HealthCheckCampaignController {
         return ResponseEntity.ok(healthCheckCampaignServiceImpl.getAllCampaigns());
     }
 
-    // lấy danh sách chiến dịch sức khỏe đã được phê duyệt
+    // lấy danh sách chiến dịch sức khỏe theo id
     @GetMapping("/{campaignId}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE')")
     public ResponseEntity<?> getCampaignById(@PathVariable @Valid int campaignId) {

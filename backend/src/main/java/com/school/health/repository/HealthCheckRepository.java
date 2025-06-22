@@ -14,7 +14,7 @@ public interface HealthCheckRepository extends JpaRepository<HealthCheck, Intege
     HealthCheck findByCampaignIdAndStudentId(Integer campaignId, Integer studentId);
 
     // Đoạn code này dùng JPQL nhá macbook trả ra kết quả dựa theo campaign ID
-    @Query("SELECT hc FROM HealthCheck hc WHERE hc.campaign.campaignId = :campaignId")
+    @Query("SELECT hc FROM HealthCheck hc WHERE hc.campaign.campaignId = :campaignId AND hc.parentConfirmation = true")
     List<HealthCheck> findByCampaignId(Integer campaignId);
 
     // Lấy hết các HealthCheck của một học sinh theo studentId
