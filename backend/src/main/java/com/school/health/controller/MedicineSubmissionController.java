@@ -62,28 +62,62 @@ public class MedicineSubmissionController {
         return ResponseEntity.status(HttpStatus.CREATED).body(medicineSubmissionResponse);
     }
 
-    //READ ALL - Phân quyền theo role
-    @GetMapping
-    @PreAuthorize("hasRole('PARENT') or hasRole('NURSE') or hasRole('ADMIN')")
-    public ResponseEntity<List<MedicineSubmissionResponse>> getAllMedicineSubmissions(
+//    //READ ALL - Phân quyền theo role
+//    @GetMapping
+//    @PreAuthorize("hasRole('PARENT') or hasRole('NURSE') or hasRole('ADMIN')")
+//    public ResponseEntity<List<MedicineSubmissionResponse>> getAllMedicineSubmissions(
+//            @RequestParam(required = false) Integer studentId,
+//            @RequestParam(required = false) Integer parentId,
+//            @RequestParam(required = false) String status,
+//            Authentication authentication) {
+//
+//        List<MedicineSubmissionResponse> list;
+//        Integer userId = authUtils.getCurrentUserId(authentication);
+//
+//        if (authUtils.hasRole(authentication, "PARENT")) {
+//            list = medicineSubmissionService.getAllByParent(userId, studentId, status);
+//        } else if (authUtils.hasRole(authentication, "NURSE")) {
+//            list = medicineSubmissionService.getAllForNurse(studentId, parentId, status);
+//        } else if (authUtils.hasRole(authentication, "ADMIN")) {
+//            list = medicineSubmissionService.getAllForAdmin(studentId, parentId, status);
+//        } else {
+//            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+//        }
+//
+//        return ResponseEntity.ok(list);
+//    }
+
+    // Endpoint for PARENT to get their submissions
+    @GetMapping("/parent")
+    @PreAuthorize("hasRole('PARENT')")
+    public ResponseEntity<List<MedicineSubmissionResponse>> getSubmissionsForParent(
             @RequestParam(required = false) Integer studentId,
-            @RequestParam(required = false) Integer parentId,
             @RequestParam(required = false) String status,
             Authentication authentication) {
+        Integer parentId = authUtils.getCurrentUserId(authentication);
+        List<MedicineSubmissionResponse> list = medicineSubmissionService.getAllByParent(parentId, studentId, status);
+        return ResponseEntity.ok(list);
+    }
 
-        List<MedicineSubmissionResponse> list;
-        Integer userId = authUtils.getCurrentUserId(authentication);
+    // Endpoint for NURSE to get submissions
+    @GetMapping("/nurse")
+    @PreAuthorize("hasRole('NURSE')")
+    public ResponseEntity<List<MedicineSubmissionResponse>> getSubmissionsForNurse(
+            @RequestParam(required = false) Integer studentId,
+            @RequestParam(required = false) Integer parentId,
+            @RequestParam(required = false) String status) {
+        List<MedicineSubmissionResponse> list = medicineSubmissionService.getAllForNurse(studentId, parentId, status);
+        return ResponseEntity.ok(list);
+    }
 
-        if (authUtils.hasRole(authentication, "PARENT")) {
-            list = medicineSubmissionService.getAllByParent(userId, studentId, status);
-        } else if (authUtils.hasRole(authentication, "NURSE")) {
-            list = medicineSubmissionService.getAllForNurse(studentId, parentId, status);
-        } else if (authUtils.hasRole(authentication, "ADMIN")) {
-            list = medicineSubmissionService.getAllForAdmin(studentId, parentId, status);
-        } else {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-
+    // Endpoint for ADMIN to get submissions
+    @GetMapping("/admin")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<MedicineSubmissionResponse>> getSubmissionsForAdmin(
+            @RequestParam(required = false) Integer studentId,
+            @RequestParam(required = false) Integer parentId,
+            @RequestParam(required = false) String status) {
+        List<MedicineSubmissionResponse> list = medicineSubmissionService.getAllForAdmin(studentId, parentId, status);
         return ResponseEntity.ok(list);
     }
 
