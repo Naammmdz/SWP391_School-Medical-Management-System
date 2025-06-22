@@ -50,4 +50,6 @@ public interface VaccinationCampaignService {
 
     VaccinationResponseDTO rejectStudentVaccine(VaccinationRequestDTO vaccineRequest);
 
+    List<VaccinationCampaignResponseDTO> getCampaignStatus(int studentId, boolean parentConfirmation);
+
 }

@@ -163,5 +163,11 @@ public class VaccinationCampaignController {
         return ResponseEntity.ok(vaccinationCampaignService.getResultWithFilterDate(startDate, endDate));
     }
 
+    @GetMapping("/student/{studentId}/campaign-parentConfirmation/{parentConfirmation}")
+    @PreAuthorize("hasRole('PARENT') or hasRole('NURSE') or hasRole('ADMIN')")
+    public ResponseEntity<?> getCampaignStatus(@PathVariable @Valid int studentId, @PathVariable boolean parentConfirmation) {
+        return ResponseEntity.ok(vaccinationCampaignService.getCampaignStatus(studentId, parentConfirmation));
+    }
+
 
 }

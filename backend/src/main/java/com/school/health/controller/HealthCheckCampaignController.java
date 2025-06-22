@@ -172,4 +172,11 @@ public class HealthCheckCampaignController {
         return ResponseEntity.ok(healthCheckCampaignService.getResultWithFilterDate(startDate, endDate, consultationAppointment));
     }
 
+    // lấy trạng thái của chiến dịch sức khỏe từ parentConfirm trong kết quả chiến dịch
+    @GetMapping("/student/{studentId}/campaign-parentConfirmation/{parentConfirmation}")
+    @PreAuthorize("hasRole('PARENT') or hasRole('NURSE') or hasRole('ADMIN')")
+    public ResponseEntity<?> getCampaignStatus(@PathVariable @Valid int studentId, @PathVariable(required = false) @Valid boolean parentConfirmation) {
+        return ResponseEntity.ok(healthCheckCampaignService.getCampaignStatus(studentId, parentConfirmation));
+    }
+
 }
