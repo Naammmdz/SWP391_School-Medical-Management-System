@@ -128,7 +128,7 @@ public class MedicineSubmissionController {
             @PathVariable Integer id,
             Authentication authentication) {
 
-        boolean includeLogsData = authUtils.hasRole(authentication, "NURSE");
+        boolean includeLogsData = authUtils.hasRole(authentication, "NURSE") || authUtils.hasRole(authentication, "PARENT");
         MedicineSubmissionResponse medicineSubmissionResponse;
 
         if (includeLogsData) {
