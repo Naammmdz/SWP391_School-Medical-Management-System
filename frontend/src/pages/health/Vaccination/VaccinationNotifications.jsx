@@ -26,99 +26,163 @@ const VaccinationNotifications = () => {
   };
 
   // Lấy danh sách chiến dịch tiêm chủng đã duyệt
-  const fetchNotifications = async () => {
-    setLoading(true);
-    try {
-      const config = { headers: { Authorization: `Bearer ${token}` } };
-      const response = await vaccinationService.getVaccinationCampaignApproved(config);
-      const data = Array.isArray(response.data) ? response.data : [];
-      const mapped = data.map(item => ({
+const fetchNotifications = async () => {
+  setLoading(true);
+  try {
+    const config = { headers: { Authorization: `Bearer ${token}` } };
+    const studentId = localStorage.getItem('selectedStudentId');
+    // Lấy thông tin học sinh từ localStorage (giả sử đã lưu object student)
+    const studentInfo = JSON.parse(localStorage.getItem('selectedStudentInfo') || '{}');
+    const studentClass = studentInfo.className || ""; // ví dụ: "3A"
+    console.log('Lớp học sinh:', studentClass);
+
+    const response = await vaccinationService.getVaccinationCampaignApproved(config);
+    const data = Array.isArray(response.data) ? response.data : [];
+
+    // Lọc chiến dịch phù hợp với lớp học sinh
+    const filtered = data.filter(item => {
+      if (!studentClass || !item.targetGroup) return false;
+      const target = item.targetGroup.toLowerCase();
+      const studentClassLower = studentClass.toLowerCase();
+
+      // So sánh chính xác hoặc kiểm tra từ khóa (ví dụ: "khối 3" khớp "3A")
+      if (target === studentClassLower) return true;
+      // Nếu target là "khối 3", kiểm tra studentClass có bắt đầu bằng "3"
+      const khoiMatch = target.match(/khoi\s*(\d+)/);
+      if (khoiMatch && studentClassLower.startsWith(khoiMatch[1])) return true;
+      // Nếu target là "lớp 3A", kiểm tra trùng khớp
+      if (target.includes(studentClassLower)) return true;
+      // Nếu target là "3A", kiểm tra trùng khớp
+      if (studentClassLower.includes(target)) return true;
+      return false;
+    });
+
+    const mapped = filtered.map(item => {
+      let status = 'Chưa phản hồi';
+      let responseNote = '';
+      let responseDate = '';
+      if (item.responses && studentId) {
+        const studentRes = item.responses.find(r => String(r.studentId) === String(studentId));
+        if (studentRes) {
+          if (studentRes.status === 'CONFIRMED') status = 'Xác nhận';
+          if (studentRes.status === 'REJECTED') status = 'Từ chối';
+          responseNote = studentRes.note || '';
+          responseDate = studentRes.responseDate || '';
+        }
+      }
+      return {
         id: item.campaignId,
         title: `Thông báo tiêm chủng: ${item.campaignName}`,
         campaignName: item.campaignName,
         targetGroup: item.targetGroup,
         type: item.type,
         address: item.address,
-        organizerId: item.approvedBy, // Lưu id người tổ chức
+        organizerId: item.approvedBy,
         description: item.description,
         date: item.scheduledDate,
-        status: 'Chưa phản hồi',
-        isNew: true,
+        status,
+        isNew: status === 'Chưa phản hồi',
         sentDate: item.createdAt ? item.createdAt.split('T')[0] : '',
-        responseNote: '',
-        responseDate: '',
+        responseNote,
+        responseDate,
         requiredDocuments: 'Phiếu đồng ý của phụ huynh, giấy tờ tùy thân',
         time: '',
         location: item.address,
-      }));
-      setNotifications(mapped);
-      setLoading(false);
-    } catch (error) {
-      setNotifications([]);
-      setLoading(false);
-    }
-  };
-
-  // Gửi phản hồi xác nhận/từ chối (giả lập, bạn cần thay bằng API thực tế)
-  const sendResponse = async (e) => {
-    e.preventDefault();
-    if (!responseData.response) {
-      alert('Vui lòng chọn phản hồi của bạn');
+      };
+    });
+    setNotifications(mapped);
+    setLoading(false);
+  } catch (error) {
+    setNotifications([]);
+    setLoading(false);
+  }
+};
+// Gửi phản hồi xác nhận/từ chối (gọi API thực tế)
+const sendResponse = async (e) => {
+  e.preventDefault();
+  if (!responseData.response) {
+    alert('Vui lòng chọn phản hồi của bạn');
+    return;
+  }
+  setSubmitting(true);
+  try {
+    // Lấy studentId từ localStorage
+    const studentId = localStorage.getItem('selectedStudentId');
+    if (!studentId) {
+      alert('Vui lòng chọn học sinh trước khi phản hồi!');
+      setSubmitting(false);
       return;
     }
-    setSubmitting(true);
-    try {
-      // TODO: Gọi API gửi phản hồi ở đây nếu có
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setNotifications(notifications.map(notification => {
-        if (notification.id === responseData.campaignId) {
-          return {
-            ...notification,
-            status: responseData.response === 'confirm' ? 'Xác nhận' : 'Từ chối',
-            responseNote: responseData.note,
-            responseDate: new Date().toISOString().split('T')[0],
-            isNew: false
-          };
-        }
-        return notification;
-      }));
-      if (activeNotification && activeNotification.id === responseData.campaignId) {
-        setActiveNotification({
-          ...activeNotification,
+
+    const config = { headers: { Authorization: `Bearer ${token}` } };
+    // Nếu xác nhận thì gọi API đăng ký tiêm chủng
+    if (responseData.response === 'confirm')  {
+      // Xem dữ liệu trước khi gửi
+      console.log('Gửi đăng ký tiêm chủng:', {
+        campaignId: responseData.campaignId,
+        studentId: Number(studentId),
+        
+        config
+      });
+      // Đúng thứ tự: campaignId, studentId, config
+      await vaccinationService.parentApproveCampaign(
+        responseData.campaignId,
+        Number(studentId),
+        config
+      );
+    }
+    if( responseData.response === 'decline') {
+       console.log('Gửi từ chối tiêm chủng:', {
+        campaignId: responseData.campaignId,
+        studentId: Number(studentId),
+        config
+      });
+      // Gọi API từ chối tiêm chủng
+      await vaccinationService.parentRejectCampaign(
+        responseData.campaignId,
+        Number(studentId),
+        config
+      );
+    }
+    // Nếu từ chối thì có thể gọi API khác nếu backend hỗ trợ, hoặc chỉ cập nhật UI
+
+    setNotifications(notifications.map(notification => {
+      if (notification.id === responseData.campaignId) {
+        return {
+          ...notification,
           status: responseData.response === 'confirm' ? 'Xác nhận' : 'Từ chối',
           responseNote: responseData.note,
           responseDate: new Date().toISOString().split('T')[0],
           isNew: false
-        });
+        };
       }
-      setShowResponseForm(false);
-      setResponseSuccess(true);
-      setResponseData({
-        campaignId: null,
-        response: '',
-        note: ''
-      });
-      setTimeout(() => {
-        setResponseSuccess(false);
-      }, 3000);
-      setSubmitting(false);
-    } catch (error) {
-      alert('Có lỗi xảy ra khi gửi phản hồi. Vui lòng thử lại sau.');
-      setSubmitting(false);
-    }
-  };
-
-  // Xem chi tiết thông báo
-  const viewNotificationDetails = (notification) => {
-    setActiveNotification(notification);
-    if (notification.status === 'Chưa phản hồi') {
-      setResponseData({
-        campaignId: notification.id,
-        response: '',
-        note: ''
+      return notification;
+    }));
+    if (activeNotification && activeNotification.id === responseData.campaignId) {
+      setActiveNotification({
+        ...activeNotification,
+        status: responseData.response === 'confirm' ? 'Xác nhận' : 'Từ chối',
+        responseNote: responseData.note,
+        responseDate: new Date().toISOString().split('T')[0],
+        isNew: false
       });
     }
-  };
+    setShowResponseForm(false);
+    setResponseSuccess(true);
+    setResponseData({
+      campaignId: null,
+      response: '',
+      note: ''
+    });
+    setTimeout(() => {
+      setResponseSuccess(false);
+    }, 3000);
+    setSubmitting(false);
+  } catch (error) {
+    alert('Có lỗi xảy ra khi gửi phản hồi. Vui lòng thử lại sau.');
+    setSubmitting(false);
+  }
+};
 
   // Xử lý thay đổi form phản hồi
   const handleResponseChange = (e) => {
@@ -137,7 +201,16 @@ const VaccinationNotifications = () => {
     const options = { year: 'numeric', month: 'numeric', day: 'numeric' };
     return new Date(dateString).toLocaleDateString('vi-VN', options);
   };
-
+const viewNotificationDetails = (notification) => {
+  setActiveNotification(notification);
+  if (notification.status === 'Chưa phản hồi') {
+    setResponseData({
+      campaignId: notification.id,
+      response: '',
+      note: ''
+    });
+  }
+};
   // Đếm số thông báo mới
   const newNotificationsCount = notifications.filter(n => n.isNew).length;
 

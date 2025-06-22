@@ -44,6 +44,7 @@ import HealthCheckResultStudent from './pages/health/HealthCheck/HealthCheckResu
 import UpdateHealthCheckResult from './pages/health/HealthCheck/UpdateHealthCheckResult';
 import UpdateVaccination from './pages/health/Vaccination/UpdateVaccination';
 import VaccinationResult from './pages/health/Vaccination/VaccinationResult';
+import VaccinationStudentResult from './pages/health/Vaccination/VaccinationStudentResult';
 
 // Component ProtectedRoute
 const ProtectedRoute = ({ element, requiredRole }) => {
@@ -80,6 +81,7 @@ function App() {
         <Route path ="/taosukientiemchung" element={<CreateVaccinationCampaign/>} />
         <Route path="/capnhatthongtintiemchung" element={<UpdateVaccination/>} />
         <Route path= "/ketquatiemchung" element={<VaccinationResult/>} />
+        <Route path ="/ketquatiemchunghocsinh" element= {<VaccinationStudentResult/>} />
 
         <Route path="/login" element={<Login />} />
 

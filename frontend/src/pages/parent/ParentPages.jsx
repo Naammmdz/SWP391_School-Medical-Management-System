@@ -40,19 +40,25 @@ export default function ParentPages() {
     setSelectedStudentId(studentId);
     localStorage.setItem("selectedStudentId", studentId);
   };
-  const handleStudentCardClick = (studentId) => {
-    if (!studentCardsDisabled) {
-      setSelectedStudentId(studentId);
-      localStorage.setItem("selectedStudentId", studentId);
-      setStudentCardsDisabled(true);
-      //window.location.reload();
-    } else if (studentId === selectedStudentId) {
-      // Nếu click lại vào card đã chọn thì mở lại tất cả card
-      setSelectedStudentId("");
-      localStorage.removeItem("selectedStudentId");
-      setStudentCardsDisabled(false);
+ const handleStudentCardClick = (studentId) => {
+  if (!studentCardsDisabled) {
+    setSelectedStudentId(studentId);
+    localStorage.setItem("selectedStudentId", studentId);
+    // Lưu thêm object student vào localStorage
+    const selectedStudent = studentList.find(s => s.studentId === studentId);
+    if (selectedStudent) {
+      localStorage.setItem("selectedStudentInfo", JSON.stringify(selectedStudent));
     }
-  };
+    setStudentCardsDisabled(true);
+    //window.location.reload();
+  } else if (studentId === selectedStudentId) {
+    // Nếu click lại vào card đã chọn thì mở lại tất cả card
+    setSelectedStudentId("");
+    localStorage.removeItem("selectedStudentId");
+    localStorage.removeItem("selectedStudentInfo");
+    setStudentCardsDisabled(false);
+  }
+};
   useEffect(() => {
     // Fetch blog posts from API
     const fetchBlogPosts = async () => {
@@ -284,6 +290,21 @@ export default function ParentPages() {
                 <h3>Tiêm Chủng</h3>
                 <p className="resource-date">Xem và phản hồi thông báo tiêm chủng</p>
                 <Link to="/thongbaotiemchung" className="btn btn-sm">
+                  Xem chi tiết
+                </Link>
+              </div>
+            </div>
+
+
+            <div className="resource-card">
+              <div className="resource-thumbnail">
+                <img src="https://th.bing.com/th/id/OIP.Ze3TuiOXtRqnq7qRQQKOzwHaEU?w=281&h=180&c=7&r=0&o=5&cb=iwc2&dpr=2&pid=1.7" alt="Tiêm Chủng" />
+                <span className="resource-type document">Thông báo</span>
+              </div>
+              <div className="resource-info">
+                <h3>Kết quả Tiêm Chủng</h3>
+                <p className="resource-date">Xem kết quả tiêm chủng</p>
+                <Link to="/ketquatiemchunghocsinh" className="btn btn-sm">
                   Xem chi tiết
                 </Link>
               </div>
