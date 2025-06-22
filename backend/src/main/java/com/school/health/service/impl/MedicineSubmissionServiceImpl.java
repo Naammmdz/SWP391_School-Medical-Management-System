@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -110,13 +111,18 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
 //                }).collect(Collectors.toList());
 //        medicineSubmission.setMedicineDetails(medicineDetails);
 
-        // Create medicine logs for each day
+        // Create medicine logs for each day, skipping weekends
         LocalDate currentDate = request.getStartDate();
         while (!currentDate.isAfter(request.getEndDate())) {
-            MedicineLog log = new MedicineLog();
-            log.setGivenAt(currentDate);
-            log.setStatus(false);
-            medicineSubmission.addMedicineLog(log);
+            DayOfWeek dayOfWeek = currentDate.getDayOfWeek();
+            // Only create a log if the day is not Saturday or Sunday
+            if (dayOfWeek != DayOfWeek.SATURDAY && dayOfWeek != DayOfWeek.SUNDAY) {
+                MedicineLog log = new MedicineLog();
+                log.setGivenAt(currentDate);
+                log.setStatus(false);
+                medicineSubmission.addMedicineLog(log);
+            }
+            // Move to the next day
             currentDate = currentDate.plusDays(1);
         }
 
