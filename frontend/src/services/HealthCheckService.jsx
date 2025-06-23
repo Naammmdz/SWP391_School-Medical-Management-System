@@ -139,6 +139,15 @@ const HealthCheckService = {
       console.error('Error fetching health check campaigns by parent status:', error);
       throw error;
     }
+  },
+  getHealthCheckNurse: async (campaignId, config) => {
+    try {
+      const response = await axios.get(`${API_URL}/${campaignId}/students-registrations`, config);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching health check campaigns for nurse:', error);
+      throw error;
+    }
   }
 };
 

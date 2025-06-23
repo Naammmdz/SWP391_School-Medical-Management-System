@@ -298,12 +298,12 @@ export default function ParentPages() {
 
             <div className="resource-card">
               <div className="resource-thumbnail">
-                <img src="https://th.bing.com/th/id/OIP.Ze3TuiOXtRqnq7qRQQKOzwHaEU?w=281&h=180&c=7&r=0&o=5&cb=iwc2&dpr=2&pid=1.7" alt="Tiêm Chủng" />
+                <img src="https://th.bing.com/th/id/OIP.e3gSBJ4B1VSWWp41F-gC_QHaEL?w=319&h=180&c=7&r=0&o=7&dpr=2&pid=1.7&rm=3" alt="Tiêm Chủng" />
                 <span className="resource-type document">Thông báo</span>
               </div>
               <div className="resource-info">
                 <h3>Kết quả Tiêm Chủng</h3>
-                <p className="resource-date">Xem kết quả tiêm chủng</p>
+                <p className="resource-date">Kết quả tiêm chủng</p>
                 <Link to="/ketquatiemchunghocsinh" className="btn btn-sm">
                   Xem chi tiết
                 </Link>
@@ -354,7 +354,7 @@ export default function ParentPages() {
 
              <div className="resource-card">
               <div className="resource-thumbnail">
-                <img src="https://th.bing.com/th/id/OIP.CPaKDsGbpbajJClRwMaLtwHaEm?w=263&h=180&c=7&r=0&o=5&cb=iwc2&dpr=2&pid=1.7" alt="Kiểm Tra Định Kỳ" />
+                <img src="https://img.freepik.com/premium-vector/customers-filling-up-survey-form-vector-illustration-flat_186332-1263.jpg?w=360" alt="Kiểm Tra Định Kỳ" />
                 <span className="resource-type document">Thông báo</span>
               </div>
               <div className="resource-info">
