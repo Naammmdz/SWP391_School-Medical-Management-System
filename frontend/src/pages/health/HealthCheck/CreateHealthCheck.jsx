@@ -28,10 +28,7 @@ const CreateHealthCheck = () => {
     const storedToken = localStorage.getItem('token');
     setNurse(user);
     setToken(storedToken);
-    form.setFieldsValue({
-      organizer: user.fullName || '',
-    });
-  }, [form]);
+  }, []);
 
   const handleSubmit = async (values) => {
     setLoading(true);
@@ -39,9 +36,13 @@ const CreateHealthCheck = () => {
     setErrorMsg('');
     try {
       const submitData = {
-        ...values,
+        campaignName: values.campaignName,
+        targetGroup: values.targetGroup,
+        type: values.type,
+        address: values.address,
+        organizer: values.organizer, // y tá nhập tay
+        description: values.description,
         scheduledDate: values.scheduledDate.format('YYYY-MM-DD'),
-        organizer: nurse.id || '',
         status: 'PENDING',
       };
 
@@ -51,7 +52,6 @@ const CreateHealthCheck = () => {
 
       setSuccessMsg('Tạo chiến dịch kiểm tra sức khỏe thành công!');
       form.resetFields();
-      form.setFieldsValue({ organizer: nurse.fullName || '' });
     } catch (err) {
       setErrorMsg(err.message || 'Tạo chiến dịch thất bại! Vui lòng thử lại.');
     }
@@ -118,6 +118,14 @@ const CreateHealthCheck = () => {
             </Form.Item>
 
             <Form.Item
+              name="organizer"
+              label="Người thực hiện"
+              rules={[{ required: true, message: 'Vui lòng nhập người thực hiện!' }]}
+            >
+              <Input prefix={<UserOutlined />} placeholder="Nhập tên người thực hiện" />
+            </Form.Item>
+
+            <Form.Item
               name="description"
               label="Mô tả chi tiết"
               rules={[{ required: true, message: 'Vui lòng nhập mô tả!' }]}
@@ -137,10 +145,6 @@ const CreateHealthCheck = () => {
                 placeholder="Chọn ngày"
                 disabledDate={(current) => current && current < moment().endOf('day')}
               />
-            </Form.Item>
-
-            <Form.Item name="organizer" label="Người thực hiện">
-              <Input prefix={<UserOutlined />} readOnly disabled />
             </Form.Item>
 
             {successMsg && <Alert message={successMsg} type="success" showIcon style={{ marginBottom: 16 }} />}

@@ -10,6 +10,7 @@ const HealthCheckList = () => {
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [approvingId, setApprovingId] = useState(null);
   const users = JSON.parse(localStorage.getItem('users') || '[]');
 
   const getUserNameById = (id) => {
@@ -25,15 +26,9 @@ const HealthCheckList = () => {
         const data = await HealthCheckService.getAllHealthCheckCampaign({
           headers: { Authorization: `Bearer ${token}` }
         });
-          console.log('Dữ liệu chiến dịch trả về từ backend:', data);
-          data.forEach(c => {
-  if (typeof c.campaignName !== 'string') {
-    console.warn('❗ Lỗi: campaignName không phải chuỗi:', c.campaignName);
-  }
-});
         setCampaigns(data);
         localStorage.setItem('healthCheckCampaigns', JSON.stringify(data));
-
+        console.log('Campaigns loaded:', data);
       } catch (err) {
         setError('Không thể tải danh sách chiến dịch!');
       }
@@ -61,6 +56,25 @@ const HealthCheckList = () => {
     localStorage.setItem('selectedCampaignId', campaign.campaignId);
     localStorage.setItem('selectedCampaign', JSON.stringify(campaign));
     navigate('/capnhatkiemtradinhky');
+  };
+
+  // Hàm approve chiến dịch
+  const handleApprove = async (campaignId) => {
+    setApprovingId(campaignId);
+    try {
+      await HealthCheckService.approveHealthCheckCampaign(campaignId, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      // Sau khi duyệt, reload lại danh sách
+      const data = await HealthCheckService.getAllHealthCheckCampaign({
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setCampaigns(data);
+      localStorage.setItem('healthCheckCampaigns', JSON.stringify(data));
+    } catch (err) {
+      alert('Duyệt chiến dịch thất bại!');
+    }
+    setApprovingId(null);
   };
 
   return (
@@ -103,14 +117,24 @@ const HealthCheckList = () => {
                   <td>{c.status}</td>
                   <td>{getUserNameById(c.createdBy)}</td>
                   <td>{c.createdAt}</td>
-                  <td>
-                    <button
-                      className="btn btn-warning btn-sm"
-                      onClick={() => handleUpdateClick(c)}
-                    >
-                      Update
-                    </button>
-                  </td>
+                 <td>
+  <button
+    className="btn btn-warning btn-sm"
+    onClick={() => handleUpdateClick(c)}
+  >
+    Cập nhật
+  </button>
+  {(user.userRole === 'ROLE_ADMIN' || user.userRole === 'ROLE_PRICIPAL') && c.status === 'PENDING' && (
+    <button
+      className="btn btn-success btn-sm"
+      style={{ marginLeft: 8 }}
+      onClick={() => handleApprove(c.campaignId)}
+      disabled={approvingId === c.campaignId}
+    >
+      {approvingId === c.campaignId ? 'Đang duyệt...' : 'Chấp nhận'}
+    </button>
+  )}
+</td>
                 </tr>
               ))
             ) : (

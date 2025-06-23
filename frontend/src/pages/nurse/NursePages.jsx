@@ -232,7 +232,7 @@ export default function NursePages() {
                 <div className="resource-info">
                   <h3>Kiểm Tra Định Kỳ</h3>
                   <p className="resource-date">Tạo và quản lý lịch kiểm tra sức khỏe</p>
-                  <Link to="/kiemtradinhky" className="btn btn-sm">
+                  <Link to="/danhsachkiemtradinhky" className="btn btn-sm">
                     Quản lý
                   </Link>
                 </div>

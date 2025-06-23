@@ -103,6 +103,43 @@ const HealthCheckService = {
       throw error;
     }
   },
+ parentConfirmHealthCheck: async (campaignId, studentId, config) => {
+  try {
+    // Đúng thứ tự: body là null, config là headers
+    const response = await axios.post(`${API_URL}/${campaignId}/student/${studentId}/register`, null, config);
+    return response.data;
+  } catch (error) {
+    console.error('Error confirming health check by parent:', error);
+    throw error;
+  }
+},
+  parentRejectHealthCheck: async(campaignId, studentId, config) => {
+    try {
+      const response = await axios.post(`${API_URL}/${campaignId}/student/${studentId}/reject`,null, config);
+      return response.data;
+    } catch (error) {
+      console.error('Error rejecting health check by parent:', error);
+      throw error;
+    }
+  },
+  parentGetConfirmedCampaigns: async (studentId, config) => {
+    try {
+      const response = await axios.get(`${API_URL}/me/students/${studentId}/campaigns`, config);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching confirmed health check campaigns by parent:', error);
+      throw error;
+    }
+  },
+  parentGetStautusCampaigns: async (studentId, parentConfirm, config) => {
+    try {
+      const response = await axios.get(`${API_URL}/student/${studentId}/campaign-parentConfirmation/${parentConfirm}`, config);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching health check campaigns by parent status:', error);
+      throw error;
+    }
+  }
 };
 
 export default HealthCheckService;
