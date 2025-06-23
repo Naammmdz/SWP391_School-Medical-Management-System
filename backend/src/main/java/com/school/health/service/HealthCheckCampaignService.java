@@ -2,6 +2,7 @@ package com.school.health.service;
 
 import com.school.health.dto.request.HealthCampaignRequestDTO;
 import com.school.health.dto.request.HealthCheckRequestDTO;
+import com.school.health.dto.response.HealthCampaignIsAcceptDTO;
 import com.school.health.dto.response.HealthCampaignResponseDTO;
 import com.school.health.dto.response.HealthCheckResponseDTO;
 import com.school.health.dto.response.StudentResponseDTO;
@@ -48,5 +49,7 @@ public interface HealthCheckCampaignService {
     HealthCheckResponseDTO rejectStudentVaccine(HealthCheckRequestDTO request);
 
     List<HealthCampaignResponseDTO> getCampaignStatus(int studentId, boolean parentConfirmation);
+
+    List<HealthCampaignIsAcceptDTO> getCampaignsIsAcceptOrReject( Integer studentId);
 
 }

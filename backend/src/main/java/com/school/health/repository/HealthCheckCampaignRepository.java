@@ -19,10 +19,12 @@ public interface HealthCheckCampaignRepository extends JpaRepository<HealthCheck
     List<HealthCheckCampaign> findByStatus(Status status);
 
     // Trả ra danh sách các chiến dịch sức khỏe của học sinh theo studentId với JPQL
-    @Query("SELECT h FROM HealthCheckCampaign h JOIN HealthCheck hc ON h.campaignId = hc.campaign.campaignId WHERE hc.student.studentId = :studentId ")
-    List<HealthCheckCampaign> findCampaignsByStudentId(Integer studentId);
+    @Query("SELECT h FROM HealthCheckCampaign h JOIN HealthCheck hc ON h.campaignId = hc.campaign.campaignId WHERE hc.student.studentId = :studentId AND h.status = :status")
+    List<HealthCheckCampaign> findCampaignsByStudentId(Integer studentId, Status status);
 
     @Query("SELECT h FROM HealthCheckCampaign h JOIN HealthCheck hc ON h.campaignId = hc.campaign.campaignId WHERE hc.student.studentId = :studentId AND hc.parentConfirmation = :parentConfirmation")
     List<HealthCheckCampaign> findCampaignsByStudentIdAndParentConfirmation(Integer studentId, boolean parentConfirmation);
 
+    @Query("SELECT h FROM HealthCheckCampaign h JOIN HealthCheck hc ON h.campaignId = hc.campaign.campaignId WHERE hc.student.studentId = :studentId")
+    List<HealthCheckCampaign> findCampaignsWithStudentID(Integer studentId);
 }
