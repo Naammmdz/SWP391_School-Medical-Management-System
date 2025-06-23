@@ -17,6 +17,7 @@ import com.school.health.service.HealthCheckCampaignService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,6 +36,26 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
         HealthCheckCampaign campaign = mapToEntity(healthCampaignRequestDTO);
         campaign.setCreatedBy(createdBy);
         HealthCheckCampaign savedCampaign = healthCheckCampaignRepository.save(campaign);
+        notificationService.createNotification(userRepository.findPrincipal().getUserId(),"[Yêu cầu phê duyệt] Chiến dịch kiểm tra sức khỏe: "+ campaign.getCampaignName(), "Kính gửi Thầy/Cô Hiệu trưởng,\n" +
+                "\n" +
+                "Hiện tại có một chiến dịch kiểm tra sức khỏe học đường đang chờ phê duyệt với các thông tin như sau:\n" +
+                "\n" +
+                "Tên chiến dịch: "+campaign.getCampaignName() +
+                "\n" +
+                "Đơn vị tổ chức: " +campaign.getOrganizer() +
+                "\n" +
+                "Đối tượng mục tiêu: " +campaign.getTargetGroup()+
+                "\n" +
+                "Thời gian dự kiến: " +campaign.getScheduledDate()+
+                "\n" +
+                "Địa điểm: "+campaign.getAddress() +
+                "\n" +
+                "Mô tả: " +campaign.getDescription() +
+                "\n" +
+                "Thầy/Cô vui lòng xem xét và thực hiện phê duyệt hoặc từ chối chiến dịch này trên hệ thống trước thời gian diễn ra.\n" +
+                "\n" +
+                "Trân trọng,\n" +
+                "Hệ thống Y tế học đường");
         return mapToResponseDTO(savedCampaign);
     }
 
@@ -124,27 +145,27 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
                 List<Student> studentList = studentRepository.findByGrade(group);
                 for (Student student : studentList) {
                     notificationService.createNotification(student.getParent().getUserId(), "[THÔNG BÁO] Tổ chức kiểm tra sức khỏe định kỳ cho học sinh", "Kính gửi Quý Phụ huynh,\n" +
-                                    "\n" +
-                                    "Nhằm theo dõi tình trạng sức khỏe, phát hiện sớm các vấn đề bất thường và đảm bảo sự phát triển toàn diện của học sinh, nhà trường sẽ phối hợp với cơ sở y tế tổ chức kiểm tra sức khỏe định kỳ cho các em trong thời gian tới.\n" +
-                                    "\n" +
-                                    "Thông tin chi tiết như sau:\n" +
-                                    "\n" +
-                                    "Thời gian: " + updatedCampaign.getScheduledDate() + "\n" +
-                                    "\n" +
-                                    "Địa điểm: " + updatedCampaign.getAddress() + "\n" +
-                                    "\n" +
-                                    "Một số thông tin khác: " + updatedCampaign.getDescription() + "\n" +
-                                    "\n" +
-                                    "Lưu ý:\n" +
-                                    "\n" +
-                                    "Phụ huynh vui lòng nhắc nhở học sinh ăn uống đầy đủ và mặc trang phục gọn gàng.\n" +
-                                    "Nếu học sinh có tiền sử bệnh lý đặc biệt, xin vui lòng thông báo với GVCN hoặc gửi kèm hồ sơ y tế (nếu có)." + "\n" +
-                                    "Sự phối hợp của Quý Phụ huynh sẽ góp phần quan trọng vào thành công của chương trình và sức khỏe của các em học sinh.\n" +
-                                    "Kết quả kiểm tra sẽ được gửi về cho Quý Phụ huynh sau khi hoàn tất nhằm giúp gia đình nắm bắt tình hình sức khỏe của các em."+
                             "\n" +
-                                    "Trân trọng cảm ơn!\n" +
-                                    "\n" +
-                                    "Ban Giám hiệu");
+                            "Nhằm theo dõi tình trạng sức khỏe, phát hiện sớm các vấn đề bất thường và đảm bảo sự phát triển toàn diện của học sinh, nhà trường sẽ phối hợp với cơ sở y tế tổ chức kiểm tra sức khỏe định kỳ cho các em trong thời gian tới.\n" +
+                            "\n" +
+                            "Thông tin chi tiết như sau:\n" +
+                            "\n" +
+                            "Thời gian: " + updatedCampaign.getScheduledDate() + "\n" +
+                            "\n" +
+                            "Địa điểm: " + updatedCampaign.getAddress() + "\n" +
+                            "\n" +
+                            "Một số thông tin khác: " + updatedCampaign.getDescription() + "\n" +
+                            "\n" +
+                            "Lưu ý:\n" +
+                            "\n" +
+                            "Phụ huynh vui lòng nhắc nhở học sinh ăn uống đầy đủ và mặc trang phục gọn gàng.\n" +
+                            "Nếu học sinh có tiền sử bệnh lý đặc biệt, xin vui lòng thông báo với GVCN hoặc gửi kèm hồ sơ y tế (nếu có)." + "\n" +
+                            "Sự phối hợp của Quý Phụ huynh sẽ góp phần quan trọng vào thành công của chương trình và sức khỏe của các em học sinh.\n" +
+                            "Kết quả kiểm tra sẽ được gửi về cho Quý Phụ huynh sau khi hoàn tất nhằm giúp gia đình nắm bắt tình hình sức khỏe của các em."+
+                            "\n" +
+                            "Trân trọng cảm ơn!\n" +
+                            "\n" +
+                            "Ban Giám hiệu");
                 }
             } else if (group.length() == 2) {
                 List<Student> studentList = studentRepository.findByClassName(group);
@@ -177,6 +198,7 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
         }
         return mapToResponseDTO(updatedCampaign);
     }
+
     @Override
     public HealthCampaignResponseDTO updateCampaignStatus(int campaignId, Status status) {
         HealthCheckCampaign existingCampaign = healthCheckCampaignRepository.findById(campaignId).orElseThrow(() -> new RuntimeException("Campaign not found with ID: " + campaignId));
@@ -216,6 +238,16 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
         HealthCheckCampaign campaign = healthCheckCampaignRepository.findById(request.getCampaignId()).orElseThrow(() -> new RuntimeException("Campaign not found with ID: " + request.getCampaignId()));
         Student student = studentRepository.findById(request.getStudentId()).orElseThrow(() -> new RuntimeException("Student not found with ID: " + request.getStudentId()));
         request.setParentConfirmation(true);
+        HealthCheck healthCheckEntity = maptoEntityCheck(request);
+        HealthCheckResponseDTO responseDTO = mapToHealthCheckResponseDTO(healthCheckEntity);
+        return responseDTO;
+    }
+
+    @Override
+    public HealthCheckResponseDTO rejectStudentVaccine(HealthCheckRequestDTO request) {
+        HealthCheckCampaign campaign = healthCheckCampaignRepository.findById(request.getCampaignId()).orElseThrow(() -> new RuntimeException("Campaign not found with ID: " + request.getCampaignId()));
+        Student student = studentRepository.findById(request.getStudentId()).orElseThrow(() -> new RuntimeException("Student not found with ID: " + request.getStudentId()));
+        request.setParentConfirmation(false);
         HealthCheck healthCheckEntity = maptoEntityCheck(request);
         HealthCheckResponseDTO responseDTO = mapToHealthCheckResponseDTO(healthCheckEntity);
         return responseDTO;
@@ -284,6 +316,9 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
         HealthCheck healthCheck = healthCheckRepository.findById(healthcheckId).orElseThrow(() -> new RuntimeException("Health check not found with ID: " + healthcheckId));
         HealthCheckCampaign campaign = healthCheckCampaignRepository.findById(requestDTO.getCampaignId()).orElseThrow(() -> new RuntimeException("Campaign not found with ID: " + requestDTO.getCampaignId()));
         Student student = studentRepository.findById(requestDTO.getStudentId()).orElseThrow(() -> new RuntimeException("Student not found with ID: " + requestDTO.getStudentId()));
+        if(healthCheck.isParentConfirmation() == false) {
+            throw new RuntimeException("Parent confirmation is required to update health check results.");
+        }
         healthCheck.setDate(requestDTO.getDate());
         healthCheck.setHeight(requestDTO.getHeight());
         healthCheck.setWeight(requestDTO.getWeight());
@@ -298,7 +333,7 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
         healthCheck.setParentConfirmation(requestDTO.isParentConfirmation());
         healthCheck.setCampaign(campaign);
         healthCheck.setStudent(student);
-//        healthCheck = maptoEntityCheck(requestDTO);
+        // healthCheck = maptoEntityCheck(requestDTO);
         // Cập nhật các trường khác nếu cần
 
         healthCheckRepository.save(healthCheck);
@@ -331,6 +366,17 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
     @Override
     public List<HealthCheckResponseDTO> getResultWithFilterDate(LocalDate startDate, LocalDate endDate,boolean consultationAppointment) {
         return healthCheckRepository.findResultWithDate( startDate, endDate , consultationAppointment).stream().map(this::mapToHealthCheckResponseDTO).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<HealthCampaignResponseDTO> getCampaignStatus(int studentId, boolean parentConfirmation) {
+        List<HealthCheckCampaign> campaign = healthCheckCampaignRepository.findCampaignsByStudentIdAndParentConfirmation(studentId,parentConfirmation);
+        if (campaign.isEmpty()) {
+            throw new RuntimeException("No health campaigns found for student with ID: " + studentId + " and parent confirmation: " + parentConfirmation);
+        }
+        return campaign.stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
     }
 }
 

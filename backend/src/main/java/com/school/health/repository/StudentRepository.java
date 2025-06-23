@@ -23,7 +23,7 @@ public interface StudentRepository extends JpaRepository<Student, Integer> {
     List<Student> findByClassName(String className);
 
     // Tìm học sinh theo khối
-    @Query("SELECT s FROM Student s WHERE s.className like '%:gradeNumber%'")
+    @Query("SELECT s FROM Student s WHERE s.className LIKE CONCAT('%', :gradeNumber, '%')")
     List<Student> findByGrade(@Param("gradeNumber") String gradeNumber);
 
 

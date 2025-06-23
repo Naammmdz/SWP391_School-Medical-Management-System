@@ -44,7 +44,7 @@ public class HealthCheckCampaignController {
         return ResponseEntity.ok(healthCheckCampaignServiceImpl.getAllCampaigns());
     }
 
-    // lấy danh sách chiến dịch sức khỏe đã được phê duyệt
+    // lấy danh sách chiến dịch sức khỏe theo id
     @GetMapping("/{campaignId}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE')")
     public ResponseEntity<?> getCampaignById(@PathVariable @Valid int campaignId) {
@@ -107,6 +107,16 @@ public class HealthCheckCampaignController {
         return ResponseEntity.ok(healthCheckCampaignServiceImpl.registerStudentHealthCheck(dto));
     }
 
+    // Phụ huynh từ chối đăng ký cho học sinh tham gia chiến dịch sức khỏe
+    @PostMapping("/{campaignId}/student/{studentId}/reject")
+    @PreAuthorize("hasRole('PARENT') or hasRole('NURSE') or hasRole('ADMIN')")
+    public ResponseEntity<?> registerStudentForHealthCampaign(@PathVariable @Valid int campaignId, @PathVariable @Valid int studentId) {
+        HealthCheckRequestDTO dto = new HealthCheckRequestDTO();
+        dto.setCampaignId(campaignId);
+        dto.setStudentId(studentId);
+        return ResponseEntity.ok(healthCheckCampaignServiceImpl.rejectStudentVaccine(dto));
+    }
+
     // Cập nhật kết quả cho học sinh tham gia chiến dịch sức khỏe = PUT
     @PutMapping("/{healthcheckId}/update")
     @PreAuthorize("hasRole('PARENT') or hasRole('NURSE') or hasRole('ADMIN')")
@@ -160,6 +170,13 @@ public class HealthCheckCampaignController {
             }
         }
         return ResponseEntity.ok(healthCheckCampaignService.getResultWithFilterDate(startDate, endDate, consultationAppointment));
+    }
+
+    // lấy trạng thái của chiến dịch sức khỏe từ parentConfirm trong kết quả chiến dịch
+    @GetMapping("/student/{studentId}/campaign-parentConfirmation/{parentConfirmation}")
+    @PreAuthorize("hasRole('PARENT') or hasRole('NURSE') or hasRole('ADMIN')")
+    public ResponseEntity<?> getCampaignStatus(@PathVariable @Valid int studentId, @PathVariable(required = false) @Valid boolean parentConfirmation) {
+        return ResponseEntity.ok(healthCheckCampaignService.getCampaignStatus(studentId, parentConfirmation));
     }
 
 }

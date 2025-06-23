@@ -2,27 +2,21 @@ package com.school.health.service.impl;
 
 import com.school.health.dto.request.VaccinationCampaignRequestDTO;
 import com.school.health.dto.request.VaccinationRequestDTO;
-import com.school.health.dto.response.HealthCheckResponseDTO;
+import com.school.health.dto.response.HealthCampaignResponseDTO;
 import com.school.health.dto.response.StudentResponseDTO;
 import com.school.health.dto.response.VaccinationCampaignResponseDTO;
 import com.school.health.dto.response.VaccinationResponseDTO;
-import com.school.health.entity.HealthCheck;
+import com.school.health.entity.HealthCheckCampaign;
 import com.school.health.entity.Student;
 import com.school.health.entity.Vaccination;
 import com.school.health.entity.VaccinationCampaign;
 import com.school.health.enums.Status;
-import com.school.health.repository.StudentRepository;
-import com.school.health.repository.UserRepository;
-import com.school.health.repository.VaccinationCampaignRepository;
-import com.school.health.repository.VaccinationRepository;
+import com.school.health.repository.*;
 import com.school.health.service.VaccinationCampaignService;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -40,6 +34,26 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
         VaccinationCampaign campaign = mapToEntity(vaccinationCampaignRequestDTO);
         campaign.setCreatedBy(createdBy);
         VaccinationCampaign savedCampaign = vaccinationCampaignRepository.save(campaign);
+        notificationService.createNotification(userRepository.findPrincipal().getUserId(),"[Yêu cầu phê duyệt] Chiến dịch tiêm chủng Vaccine: "+ campaign.getCampaignName(), "Kính gửi Thầy/Cô Hiệu trưởng,\n" +
+                "\n" +
+                "Hiện tại có một chiến dịch kiểm tra sức khỏe học đường đang chờ phê duyệt với các thông tin như sau:\n" +
+                "\n" +
+                "Tên chiến dịch: "+campaign.getCampaignName() +
+                "\n" +
+                "Đơn vị tổ chức: " +campaign.getOrganizer() +
+                "\n" +
+                "Đối tượng mục tiêu: " +campaign.getTargetGroup()+
+                "\n" +
+                "Thời gian dự kiến: " +campaign.getScheduledDate()+
+                "\n" +
+                "Địa điểm: "+campaign.getAddress() +
+                "\n" +
+                "Mô tả: " +campaign.getDescription() +
+                "\n" +
+                "Thầy/Cô vui lòng xem xét và thực hiện phê duyệt hoặc từ chối chiến dịch này trên hệ thống trước thời gian diễn ra.\n" +
+                "\n" +
+                "Trân trọng,\n" +
+                "Hệ thống Y tế học đường");
         return mapToResponseDTO(savedCampaign);
     }
 
@@ -116,68 +130,68 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
         notificationService.createNotification(campaign.getCreatedBy(),"Chiến dịch: "+campaign.getCampaignName()+" đã được phê duyệt", "Chiến dịch: "+campaign.getCampaignName()+" đã được phê duyệt bởi "+userRepository.findByUserId(approvedBy).orElseThrow().getFullName()+" vui lòng kiểm tra!");
         //Gửi noti đến người dùng có con trong target group
         String[] targetGroup = campaign.getTargetGroup().split(",");
-       for (String group : targetGroup) {
-           group = group.trim();
-           if(group.length()==1){
-               List<Student> studentList = studentRepository.findByGrade(group);
-               for(Student student : studentList){
-                   notificationService.createNotification(student.getParent().getUserId(),"[THÔNG BÁO] Triển khai chiến dịch tiêm chủng tại trường!","Kính gửi Quý Phụ huynh,\n" +
-                           "\n" +
-                           "Nhằm tăng cường sức khỏe và phòng ngừa dịch bệnh cho học sinh, nhà trường phối hợp với Trung tâm Y tế địa phương tổ chức chiến dịch tiêm chủng định kỳ cho các em học sinh.\n" +
-                           "\n" +
-                           "Thông tin chi tiết như sau:\n" +
-                           "\n" +
-                           "Thời gian: "+campaign.getScheduledDate()+ "\n" +
-                           "\n" +
-                           "Địa điểm: "+campaign.getAddress()+"\n" +
-                           "\n" +
-                           "Một số thông tin khác: "+campaign.getDescription()+"\n" +
-                           "\n" +
-                           "Lưu ý:\n" +
-                           "\n" +
-                           "Phụ huynh vui lòng kiểm tra và xác nhận đồng ý tiêm chủng trước "+campaign.getScheduledDate().minusDays(2)+ "\n" +
-                           "\n" +
-                           "Đảm bảo học sinh ăn sáng đầy đủ trước khi tiêm.\n" +
-                           "\n" +
-                           "Học sinh cần mang theo sổ y bạ (nếu có).\n" +
-                           "\n" +
-                           "Sự phối hợp của Quý Phụ huynh sẽ góp phần quan trọng vào thành công của chương trình và sức khỏe của các em học sinh.\n" +
-                           "\n" +
-                           "Trân trọng cảm ơn!\n" +
-                           "\n" +
-                           "Ban Giám hiệu");
-               }
-           } else if(group.length()==2){
-               List<Student> studentList = studentRepository.findByClassName(group);
-               for(Student student : studentList){
-                   notificationService.createNotification(student.getParent().getUserId(),"[THÔNG BÁO] Triển khai chiến dịch tiêm chủng tại trường!","Kính gửi Quý Phụ huynh,\n" +
-                           "\n" +
-                           "Nhằm tăng cường sức khỏe và phòng ngừa dịch bệnh cho học sinh, nhà trường phối hợp với Trung tâm Y tế địa phương tổ chức chiến dịch tiêm chủng định kỳ cho các em học sinh.\n" +
-                           "\n" +
-                           "Thông tin chi tiết như sau:\n" +
-                           "\n" +
-                           "Thời gian: "+campaign.getScheduledDate()+ "\n" +
-                           "\n" +
-                           "Địa điểm: "+campaign.getAddress()+"\n" +
-                           "\n" +
-                           "Một số thông tin khác: "+campaign.getDescription()+"\n" +
-                           "\n" +
-                           "Lưu ý:\n" +
-                           "\n" +
-                           "Phụ huynh vui lòng kiểm tra và xác nhận đồng ý tiêm chủng trước "+campaign.getScheduledDate().minusDays(2)+ "\n" +
-                           "\n" +
-                           "Đảm bảo học sinh ăn sáng đầy đủ trước khi tiêm.\n" +
-                           "\n" +
-                           "Học sinh cần mang theo sổ y bạ (nếu có).\n" +
-                           "\n" +
-                           "Sự phối hợp của Quý Phụ huynh sẽ góp phần quan trọng vào thành công của chương trình và sức khỏe của các em học sinh.\n" +
-                           "\n" +
-                           "Trân trọng cảm ơn!\n" +
-                           "\n" +
-                           "Ban Giám hiệu");
-               }
-           }
-       }
+        for (String group : targetGroup) {
+            group = group.trim();
+            if(group.length()==1){
+                List<Student> studentList = studentRepository.findByGrade(group);
+                for(Student student : studentList){
+                    notificationService.createNotification(student.getParent().getUserId(),"[THÔNG BÁO] Triển khai chiến dịch tiêm chủng tại trường!","Kính gửi Quý Phụ huynh,\n" +
+                            "\n" +
+                            "Nhằm tăng cường sức khỏe và phòng ngừa dịch bệnh cho học sinh, nhà trường phối hợp với Trung tâm Y tế địa phương tổ chức chiến dịch tiêm chủng định kỳ cho các em học sinh.\n" +
+                            "\n" +
+                            "Thông tin chi tiết như sau:\n" +
+                            "\n" +
+                            "Thời gian: "+campaign.getScheduledDate()+ "\n" +
+                            "\n" +
+                            "Địa điểm: "+campaign.getAddress()+"\n" +
+                            "\n" +
+                            "Một số thông tin khác: "+campaign.getDescription()+"\n" +
+                            "\n" +
+                            "Lưu ý:\n" +
+                            "\n" +
+                            "Phụ huynh vui lòng kiểm tra và xác nhận đồng ý tiêm chủng trước "+campaign.getScheduledDate().minusDays(2)+ "\n" +
+                            "\n" +
+                            "Đảm bảo học sinh ăn sáng đầy đủ trước khi tiêm.\n" +
+                            "\n" +
+                            "Học sinh cần mang theo sổ y bạ (nếu có).\n" +
+                            "\n" +
+                            "Sự phối hợp của Quý Phụ huynh sẽ góp phần quan trọng vào thành công của chương trình và sức khỏe của các em học sinh.\n" +
+                            "\n" +
+                            "Trân trọng cảm ơn!\n" +
+                            "\n" +
+                            "Ban Giám hiệu");
+                }
+            } else if(group.length()==2){
+                List<Student> studentList = studentRepository.findByClassName(group);
+                for(Student student : studentList){
+                    notificationService.createNotification(student.getParent().getUserId(),"[THÔNG BÁO] Triển khai chiến dịch tiêm chủng tại trường!","Kính gửi Quý Phụ huynh,\n" +
+                            "\n" +
+                            "Nhằm tăng cường sức khỏe và phòng ngừa dịch bệnh cho học sinh, nhà trường phối hợp với Trung tâm Y tế địa phương tổ chức chiến dịch tiêm chủng định kỳ cho các em học sinh.\n" +
+                            "\n" +
+                            "Thông tin chi tiết như sau:\n" +
+                            "\n" +
+                            "Thời gian: "+campaign.getScheduledDate()+ "\n" +
+                            "\n" +
+                            "Địa điểm: "+campaign.getAddress()+"\n" +
+                            "\n" +
+                            "Một số thông tin khác: "+campaign.getDescription()+"\n" +
+                            "\n" +
+                            "Lưu ý:\n" +
+                            "\n" +
+                            "Phụ huynh vui lòng kiểm tra và xác nhận đồng ý tiêm chủng trước "+campaign.getScheduledDate().minusDays(2)+ "\n" +
+                            "\n" +
+                            "Đảm bảo học sinh ăn sáng đầy đủ trước khi tiêm.\n" +
+                            "\n" +
+                            "Học sinh cần mang theo sổ y bạ (nếu có).\n" +
+                            "\n" +
+                            "Sự phối hợp của Quý Phụ huynh sẽ góp phần quan trọng vào thành công của chương trình và sức khỏe của các em học sinh.\n" +
+                            "\n" +
+                            "Trân trọng cảm ơn!\n" +
+                            "\n" +
+                            "Ban Giám hiệu");
+                }
+            }
+        }
         return mapToResponseDTO(approvedCampaign);
     }
 
@@ -223,6 +237,17 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
         VaccinationResponseDTO responseDTO = mapToResponseDTO(vaccination);
         return responseDTO;
     }
+    // rejectStudentVaccine
+    @Override
+    public VaccinationResponseDTO rejectStudentVaccine(VaccinationRequestDTO vaccineRequest) {
+        VaccinationCampaign campaign = vaccinationCampaignRepository.findById(vaccineRequest.getCampaignId()).orElseThrow(() -> new RuntimeException("Campaign not found id :" + vaccineRequest.getCampaignId()));
+        Student student = studentRepository.findById(vaccineRequest.getStudentId()).orElseThrow(() -> new RuntimeException("Student not found id :" + vaccineRequest.getStudentId()));
+        vaccineRequest.setParentConfirmation(false);
+        Vaccination vaccination = mapToEntityVaccine(vaccineRequest);
+        VaccinationResponseDTO responseDTO = mapToResponseDTO(vaccination);
+        return responseDTO;
+    }
+
 
     public Vaccination mapToEntityVaccine(VaccinationRequestDTO requestDTO) {
         Vaccination vaccination = new Vaccination();
@@ -323,6 +348,17 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
     @Override
     public List<VaccinationResponseDTO> getResultWithFilterDate(LocalDate startDate, LocalDate endDate) {
         return vaccinationRepository.findResultWithDate( startDate, endDate ).stream().map(this::mapToResponseDTO).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<VaccinationCampaignResponseDTO> getCampaignStatus(int studentId, boolean parentConfirmation) {
+        List<VaccinationCampaign> campaign = vaccinationCampaignRepository.findCampaignsByStudentIdAndParentConfirmation(studentId,parentConfirmation);
+        if (campaign.isEmpty()) {
+            throw new RuntimeException("No health campaigns found for student with ID: " + studentId + " and parent confirmation: " + parentConfirmation);
+        }
+        return campaign.stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
     }
 }
 

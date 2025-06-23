@@ -35,5 +35,5 @@ public interface UserRepository extends JpaRepository<User, Integer>, JpaSpecifi
 
     // tìm người dùng có vai trò là PRINCIPAL
     @Query ("select u from User u where u.role='PRINCIPAL'")
-    List<User> findAllPrincipal ();
+    User findPrincipal ();
 }
