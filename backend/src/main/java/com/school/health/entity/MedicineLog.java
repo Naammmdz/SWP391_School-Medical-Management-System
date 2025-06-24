@@ -31,4 +31,9 @@ public class MedicineLog {
 
     @Column(name = "Status", nullable = false)
     private boolean status = false;
+
+    @Column(name = "ImageData", columnDefinition = "TEXT")
+    private String imageData; // Base64 encoded image
+
+
 }

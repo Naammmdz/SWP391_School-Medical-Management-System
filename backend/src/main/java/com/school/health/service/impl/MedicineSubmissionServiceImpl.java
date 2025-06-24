@@ -62,32 +62,29 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
         // Calculate duration based on start and end dates
         int duration = (int) ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate()) + 1;
 
-        String encodedImage;
-        try {
-            if (image == null || image.isEmpty()) {
-                throw new BadRequestException("Ảnh không được để trống");
+        String encodedImage = null;;
+        if (image != null) {
+            try {
+                // Check file size (max 5MB)
+                if (image.getSize() > 5 * 1024 * 1024) {
+                    throw new BadRequestException("Kích thước ảnh không được vượt quá 5MB");
+                }
+
+                // Check file type
+                List<String> allowedTypes = Arrays.asList("image/jpeg", "image/png", "image/jpg");
+                if (!allowedTypes.contains(image.getContentType())) {
+                    throw new BadRequestException("Chỉ chấp nhận file ảnh (JPEG, PNG, JPG)");
+                }
+
+                // Convert to Base64
+                byte[] imageBytes = image.getBytes();
+                String contentType = image.getContentType();
+                encodedImage = "data:" + contentType + ";base64," + Base64.getEncoder().encodeToString(imageBytes);
+
+            } catch (IOException e) {
+                throw new BadRequestException("Lỗi xử lý ảnh: " + e.getMessage());
             }
-
-            // Check file size (max 5MB)
-            if (image.getSize() > 5 * 1024 * 1024) {
-                throw new BadRequestException("Kích thước ảnh không được vượt quá 5MB");
-            }
-
-            // Check file type
-            List<String> allowedTypes = Arrays.asList("image/jpeg", "image/png", "image/jpg");
-            if (!allowedTypes.contains(image.getContentType())) {
-                throw new BadRequestException("Chỉ chấp nhận file ảnh (JPEG, PNG, JPG)");
-            }
-
-            // Convert to Base64
-            byte[] imageBytes = image.getBytes();
-            String contentType = image.getContentType();
-            encodedImage = "data:" + contentType + ";base64," + Base64.getEncoder().encodeToString(imageBytes);
-
-        } catch (IOException e) {
-            throw new BadRequestException("Lỗi xử lý ảnh: " + e.getMessage());
         }
-
         //Create a new MedicineSubmission entity
         MedicineSubmission medicineSubmission = new MedicineSubmission();
         medicineSubmission.setStudent(student.get());
@@ -393,7 +390,7 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
     }
 
     @Override
-    public MedicineLogResponse markMedicineTaken(Integer submissionId, MedicineLogRequest request) {
+    public MedicineLogResponse markMedicineTaken(Integer submissionId, MedicineLogRequest request, MultipartFile image) {
         MedicineSubmission submission = medicineSubmissionRepository.findById(submissionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Submission not found: " + submissionId));
 
@@ -415,6 +412,35 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
 //        log.setGivenAt(request.getGivenAt());
         log.setNotes(request.getNotes());
         log.setStatus(true); // Mark as taken
+
+        // Handle image upload
+        String encodedImage = null;
+        if (image != null) {
+            try {
+                // Check file size (max 5MB)
+                if (image.getSize() > 5 * 1024 * 1024) {
+                    throw new BadRequestException("Kích thước ảnh không được vượt quá 5MB");
+                }
+
+                // Check file type
+                List<String> allowedTypes = Arrays.asList("image/jpeg", "image/png", "image/jpg");
+                if (!allowedTypes.contains(image.getContentType())) {
+                    throw new BadRequestException("Chỉ chấp nhận file ảnh (JPEG, PNG, JPG)");
+                }
+
+                // Convert to Base64
+                byte[] imageBytes = image.getBytes();
+                String contentType = image.getContentType();
+                encodedImage = "data:" + contentType + ";base64," + Base64.getEncoder().encodeToString(imageBytes);
+
+            } catch (IOException e) {
+                throw new BadRequestException("Lỗi xử lý ảnh: " + e.getMessage());
+            }
+        }
+        // Set the image data if provided
+        if (encodedImage != null) {
+            log.setImageData(encodedImage);
+        }
 
         medicineLogRepository.save(log);
 

@@ -40,26 +40,14 @@ public class MedicineSubmissionController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('PARENT')")
     public ResponseEntity<MedicineSubmissionResponse> createMedicineSubmission(
-            @RequestParam("studentId") Integer studentId,
-            @RequestParam("instruction") String instruction,
-            @RequestParam("startDate") String startDate,
-            @RequestParam("endDate") String endDate,
-            @RequestParam("notes") String notes,
-            @RequestPart("image") MultipartFile image,
+            @RequestPart("request") @Valid MedicineSubmissionRequest request,
+            @RequestPart(value = "image", required = false) MultipartFile image,
             Authentication authentication
     ) {
-        // Tạo request object từ các parameters
-        MedicineSubmissionRequest request = new MedicineSubmissionRequest();
-        request.setStudentId(studentId);
-        request.setInstruction(instruction);
-        request.setStartDate(LocalDate.parse(startDate));
-        request.setEndDate(LocalDate.parse(endDate));
-        request.setNotes(notes);
-
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
         Integer userId = userPrincipal.getId();
-        MedicineSubmissionResponse medicineSubmissionResponse = medicineSubmissionService.createMedicineSubmission(request, image, userId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(medicineSubmissionResponse);
+        MedicineSubmissionResponse response = medicineSubmissionService.createMedicineSubmission(request, image, userId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
 //    //READ ALL - Phân quyền theo role
@@ -213,14 +201,15 @@ public class MedicineSubmissionController {
     @PreAuthorize("hasAnyRole('NURSE')")
     public ResponseEntity<MedicineLogResponse> markMedicineTaken(
             @PathVariable Integer id,
-            @Valid @RequestBody MedicineLogRequest request,
+            @Valid @RequestPart("request") MedicineLogRequest request,
+            @RequestPart(value = "image", required = false) MultipartFile image,
             Authentication authentication) {
 
          Integer givenBy = authUtils.getCurrentUserId(authentication);
         request.setGivenByUserId(givenBy);
         request.setGivenAt(LocalDate.now());
 
-        MedicineLogResponse response = medicineSubmissionService.markMedicineTaken(id, request);
+        MedicineLogResponse response = medicineSubmissionService.markMedicineTaken(id, request, image);
         return ResponseEntity.status(201).body(response);
     }
 
