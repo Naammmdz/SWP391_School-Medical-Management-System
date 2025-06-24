@@ -467,7 +467,7 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
     }
 
     @Override
-    public MedicineSubmissionResponse getByIdForNurse(Integer id) {
+    public MedicineSubmissionResponse getByIdWithLog(Integer id) {
         MedicineSubmission submission = medicineSubmissionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Submission not found: " + id));
 

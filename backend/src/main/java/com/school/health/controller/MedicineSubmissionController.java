@@ -1,12 +1,10 @@
 package com.school.health.controller;
 
 
-import com.school.health.dto.request.MedicineDetailRequest;
 import com.school.health.dto.request.MedicineLogRequest;
 import com.school.health.dto.request.MedicineSubmissionRequest;
 import com.school.health.dto.request.StatusUpdateRequest;
 import com.school.health.dto.response.*;
-import com.school.health.entity.MedicineSubmission;
 import com.school.health.security.services.UserDetailsImpl;
 import com.school.health.service.MedicineSubmissionService;
 import com.school.health.util.AuthenticationUtils;
@@ -120,7 +118,7 @@ public class MedicineSubmissionController {
         MedicineSubmissionResponse medicineSubmissionResponse;
 
         if (includeLogsData) {
-            medicineSubmissionResponse = medicineSubmissionService.getByIdForNurse(id);
+            medicineSubmissionResponse = medicineSubmissionService.getByIdWithLog(id);
         } else {
             medicineSubmissionResponse = medicineSubmissionService.getById(id);
         }

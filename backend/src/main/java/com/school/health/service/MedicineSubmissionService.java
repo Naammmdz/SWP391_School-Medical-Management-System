@@ -19,7 +19,7 @@ public interface MedicineSubmissionService {
     List<MedicineSubmissionResponse> getAllForNurse(Integer studentId, Integer parentId, String status);
     HealthDashboardResponse getHealthDashboard();
     MedicineLogResponse markMedicineTaken(Integer submissionId, MedicineLogRequest request, MultipartFile image);
-    MedicineSubmissionResponse getByIdForNurse(Integer id);
+    MedicineSubmissionResponse getByIdWithLog(Integer id);
 
     // ADMIN operations
     List<MedicineSubmissionResponse> getAllForAdmin(Integer studentId, Integer parentId, String status);
