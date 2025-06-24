@@ -186,4 +186,23 @@ public class HealthCheckCampaignController {
         return ResponseEntity.ok(healthCheckCampaignService.getCampaignsIsAcceptOrReject(studentId));
     }
 
+    // filter kết quả kiểm tra chiến dịch theo lớp, tên chiến dịch và tên học sinh
+    @GetMapping("/filter-result")
+    @PreAuthorize("hasRole('NURSE') or hasRole('ADMIN') or hasRole('PARENT')")
+    public ResponseEntity<?> filterHealthCheckCampaigns(
+            @RequestParam(required = false) String className,
+            @RequestParam(required = false) String campaignName,
+            @RequestParam(required = false) String studentName,
+            @RequestParam(required = false) LocalDate startDate,
+            @RequestParam(required = false) LocalDate endDate
+    ) {
+        if(startDate != null && endDate != null) {
+            if (startDate.isAfter(endDate)) {
+                throw new RuntimeException("startDate is after endDate");
+            }
+        }
+        return ResponseEntity.ok(healthCheckCampaignService.filterHealthCheckCampaigns(className, campaignName, studentName, startDate, endDate));
+    }
+
+
 }

@@ -15,6 +15,7 @@ import com.school.health.repository.HealthCheckRepository;
 import com.school.health.repository.StudentRepository;
 import com.school.health.service.HealthCheckCampaignService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -321,6 +322,41 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
         dto.setStatus(campaign.getStatus());
         dto.setAcceptOrNot(healthCheck.isParentConfirmation());
         return dto;
+    }
+
+    @Override
+    public List<HealthCheckResponseDTO> filterHealthCheckCampaigns(String className, String campaignName, String studentName, LocalDate startDate, LocalDate endDate) {
+        Specification<HealthCheck> spec = Specification.where(null);
+
+        if (className != null && !className.isBlank()) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("student").get("className"), className));
+        }
+
+        if (campaignName != null && !campaignName.isBlank()) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("campaign").get("campaignName"), campaignName));
+        }
+
+        if (studentName != null && !studentName.isBlank()) {
+            spec = spec.and((root, query, cb) ->
+                    cb.like(cb.lower(root.get("student").get("fullName")), "%" + studentName.toLowerCase() + "%"));
+        }
+
+        if (startDate != null && endDate != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.greaterThanOrEqualTo(root.get("date"), startDate));
+        }
+
+        if (endDate != null && startDate != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.lessThanOrEqualTo(root.get("date"), endDate));
+        }
+
+        return healthCheckRepository.findAll(spec)
+                .stream()
+                .map(this::mapToHealthCheckResponseDTO)
+                .collect(Collectors.toList());
     }
 }
 

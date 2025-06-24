@@ -2,6 +2,7 @@ package com.school.health.repository;
 
 import com.school.health.entity.HealthCheck;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -9,7 +10,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Repository
-public interface HealthCheckRepository extends JpaRepository<HealthCheck, Integer> {
+public interface HealthCheckRepository extends JpaRepository<HealthCheck, Integer>, JpaSpecificationExecutor<HealthCheck> {
     @Query("SELECT hc FROM HealthCheck hc WHERE hc.campaign.campaignId = :campaignId AND hc.student.studentId = :studentId")
     HealthCheck findByCampaignIdAndStudentId(Integer campaignId, Integer studentId);
 
@@ -23,5 +24,6 @@ public interface HealthCheckRepository extends JpaRepository<HealthCheck, Intege
 
     @Query("SELECT hc FROM HealthCheck hc WHERE :startDate <= hc.date AND hc.date <= :endDate OR hc.consultationAppointment = :consultationAppointment")
     List<HealthCheck> findResultWithDate(LocalDate startDate, LocalDate endDate,boolean consultationAppointment);
+
 }
 

@@ -169,5 +169,17 @@ public class VaccinationCampaignController {
         return ResponseEntity.ok(vaccinationCampaignService.getCampaignStatus(studentId, parentConfirmation));
     }
 
+    @GetMapping("/filter-result")
+    @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN') or hasRole('NURSE')")
+    public ResponseEntity<?> filterVaccinationCampaigns(
+            @RequestParam(required = false) String className,
+            @RequestParam(required = false) String campaignName,
+            @RequestParam(required = false) String studentName,
+            @RequestParam(required = false) LocalDate startDate,
+            @RequestParam(required = false) LocalDate endDate
+    ) {
+        return ResponseEntity.ok(vaccinationCampaignService.filterVaccinationCampaigns(className, campaignName, studentName, startDate, endDate));
+    }
+
 
 }

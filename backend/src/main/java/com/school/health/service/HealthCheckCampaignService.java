@@ -36,7 +36,7 @@ public interface HealthCheckCampaignService {
 
     HealthCheckResponseDTO recordHealthCheckResult(Integer campaignId, HealthCheckRequestDTO requestDTO);
 
-    HealthCheckResponseDTO updateStudentHealthCampaign(Integer healthcheckId ,HealthCheckRequestDTO requestDTO);
+    HealthCheckResponseDTO updateStudentHealthCampaign(Integer healthcheckId, HealthCheckRequestDTO requestDTO);
 
     List<HealthCheckResponseDTO> getHealthCheckResults(Integer campaignId);
 
@@ -44,12 +44,14 @@ public interface HealthCheckCampaignService {
 
     List<HealthCheckResponseDTO> getResultByStudentId(Integer studentId);
 
-    List<HealthCheckResponseDTO> getResultWithFilterDate(LocalDate startDate, LocalDate endDate,boolean consultationAppointment);
+    List<HealthCheckResponseDTO> getResultWithFilterDate(LocalDate startDate, LocalDate endDate, boolean consultationAppointment);
 
     HealthCheckResponseDTO rejectStudentVaccine(HealthCheckRequestDTO request);
 
     List<HealthCampaignResponseDTO> getCampaignStatus(int studentId, boolean parentConfirmation);
 
-    List<HealthCampaignIsAcceptDTO> getCampaignsIsAcceptOrReject( Integer studentId);
+    List<HealthCampaignIsAcceptDTO> getCampaignsIsAcceptOrReject(Integer studentId);
+
+    List<HealthCheckResponseDTO> filterHealthCheckCampaigns(String className, String campaignName, String studentName, LocalDate startDate, LocalDate endDate);
 
 }
