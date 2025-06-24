@@ -197,11 +197,11 @@ public class MedicineSubmissionController {
     }
 
     // API chấm công uống thuốc - NURSE
-    @PostMapping("/{id}/mark-taken")
+    @PostMapping(value = "/{id}/mark-taken", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyRole('NURSE')")
     public ResponseEntity<MedicineLogResponse> markMedicineTaken(
             @PathVariable Integer id,
-            @Valid @RequestPart("request") MedicineLogRequest request,
+            @RequestPart("request") @Valid MedicineLogRequest request,
             @RequestPart(value = "image", required = false) MultipartFile image,
             Authentication authentication) {
 

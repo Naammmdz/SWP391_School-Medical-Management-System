@@ -13,4 +13,5 @@ public class MedicineLogResponse {
     private LocalDate givenAt;
     private String notes;
     private boolean status = false;
+    private String imageData; // Base64 encoded image
 }

@@ -451,11 +451,18 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
         MedicineLogResponse response = new MedicineLogResponse();
         response.setId(log.getMedicineLogId());
         response.setSubmissionId(log.getMedicineSubmission().getMedicineSubmissionId());
-        response.setGivenByUserId(log.getGivenBy().getUserId());
-        response.setGivenByName(log.getGivenBy().getFullName());
+        // Xử lý null safety cho givenBy
+        if (log.getGivenBy() != null) {
+            response.setGivenByUserId(log.getGivenBy().getUserId());
+            response.setGivenByName(log.getGivenBy().getFullName());
+        }
         response.setGivenAt(log.getGivenAt());
         response.setNotes(log.getNotes());
         response.setStatus(log.isStatus());
+        // Chỉ set imageData nếu có
+        if (log.getImageData() != null) {
+            response.setImageData(log.getImageData());
+        }
         return response;
     }
 
