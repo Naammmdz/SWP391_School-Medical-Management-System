@@ -1,6 +1,6 @@
 import axios from "axios";
-const API_URL = 'http://localhost:8080/api/auth';
-const USER_URL ='http://localhost:8080/api';
+const API_URL = import.meta.env.VVITE_API_AUTH; ;
+const USER_URL =import.meta.env.VITE_API_USER;
 const userService = {
      getAllUsers: (config) => {
         return axios.get(USER_URL+ '/user', config);

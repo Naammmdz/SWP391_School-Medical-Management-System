@@ -1,5 +1,5 @@
 import axios from "axios";
-const vaccinationApiUrl = 'http://localhost:8080/api/vaccination-campaigns';
+const vaccinationApiUrl = import.meta.env.VITE_API_VACCINATION;
 
 const VaccinationService = {
     createVaccinationCampaign: (data, config) => {

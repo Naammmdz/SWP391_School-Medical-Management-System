@@ -38,24 +38,33 @@ const fetchNotifications = async () => {
 
     const response = await vaccinationService.getVaccinationCampaignApproved(config);
     const data = Array.isArray(response.data) ? response.data : [];
-
+   console.log('Dữ liệu chiến dịch tiêm chủng:', data);
     // Lọc chiến dịch phù hợp với lớp học sinh
+    function removeVietnameseTones(str) {
+  return str.normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd').replace(/Đ/g, 'D');
+}
     const filtered = data.filter(item => {
-      if (!studentClass || !item.targetGroup) return false;
-      const target = item.targetGroup.toLowerCase();
-      const studentClassLower = studentClass.toLowerCase();
+  if (!studentClass || !item.targetGroup) return false;
+  const target = item.targetGroup.toLowerCase();
+  const studentClassLower = studentClass.toLowerCase();
 
-      // So sánh chính xác hoặc kiểm tra từ khóa (ví dụ: "khối 3" khớp "3A")
-      if (target === studentClassLower) return true;
-      // Nếu target là "khối 3", kiểm tra studentClass có bắt đầu bằng "3"
-      const khoiMatch = target.match(/khoi\s*(\d+)/);
-      if (khoiMatch && studentClassLower.startsWith(khoiMatch[1])) return true;
-      // Nếu target là "lớp 3A", kiểm tra trùng khớp
-      if (target.includes(studentClassLower)) return true;
-      // Nếu target là "3A", kiểm tra trùng khớp
-      if (studentClassLower.includes(target)) return true;
-      return false;
-    });
+  // Kiểm tra nếu là "toàn trường" (không phân biệt hoa thường, có dấu hoặc không dấu)
+  const targetNoSign = removeVietnameseTones(target).replace(/\s/g, '');
+  if (targetNoSign === 'toantruong') return true;
+
+  // So sánh chính xác hoặc kiểm tra từ khóa (ví dụ: "khối 3" khớp "3A")
+  if (target === studentClassLower) return true;
+  // Nếu target là "khối 3", kiểm tra studentClass có bắt đầu bằng "3"
+  const khoiMatch = target.match(/khoi\s*(\d+)/);
+  if (khoiMatch && studentClassLower.startsWith(khoiMatch[1])) return true;
+  // Nếu target là "lớp 3A", kiểm tra trùng khớp
+  if (target.includes(studentClassLower)) return true;
+  // Nếu target là "3A", kiểm tra trùng khớp
+  if (studentClassLower.includes(target)) return true;
+  return false;
+});
 
     const mapped = filtered.map(item => {
       let status = 'Chưa phản hồi';

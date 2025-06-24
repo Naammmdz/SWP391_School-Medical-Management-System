@@ -6,7 +6,7 @@ const userId = user?.userId; // hoặc user.id tùy backend trả về
 const BASE_URL = 'http://localhost:8080/api/admin/5/students';
 
 
-const HEALTH_ST =`http://localhost:8080/api/students`;
+const HEALTH_ST =import.meta.env.VITE_API_HEALTHPROFILE;
 
 class HealthRecordService {
     getHealthRecordByStudentId(studentId, config) {

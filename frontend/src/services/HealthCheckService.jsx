@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8080/api/healthcheck-campaigns';
+const API_URL = import.meta.env.VITE_API_HEALTHCHECK; // <-- Sửa lại đường dẫn API cho Health Check
 
 
 const HealthCheckService = {

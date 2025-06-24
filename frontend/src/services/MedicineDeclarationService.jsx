@@ -1,5 +1,5 @@
 import axios from "axios";
-const API_URL = 'http://localhost:8080/api/medicine-submissions';
+const API_URL = import.meta.env.VITE_API_MEDICAL;
 
 const MedicineDeclarationService = {
  createMedicineSubmission: async (data, config) => {
