@@ -307,6 +307,16 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<VaccinationResponseDTO> getAllVaccinationResultsWithParentConfirmationTrue() {
+        return vaccinationRepository.findAll().stream()
+                .map(this::mapToResponseDTO)
+                .filter(a -> a.isParentConfirmation()) // Nếu ở đây không có get true hay false
+                // thì mặc định là true tại vì a.isParentConfirmation() trả về true nếu muốn trả về false
+                // thì phải dùng a.isParentConfirmation() == false
+                .collect(Collectors.toList());
+    }
 }
 
 

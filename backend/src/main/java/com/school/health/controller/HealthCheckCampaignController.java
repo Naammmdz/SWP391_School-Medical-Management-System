@@ -204,5 +204,11 @@ public class HealthCheckCampaignController {
         return ResponseEntity.ok(healthCheckCampaignService.filterHealthCheckCampaigns(className, campaignName, studentName, startDate, endDate));
     }
 
+    // Get all health check results with parent confirmation is true
+    @GetMapping("/results-campaign/all/confirmation-true")
+    @PreAuthorize("hasRole('NURSE') or hasRole('ADMIN') or hasRole('PARENT')")
+    public ResponseEntity<?> getAllHealthCheckResultsWithParentConfirmationTrue() {
+        return ResponseEntity.ok(healthCheckCampaignServiceImpl.getAllHealthCheckResultsWithParentConfirmationTrue());
+    }
 
 }

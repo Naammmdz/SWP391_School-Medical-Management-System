@@ -358,5 +358,14 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
                 .map(this::mapToHealthCheckResponseDTO)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<HealthCheckResponseDTO> getAllHealthCheckResultsWithParentConfirmationTrue() {
+        return healthCheckRepository.findAll().stream()
+                .map(this::mapToHealthCheckResponseDTO)
+                .filter(healthCheckResponseDTO -> healthCheckResponseDTO.isParentConfirmation())
+                .collect(Collectors.toList());
+    }
+
 }
 

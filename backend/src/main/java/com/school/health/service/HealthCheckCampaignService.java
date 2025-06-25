@@ -54,4 +54,6 @@ public interface HealthCheckCampaignService {
 
     List<HealthCheckResponseDTO> filterHealthCheckCampaigns(String className, String campaignName, String studentName, LocalDate startDate, LocalDate endDate);
 
+    List<HealthCheckResponseDTO> getAllHealthCheckResultsWithParentConfirmationTrue();
+
 }

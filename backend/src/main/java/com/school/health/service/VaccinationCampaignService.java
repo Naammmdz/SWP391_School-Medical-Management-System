@@ -59,4 +59,6 @@ public interface VaccinationCampaignService {
             LocalDate startDate,
             LocalDate endDate
     );
+
+    List<VaccinationResponseDTO> getAllVaccinationResultsWithParentConfirmationTrue();
 }

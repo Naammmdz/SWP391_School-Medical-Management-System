@@ -181,5 +181,11 @@ public class VaccinationCampaignController {
         return ResponseEntity.ok(vaccinationCampaignService.filterVaccinationCampaigns(className, campaignName, studentName, startDate, endDate));
     }
 
+    // Get all vaccination results with parent confirmation is true
+    @GetMapping("/results-campaign/parent-confirmation-true")
+    @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN') or hasRole('NURSE')")
+    public ResponseEntity<?> getAllVaccinationResultsWithParentConfirmationTrue() {
+        return ResponseEntity.ok(vaccinationCampaignService.getAllVaccinationResultsWithParentConfirmationTrue());
+    }
 
 }
