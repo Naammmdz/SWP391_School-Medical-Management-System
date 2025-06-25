@@ -7,6 +7,12 @@ import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 public class OpenApiConfig { // CÁ NHÂN HÓA CẤU HÌNH OPENAPI
@@ -23,5 +29,18 @@ public class OpenApiConfig { // CÁ NHÂN HÓA CẤU HÌNH OPENAPI
                                 .type(SecurityScheme.Type.HTTP)
                                 .scheme("bearer")
                                 .bearerFormat("JWT")));
+    }
+
+    @Bean
+    public MappingJackson2HttpMessageConverter octetStreamJsonConverter() {
+        MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter() {
+            @Override
+            public boolean canWrite(Class<?> clazz, MediaType mediaType) {
+                // Không dùng converter này để ghi (response)
+                return false;
+            }
+        };
+        converter.setSupportedMediaTypes(List.of(new MediaType("application", "octet-stream")));
+        return converter;
     }
 }
