@@ -57,4 +57,5 @@ public class Student {
     @Column(name = "CreatedAt")
     private LocalDateTime createdAt;
 
+
 }

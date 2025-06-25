@@ -110,7 +110,9 @@ public class HealthCheckCampaignController {
     // Phụ huynh từ chối đăng ký cho học sinh tham gia chiến dịch sức khỏe
     @PostMapping("/{campaignId}/student/{studentId}/reject")
     @PreAuthorize("hasRole('PARENT') or hasRole('NURSE') or hasRole('ADMIN')")
+
     public ResponseEntity<?> rejectStudentForHealthCampaign(@PathVariable @Valid int campaignId, @PathVariable @Valid int studentId) {
+
         HealthCheckRequestDTO dto = new HealthCheckRequestDTO();
         dto.setCampaignId(campaignId);
         dto.setStudentId(studentId);
@@ -210,5 +212,6 @@ public class HealthCheckCampaignController {
     public ResponseEntity<?> getAllHealthCheckResultsWithParentConfirmationTrue() {
         return ResponseEntity.ok(healthCheckCampaignServiceImpl.getAllHealthCheckResultsWithParentConfirmationTrue());
     }
+
 
 }

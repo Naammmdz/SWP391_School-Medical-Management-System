@@ -169,6 +169,7 @@ public class VaccinationCampaignController {
         return ResponseEntity.ok(vaccinationCampaignService.getCampaignStatus(studentId, parentConfirmation));
     }
 
+
     @GetMapping("/filter-result")
     @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN') or hasRole('NURSE')")
     public ResponseEntity<?> filterVaccinationCampaigns(
@@ -187,5 +188,6 @@ public class VaccinationCampaignController {
     public ResponseEntity<?> getAllVaccinationResultsWithParentConfirmationTrue() {
         return ResponseEntity.ok(vaccinationCampaignService.getAllVaccinationResultsWithParentConfirmationTrue());
     }
+
 
 }

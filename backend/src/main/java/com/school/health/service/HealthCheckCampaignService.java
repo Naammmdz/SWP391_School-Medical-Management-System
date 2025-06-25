@@ -44,6 +44,7 @@ public interface HealthCheckCampaignService {
 
     List<HealthCheckResponseDTO> getResultByStudentId(Integer studentId);
 
+
     List<HealthCheckResponseDTO> getResultWithFilterDate(LocalDate startDate, LocalDate endDate, boolean consultationAppointment);
 
     HealthCheckResponseDTO rejectStudentVaccine(HealthCheckRequestDTO request);
