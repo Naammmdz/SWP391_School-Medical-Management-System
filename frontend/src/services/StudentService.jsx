@@ -1,5 +1,6 @@
 import axios from "axios";
-const STUDENT_URL = 'http://localhost:8080/api/admin/students';
+
+const STUDENT_URL = import.meta.env.VITE_API_STUDENT;
 
 
 const studentService = {

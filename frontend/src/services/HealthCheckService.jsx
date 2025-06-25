@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8080/api/healthcheck-campaigns';
+const API_URL = import.meta.env.VITE_API_HEALTHCHECK; // <-- Sửa lại đường dẫn API cho Health Check
 
 
 const HealthCheckService = {
@@ -85,6 +85,70 @@ const HealthCheckService = {
       throw error;
     }
   },
+  getResultByStudentId: async (studentId, config) => {
+    try {
+      const response = await axios.get(`${API_URL}/results-campaign/student/${studentId}`, config);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching health check results by student ID:', error);
+      throw error;
+    }
+  },
+  updateHealthCheckResult: async (id, result, config) => {
+    try {
+      const response = await axios.put(`${API_URL}/${id}/update`, result, config);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating health check result:', error);
+      throw error;
+    }
+  },
+ parentConfirmHealthCheck: async (campaignId, studentId, config) => {
+  try {
+    // Đúng thứ tự: body là null, config là headers
+    const response = await axios.post(`${API_URL}/${campaignId}/student/${studentId}/register`, null, config);
+    return response.data;
+  } catch (error) {
+    console.error('Error confirming health check by parent:', error);
+    throw error;
+  }
+},
+  parentRejectHealthCheck: async(campaignId, studentId, config) => {
+    try {
+      const response = await axios.post(`${API_URL}/${campaignId}/student/${studentId}/reject`,null, config);
+      return response.data;
+    } catch (error) {
+      console.error('Error rejecting health check by parent:', error);
+      throw error;
+    }
+  },
+  parentGetConfirmedCampaigns: async (studentId, config) => {
+    try {
+      const response = await axios.get(`${API_URL}/me/students/${studentId}/campaigns`, config);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching confirmed health check campaigns by parent:', error);
+      throw error;
+    }
+  },
+  parentGetStautusCampaigns: async (studentId, parentConfirm, config) => {
+    try {
+      const response = await axios.get(`${API_URL}/student/${studentId}/campaign-parentConfirmation/${parentConfirm}`, config);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching health check campaigns by parent status:', error);
+      throw error;
+    }
+  },
+  getHealthCheckNurse: async (campaignId, config) => {
+    try {
+      const response = await axios.get(`${API_URL}/${campaignId}/students-registrations`, config);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching health check campaigns for nurse:', error);
+      throw error;
+    }
+  }
 };
 
 export default HealthCheckService;

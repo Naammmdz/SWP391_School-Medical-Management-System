@@ -30,12 +30,13 @@ const StudentList = () => {
       // Fetch students
       const studentsResponse = await studentService.getAllStudents(config);
       setStudents(studentsResponse.data);
-     
+      console.log('Fetched students:', studentsResponse.data);
       localStorage.setItem('students', JSON.stringify(studentsResponse.data)); 
-
+       
       // Fetch users to get parent information
       const usersResponse = await userService.getAllUsers(config);
       setUsers(usersResponse.data);
+      
     } catch (error) {
       setError('Không thể tải dữ liệu học sinh');
     } finally {

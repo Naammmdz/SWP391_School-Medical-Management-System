@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import HealthCheckService from '../../../services/HealthCheckService';
 import './HealthCheckList.css';
+
 const HealthCheckList = () => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const token = localStorage.getItem('token');
@@ -9,11 +10,14 @@ const HealthCheckList = () => {
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
- const users = JSON.parse(localStorage.getItem('users') || '[]');
-const getUserNameById = (id) => {
-  const user = users.find(u => String(u.id) === String(id));
-  return user ? user.fullName : id;
-};
+  const [approvingId, setApprovingId] = useState(null);
+  const users = JSON.parse(localStorage.getItem('users') || '[]');
+
+  const getUserNameById = (id) => {
+    const user = users.find(u => String(u.id) === String(id));
+    return user ? user.fullName : id;
+  };
+
   useEffect(() => {
     const fetchCampaigns = async () => {
       setLoading(true);
@@ -23,6 +27,8 @@ const getUserNameById = (id) => {
           headers: { Authorization: `Bearer ${token}` }
         });
         setCampaigns(data);
+        localStorage.setItem('healthCheckCampaigns', JSON.stringify(data));
+        console.log('Campaigns loaded:', data);
       } catch (err) {
         setError('Không thể tải danh sách chiến dịch!');
       }
@@ -31,7 +37,7 @@ const getUserNameById = (id) => {
     if (
       user.userRole === 'ROLE_ADMIN' ||
       user.userRole === 'ROLE_NURSE' ||
-      user.userRole === 'ROLE_PRICIPAL' 
+      user.userRole === 'ROLE_PRICIPAL'
     ) {
       fetchCampaigns();
     }
@@ -44,6 +50,32 @@ const getUserNameById = (id) => {
   ) {
     return <div>Bạn không có quyền truy cập trang này.</div>;
   }
+
+  // Hàm lưu thông tin chiến dịch vào localStorage
+  const handleUpdateClick = (campaign) => {
+    localStorage.setItem('selectedCampaignId', campaign.campaignId);
+    localStorage.setItem('selectedCampaign', JSON.stringify(campaign));
+    navigate('/capnhatkiemtradinhky');
+  };
+
+  // Hàm approve chiến dịch
+  const handleApprove = async (campaignId) => {
+    setApprovingId(campaignId);
+    try {
+      await HealthCheckService.approveHealthCheckCampaign(campaignId, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      // Sau khi duyệt, reload lại danh sách
+      const data = await HealthCheckService.getAllHealthCheckCampaign({
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setCampaigns(data);
+      localStorage.setItem('healthCheckCampaigns', JSON.stringify(data));
+    } catch (err) {
+      alert('Duyệt chiến dịch thất bại!');
+    }
+    setApprovingId(null);
+  };
 
   return (
     <div className="health-check-list-container">
@@ -85,22 +117,29 @@ const getUserNameById = (id) => {
                   <td>{c.status}</td>
                   <td>{getUserNameById(c.createdBy)}</td>
                   <td>{c.createdAt}</td>
-                  <td>
-                    <button
-                      className="btn btn-warning btn-sm"
-                      onClick={() => {
-                        localStorage.setItem('selectedCampaignId', c.campaignId);
-                        navigate('/capnhatkiemtradinhky');
-                      }}
-                    >
-                      Update
-                    </button>
-                  </td>
+                 <td>
+  <button
+    className="btn btn-warning btn-sm"
+    onClick={() => handleUpdateClick(c)}
+  >
+    Cập nhật
+  </button>
+  {(user.userRole === 'ROLE_ADMIN' || user.userRole === 'ROLE_PRICIPAL') && c.status === 'PENDING' && (
+    <button
+      className="btn btn-success btn-sm"
+      style={{ marginLeft: 8 }}
+      onClick={() => handleApprove(c.campaignId)}
+      disabled={approvingId === c.campaignId}
+    >
+      {approvingId === c.campaignId ? 'Đang duyệt...' : 'Chấp nhận'}
+    </button>
+  )}
+</td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={8}>Không có chiến dịch nào.</td>
+                <td colSpan={9}>Không có chiến dịch nào.</td>
               </tr>
             )}
           </tbody>
