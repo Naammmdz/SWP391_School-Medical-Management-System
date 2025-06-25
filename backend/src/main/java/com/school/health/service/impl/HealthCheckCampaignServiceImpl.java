@@ -2,6 +2,7 @@ package com.school.health.service.impl;
 
 import com.school.health.dto.request.HealthCampaignRequestDTO;
 import com.school.health.dto.request.HealthCheckRequestDTO;
+import com.school.health.dto.response.HealthCampaignIsAcceptDTO;
 import com.school.health.dto.response.HealthCampaignResponseDTO;
 import com.school.health.dto.response.HealthCheckResponseDTO;
 import com.school.health.dto.response.StudentResponseDTO;
@@ -13,14 +14,15 @@ import com.school.health.repository.HealthCheckCampaignRepository;
 import com.school.health.repository.HealthCheckRepository;
 import com.school.health.repository.StudentRepository;
 import com.school.health.service.HealthCheckCampaignService;
-import jakarta.persistence.Column;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.school.health.enums.Status.APPROVED;
 
 @Service
 @RequiredArgsConstructor
@@ -110,7 +112,7 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
         HealthCheckCampaign existingCampaign = healthCheckCampaignRepository.findById(campaignId).orElseThrow(() -> new RuntimeException("Campaign not found with ID: " + campaignId));
 
         existingCampaign.setApprovedBy(approvedBy);
-        existingCampaign.setStatus(Status.APPROVED); // Set status thành approved
+        existingCampaign.setStatus(APPROVED); // Set status thành approved
 
         HealthCheckCampaign updatedCampaign = healthCheckCampaignRepository.save(existingCampaign);
         return mapToResponseDTO(updatedCampaign);
@@ -146,7 +148,7 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
 
     @Override
     public List<HealthCampaignResponseDTO> getApprovedCampaigns() {
-        List<HealthCheckCampaign> approvedCampaigns = healthCheckCampaignRepository.findByStatus(Status.APPROVED);
+        List<HealthCheckCampaign> approvedCampaigns = healthCheckCampaignRepository.findByStatus(APPROVED);
         return approvedCampaigns.stream().map(this::mapToResponseDTO).collect(Collectors.toList());
     }
 
@@ -155,6 +157,16 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
         HealthCheckCampaign campaign = healthCheckCampaignRepository.findById(request.getCampaignId()).orElseThrow(() -> new RuntimeException("Campaign not found with ID: " + request.getCampaignId()));
         Student student = studentRepository.findById(request.getStudentId()).orElseThrow(() -> new RuntimeException("Student not found with ID: " + request.getStudentId()));
         request.setParentConfirmation(true);
+        HealthCheck healthCheckEntity = maptoEntityCheck(request);
+        HealthCheckResponseDTO responseDTO = mapToHealthCheckResponseDTO(healthCheckEntity);
+        return responseDTO;
+    }
+
+    @Override
+    public HealthCheckResponseDTO rejectStudentVaccine(HealthCheckRequestDTO request) {
+        HealthCheckCampaign campaign = healthCheckCampaignRepository.findById(request.getCampaignId()).orElseThrow(() -> new RuntimeException("Campaign not found with ID: " + request.getCampaignId()));
+        Student student = studentRepository.findById(request.getStudentId()).orElseThrow(() -> new RuntimeException("Student not found with ID: " + request.getStudentId()));
+        request.setParentConfirmation(false);
         HealthCheck healthCheckEntity = maptoEntityCheck(request);
         HealthCheckResponseDTO responseDTO = mapToHealthCheckResponseDTO(healthCheckEntity);
         return responseDTO;
@@ -184,6 +196,7 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
 
     public HealthCheckResponseDTO mapToHealthCheckResponseDTO(HealthCheck healthCheck) {
         HealthCheckResponseDTO responseDTO = new HealthCheckResponseDTO();
+        responseDTO.setHealthCheckId(healthCheck.getCheckId());
         responseDTO.setCampaignId(healthCheck.getCampaign().getCampaignId());
         responseDTO.setStudentId(healthCheck.getStudent().getStudentId());
         responseDTO.setDate(healthCheck.getDate());
@@ -204,7 +217,11 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
 
     @Override
     public List<HealthCheckCampaign> getMyChildHealthCampaigns(Integer parentId, Integer studentId) {
-        return healthCheckCampaignRepository.findCampaignsByStudentId(studentId);
+        List<HealthCheckCampaign> health = healthCheckCampaignRepository.findCampaignsByStudentId(studentId,APPROVED);
+        if(health.isEmpty() ) {
+            throw new RuntimeException("No health campaigns found for campaign is not APPROVED or not found student with ID: " + studentId);
+        }
+        return health;
         // Chuyển đổi danh sách HealthCheck thành HealthCampaignResponseDTO
     }
 
@@ -222,6 +239,9 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
         HealthCheck healthCheck = healthCheckRepository.findById(healthcheckId).orElseThrow(() -> new RuntimeException("Health check not found with ID: " + healthcheckId));
         HealthCheckCampaign campaign = healthCheckCampaignRepository.findById(requestDTO.getCampaignId()).orElseThrow(() -> new RuntimeException("Campaign not found with ID: " + requestDTO.getCampaignId()));
         Student student = studentRepository.findById(requestDTO.getStudentId()).orElseThrow(() -> new RuntimeException("Student not found with ID: " + requestDTO.getStudentId()));
+        if(healthCheck.isParentConfirmation() == false) {
+            throw new RuntimeException("Parent confirmation is required to update health check results.");
+        }
         healthCheck.setDate(requestDTO.getDate());
         healthCheck.setHeight(requestDTO.getHeight());
         healthCheck.setWeight(requestDTO.getWeight());
@@ -236,7 +256,7 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
         healthCheck.setParentConfirmation(requestDTO.isParentConfirmation());
         healthCheck.setCampaign(campaign);
         healthCheck.setStudent(student);
-//        healthCheck = maptoEntityCheck(requestDTO);
+        // healthCheck = maptoEntityCheck(requestDTO);
         // Cập nhật các trường khác nếu cần
 
         healthCheckRepository.save(healthCheck);
@@ -254,8 +274,98 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
     public List<HealthCheckResponseDTO> getAllHealthCheckResults() {
         return healthCheckRepository.findAll().stream()
                 .map(this::mapToHealthCheckResponseDTO)
-//                .filter( name -> name.getCampaignId() > 1)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<HealthCheckResponseDTO> getResultByStudentId(Integer studentId) {
+        List<HealthCheck> healthChecks = healthCheckRepository.findByStudentId(studentId);
+        if (healthChecks.isEmpty()) {
+            throw new RuntimeException("No health check results found for student with ID: " + studentId);
+        }
+        return healthChecks.stream().map(this::mapToHealthCheckResponseDTO).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<HealthCheckResponseDTO> getResultWithFilterDate(LocalDate startDate, LocalDate endDate,boolean consultationAppointment) {
+        return healthCheckRepository.findResultWithDate( startDate, endDate , consultationAppointment).stream().map(this::mapToHealthCheckResponseDTO).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<HealthCampaignResponseDTO> getCampaignStatus(int studentId, boolean parentConfirmation) {
+        List<HealthCheckCampaign> campaign = healthCheckCampaignRepository.findCampaignsByStudentIdAndParentConfirmation(studentId,parentConfirmation);
+        if (campaign.isEmpty()) {
+            throw new RuntimeException("No health campaigns found for student with ID: " + studentId + " and parent confirmation: " + parentConfirmation);
+        }
+        return campaign.stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<HealthCampaignIsAcceptDTO> getCampaignsIsAcceptOrReject(Integer studentId) {
+        List<HealthCheck> healthChecks = healthCheckRepository.findByStudentId(studentId);
+        if (healthChecks.isEmpty()) {
+            throw new RuntimeException("No health checks found for student with ID: " + studentId);
+        }
+        return healthChecks.stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+
+    private HealthCampaignIsAcceptDTO convertToDto(HealthCheck healthCheck) {
+        HealthCheckCampaign campaign = healthCheck.getCampaign();
+        HealthCampaignIsAcceptDTO dto = new HealthCampaignIsAcceptDTO();
+        dto.setCampaignId(campaign.getCampaignId());
+        dto.setCampaignName(campaign.getCampaignName());
+        dto.setScheduledDate(campaign.getScheduledDate());
+        dto.setStatus(campaign.getStatus());
+        dto.setAcceptOrNot(healthCheck.isParentConfirmation());
+        return dto;
+    }
+
+    @Override
+    public List<HealthCheckResponseDTO> filterHealthCheckCampaigns(String className, String campaignName, String studentName, LocalDate startDate, LocalDate endDate) {
+        Specification<HealthCheck> spec = Specification.where(null);
+
+        if (className != null && !className.isBlank()) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("student").get("className"), className));
+        }
+
+        if (campaignName != null && !campaignName.isBlank()) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("campaign").get("campaignName"), campaignName));
+        }
+
+        if (studentName != null && !studentName.isBlank()) {
+            spec = spec.and((root, query, cb) ->
+                    cb.like(cb.lower(root.get("student").get("fullName")), "%" + studentName.toLowerCase() + "%"));
+        }
+
+        if (startDate != null && endDate != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.greaterThanOrEqualTo(root.get("date"), startDate));
+        }
+
+        if (endDate != null && startDate != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.lessThanOrEqualTo(root.get("date"), endDate));
+        }
+
+        return healthCheckRepository.findAll(spec)
+                .stream()
+                .map(this::mapToHealthCheckResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<HealthCheckResponseDTO> getAllHealthCheckResultsWithParentConfirmationTrue() {
+        return healthCheckRepository.findAll().stream()
+                .map(this::mapToHealthCheckResponseDTO)
+                .filter(healthCheckResponseDTO -> healthCheckResponseDTO.isParentConfirmation())
+                .collect(Collectors.toList());
+    }
+
 }
 

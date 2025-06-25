@@ -1,14 +1,18 @@
 package com.school.health.dto.request;
 
 import jakarta.validation.constraints.*;
-import lombok.Data;
+import lombok.*;
 
 import java.math.BigDecimal;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class CreateHealthProfileDTO {
 
     @NotNull(message = "Student ID không được để trống")
+    @Positive(message = "studentId phải lớn hơn 0") // phải là số dương
     private Integer studentId;
 
     @Size(max = 255, message = "Thông tin dị ứng không được vượt quá 255 ký tự")
@@ -18,10 +22,7 @@ public class CreateHealthProfileDTO {
     private String chronicDiseases;
 
     @Size(max = 255, message = "Tiền sử điều trị không được vượt quá 255 ký tự")
-    @NotEmpty(message = "Tiền sử điều trị không được để trống")
-    @NotNull(message = "Tiền sử điều trị không được để trống")
     @NotBlank(message = "Tiền sử điều trị không được để trống")
-    @Pattern(regexp = "^(?!null$).*$", message = "Tiền sử điều trị không được là 'null'")
     private String treatmentHistory;
 
     @Size(max = 50, message = "Thông tin thị lực không được vượt quá 50 ký tự")

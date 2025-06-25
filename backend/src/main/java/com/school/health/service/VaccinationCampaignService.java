@@ -5,11 +5,10 @@ import com.school.health.dto.request.VaccinationRequestDTO;
 import com.school.health.dto.response.StudentResponseDTO;
 import com.school.health.dto.response.VaccinationCampaignResponseDTO;
 import com.school.health.dto.response.VaccinationResponseDTO;
-import com.school.health.entity.Student;
-import com.school.health.entity.Vaccination;
 import com.school.health.entity.VaccinationCampaign;
 import com.school.health.enums.Status;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface VaccinationCampaignService {
@@ -44,4 +43,22 @@ public interface VaccinationCampaignService {
     List<VaccinationResponseDTO> getAllVaccinationResults();
 
     List<VaccinationResponseDTO> getVaccinationResults(Integer campaignId);
+
+    List<VaccinationResponseDTO> getResultByStudentId(Integer studentId);
+
+    List<VaccinationResponseDTO> getResultWithFilterDate(LocalDate startDate, LocalDate endDate);
+
+    VaccinationResponseDTO rejectStudentVaccine(VaccinationRequestDTO vaccineRequest);
+
+    List<VaccinationCampaignResponseDTO> getCampaignStatus(int studentId, boolean parentConfirmation);
+
+    List<VaccinationResponseDTO> filterVaccinationCampaigns(
+            String className,
+            String campaignName,
+            String studentName,
+            LocalDate startDate,
+            LocalDate endDate
+    );
+
+    List<VaccinationResponseDTO> getAllVaccinationResultsWithParentConfirmationTrue();
 }

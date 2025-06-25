@@ -13,9 +13,8 @@ import com.school.health.repository.StudentRepository;
 import com.school.health.repository.VaccinationCampaignRepository;
 import com.school.health.repository.VaccinationRepository;
 import com.school.health.service.VaccinationCampaignService;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -150,6 +149,17 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
         VaccinationResponseDTO responseDTO = mapToResponseDTO(vaccination);
         return responseDTO;
     }
+    // rejectStudentVaccine
+    @Override
+    public VaccinationResponseDTO rejectStudentVaccine(VaccinationRequestDTO vaccineRequest) {
+        VaccinationCampaign campaign = vaccinationCampaignRepository.findById(vaccineRequest.getCampaignId()).orElseThrow(() -> new RuntimeException("Campaign not found id :" + vaccineRequest.getCampaignId()));
+        Student student = studentRepository.findById(vaccineRequest.getStudentId()).orElseThrow(() -> new RuntimeException("Student not found id :" + vaccineRequest.getStudentId()));
+        vaccineRequest.setParentConfirmation(false);
+        Vaccination vaccination = mapToEntityVaccine(vaccineRequest);
+        VaccinationResponseDTO responseDTO = mapToResponseDTO(vaccination);
+        return responseDTO;
+    }
+
 
     public Vaccination mapToEntityVaccine(VaccinationRequestDTO requestDTO) {
         Vaccination vaccination = new Vaccination();
@@ -169,6 +179,7 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
 
     public VaccinationResponseDTO mapToResponseDTO(Vaccination vaccination) {
         VaccinationResponseDTO responseDTO = new VaccinationResponseDTO();
+        responseDTO.setVaccinationId(vaccination.getVaccinationId());
         responseDTO.setCampaignId(vaccination.getCampaign().getCampaignId());
         responseDTO.setStudentId(vaccination.getStudent().getStudentId());
         responseDTO.setVaccineName(vaccination.getVaccineName());
@@ -234,6 +245,76 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
     public List<VaccinationResponseDTO> getVaccinationResults(Integer campaignId) {
         return vaccinationRepository.findByCampaignId(campaignId).stream()
                 .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<VaccinationResponseDTO> getResultByStudentId(Integer studentId) {
+        List<Vaccination> vaccine = vaccinationRepository.findByStudentId(studentId);
+        if(vaccine.isEmpty()){
+            throw new RuntimeException("Vaccination not found : " + studentId);
+        }
+        return vaccine.stream().map(this::mapToResponseDTO).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<VaccinationResponseDTO> getResultWithFilterDate(LocalDate startDate, LocalDate endDate) {
+        return vaccinationRepository.findResultWithDate( startDate, endDate ).stream().map(this::mapToResponseDTO).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<VaccinationCampaignResponseDTO> getCampaignStatus(int studentId, boolean parentConfirmation) {
+        List<VaccinationCampaign> campaign = vaccinationCampaignRepository.findCampaignsByStudentIdAndParentConfirmation(studentId,parentConfirmation);
+        if (campaign.isEmpty()) {
+            throw new RuntimeException("No health campaigns found for student with ID: " + studentId + " and parent confirmation: " + parentConfirmation);
+        }
+        return campaign.stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<VaccinationResponseDTO> filterVaccinationCampaigns(String className, String campaignName, String studentName, LocalDate startDate, LocalDate endDate) {
+        Specification<Vaccination> spec = Specification.where(null);
+
+        if (className != null && !className.isBlank()) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("student").get("className"), className));
+        }
+
+        if (campaignName != null && !campaignName.isBlank()) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("campaign").get("campaignName"), campaignName));
+        }
+
+        if (studentName != null && !studentName.isBlank()) {
+            spec = spec.and((root, query, cb) ->
+                    cb.like(cb.lower(root.get("student").get("fullName")), "%" + studentName.toLowerCase() + "%"));
+        }
+
+        if (startDate != null && endDate != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.greaterThanOrEqualTo(root.get("date"), startDate));
+        }
+
+        if (endDate != null && startDate != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.lessThanOrEqualTo(root.get("date"), endDate));
+        }
+
+        return vaccinationRepository.findAll(spec)
+                .stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<VaccinationResponseDTO> getAllVaccinationResultsWithParentConfirmationTrue() {
+        return vaccinationRepository.findAll().stream()
+                .map(this::mapToResponseDTO)
+                .filter(a -> a.isParentConfirmation()) // Nếu ở đây không có get true hay false
+                // thì mặc định là true tại vì a.isParentConfirmation() trả về true nếu muốn trả về false
+                // thì phải dùng a.isParentConfirmation() == false
                 .collect(Collectors.toList());
     }
 }

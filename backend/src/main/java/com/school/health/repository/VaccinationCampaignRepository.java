@@ -20,4 +20,7 @@ public interface VaccinationCampaignRepository extends JpaRepository<Vaccination
 
     @Query("SELECT v FROM VaccinationCampaign v JOIN Vaccination s ON v.campaignId = s.campaign.campaignId WHERE s.student.studentId = :studentId")
     List<VaccinationCampaign> findCampaignsByStudentId(Integer studentId);
+
+    @Query("SELECT h FROM VaccinationCampaign h JOIN Vaccination hc ON h.campaignId = hc.campaign.campaignId WHERE hc.student.studentId = :studentId AND hc.parentConfirmation = :parentConfirmation")
+    List<VaccinationCampaign> findCampaignsByStudentIdAndParentConfirmation(Integer studentId, boolean parentConfirmation);
 }

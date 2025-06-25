@@ -1,11 +1,14 @@
 package com.school.health.dto.request;
 
-import java.time.LocalDate;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-import jakarta.persistence.Column;
-import jakarta.validation.constraints.Future;
-import jakarta.validation.constraints.*;
-import lombok.*;
+import java.time.LocalDate;
 
 @Getter
 @Setter
@@ -19,11 +22,17 @@ public class HealthCheckRequestDTO {
     @Positive(message = "Cân nặng phải lớn hơn 0")
     private double weight;
     //
+    @NotBlank(message = "Không được để trống")
     private String eyesightLeft;
+    @NotBlank(message = "Không được để trống")
     private String eyesightRight;
+    @NotBlank(message = "Không được để trống")
     private String bloodPressure;
+    @NotBlank(message = "Không được để trống")
     private String hearingLeft;
+    @NotBlank(message = "Không được để trống")
     private String hearingRight;
+    @NotBlank(message = "Không được để trống")
     private String temperature;
     private boolean consultationAppointment;
     //

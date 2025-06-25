@@ -1,6 +1,5 @@
 package com.school.health.service.impl;
 
-import com.school.health.dto.request.CreateHealthProfileDTO;
 import com.school.health.dto.request.StudentRequestDTO;
 import com.school.health.dto.response.StudentResponseDTO;
 import com.school.health.entity.HealthProfile;
@@ -116,6 +115,10 @@ public class StudentServiceImpl implements StudentService {
 
     public List<StudentResponseDTO> getAllStudents() {
         List<Student> students = studentRepository.findAll();
+        // học sinh phải isActive = true
+        students = students.stream()
+                .filter(Student::isActive)
+                .collect(Collectors.toList());
         return students.stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());

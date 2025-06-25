@@ -16,7 +16,6 @@ public class HealthProfileParentRequestDTO {
     @NotEmpty(message = "Tiền sử điều trị không được để trống")
     @NotNull(message = "Tiền sử điều trị không được để trống")
     @NotBlank(message = "Tiền sử điều trị không được để trống")
-    @Pattern(regexp = "^(?!null$).*$", message = "Tiền sử điều trị không được là 'null'")
     private String treatmentHistory;
 
     @Pattern(regexp = "^(?:[0-9]{1,2}/[0-9]{1,2})?$", message = "eyeSight phải đúng định dạng VD: 10/10, 7/10")
