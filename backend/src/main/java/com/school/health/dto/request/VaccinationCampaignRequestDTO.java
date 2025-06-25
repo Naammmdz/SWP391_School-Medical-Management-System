@@ -1,10 +1,14 @@
 package com.school.health.dto.request;
 
 import com.school.health.enums.Status;
-import com.school.health.validate.MinDaysAhead;
-import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
-import lombok.*;
+
+import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDate;
 
@@ -15,20 +19,26 @@ import java.time.LocalDate;
 public class VaccinationCampaignRequestDTO {
     @NotBlank(message = "Tên chiến dịch không được để trống")
     private String campaignName;
-    @NotBlank(message = "không được để trống")
+
+    @NotBlank(message = "Nhóm đối tượng không được để trống")
     private String targetGroup;
-    @NotBlank(message = "không được để trống")
+
+    @NotBlank(message = "Loại tiêm chủng không được để trống")
     private String type;
-    @NotBlank(message = "không được để trống")
-    private String address; // địa điểm tổ chức khám
-    @NotBlank(message = "không được để trống")
-    private String organizer; // người thực hiện chiến dịch
-    private String description;
+
+    @NotBlank(message = "Địa điểm không được để trống")
+    private String address;
+
+    @NotBlank(message = "Người tổ chức không được để trống")
+    private String organizer;
+
+    private String description; // Optional
+
     @NotNull(message = "Ngày tiêm chủng không được để trống")
     @Future(message = "Ngày tiêm chủng phải là ngày trong tương lai")
     @MinDaysAhead(days = 20)
     private LocalDate scheduledDate;
-    @Enumerated(EnumType.STRING)
+
     @NotNull(message = "Trạng thái không được để trống")
     private Status status;
 }

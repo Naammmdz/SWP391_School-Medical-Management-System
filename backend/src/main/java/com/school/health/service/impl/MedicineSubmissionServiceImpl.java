@@ -17,11 +17,13 @@ import com.school.health.service.MedicineSubmissionService;
 import com.school.health.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -44,7 +46,7 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
 
     // ===== PARENT OPERATIONS =====
     @Override
-    public MedicineSubmissionResponse createMedicineSubmission(MedicineSubmissionRequest request, Integer parentId) {
+    public MedicineSubmissionResponse createMedicineSubmission(MedicineSubmissionRequest request, MultipartFile image, Integer parentId) {
         //Validate the request: ngay ket thuc >= ngay bat dau
         if (request.getEndDate().isBefore(request.getStartDate())) {
             throw new BadRequestException("Ngày kết thúc phải sau hoặc bằng ngày bắt đầu");
@@ -60,27 +62,69 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
             throw new AccessDeniedException("You are not allowed to submit medicine for this student.");
         }
 
+        // Calculate duration based on start and end dates
+        int duration = (int) ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate()) + 1;
+
+        String encodedImage = null;;
+        if (image != null) {
+            try {
+                // Check file size (max 5MB)
+                if (image.getSize() > 5 * 1024 * 1024) {
+                    throw new BadRequestException("Kích thước ảnh không được vượt quá 5MB");
+                }
+
+                // Check file type
+                List<String> allowedTypes = Arrays.asList("image/jpeg", "image/png", "image/jpg");
+                if (!allowedTypes.contains(image.getContentType())) {
+                    throw new BadRequestException("Chỉ chấp nhận file ảnh (JPEG, PNG, JPG)");
+                }
+
+                // Convert to Base64
+                byte[] imageBytes = image.getBytes();
+                String contentType = image.getContentType();
+                encodedImage = "data:" + contentType + ";base64," + Base64.getEncoder().encodeToString(imageBytes);
+
+            } catch (IOException e) {
+                throw new BadRequestException("Lỗi xử lý ảnh: " + e.getMessage());
+            }
+        }
         //Create a new MedicineSubmission entity
         MedicineSubmission medicineSubmission = new MedicineSubmission();
         medicineSubmission.setStudent(student.get());
         medicineSubmission.setParent(parent.get());
         medicineSubmission.setInstruction(request.getInstruction());
-        medicineSubmission.setDuration(request.getDuration());
+        medicineSubmission.setDuration(duration);
         medicineSubmission.setStartDate(request.getStartDate());
         medicineSubmission.setEndDate(request.getEndDate());
         medicineSubmission.setNotes(request.getNotes());
         medicineSubmission.setSubmissionStatus(MedicineSubmissionStatus.PENDING);
+        medicineSubmission.setImageData(encodedImage);
 
         //Map the medicine details from request to entity
-        List<MedicineDetail> medicineDetails = request.getMedicineDetails().stream()
-                .map(detail -> {
-                    MedicineDetail medicineDetail = new MedicineDetail();
-                    medicineDetail.setMedicineName(detail.getMedicineName());
-                    medicineDetail.setMedicineDosage(detail.getMedicineDosage());
-                    medicineDetail.setMedicineSubmission(medicineSubmission);
-                    return medicineDetail;
-                }).collect(Collectors.toList());
-        medicineSubmission.setMedicineDetails(medicineDetails);
+//        List<MedicineDetail> medicineDetails = request.getMedicineDetails().stream()
+//                .map(detail -> {
+//                    MedicineDetail medicineDetail = new MedicineDetail();
+//                    medicineDetail.setMedicineName(detail.getMedicineName());
+//                    medicineDetail.setMedicineDosage(detail.getMedicineDosage());
+//                    medicineDetail.setMedicineSubmission(medicineSubmission);
+//                    return medicineDetail;
+//                }).collect(Collectors.toList());
+//        medicineSubmission.setMedicineDetails(medicineDetails);
+
+        // Create medicine logs for each day, skipping weekends
+        LocalDate currentDate = request.getStartDate();
+        while (!currentDate.isAfter(request.getEndDate())) {
+            DayOfWeek dayOfWeek = currentDate.getDayOfWeek();
+            // Only create a log if the day is not Saturday or Sunday
+            if (dayOfWeek != DayOfWeek.SATURDAY && dayOfWeek != DayOfWeek.SUNDAY) {
+                MedicineLog log = new MedicineLog();
+                log.setGivenAt(currentDate);
+                log.setStatus(false);
+                medicineSubmission.addMedicineLog(log);
+            }
+            // Move to the next day
+            currentDate = currentDate.plusDays(1);
+        }
 
         //Save the MedicineSubmission entity
         medicineSubmissionRepository.save(medicineSubmission);
@@ -92,7 +136,7 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
         return toResponse(medicineSubmission);
     }
 
-    private MedicineSubmissionResponse toResponse(MedicineSubmission submission) {
+    private MedicineSubmissionResponse toResponse(MedicineSubmission submission, boolean includeLogsData) {
         MedicineSubmissionResponse resp = new MedicineSubmissionResponse();
         resp.setId(submission.getMedicineSubmissionId());
         resp.setStudentId(submission.getStudent().getStudentId());
@@ -110,18 +154,31 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
             resp.setApprovedByName(submission.getApprovedBy().getFullName());
         }
         resp.setApprovedAt(submission.getApprovedAt());
-        resp.setMedicineDetails(
-                submission.getMedicineDetails() != null ?
-                        submission.getMedicineDetails().stream().map(detail -> {
-                            MedicineDetailResponse d = new MedicineDetailResponse();
-                            d.setId(detail.getId());
-                            d.setMedicineName(detail.getMedicineName());
-                            d.setMedicineDosage(detail.getMedicineDosage());
-                            return d;
-                        }).collect(Collectors.toList())
-                        : Collections.emptyList()
-        );
+//        resp.setMedicineDetails(
+//                submission.getMedicineDetails() != null ?
+//                        submission.getMedicineDetails().stream().map(detail -> {
+//                            MedicineDetailResponse d = new MedicineDetailResponse();
+//                            d.setId(detail.getId());
+//                            d.setMedicineName(detail.getMedicineName());
+//                            d.setMedicineDosage(detail.getMedicineDosage());
+//                            return d;
+//                        }).collect(Collectors.toList())
+//                        : Collections.emptyList()
+//        );
+        resp.setImageData(submission.getImageData());
+        // Chỉ bao gồm logs cho NURSE
+        if (includeLogsData) {
+            resp.setMedicineLogs(submission.getMedicineLogs().stream()
+                    .map(this::toLogResponse)
+                    .sorted(Comparator.comparing(MedicineLogResponse::getGivenAt))
+                    .collect(Collectors.toList()));
+        }
+
         return resp;
+    }
+
+    private MedicineSubmissionResponse toResponse(MedicineSubmission submission) {
+        return toResponse(submission, false);
     }
 
 
@@ -342,7 +399,7 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
     }
 
     @Override
-    public MedicineLogResponse markMedicineTaken(Integer submissionId, MedicineLogRequest request) {
+    public MedicineLogResponse markMedicineTaken(Integer submissionId, MedicineLogRequest request, MultipartFile image) {
         MedicineSubmission submission = medicineSubmissionRepository.findById(submissionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Submission not found: " + submissionId));
 
@@ -353,11 +410,46 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
         User givenBy = userRepository.findById(request.getGivenByUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + request.getGivenByUserId()));
 
-        MedicineLog log = new MedicineLog();
-        log.setMedicineSubmission(submission);
+        // Find and update existing log for the given date
+        MedicineLog log = submission.getMedicineLogs().stream()
+                .filter(l -> l.getGivenAt().equals(request.getGivenAt()))
+                .findFirst()
+                .orElseThrow(() -> new BadRequestException("Không tìm thấy lịch uống thuốc cho ngày: " + request.getGivenAt()));
+
+        // Update the log details
         log.setGivenBy(givenBy);
-        log.setGivenAt(request.getGivenAt());
+//        log.setGivenAt(request.getGivenAt());
         log.setNotes(request.getNotes());
+        log.setStatus(true); // Mark as taken
+
+        // Handle image upload
+        String encodedImage = null;
+        if (image != null) {
+            try {
+                // Check file size (max 5MB)
+                if (image.getSize() > 5 * 1024 * 1024) {
+                    throw new BadRequestException("Kích thước ảnh không được vượt quá 5MB");
+                }
+
+                // Check file type
+                List<String> allowedTypes = Arrays.asList("image/jpeg", "image/png", "image/jpg");
+                if (!allowedTypes.contains(image.getContentType())) {
+                    throw new BadRequestException("Chỉ chấp nhận file ảnh (JPEG, PNG, JPG)");
+                }
+
+                // Convert to Base64
+                byte[] imageBytes = image.getBytes();
+                String contentType = image.getContentType();
+                encodedImage = "data:" + contentType + ";base64," + Base64.getEncoder().encodeToString(imageBytes);
+
+            } catch (IOException e) {
+                throw new BadRequestException("Lỗi xử lý ảnh: " + e.getMessage());
+            }
+        }
+        // Set the image data if provided
+        if (encodedImage != null) {
+            log.setImageData(encodedImage);
+        }
 
         medicineLogRepository.save(log);
 
@@ -368,10 +460,26 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
         MedicineLogResponse response = new MedicineLogResponse();
         response.setId(log.getMedicineLogId());
         response.setSubmissionId(log.getMedicineSubmission().getMedicineSubmissionId());
-        response.setGivenByUserId(log.getGivenBy().getUserId());
-        response.setGivenByName(log.getGivenBy().getFullName());
+        // Xử lý null safety cho givenBy
+        if (log.getGivenBy() != null) {
+            response.setGivenByUserId(log.getGivenBy().getUserId());
+            response.setGivenByName(log.getGivenBy().getFullName());
+        }
         response.setGivenAt(log.getGivenAt());
         response.setNotes(log.getNotes());
+        response.setStatus(log.isStatus());
+        // Chỉ set imageData nếu có
+        if (log.getImageData() != null) {
+            response.setImageData(log.getImageData());
+        }
         return response;
+    }
+
+    @Override
+    public MedicineSubmissionResponse getByIdWithLog(Integer id) {
+        MedicineSubmission submission = medicineSubmissionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Submission not found: " + id));
+
+        return toResponse(submission, true);
     }
 }

@@ -85,7 +85,7 @@ const HealthRecord = () => {
       const body = {};
       if (filters.fullName) body.name = filters.fullName;
       if (filters.className) body.className = filters.className;
-      const res = await studentService.filterHealthRecord(body, config);
+      const res = await HealthRecordService.filterHealthRecord(body, config);
       setHealthRecords(res.data || []);
     } catch (err) {
       console.error("Error fetching filtered health records:", err);

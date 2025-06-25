@@ -40,6 +40,12 @@ import CreateHealthCheck from './pages/health/HealthCheck/CreateHealthCheck';
 
 
 import HealthCheckResult from './pages/health/HealthCheck/HealthCheckResult';
+import HealthCheckResultStudent from './pages/health/HealthCheck/HealthCheckResultStudent';
+import UpdateHealthCheckResult from './pages/health/HealthCheck/UpdateHealthCheckResult';
+import UpdateVaccination from './pages/health/Vaccination/UpdateVaccination';
+import VaccinationResult from './pages/health/Vaccination/VaccinationResult';
+import VaccinationStudentResult from './pages/health/Vaccination/VaccinationStudentResult';
+import MedicineList from './pages/health/MedicineDeclaration/MedicineList';
 
 // Component ProtectedRoute
 const ProtectedRoute = ({ element, requiredRole }) => {
@@ -62,19 +68,31 @@ const ProtectedRoute = ({ element, requiredRole }) => {
 function App() {
   return (
     <>
-      <Header />
+      <Header/>
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/hososuckhoe" element={<HealthRecord />} />
         <Route path="/sukienyte" element={<MedicalEvents/>}/>
+
         <Route path="/khaibaothuoc" element={<MedicineDeclarations/>}/>
+        <Route path="/donthuoc" element={<NursePrescription/>}/>
+        <Route path="/donthuocdagui" element={<MedicineList/>}/>
+
+
         <Route path="/quanlythuoc" element={<Pharmaceutical/>}/>
+
+        
         <Route path="/quanlytiemchung" element={<VaccinationManagement/>}/>
         <Route path="/thongbaotiemchung" element={<VaccinationNotifications/>}/>
+        <Route path ="/taosukientiemchung" element={<CreateVaccinationCampaign/>} />
+        <Route path="/capnhatthongtintiemchung" element={<UpdateVaccination/>} />
+        <Route path= "/ketquatiemchung" element={<VaccinationResult/>} />
+        <Route path ="/ketquatiemchunghocsinh" element= {<VaccinationStudentResult/>} />
 
         <Route path="/login" element={<Login />} />
 
-        <Route path="/donthuoc" element={<NursePrescription/>}/>
+        
+
 
         <Route path="/thongke" element={<DashboardPage/>}/>
 
@@ -83,6 +101,8 @@ function App() {
         <Route path="/capnhatkiemtradinhky" element={<UpdateHealthCheck />} />
         <Route path="/kiemtradinhkyhocsinh" element={<HealthCheck />} />
         <Route path="/ketquakiemtradinhky" element={<HealthCheckResult />} />
+        <Route path="/ketquakiemtradinhkyhocsinh" element={<HealthCheckResultStudent />} />
+        <Route path ="/capnhatketquakiemtra" element={<UpdateHealthCheckResult/>} />
 
         <Route path="/capnhatthongtin" element={<UpdateUser/>}/>
         <Route path="/doimatkhau" element={<UpdatePassword/>}/>
@@ -97,7 +117,6 @@ function App() {
         <Route path="/danhsachhocsinh" element={<StudentList/>}/>
         <Route path="/capnhathocsinh/:studentId" element={<UpdateStudent/>}/>
          
-        <Route path ="/taosukientiemchung" element={<CreateVaccinationCampaign/>} />
            
         <Route path="/parent" element={<ProtectedRoute element={<ParentPages/>} requiredRole="ROLE_PARENT" />} />
         <Route path="/nurse" element={<ProtectedRoute element={<NursePages/>} requiredRole="ROLE_NURSE" />} />

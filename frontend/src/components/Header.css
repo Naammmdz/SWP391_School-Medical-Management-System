@@ -347,3 +347,128 @@
     font-size: 1rem;
   }
 }
+
+/* --- Notifications Dropdown --- */
+.notifications-dropdown {
+  position: absolute;
+  top: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 340px;
+  max-width: 95vw;
+  background: #fff;
+  color: #111;
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  border: 1px solid #e5e7eb;
+  z-index: 4000;
+  padding: 0.5rem 0 0.5rem 0;
+  margin-top: 8px;
+}
+
+.notifications-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px 8px 20px;
+  border-bottom: 1px solid #e5e7eb;
+  font-weight: 600;
+  font-size: 1.05rem;
+  background: #fff;
+  color: #111;
+}
+
+.mark-all-btn {
+  background: #111;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 4px 12px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.mark-all-btn:disabled {
+  background: #e5e7eb;
+  color: #888;
+  cursor: not-allowed;
+}
+
+.notifications-list {
+  max-height: 340px;
+  overflow-y: auto;
+  background: #fff;
+}
+
+.notification-item {
+  padding: 14px 20px 10px 20px;
+  border-bottom: 1px solid #f1f1f1;
+  background: #fff;
+  color: #111;
+  transition: background 0.2s, color 0.2s;
+  position: relative;
+  font-size: 1rem;
+}
+.notification-item:last-child {
+  border-bottom: none;
+}
+.notification-item.unread {
+  background: #111;
+  color: #fff;
+}
+.notification-item.unread .notification-title,
+.notification-item.unread .notification-content,
+.notification-item.unread .notification-time {
+  color: #fff;
+}
+.notification-item .notification-title {
+  font-weight: 600;
+  margin-bottom: 2px;
+  color: #111;
+}
+.notification-item .notification-content {
+  font-size: 0.97rem;
+  color: #222;
+  margin-bottom: 2px;
+}
+.notification-item .notification-time {
+  font-size: 0.85rem;
+  color: #888;
+}
+.notification-item.unread .notification-time {
+  color: #e5e7eb;
+}
+.notification-item.unread .notification-content {
+  color: #e5e7eb;
+}
+.notification-item.empty {
+  text-align: center;
+  color: #888;
+  background: #fff;
+  padding: 24px 0;
+  border-bottom: none;
+}
+.notification-dot {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 10px;
+  height: 10px;
+  background: #dc2626;
+  border-radius: 50%;
+  display: inline-block;
+  border: 2px solid #fff;
+}
+
+@media (max-width: 600px) {
+  .notifications-dropdown {
+    min-width: 90vw;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.5rem 0;
+  }
+  .notifications-header, .notification-item {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+}

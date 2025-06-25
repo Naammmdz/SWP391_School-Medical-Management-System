@@ -52,4 +52,15 @@ public interface VaccinationCampaignService {
 
     List<VaccinationCampaignResponseDTO> getCampaignStatus(int studentId, boolean parentConfirmation);
 
+
+    List<VaccinationResponseDTO> filterVaccinationCampaigns(
+            String className,
+            String campaignName,
+            String studentName,
+            LocalDate startDate,
+            LocalDate endDate
+    );
+
+    List<VaccinationResponseDTO> getAllVaccinationResultsWithParentConfirmationTrue();
+
 }

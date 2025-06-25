@@ -15,6 +15,12 @@ const Admin = () => {
   const navigateToStudentManagement = () => {
     navigate('/danhsachhocsinh');
   };
+  const navigateToHealthCheckManagement = () => {
+    navigate('/danhsachkiemtradinhky');
+  };
+  const navigateToVaccinationManagement = () => {
+    navigate('/quanlytiemchung'); 
+  }
 
   return (
     <>
@@ -44,6 +50,27 @@ const Admin = () => {
               <p>Quản lý thông tin học sinh, lớp học và phụ huynh</p>
             </div>
           </div>
+            
+            <div className="management-card" onClick={navigateToHealthCheckManagement}>
+            <div className="card-icon">
+              <GraduationCap size={32} />
+            </div>
+            <div className="card-content">
+              <h2>Quản lý kiểm tra định kỳ</h2>
+              <p>Quản lý thông tin kiểm tra sức khỏe học sinh</p>
+            </div>
+          </div>
+               
+               <div className="management-card" onClick={navigateToVaccinationManagement}>
+            <div className="card-icon">
+              <GraduationCap size={32} />
+            </div>
+            <div className="card-content">
+              <h2>Quản lý sự kiện tiêm chủng</h2>
+              <p>Quản lý thông tin tiêm chủng, kết quả tiêm chủng</p>
+            </div>
+          </div>
+
         </div>
       </div>
     </>

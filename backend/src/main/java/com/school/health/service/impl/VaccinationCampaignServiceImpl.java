@@ -2,11 +2,13 @@ package com.school.health.service.impl;
 
 import com.school.health.dto.request.VaccinationCampaignRequestDTO;
 import com.school.health.dto.request.VaccinationRequestDTO;
+
 import com.school.health.dto.response.HealthCampaignResponseDTO;
 import com.school.health.dto.response.StudentResponseDTO;
 import com.school.health.dto.response.VaccinationCampaignResponseDTO;
 import com.school.health.dto.response.VaccinationResponseDTO;
 import com.school.health.entity.HealthCheckCampaign;
+
 import com.school.health.entity.Student;
 import com.school.health.entity.Vaccination;
 import com.school.health.entity.VaccinationCampaign;
@@ -14,6 +16,7 @@ import com.school.health.enums.Status;
 import com.school.health.repository.*;
 import com.school.health.service.VaccinationCampaignService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -360,6 +363,53 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
+
+
+    @Override
+    public List<VaccinationResponseDTO> filterVaccinationCampaigns(String className, String campaignName, String studentName, LocalDate startDate, LocalDate endDate) {
+        Specification<Vaccination> spec = Specification.where(null);
+
+        if (className != null && !className.isBlank()) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("student").get("className"), className));
+        }
+
+        if (campaignName != null && !campaignName.isBlank()) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("campaign").get("campaignName"), campaignName));
+        }
+
+        if (studentName != null && !studentName.isBlank()) {
+            spec = spec.and((root, query, cb) ->
+                    cb.like(cb.lower(root.get("student").get("fullName")), "%" + studentName.toLowerCase() + "%"));
+        }
+
+        if (startDate != null && endDate != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.greaterThanOrEqualTo(root.get("date"), startDate));
+        }
+
+        if (endDate != null && startDate != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.lessThanOrEqualTo(root.get("date"), endDate));
+        }
+
+        return vaccinationRepository.findAll(spec)
+                .stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<VaccinationResponseDTO> getAllVaccinationResultsWithParentConfirmationTrue() {
+        return vaccinationRepository.findAll().stream()
+                .map(this::mapToResponseDTO)
+                .filter(a -> a.isParentConfirmation()) // Nếu ở đây không có get true hay false
+                // thì mặc định là true tại vì a.isParentConfirmation() trả về true nếu muốn trả về false
+                // thì phải dùng a.isParentConfirmation() == false
+                .collect(Collectors.toList());
+    }
+
 }
 
 

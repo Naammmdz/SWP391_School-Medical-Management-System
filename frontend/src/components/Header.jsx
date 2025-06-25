@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Header.css';
 import { Bell, User, Menu, X } from 'lucide-react';
+import NotificationService from '../services/NotificationService'; // Đảm bảo đúng đường dẫn
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -10,6 +11,12 @@ const Header = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [user, setUser] = useState(null);
+
+  // Thông báo
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const notificationsRef = useRef(null);
 
   const navigate = useNavigate();
 
@@ -31,6 +38,12 @@ const Header = () => {
     }
 
     const handleClickOutside = (event) => {
+      if (
+        notificationsRef.current &&
+        !notificationsRef.current.contains(event.target)
+      ) {
+        setShowNotifications(false);
+      }
       if (
         studentHealthRef.current &&
         !studentHealthRef.current.contains(event.target)
@@ -62,6 +75,24 @@ const Header = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Lấy thông báo và số lượng chưa đọc
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const config = { headers: { Authorization: `Bearer ${token}` } };
+        const data = await NotificationService.getAllNotifications(config);
+        setNotifications(Array.isArray(data) ? data : []);
+        const count = await NotificationService.countUnreadNotifications(config);
+        setUnreadCount(count || 0);
+      } catch (err) {
+        setNotifications([]);
+        setUnreadCount(0);
+      }
+    };
+    if (user) fetchNotifications();
+  }, [user]);
+
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
@@ -77,6 +108,33 @@ const Header = () => {
     localStorage.removeItem('token');
     setUser(null);
     navigate('/login');
+  };
+
+  // Đánh dấu 1 thông báo là đã đọc
+  const handleReadNotification = async (notification) => {
+    if (notification.read) return;
+    try {
+      const token = localStorage.getItem('token');
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      await NotificationService.removeEventListener(notification.id, config);
+      setNotifications((prev) =>
+        prev.map((n) =>
+          n.id === notification.id ? { ...n, read: true } : n
+        )
+      );
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+    } catch (err) {}
+  };
+
+  // Đánh dấu tất cả là đã đọc
+  const handleMarkAllAsRead = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      await NotificationService.markAllAsRead(config);
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+      setUnreadCount(0);
+    } catch (err) {}
   };
 
   let homeLink = '/';
@@ -168,10 +226,56 @@ const Header = () => {
 
       <div className="header-right">
         <div className="user-controls">
-          <button className="notifications-btn" aria-label="Thông báo">
-            <Bell className="icon" />
-            <span className="notification-badge">3</span>
-          </button>
+          {/* Thông báo */}
+          <div style={{ position: 'relative' }} ref={notificationsRef}>
+            <button
+              className="notifications-btn"
+              aria-label="Thông báo"
+              onClick={() => setShowNotifications((prev) => !prev)}
+            >
+              <Bell className="icon" />
+              {unreadCount > 0 && (
+                <span className="notification-badge">{unreadCount}</span>
+              )}
+            </button>
+            {showNotifications && (
+              <div className="notifications-dropdown">
+                <div className="notifications-header">
+                  <span>Thông báo</span>
+                  <button
+                    className="mark-all-btn"
+                    onClick={handleMarkAllAsRead}
+                    disabled={unreadCount === 0}
+                  >
+                    Đánh dấu tất cả đã đọc
+                  </button>
+                </div>
+                <div className="notifications-list">
+                  {notifications.length === 0 ? (
+                    <div className="notification-item empty">Không có thông báo.</div>
+                  ) : (
+                    notifications.map((n) => (
+                      <div
+                        key={n.id}
+                        className={`notification-item${n.read ? '' : ' unread'}`}
+                        onClick={() => handleReadNotification(n)}
+                        style={{ cursor: n.read ? 'default' : 'pointer' }}
+                      >
+                        <div className="notification-title">{n.title || 'Thông báo'}</div>
+                        <div className="notification-content">{n.content}</div>
+                        <div className="notification-time">
+                          {n.createdAt ? new Date(n.createdAt).toLocaleString() : ''}
+                        </div>
+                        {!n.read && <span className="notification-dot" />}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+          {/* Kết thúc phần thông báo */}
+
           <div className="user-profile">
             <div className="avatar-container">
               <User className="avatar-icon" />

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Table, Tag, Button, Modal, Space, Typography, Popconfirm, message } from 'antd';
+import { Card, Table, Tag, Button, Modal, Space, Typography, Popconfirm, message, Input } from 'antd';
 import { CheckCircleOutlined, DeleteOutlined, EditOutlined, UserOutlined, TeamOutlined, InfoCircleOutlined, MedicineBoxOutlined } from '@ant-design/icons';
 import MedicineDeclarationService from '../../services/MedicineDeclarationService';
+import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
 
@@ -16,6 +17,10 @@ const MedicineDeclarationsList = () => {
   const [loading, setLoading] = useState(true);
   const [viewDetail, setViewDetail] = useState(null);
   const [studentClassMap, setStudentClassMap] = useState({});
+  const [markTakenLoading, setMarkTakenLoading] = useState(false);
+  const [markTakenNotes, setMarkTakenNotes] = useState('');
+  const [selectedSubmission, setSelectedSubmission] = useState(null);
+
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const isParent = user.userRole === 'ROLE_PARENT';
 
@@ -38,6 +43,7 @@ const MedicineDeclarationsList = () => {
       const config = { headers: { Authorization: `Bearer ${token}` } };
       const data = await MedicineDeclarationService.getMedicineSubmissions(config);
       setSubmissions(Array.isArray(data) ? data : []);
+      console.log('Fetched submissions:', data);
     } catch (err) {
       message.error('Không thể tải danh sách đơn thuốc!');
     }
@@ -49,43 +55,36 @@ const MedicineDeclarationsList = () => {
   }, []);
 
   // Cập nhật trạng thái đơn thuốc
-const updateStatus = async (id, status) => {
-  try {
-    const token = localStorage.getItem('token');
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-
-    // Validate dữ liệu đầu vào
-    if (!status) {
-      message.error("Trạng thái không hợp lệ!");
-      return;
-    }
-
-    // Tạo đúng payload mà backend yêu cầu
-    const payload = {
-      submissionStatus: status.toUpperCase(), // ví dụ: 'APPROVED'
-      approvedBy: user.id || 0, // nếu backend dùng 0 hoặc lấy từ token cũng được
-      approvedAt: new Date().toISOString().split('T')[0], // format yyyy-MM-dd
-    };
-
-    await MedicineDeclarationService.updateMedicineSubmissionStatus(
-      id,
-      payload,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+  const updateStatus = async (id, status) => {
+    try {
+      const token = localStorage.getItem('token');
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      if (!status) {
+        message.error("Trạng thái không hợp lệ!");
+        return;
       }
-    );
-
-    message.success('Cập nhật trạng thái thành công!');
-    fetchData();
-  } catch (err) {
-    console.error("Chi tiết lỗi:", err.response?.data || err);
-    message.error('Cập nhật trạng thái thất bại!');
-  }
-};
-
+      const payload = {
+        submissionStatus: status.toUpperCase(),
+        approvedBy: user.id || 0,
+        approvedAt: new Date().toISOString().split('T')[0],
+      };
+      await MedicineDeclarationService.updateMedicineSubmissionStatus(
+        id,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      message.success('Cập nhật trạng thái thành công!');
+      fetchData();
+    } catch (err) {
+      console.error("Chi tiết lỗi:", err.response?.data || err);
+      message.error('Cập nhật trạng thái thất bại!');
+    }
+  };
 
   // Xóa đơn thuốc
   const deleteSubmission = async (id) => {
@@ -99,6 +98,31 @@ const updateStatus = async (id, status) => {
     } catch (err) {
       message.error('Xóa đơn thuốc thất bại!');
     }
+  };
+
+  // Gọi API markMedicineTaken
+  const handleMarkTaken = async () => {
+    if (!viewDetail) return;
+    setMarkTakenLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const nurse = JSON.parse(localStorage.getItem('user') || '{}');
+      const data = {
+        givenByUserId: nurse.id,
+        givenAt: dayjs().format('YYYY-MM-DD'),
+        notes: markTakenNotes
+      };
+      await MedicineDeclarationService.markMedicineTaken(viewDetail.id, data, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      message.success('Đã ghi nhận học sinh đã uống thuốc!');
+      setMarkTakenNotes('');
+      setViewDetail(null);
+      fetchData();
+    } catch (err) {
+      message.error('Ghi nhận uống thuốc thất bại!');
+    }
+    setMarkTakenLoading(false);
   };
 
   const columns = [
@@ -246,7 +270,7 @@ const updateStatus = async (id, status) => {
           </Space>
         );
       },
-      width: 200
+      width: 220
     }
   ];
 
@@ -277,7 +301,8 @@ const updateStatus = async (id, status) => {
         />
       </Card>
 
-      {/* Modal xem chi tiết thuốc */}
+      {/* Modal xem chi tiết thuốc + cho uống thuốc */}
+     
       <Modal
         open={!!viewDetail}
         title={
@@ -285,29 +310,61 @@ const updateStatus = async (id, status) => {
             <MedicineBoxOutlined /> Chi tiết thuốc cho học sinh: <b>{viewDetail?.studentName}</b>
           </span>
         }
-        onCancel={() => setViewDetail(null)}
-        footer={null}
+        onCancel={() => {
+          setViewDetail(null);
+          setMarkTakenNotes('');
+        }}
+        footer={
+          !isParent && viewDetail?.submissionStatus === 'APPROVED' ? (
+            <Space>
+              <Input.TextArea
+                rows={2}
+                placeholder="Ghi chú (nếu có)"
+                value={markTakenNotes}
+                onChange={e => setMarkTakenNotes(e.target.value)}
+                style={{ width: 220 }}
+              />
+              <Button
+                icon={<MedicineBoxOutlined />}
+                type="primary"
+                loading={markTakenLoading}
+                onClick={handleMarkTaken}
+              >
+                Xác nhận đã uống thuốc
+              </Button>
+            </Space>
+          ) : null
+        }
         width={500}
       >
         {viewDetail && (
-          <div>
-            <p><b>Phụ huynh:</b> {viewDetail.parentName}</p>
-            <p><b>Hướng dẫn sử dụng:</b> {viewDetail.instruction}</p>
-            <p><b>Thời gian dùng:</b> {viewDetail.startDate} → {viewDetail.endDate} ({viewDetail.duration} ngày)</p>
-            <p><b>Ghi chú:</b> {viewDetail.notes}</p>
-            <h4>Danh sách thuốc:</h4>
-            <ul>
-              {viewDetail.medicineDetails.map(md => (
-                <li key={md.id}>
-                  <b>{md.medicineName}</b> - Liều lượng: <Tag color="geekblue">{md.medicineDosage}</Tag>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+  <div>
+    <p><b>Phụ huynh:</b> {viewDetail.parentName}</p>
+    <p><b>Hướng dẫn sử dụng:</b> {viewDetail.instruction}</p>
+    <p><b>Thời gian dùng:</b> {viewDetail.startDate} → {viewDetail.endDate} ({viewDetail.duration} ngày)</p>
+    <p><b>Ghi chú:</b> {viewDetail.notes}</p>
+    <h4>Hình ảnh đơn thuốc:</h4>
+    {console.log('imageData:', viewDetail.imageData)}
+    {viewDetail.imageData ? (
+      <img
+        src={viewDetail.imageData}
+        alt="Đơn thuốc"
+        style={{
+          maxWidth: 350,
+          maxHeight: 250,
+          borderRadius: 8,
+          border: '1px solid #eee',
+          marginTop: 8
+        }}
+      />
+    ) : (
+      <p style={{ color: '#888' }}>Không có hình ảnh đơn thuốc.</p>
+    )}
+  </div>
+)}
+
       </Modal>
     </div>
   );
 };
-
 export default MedicineDeclarationsList;

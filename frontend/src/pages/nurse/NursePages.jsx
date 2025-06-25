@@ -151,9 +151,9 @@ export default function NursePages() {
                   <span className="resource-type guide">Xem</span>
                 </div>
                 <div className="resource-info">
-                  <h3>Khai Báo Thuốc</h3>
+                  <h3>Xem đơn thuốc</h3>
                   <p className="resource-date">Xem khai báo thuốc từ phụ huynh</p>
-                  <Link to="/khaibaothuoc" className="btn btn-sm">
+                  <Link to="/donthuoc" className="btn btn-sm">
                     Xem chi tiết
                   </Link>
                 </div>
@@ -175,6 +175,21 @@ export default function NursePages() {
                 </div>
               </div>
 
+                <div className="resource-card">
+                <div className="resource-thumbnail">
+                <img src="https://img.freepik.com/premium-vector/customers-filling-up-survey-form-vector-illustration-flat_186332-1263.jpg?w=360" alt="Sự Kiện Y Tế" />
+
+                  <span className="resource-type document">Quản lý</span>
+                </div>
+                <div className="resource-info">
+                  <h3>Kết Quả Kiểm Tra Y Tế</h3>
+                  <p className="resource-date">Kết quả kiểm tra y tế</p>
+                  <Link to="/ketquakiemtradinhky" className="btn btn-sm">
+                    Quản lý
+                  </Link>
+                </div>
+              </div>
+
               {/* Vaccination Management */}
               <div className="resource-card">
                 <div className="resource-thumbnail">
@@ -191,6 +206,22 @@ export default function NursePages() {
                 </div>
               </div>
 
+
+               <div className="resource-card">
+                <div className="resource-thumbnail">
+                <img src="https://th.bing.com/th/id/OIP.e3gSBJ4B1VSWWp41F-gC_QHaEL?w=319&h=180&c=7&r=0&o=7&dpr=2&pid=1.7&rm=3" alt="Tiêm Chủng" />
+
+                  <span className="resource-type document">Quản lý</span>
+                </div>
+                <div className="resource-info">
+                  <h3>Kết Quả Tiêm Chủng</h3>
+                  <p className="resource-date">Cập nhật và quản lý kết quả tiêm chủng</p>
+                  <Link to="/ketquatiemchung" className="btn btn-sm">
+                    Quản lý
+                  </Link>
+                </div>
+              </div>
+
               {/* Health Check Management */}
               <div className="resource-card">
                 <div className="resource-thumbnail">
@@ -201,7 +232,7 @@ export default function NursePages() {
                 <div className="resource-info">
                   <h3>Kiểm Tra Định Kỳ</h3>
                   <p className="resource-date">Tạo và quản lý lịch kiểm tra sức khỏe</p>
-                  <Link to="/kiemtradinhky" className="btn btn-sm">
+                  <Link to="/danhsachkiemtradinhky" className="btn btn-sm">
                     Quản lý
                   </Link>
                 </div>

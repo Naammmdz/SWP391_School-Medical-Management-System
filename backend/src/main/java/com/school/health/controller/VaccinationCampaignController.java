@@ -26,7 +26,7 @@ public class VaccinationCampaignController {
 
     // Tạo chiến dịch tiêm chủng
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE')")
+    @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN') or hasRole('NURSE')")
     public ResponseEntity<?> createVaccinationCampaign(@RequestBody @Valid VaccinationCampaignRequestDTO vaccine, Authentication authentication) {
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
         Integer userId = userPrincipal.getId();
@@ -35,14 +35,14 @@ public class VaccinationCampaignController {
 
     // Lấy tất cả danh sách chiến dịch tiêm chủng
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE')")
+    @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN') or hasRole('NURSE')")
     public ResponseEntity<?> getAllVaccinationCampaigns() {
         return ResponseEntity.ok(vaccinationCampaignService.getAllVaccinationCampaigns());
     }
 
     // Lấy danh sách chiến dịch tiêm chủng đã được phê duyệt theo ID
     @GetMapping("/{campaignId}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE')")
+    @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN') or hasRole('NURSE')")
     public ResponseEntity<?> getVaccinationCampaignById(@PathVariable @Valid int campaignId) {
         return ResponseEntity.ok(vaccinationCampaignService.getVaccinationCampaignById(campaignId));
     }
@@ -50,14 +50,14 @@ public class VaccinationCampaignController {
 
     // Cập nhật thông tin chiến dịch tiêm chủng theo ID
     @PutMapping("/{campaignId}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE')")
+    @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN') or hasRole('NURSE')")
     public ResponseEntity<?> updateVaccinationCampaign(@PathVariable @Valid int campaignId, @RequestBody @Valid VaccinationCampaignRequestDTO vaccine) {
         return ResponseEntity.ok(vaccinationCampaignService.updateVaccinationCampaign(campaignId, vaccine));
     }
 
     // Cập nhật trạng thái thành APPROVED của chiến dịch tiêm chủng
     @PutMapping("/{campaignId}/approve")
-//    @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE')")
+    @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN') or hasRole('NURSE')")
     public ResponseEntity<?> approveVaccinationCampaign(@PathVariable @Valid int campaignId, Authentication authentication) {
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
         Integer approvedBy = userPrincipal.getId();
@@ -67,21 +67,21 @@ public class VaccinationCampaignController {
 
     // Cập nhật trạng thái của chiến dịch tiêm chủng
     @PutMapping("/{campaignId}/status/{status}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE')")
+    @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN') or hasRole('NURSE')")
     public ResponseEntity<?> updateVaccinationCampaignStatus(@PathVariable @Valid int campaignId, @PathVariable @Valid Status status) {
         return ResponseEntity.ok(vaccinationCampaignService.updateVaccinationCampaignStatus(campaignId, status));
     }
 
     // danh sách học sinh đã đăng ký tiêm chủng trong chiến dịch
     @GetMapping("/{campaignId}/students-registrations")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE')")
+    @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN') or hasRole('NURSE')")
     public ResponseEntity<?> getStudentsRegistrationsInCampaign(@PathVariable @Valid int campaignId) {
         return ResponseEntity.ok(vaccinationCampaignService.getStudentsRegistrations(campaignId));
     }
 
     // Lấy danh sách chiến dịch tiêm chủng đã được phê duyệt
     @GetMapping("/approved")
-    @PreAuthorize("hasRole('PARENT') or hasRole('NURSE')")
+    @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN') or hasRole('NURSE')")
     public ResponseEntity<?> getApprovedVaccinationCampaigns() {
         return ResponseEntity.ok(vaccinationCampaignService.getApprovedVaccination());
     }
@@ -110,7 +110,7 @@ public class VaccinationCampaignController {
 
     // Phụ huynh lấy danh sách chiến dịch tiêm chủng của con mình
     @GetMapping("/me/students/{studentId}/campaigns")
-    @PreAuthorize("hasRole('PARENT')")
+    @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN') or hasRole('NURSE')")
     public ResponseEntity<?> getMyChildHealthCampaigns(@PathVariable @Valid int studentId, Authentication authentication) {
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
         Integer userId = userPrincipal.getId();
@@ -120,7 +120,7 @@ public class VaccinationCampaignController {
 
     // Post kết quả tiêm chủng cho học sinh trong chiến dịch
     @PostMapping("result/{campaignId}")
-    @PreAuthorize("hasRole('NURSE') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN') or hasRole('NURSE')")
     public ResponseEntity<?> recordVaccination(@PathVariable @Valid int campaignId, @RequestBody @Valid VaccinationRequestDTO request) {
         return ResponseEntity.ok(vaccinationCampaignService.recordVaccinationResult(campaignId, request));
     }
@@ -134,20 +134,20 @@ public class VaccinationCampaignController {
 
     // Lấy kết quả của tất cả học sinh trong chiến dịch sức khỏe
     @GetMapping("/{campaignId}/results")
-    @PreAuthorize("hasRole('NURSE') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN') or hasRole('NURSE')")
     public ResponseEntity<?> getVaccinationResults(@PathVariable @Valid int campaignId) {
         return ResponseEntity.ok(vaccinationCampaignService.getVaccinationResults(campaignId));
     }
 
     // lấy tất cả kết quả của chiến dịch sức khỏe
     @GetMapping("/results-campaign/all")
-    @PreAuthorize("hasRole('NURSE') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN') or hasRole('NURSE')")
     public ResponseEntity<?> getAllVaccinationResults() {
         return ResponseEntity.ok(vaccinationCampaignService.getAllVaccinationResults());
     }
 
     @GetMapping("/results-campaign/student/{studentId}")
-    @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN') or hasRole('NURSE')")
     public ResponseEntity<?> getResultByStudentId(@PathVariable @Valid int studentId) {
         return ResponseEntity.ok(vaccinationCampaignService.getResultByStudentId(studentId));
     }
@@ -167,6 +167,26 @@ public class VaccinationCampaignController {
     @PreAuthorize("hasRole('PARENT') or hasRole('NURSE') or hasRole('ADMIN')")
     public ResponseEntity<?> getCampaignStatus(@PathVariable @Valid int studentId, @PathVariable boolean parentConfirmation) {
         return ResponseEntity.ok(vaccinationCampaignService.getCampaignStatus(studentId, parentConfirmation));
+    }
+
+
+    @GetMapping("/filter-result")
+    @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN') or hasRole('NURSE')")
+    public ResponseEntity<?> filterVaccinationCampaigns(
+            @RequestParam(required = false) String className,
+            @RequestParam(required = false) String campaignName,
+            @RequestParam(required = false) String studentName,
+            @RequestParam(required = false) LocalDate startDate,
+            @RequestParam(required = false) LocalDate endDate
+    ) {
+        return ResponseEntity.ok(vaccinationCampaignService.filterVaccinationCampaigns(className, campaignName, studentName, startDate, endDate));
+    }
+
+    // Get all vaccination results with parent confirmation is true
+    @GetMapping("/results-campaign/parent-confirmation-true")
+    @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN') or hasRole('NURSE')")
+    public ResponseEntity<?> getAllVaccinationResultsWithParentConfirmationTrue() {
+        return ResponseEntity.ok(vaccinationCampaignService.getAllVaccinationResultsWithParentConfirmationTrue());
     }
 
 

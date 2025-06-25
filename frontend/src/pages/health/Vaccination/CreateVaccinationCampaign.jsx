@@ -3,16 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import VaccinationService from '../../../services/VaccinationService';
 
 const CreateVaccinationCampaign = () => {
-  const nurse = JSON.parse(localStorage.getItem('user') || '{}');
   const [form, setForm] = useState({
     campaignName: '',
     targetGroup: '',
     type: '',
     address: '',
-    organizer: nurse.id || '',
+    organizer: '',
     description: '',
     scheduledDate: '',
-    status: 'CRAFT' // Mặc định là nháp khi nhập form
+    status: 'CRAFT'
   });
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -30,7 +29,7 @@ const CreateVaccinationCampaign = () => {
     e.preventDefault();
     setError('');
     setSuccessMsg('');
-    if (!form.campaignName || !form.scheduledDate) {
+    if (!form.campaignName || !form.scheduledDate || !form.organizer || !form.type) {
       setError('Vui lòng nhập đầy đủ thông tin bắt buộc.');
       return;
     }
@@ -82,11 +81,31 @@ const CreateVaccinationCampaign = () => {
           />
         </div>
         <div className="form-group">
+          <label>Loại vắc xin <span style={{color: 'red'}}>*</span></label>
+          <input
+            type="text"
+            name="type"
+            value={form.type}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div className="form-group">
           <label>Địa điểm <span style={{color: 'red'}}>*</span></label>
           <input
             type="text"
             name="address"
             value={form.address}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label>Người tổ chức <span style={{color: 'red'}}>*</span></label>
+          <input
+            type="text"
+            name="organizer"
+            value={form.organizer}
             onChange={handleChange}
             required
           />
@@ -121,23 +140,11 @@ const CreateVaccinationCampaign = () => {
             disabled
           />
         </div>
-        {/* Organizer hiển thị tên người tạo, không cho nhập */}
-        <div className="form-group">
-          <label>Người tạo</label>
-          <input
-            type="text"
-            name="organizer"
-            value={nurse.fullName || ''}
-            readOnly
-            disabled
-          />
-        </div>
         <button type="submit" className="btn btn-primary">Tạo chiến dịch</button>
         {successMsg && <div className="success-message">{successMsg}</div>}
         {error && <div className="error-message">{error}</div>}
       </form>
-    </div>
+      </div>
   );
 };
-
 export default CreateVaccinationCampaign;

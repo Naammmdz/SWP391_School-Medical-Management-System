@@ -40,7 +40,7 @@ public class HealthProfileController {
     }
 
     @PostMapping("/filter")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE') or hasRole('PARENT')")
     public ResponseEntity<?> filterHealthProfiles(
           @RequestBody @Valid HealthProfileFilterRequest filterRequest
     ) {
@@ -50,7 +50,7 @@ public class HealthProfileController {
 
     // lấy danh sách sức khỏe của tất cả học sinh theo id phụ huynh
     @GetMapping("/{userId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE') or hasRole('PARENT')")
     public ResponseEntity<?> getAllHealthProfiles( @PathVariable @Valid Integer userId) {
         return ResponseEntity.ok(service.getHealthProfilesByParentId(userId));
     }
@@ -58,7 +58,7 @@ public class HealthProfileController {
 
     // lấy danh sách sức khỏe của tất cả học sinh không cần id
     @GetMapping("/all")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE') or hasRole('PARENT')")
     public ResponseEntity<?> getAllHealthProfiles() {
         return ResponseEntity.ok(service.getAllHealthProfiles());
     }

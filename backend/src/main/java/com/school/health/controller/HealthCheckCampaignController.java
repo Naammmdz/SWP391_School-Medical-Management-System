@@ -80,7 +80,7 @@ public class HealthCheckCampaignController {
     }
 
     // Endpoint để lấy danh sách đăng ký của học sinh trong chiến dịch sức khỏe
-    // Tức là danh sách học sinh đã được parentConfirmation với bit status = 1
+    // Tức là danh sách học sinh đã được parentConfirmation với bit status = true
     @GetMapping("{campaignId}/students-registrations")
     @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE') or hasRole('PRINCIPAL')")
     public ResponseEntity<?> getStudentsRegistrations(@PathVariable @Valid int campaignId) {
@@ -110,7 +110,9 @@ public class HealthCheckCampaignController {
     // Phụ huynh từ chối đăng ký cho học sinh tham gia chiến dịch sức khỏe
     @PostMapping("/{campaignId}/student/{studentId}/reject")
     @PreAuthorize("hasRole('PARENT') or hasRole('NURSE') or hasRole('ADMIN')")
-    public ResponseEntity<?> registerStudentForHealthCampaign(@PathVariable @Valid int campaignId, @PathVariable @Valid int studentId) {
+
+    public ResponseEntity<?> rejectStudentForHealthCampaign(@PathVariable @Valid int campaignId, @PathVariable @Valid int studentId) {
+
         HealthCheckRequestDTO dto = new HealthCheckRequestDTO();
         dto.setCampaignId(campaignId);
         dto.setStudentId(studentId);
@@ -178,5 +180,38 @@ public class HealthCheckCampaignController {
     public ResponseEntity<?> getCampaignStatus(@PathVariable @Valid int studentId, @PathVariable(required = false) @Valid boolean parentConfirmation) {
         return ResponseEntity.ok(healthCheckCampaignService.getCampaignStatus(studentId, parentConfirmation));
     }
+
+    // Phụ huynh xem các chiến dịch là đồng ý hay từ chối
+    @GetMapping("/student/{studentId}/campaigns-isAcceptOrReject")
+    @PreAuthorize("hasRole('PARENT') or hasRole('NURSE') or hasRole('ADMIN')")
+    public ResponseEntity<?> getCampaignsIsAcceptOrReject(@PathVariable @Valid int studentId) {
+        return ResponseEntity.ok(healthCheckCampaignService.getCampaignsIsAcceptOrReject(studentId));
+    }
+
+    // filter kết quả kiểm tra chiến dịch theo lớp, tên chiến dịch và tên học sinh
+    @GetMapping("/filter-result")
+    @PreAuthorize("hasRole('NURSE') or hasRole('ADMIN') or hasRole('PARENT')")
+    public ResponseEntity<?> filterHealthCheckCampaigns(
+            @RequestParam(required = false) String className,
+            @RequestParam(required = false) String campaignName,
+            @RequestParam(required = false) String studentName,
+            @RequestParam(required = false) LocalDate startDate,
+            @RequestParam(required = false) LocalDate endDate
+    ) {
+        if(startDate != null && endDate != null) {
+            if (startDate.isAfter(endDate)) {
+                throw new RuntimeException("startDate is after endDate");
+            }
+        }
+        return ResponseEntity.ok(healthCheckCampaignService.filterHealthCheckCampaigns(className, campaignName, studentName, startDate, endDate));
+    }
+
+    // Get all health check results with parent confirmation is true
+    @GetMapping("/results-campaign/all/confirmation-true")
+    @PreAuthorize("hasRole('NURSE') or hasRole('ADMIN') or hasRole('PARENT')")
+    public ResponseEntity<?> getAllHealthCheckResultsWithParentConfirmationTrue() {
+        return ResponseEntity.ok(healthCheckCampaignServiceImpl.getAllHealthCheckResultsWithParentConfirmationTrue());
+    }
+
 
 }
