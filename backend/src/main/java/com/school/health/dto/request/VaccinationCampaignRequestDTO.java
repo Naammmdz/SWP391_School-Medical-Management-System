@@ -1,6 +1,7 @@
 package com.school.health.dto.request;
 
 import com.school.health.enums.Status;
+import com.school.health.validate.MinDaysAhead;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -25,6 +26,7 @@ public class VaccinationCampaignRequestDTO {
     private String description;
     @NotNull(message = "Ngày tiêm chủng không được để trống")
     @Future(message = "Ngày tiêm chủng phải là ngày trong tương lai")
+    @MinDaysAhead(days = 20)
     private LocalDate scheduledDate;
     @Enumerated(EnumType.STRING)
     @NotNull(message = "Trạng thái không được để trống")
