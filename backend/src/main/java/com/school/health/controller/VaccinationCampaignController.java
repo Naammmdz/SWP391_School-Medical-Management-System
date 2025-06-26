@@ -176,10 +176,11 @@ public class VaccinationCampaignController {
             @RequestParam(required = false) String className,
             @RequestParam(required = false) String campaignName,
             @RequestParam(required = false) String studentName,
+            @RequestParam(required = false) boolean parentConfirmation,
             @RequestParam(required = false) LocalDate startDate,
             @RequestParam(required = false) LocalDate endDate
     ) {
-        return ResponseEntity.ok(vaccinationCampaignService.filterVaccinationCampaigns(className, campaignName, studentName, startDate, endDate));
+        return ResponseEntity.ok(vaccinationCampaignService.filterVaccinationCampaigns(className, campaignName, studentName, parentConfirmation, startDate, endDate));
     }
 
     // Get all vaccination results with parent confirmation is true

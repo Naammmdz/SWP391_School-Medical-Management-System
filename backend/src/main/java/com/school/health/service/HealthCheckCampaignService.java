@@ -53,7 +53,7 @@ public interface HealthCheckCampaignService {
 
     List<HealthCampaignIsAcceptDTO> getCampaignsIsAcceptOrReject(Integer studentId);
 
-    List<HealthCheckResponseDTO> filterHealthCheckCampaigns(String className, String campaignName, String studentName, LocalDate startDate, LocalDate endDate);
+    List<HealthCheckResponseDTO> filterHealthCheckCampaigns(String className, String campaignName, String studentName,boolean isParentConfirmation, LocalDate startDate, LocalDate endDate);
 
     List<HealthCheckResponseDTO> getAllHealthCheckResultsWithParentConfirmationTrue();
 

@@ -16,6 +16,8 @@ import com.school.health.repository.StudentRepository;
 import com.school.health.repository.UserRepository;
 import com.school.health.service.HealthCheckCampaignService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
@@ -28,7 +30,7 @@ import static com.school.health.enums.Status.APPROVED;
 @Service
 @RequiredArgsConstructor
 public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignService {
-
+    private final ApplicationEventPublisher eventPublisher;
     private final HealthCheckCampaignRepository healthCheckCampaignRepository;
     private final HealthCheckRepository healthCheckRepository;
     private final StudentRepository studentRepository;
@@ -40,26 +42,28 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
         HealthCheckCampaign campaign = mapToEntity(healthCampaignRequestDTO);
         campaign.setCreatedBy(createdBy);
         HealthCheckCampaign savedCampaign = healthCheckCampaignRepository.save(campaign);
-        notificationService.createNotification(userRepository.findPrincipal().getUserId(),"[Yêu cầu phê duyệt] Chiến dịch kiểm tra sức khỏe: "+ campaign.getCampaignName(), "Kính gửi Thầy/Cô Hiệu trưởng,\n" +
-                "\n" +
-                "Hiện tại có một chiến dịch kiểm tra sức khỏe học đường đang chờ phê duyệt với các thông tin như sau:\n" +
-                "\n" +
-                "Tên chiến dịch: "+campaign.getCampaignName() +
-                "\n" +
-                "Đơn vị tổ chức: " +campaign.getOrganizer() +
-                "\n" +
-                "Đối tượng mục tiêu: " +campaign.getTargetGroup()+
-                "\n" +
-                "Thời gian dự kiến: " +campaign.getScheduledDate()+
-                "\n" +
-                "Địa điểm: "+campaign.getAddress() +
-                "\n" +
-                "Mô tả: " +campaign.getDescription() +
-                "\n" +
-                "Thầy/Cô vui lòng xem xét và thực hiện phê duyệt hoặc từ chối chiến dịch này trên hệ thống trước thời gian diễn ra.\n" +
-                "\n" +
-                "Trân trọng,\n" +
-                "Hệ thống Y tế học đường");
+        eventPublisher.publishEvent(new CampaignCreatedEvent(savedCampaign));
+
+//        notificationService.createNotification(userRepository.findPrincipal().getUserId(),"[Yêu cầu phê duyệt] Chiến dịch kiểm tra sức khỏe: "+ campaign.getCampaignName(), "Kính gửi Thầy/Cô Hiệu trưởng,\n" +
+//                "\n" +
+//                "Hiện tại có một chiến dịch kiểm tra sức khỏe học đường đang chờ phê duyệt với các thông tin như sau:\n" +
+//                "\n" +
+//                "Tên chiến dịch: "+campaign.getCampaignName() +
+//                "\n" +
+//                "Đơn vị tổ chức: " +campaign.getOrganizer() +
+//                "\n" +
+//                "Đối tượng mục tiêu: " +campaign.getTargetGroup()+
+//                "\n" +
+//                "Thời gian dự kiến: " +campaign.getScheduledDate()+
+//                "\n" +
+//                "Địa điểm: "+campaign.getAddress() +
+//                "\n" +
+//                "Mô tả: " +campaign.getDescription() +
+//                "\n" +
+//                "Thầy/Cô vui lòng xem xét và thực hiện phê duyệt hoặc từ chối chiến dịch này trên hệ thống trước thời gian diễn ra.\n" +
+//                "\n" +
+//                "Trân trọng,\n" +
+//                "Hệ thống Y tế học đường");
         return mapToResponseDTO(savedCampaign);
     }
 
@@ -411,7 +415,7 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
     }
 
     @Override
-    public List<HealthCheckResponseDTO> filterHealthCheckCampaigns(String className, String campaignName, String studentName, LocalDate startDate, LocalDate endDate) {
+    public List<HealthCheckResponseDTO> filterHealthCheckCampaigns(String className, String campaignName, String studentName, boolean isParentConfirmation, LocalDate startDate, LocalDate endDate) {
         Specification<HealthCheck> spec = Specification.where(null);
 
         if (className != null && !className.isBlank()) {
@@ -427,6 +431,13 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
         if (studentName != null && !studentName.isBlank()) {
             spec = spec.and((root, query, cb) ->
                     cb.like(cb.lower(root.get("student").get("fullName")), "%" + studentName.toLowerCase() + "%"));
+        }
+        if( isParentConfirmation) {
+            spec = spec.and((root, query, cb) ->
+                    cb.isTrue(root.get("parentConfirmation")));
+        } else {
+            spec = spec.and((root, query, cb) ->
+                    cb.isFalse(root.get("parentConfirmation")));
         }
 
         if (startDate != null && endDate != null) {
