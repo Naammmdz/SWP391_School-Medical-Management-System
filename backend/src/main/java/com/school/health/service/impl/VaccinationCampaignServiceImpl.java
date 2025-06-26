@@ -364,28 +364,30 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
 
 
     @Override
-    public List<VaccinationResponseDTO> filterVaccinationCampaigns(String className, String campaignName, String studentName, boolean parentConfirmation, LocalDate startDate, LocalDate endDate) {
+    public List<VaccinationResponseResultDTO> filterVaccinationCampaigns(String className, String campaignName, String studentName, Boolean parentConfirmation, LocalDate startDate, LocalDate endDate) {
         Specification<Vaccination> spec = Specification.where(null);
 
         if (className != null && !className.isBlank()) {
             spec = spec.and((root, query, cb) ->
-                    cb.equal(root.get("student").get("className"), className));
+                    cb.like(root.get("student").get("className"),"%" + className + "%"));
         }
 
         if (campaignName != null && !campaignName.isBlank()) {
             spec = spec.and((root, query, cb) ->
-                    cb.equal(root.get("campaign").get("campaignName"), campaignName));
+                    cb.like(root.get("campaign").get("campaignName"),"%" + campaignName + "%"));
         }
 
         if (studentName != null && !studentName.isBlank()) {
             spec = spec.and((root, query, cb) ->
                     cb.like(cb.lower(root.get("student").get("fullName")), "%" + studentName.toLowerCase() + "%"));
         }
-        if (parentConfirmation) {
+        if (Boolean.TRUE.equals(parentConfirmation)) {
             spec = spec.and((root, query, cb) -> cb.isTrue(root.get("parentConfirmation")));
-        } else {
+        } else if (Boolean.FALSE.equals(parentConfirmation)) {
             spec = spec.and((root, query, cb) -> cb.isFalse(root.get("parentConfirmation")));
         }
+// else null => không thêm gì vào spec
+
 
         if (startDate != null && endDate != null) {
             spec = spec.and((root, query, cb) ->
@@ -397,9 +399,23 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
                     cb.lessThanOrEqualTo(root.get("date"), endDate));
         }
 
-        return vaccinationRepository.findAll(spec)
-                .stream()
-                .map(this::mapToResponseDTO)
+        return vaccinationRepository.findAll(spec).stream()
+                .map(vac ->
+                        VaccinationResponseResultDTO.builder()
+                                .vaccinationId(vac.getVaccinationId())
+                                .date(vac.getDate())
+                                .adverseReaction(vac.getAdverseReaction())
+                                .doseNumber(vac.getDoseNumber())
+                                .notes(vac.getNotes())
+                                .parentConfirmation(vac.isParentConfirmation())
+                                .result(vac.getResult())
+                                .studentId(vac.getStudent().getStudentId())
+                                .isPreviousDose(vac.isPreviousDose())
+                                .vaccineName(vac.getVaccineName())
+                                .campaignId(vac.getCampaign().getCampaignId())
+                                .campaignName(vac.getCampaign().getCampaignName())
+                                .scheduledDate(vac.getCampaign().getScheduledDate()).build()
+                )
                 .collect(Collectors.toList());
     }
 
@@ -421,7 +437,7 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
                                 .campaignId(vac.getCampaign().getCampaignId())
                                 .campaignName(vac.getCampaign().getCampaignName())
                                 .scheduledDate(vac.getCampaign().getScheduledDate()).build()
-                )
+                ).filter(parent -> parent.isParentConfirmation() == true)
                 .collect(Collectors.toList());
     }
 

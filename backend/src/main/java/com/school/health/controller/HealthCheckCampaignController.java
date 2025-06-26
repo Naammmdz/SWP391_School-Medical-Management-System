@@ -163,16 +163,16 @@ public class HealthCheckCampaignController {
         return ResponseEntity.ok(healthCheckCampaignServiceImpl.getResultByStudentId(studentId));
     }
 
-    @GetMapping("/filter/result")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE') or hasRole('PRINCIPAL') or hasRole('PARENT')")
-    public ResponseEntity<?> getResultWithFilter(@RequestParam(required = false) LocalDate startDate, @RequestParam(required = false) LocalDate endDate, @RequestParam(required = false) boolean consultationAppointment) {
-        if (startDate != null && endDate != null) {
-            if (startDate.isAfter(endDate)) {
-                throw new RuntimeException("startDate is after endDate");
-            }
-        }
-        return ResponseEntity.ok(healthCheckCampaignService.getResultWithFilterDate(startDate, endDate, consultationAppointment));
-    }
+//    @GetMapping("/filter/result")
+//    @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE') or hasRole('PRINCIPAL') or hasRole('PARENT')")
+//    public ResponseEntity<?> getResultWithFilter(@RequestParam(required = false) LocalDate startDate, @RequestParam(required = false) LocalDate endDate, @RequestParam(required = false) boolean consultationAppointment) {
+//        if (startDate != null && endDate != null) {
+//            if (startDate.isAfter(endDate)) {
+//                throw new RuntimeException("startDate is after endDate");
+//            }
+//        }
+//        return ResponseEntity.ok(healthCheckCampaignService.getResultWithFilterDate(startDate, endDate, consultationAppointment));
+//    }
 
     // lấy trạng thái của chiến dịch sức khỏe từ parentConfirm trong kết quả chiến dịch
     @GetMapping("/student/{studentId}/campaign-parentConfirmation/{parentConfirmation}")
@@ -195,7 +195,7 @@ public class HealthCheckCampaignController {
             @RequestParam(required = false) String className,
             @RequestParam(required = false) String campaignName,
             @RequestParam(required = false) String studentName,
-            @RequestParam(required = false) boolean isParentConfirmation,
+            @RequestParam(required = false) Boolean isParentConfirmation,
             @RequestParam(required = false) LocalDate startDate,
             @RequestParam(required = false) LocalDate endDate
     ) {
@@ -207,12 +207,12 @@ public class HealthCheckCampaignController {
         return ResponseEntity.ok(healthCheckCampaignService.filterHealthCheckCampaigns(className, campaignName, studentName, isParentConfirmation, startDate, endDate));
     }
 
-    // Get all health check results with parent confirmation is true
-    @GetMapping("/results-campaign/all/confirmation-true")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE') or hasRole('PRINCIPAL') or hasRole('PARENT')")
-    public ResponseEntity<?> getAllHealthCheckResultsWithParentConfirmationTrue() {
-        return ResponseEntity.ok(healthCheckCampaignServiceImpl.getAllHealthCheckResultsWithParentConfirmationTrue());
-    }
+//    // Get all health check results with parent confirmation is true
+//    @GetMapping("/results-campaign/all/confirmation-true")
+//    @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE') or hasRole('PRINCIPAL') or hasRole('PARENT')")
+//    public ResponseEntity<?> getAllHealthCheckResultsWithParentConfirmationTrue() {
+//        return ResponseEntity.ok(healthCheckCampaignServiceImpl.getAllHealthCheckResultsWithParentConfirmationTrue());
+//    }
 
 
 }
