@@ -3,6 +3,9 @@ import MedicineDeclarationService from "../../../services/MedicineDeclarationSer
 import { Card, Table, Tag, Modal, Image, Typography, Spin, Alert, Empty, Button, Popconfirm, message } from "antd";
 import { UserOutlined, FileTextOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import { EyeOutlined } from "@ant-design/icons";
+import { Descriptions } from "antd";
+
 
 const { Title, Text } = Typography;
 
@@ -24,6 +27,10 @@ const MedicineList = () => {
   const [error, setError] = useState("");
   const [previewImage, setPreviewImage] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+   const [logModalOpen, setLogModalOpen] = useState(false);
+  const [medicineLog, setMedicineLog] = useState(null);
+  const [logLoading, setLogLoading] = useState(false);
+
   const navigate = useNavigate();
 
   // Lấy studentId từ localStorage (phụ huynh đã chọn con ở ParentPages.jsx)
@@ -74,7 +81,21 @@ const MedicineList = () => {
     }
     setDeletingId(null);
   };
-
+ const handleViewLog = async (medicineId) => {
+    setLogLoading(true);
+    setLogModalOpen(true);
+    try {
+      const token = localStorage.getItem("token");
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      const log = await MedicineDeclarationService.getMedicineLog(config, medicineId);
+      setMedicineLog(log);
+      console.log("Medicine Log:", log);
+    } catch (err) {
+      setMedicineLog(null);
+      message.error("Không thể tải thông tin uống thuốc!");
+    }
+    setLogLoading(false);
+  };
   // Cột cho bảng antd
   const columns = [
     {
@@ -153,6 +174,20 @@ const MedicineList = () => {
         ) : (
           <Text type="secondary">Không có</Text>
         ),
+    },
+    {
+      title: "Chi tiết",
+      key: "log",
+      align: "center",
+      render: (_, record) => (
+        <Button
+          icon={<EyeOutlined />}
+          size="small"
+          onClick={() => handleViewLog(record.id)}
+        >
+          Xem thông tin uống thuốc
+        </Button>
+      ),
     },
     {
       title: "Thao tác",
@@ -246,6 +281,62 @@ const MedicineList = () => {
       >
         <Image src={previewImage} alt="Đơn thuốc" style={{ maxHeight: 400, borderRadius: 8 }} />
       </Modal>
+
+      {/* Modal xem log uống thuốc */}
+      <Modal
+  open={logModalOpen}
+  title="Thông tin y tá cho uống thuốc"
+  onCancel={() => {
+    setLogModalOpen(false);
+    setMedicineLog(null);
+  }}
+  footer={null}
+  centered
+>
+  {logLoading ? (
+    <Spin />
+  ) : medicineLog && Array.isArray(medicineLog.medicineLogs) && medicineLog.medicineLogs.length > 0 ? (
+    <div>
+      {medicineLog.medicineLogs.map((log, idx) => (
+        <Descriptions
+          key={log.id || idx}
+          column={1}
+          bordered
+          size="small"
+          style={{ marginBottom: 16 }}
+          title={`Lần uống thuốc ${idx + 1}`}
+        >
+          <Descriptions.Item label="Người cho uống">
+            {log.givenByName || <Text type="secondary">---</Text>}
+          </Descriptions.Item>
+          <Descriptions.Item label="Ngày giờ uống">
+            {log.givenAt
+              ? Array.isArray(log.givenAt)
+                ? new Date(log.givenAt[0], log.givenAt[1] - 1, log.givenAt[2]).toLocaleDateString("vi-VN")
+                : new Date(log.givenAt).toLocaleString("vi-VN")
+              : <Text type="secondary">---</Text>}
+          </Descriptions.Item>
+          <Descriptions.Item label="Ghi chú">
+            {log.notes || <Text type="secondary">---</Text>}
+          </Descriptions.Item>
+          <Descriptions.Item label="Ảnh xác nhận">
+            {log.imageData ? (
+              <Image
+                src={log.imageData}
+                alt="Ảnh xác nhận uống thuốc"
+                style={{ maxWidth: 300, borderRadius: 8 }}
+              />
+            ) : (
+              <Text type="secondary">Không có ảnh</Text>
+            )}
+          </Descriptions.Item>
+        </Descriptions>
+      ))}
+    </div>
+  ) : (
+    <Alert type="info" message="Chưa có thông tin uống thuốc." />
+  )}
+</Modal>
     </div>
   );
 }

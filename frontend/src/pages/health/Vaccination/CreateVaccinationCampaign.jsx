@@ -101,7 +101,7 @@ const CreateVaccinationCampaign = () => {
           />
         </div>
         <div className="form-group">
-          <label>Người tổ chức <span style={{color: 'red'}}>*</span></label>
+          <label>Đơn vị tổ chức <span style={{color: 'red'}}>*</span></label>
           <input
             type="text"
             name="organizer"

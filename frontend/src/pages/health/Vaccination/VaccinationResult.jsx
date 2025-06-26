@@ -62,7 +62,9 @@ const VaccinationResult = () => {
   const getCampaignName = (campaignId) => {
     const c = approvedCampaigns.find(ca => String(ca.campaignId) === String(campaignId));
     return c ? c.campaignName : campaignId;
+    
   };
+  console.log("approvedCampaigns:", approvedCampaigns);
 
   // Hiển thị modal và load học sinh đã đăng ký chiến dịch
   const handleOpenModal = async (campaign) => {

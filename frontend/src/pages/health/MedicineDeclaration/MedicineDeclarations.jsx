@@ -45,90 +45,84 @@ const MedicineDeclarations = () => {
   }, [selectedStudentId]);
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
-  };
+  const { name, value } = e.target;
+  setFormData({
+    ...formData,
+    [name]: value
+  });
+};
 
-  const handleImageChange = (e) => {
-    setImageFile(e.target.files[0] || null);
-  };
+const handleImageChange = (e) => {
+  setImageFile(e.target.files[0] || null);
+};
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (
-      !studentInfo.studentId ||
-      !formData.instruction ||
-      !formData.startDate ||
-      !formData.endDate
-    ) {
-      toast.error('Vui lòng nhập đầy đủ thông tin bắt buộc');
-      return;
-    }
+  if (
+    !studentInfo.studentId ||
+    !formData.instruction ||
+    !formData.startDate ||
+    !formData.endDate
+  ) {
+    toast.error('Vui lòng nhập đầy đủ thông tin bắt buộc');
+    return;
+  }
 
-    if (!imageFile) {
-      toast.error('Vui lòng chọn hình ảnh đơn thuốc!');
-      return;
-    }
+  if (!imageFile) {
+    toast.error('Vui lòng chọn hình ảnh đơn thuốc!');
+    return;
+  }
 
-    const duration =
-      formData.startDate && formData.endDate
-        ? Math.max(
-            1,
-            Math.ceil(
-              (new Date(formData.endDate) - new Date(formData.startDate)) /
-                (1000 * 60 * 60 * 24) +
-                1
-            )
+  const duration =
+    formData.startDate && formData.endDate
+      ? Math.max(
+          1,
+          Math.ceil(
+            (new Date(formData.endDate) - new Date(formData.startDate)) /
+              (1000 * 60 * 60 * 24) +
+              1
           )
-        : 1;
+        )
+      : 1;
 
-    // Tạo formData để gửi multipart/form-data
-    const form = new FormData();
-    form.append('studentId', studentInfo.studentId);
-    form.append('instruction', formData.instruction);
-    form.append('duration', duration);
-    form.append('startDate', formData.startDate);
-    form.append('endDate', formData.endDate);
-    form.append('notes', formData.notes);
-    form.append('image', imageFile);
-
-    const token = localStorage.getItem('token');
-
-    setIsSubmitting(true);
-    setSubmitError(null);
-
-    try {
-      await MedicineDeclarationService.createMedicineSubmission(
-        form,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
-          }
-        }
-      );
-
-      setFormData({
-        instruction: '',
-        startDate: '',
-        endDate: '',
-        notes: ''
-      });
-      setImageFile(null);
-      setSubmitSuccess(true);
-      toast.success('Khai báo thuốc đã được gửi thành công!');
-      setTimeout(() => setSubmitSuccess(false), 5000);
-    } catch (err) {
-      setSubmitError('Có lỗi xảy ra khi gửi khai báo. Vui lòng thử lại sau.');
-      toast.error('Có lỗi xảy ra khi gửi khai báo. Vui lòng thử lại sau.');
-    } finally {
-      setIsSubmitting(false);
-    }
+  // Chuẩn bị dữ liệu theo API mới
+  const requestData = {
+    studentId: studentInfo.studentId,
+    instruction: formData.instruction,
+    duration,
+    startDate: formData.startDate,
+    endDate: formData.endDate,
+    notes: formData.notes
   };
+
+  const token = localStorage.getItem('token');
+
+  setIsSubmitting(true);
+  setSubmitError(null);
+  try {
+    await MedicineDeclarationService.createMedicineSubmission(
+      { requestData, imageFile },
+      token
+    );
+
+    setFormData({
+      instruction: '',
+      startDate: '',
+      endDate: '',
+      notes: ''
+    });
+    setImageFile(null);
+    setSubmitSuccess(true);
+    toast.success('Khai báo thuốc đã được gửi thành công!');
+    setTimeout(() => setSubmitSuccess(false), 5000);
+  } catch (err) {
+    setSubmitError('Có lỗi xảy ra khi gửi khai báo. Vui lòng thử lại sau.');
+    toast.error('Có lỗi xảy ra khi gửi khai báo. Vui lòng thử lại sau.');
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   if (isLoading) {
     return (
