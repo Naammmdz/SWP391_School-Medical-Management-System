@@ -35,7 +35,6 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
     private final HealthCheckCampaignRepository healthCheckCampaignRepository;
     private final HealthCheckRepository healthCheckRepository;
     private final StudentRepository studentRepository;
-
     private final ApplicationEventPublisher eventPublisher;
     @Override
     public HealthCampaignResponseDTO createCampaign(HealthCampaignRequestDTO healthCampaignRequestDTO, int createdBy) {

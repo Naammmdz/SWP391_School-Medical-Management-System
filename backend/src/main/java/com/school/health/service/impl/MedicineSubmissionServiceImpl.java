@@ -128,6 +128,7 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
 
         //Save the MedicineSubmission entity
         medicineSubmissionRepository.save(medicineSubmission);
+        //TODO --------------------------------------
         userRepository.findAllNurse().forEach(user -> {
             notificationService.createNotification(user.getUserId(),
                     "Có đơn thuốc chờ bạn xử lí", "Có đơn gửi thuốc từ phụ huynh " + medicineSubmission.getParent().getFullName() + " xin vui lòng kiểm tra");
@@ -333,6 +334,7 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
         submission.setApprovedAt(request.getApprovedAt());
 
         medicineSubmissionRepository.save(submission);
+        //TODO -------------------
         String status = request.getSubmissionStatus().equals("APPROVED") ? "chấp nhận" : "từ chối";
         notificationService.createNotification(submission.getParent().getUserId(),"Yêu cầu gửi thuốc của bạn đã có kết quả", "Yêu cầu gửi thuốc của bạn đã được "+ status + " bởi "+submission.getApprovedBy().getFullName()+" vào "+ submission.getApprovedAt());
         return toResponse(submission);
@@ -455,7 +457,7 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
 
         return toLogResponse(log);
     }
-
+// TODO ---------------------------
     private MedicineLogResponse toLogResponse(MedicineLog log) {
         MedicineLogResponse response = new MedicineLogResponse();
         response.setId(log.getMedicineLogId());

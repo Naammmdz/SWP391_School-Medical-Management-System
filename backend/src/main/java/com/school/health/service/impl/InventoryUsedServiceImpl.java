@@ -64,7 +64,7 @@ public class InventoryUsedServiceImpl implements InventoryUsedLogService {
         if (dto.getQuantityUsed()> item.getQuantity()) {
             throw new IllegalArgumentException("Số lượng sử dụng vượt quá tồn kho");
         }
-
+//TODO ---------------------------------
         item.setQuantity(item.getQuantity() - dto.getQuantityUsed());
         if(item.getQuantity()<=item.getMinStockLevel()){
            List<User> users = userRepo.findAllAdminAndNurse();
