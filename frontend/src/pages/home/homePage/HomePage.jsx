@@ -219,8 +219,8 @@ export default function HomePage() {
                 <div className="resource-info">
                   <h3>Hồ Sơ Sức Khỏe</h3>
                   <p className="resource-date">Quản lý thông tin sức khỏe cá nhân học sinh</p>
-                  <Link to="/hososuckhoe" className="btn btn-sm">
-                    Truy cập
+                  <Link to="/login" className="btn btn-sm">
+                    Đăng nhập
                   </Link>
                 </div>
               </div>
@@ -233,8 +233,8 @@ export default function HomePage() {
                 <div className="resource-info">
                   <h3>Khai Báo Thuốc</h3>
                   <p className="resource-date">Khai báo thông tin thuốc sử dụng tại trường</p>
-                  <Link to="/khaibaothuoc" className="btn btn-sm">
-                    Truy cập
+                  <Link to="/login" className="btn btn-sm">
+                    Đăng nhập
                   </Link>
                 </div>
               </div>
@@ -247,8 +247,8 @@ export default function HomePage() {
                 <div className="resource-info">
                   <h3>Sự Kiện Y Tế</h3>
                   <p className="resource-date">Xem các sự kiện y tế và tai nạn tại trường</p>
-                  <Link to="/sukienyte" className="btn btn-sm">
-                    Truy cập
+                  <Link to="/login" className="btn btn-sm">
+                    Đăng nhập
                   </Link>
                 </div>
               </div>
@@ -262,8 +262,8 @@ export default function HomePage() {
                   <h3>Tiêm Chủng</h3>
                   <p className="resource-date">Quản lý thông tin tiêm chủng của học sinh</p>
                   {isAuthenticated ? (
-                    <Link to="/tiemchung" className="btn btn-sm">
-                      Truy cập
+                    <Link to="/login" className="btn btn-sm">
+                      Đăng nhập
                     </Link>
                   ) : (
                     <Link to="/login" className="btn btn-sm">
@@ -282,8 +282,8 @@ export default function HomePage() {
                   <h3>Kiểm Tra Định Kỳ</h3>
                   <p className="resource-date">Lịch và kết quả kiểm tra sức khỏe định kỳ</p>
                   {isAuthenticated ? (
-                    <Link to="/kiemtradinhky" className="btn btn-sm">
-                      Truy cập
+                    <Link to="/login" className="btn btn-sm">
+                      Đăng nhập
                     </Link>
                   ) : (
                     <Link to="/login" className="btn btn-sm">
@@ -304,8 +304,8 @@ export default function HomePage() {
                   <h3>Quản Lý Thuốc</h3>
                   <p className="resource-date">Hệ thống quản lý thuốc và vật tư y tế</p>
                   {isAuthenticated ? (
-                    <Link to="/quanlythuoc" className="btn btn-sm">
-                      Truy cập
+                    <Link to="/login" className="btn btn-sm">
+                      Đăng nhập
                     </Link>
                   ) : (
                     <Link to="/login" className="btn btn-sm">
@@ -332,7 +332,7 @@ export default function HomePage() {
       
       {/* Blog Section */}
       <Blog blogPosts={blogPosts} isLoading={isLoading} />
-      <DashboardPage/>
+     
       {/* Contact Section */}
       <section className="section contact-section">
         <div className="container">

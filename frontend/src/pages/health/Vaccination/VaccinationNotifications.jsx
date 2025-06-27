@@ -47,22 +47,32 @@ const fetchNotifications = async () => {
 }
     const filtered = data.filter(item => {
   if (!studentClass || !item.targetGroup) return false;
-  const target = item.targetGroup.toLowerCase();
-  const studentClassLower = studentClass.toLowerCase();
+  const target = item.targetGroup.toLowerCase().trim();
+  const studentClassLower = studentClass.toLowerCase().trim();
 
-  // Kiểm tra nếu là "toàn trường" (không phân biệt hoa thường, có dấu hoặc không dấu)
+  // Chuẩn hóa tiếng Việt không dấu
+  function removeVietnameseTones(str) {
+    return str.normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd').replace(/Đ/g, 'D');
+  }
   const targetNoSign = removeVietnameseTones(target).replace(/\s/g, '');
+  const studentClassNoSign = removeVietnameseTones(studentClassLower).replace(/\s/g, '');
+
+  // Toàn trường
   if (targetNoSign === 'toantruong') return true;
 
-  // So sánh chính xác hoặc kiểm tra từ khóa (ví dụ: "khối 3" khớp "3A")
-  if (target === studentClassLower) return true;
-  // Nếu target là "khối 3", kiểm tra studentClass có bắt đầu bằng "3"
-  const khoiMatch = target.match(/khoi\s*(\d+)/);
-  if (khoiMatch && studentClassLower.startsWith(khoiMatch[1])) return true;
-  // Nếu target là "lớp 3A", kiểm tra trùng khớp
-  if (target.includes(studentClassLower)) return true;
-  // Nếu target là "3A", kiểm tra trùng khớp
-  if (studentClassLower.includes(target)) return true;
+  // Khớp chính xác
+  if (targetNoSign === studentClassNoSign) return true;
+
+  // Nếu target là "khoi 4" hoặc "khối 4" thì khớp các lớp bắt đầu bằng "4"
+  const khoiMatch = targetNoSign.match(/khoi(\d+)/);
+  if (khoiMatch && studentClassNoSign.startsWith(khoiMatch[1])) return true;
+
+  // Nếu target chứa tên lớp
+  if (targetNoSign.includes(studentClassNoSign)) return true;
+  if (studentClassNoSign.includes(targetNoSign)) return true;
+
   return false;
 });
 
@@ -80,25 +90,25 @@ const fetchNotifications = async () => {
         }
       }
       return {
-        id: item.campaignId,
-        title: `Thông báo tiêm chủng: ${item.campaignName}`,
-        campaignName: item.campaignName,
-        targetGroup: item.targetGroup,
-        type: item.type,
-        address: item.address,
-        organizerId: item.approvedBy,
-        description: item.description,
-        date: item.scheduledDate,
-        status,
-        isNew: status === 'Chưa phản hồi',
-        sentDate: item.createdAt ? item.createdAt.split('T')[0] : '',
-        responseNote,
-        responseDate,
-        requiredDocuments: 'Phiếu đồng ý của phụ huynh, giấy tờ tùy thân',
-        time: '',
-        location: item.address,
-      };
-    });
+    id: item.campaignId,
+    title: `Thông báo tiêm chủng: ${item.campaignName}`,
+    campaignName: item.campaignName,
+    targetGroup: item.targetGroup,
+    type: item.type,
+    address: item.address,
+    organizerId: item.approvedBy,
+    description: item.description,
+    date: item.scheduledDate, // giữ nguyên, format khi hiển thị
+    status,
+    isNew: status === 'Chưa phản hồi',
+    sentDate: item.createdAt, // giữ nguyên, format khi hiển thị
+    responseNote,
+    responseDate,
+    requiredDocuments: 'Phiếu đồng ý của phụ huynh, giấy tờ tùy thân',
+    time: '',
+    location: item.address,
+  };
+});
     setNotifications(mapped);
     setLoading(false);
   } catch (error) {
@@ -205,11 +215,19 @@ const sendResponse = async (e) => {
   }, []);
 
   // Định dạng ngày
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
+ const formatDate = (date) => {
+  if (!date) return '';
+  if (Array.isArray(date)) {
+    // [2025, 6, 28] => "28/06/2025"
+    const [y, m, d] = date;
+    return `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
+  }
+  if (typeof date === 'string') {
     const options = { year: 'numeric', month: 'numeric', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString('vi-VN', options);
-  };
+    return new Date(date).toLocaleDateString('vi-VN', options);
+  }
+  return '';
+};
 const viewNotificationDetails = (notification) => {
   setActiveNotification(notification);
   if (notification.status === 'Chưa phản hồi') {
@@ -264,7 +282,7 @@ const viewNotificationDetails = (notification) => {
                     <div className="notification-details">
                       <h3>{notification.title}</h3>
                       <div className="notification-meta">
-                        <span className="date">{formatDate(notification.sentDate)}</span>
+                       <span className="date">{formatDate(notification.sentDate)}</span>
                         <span className={`status ${notification.status.toLowerCase().replace(' ', '-')}`}>
                           {notification.status}
                         </span>

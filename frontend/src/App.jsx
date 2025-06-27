@@ -52,7 +52,10 @@ import MedicineLog from './pages/health/MedicineDeclaration/MedicineLog';
 const ProtectedRoute = ({ element, requiredRole }) => {
   const user = JSON.parse(localStorage.getItem('user'));
   const isAuthenticated = !!user && !!localStorage.getItem('token');
-  const hasRequiredRole = user && user.userRole === requiredRole;
+  // Hỗ trợ requiredRole là string hoặc mảng
+  const hasRequiredRole = Array.isArray(requiredRole)
+    ? requiredRole.includes(user?.userRole)
+    : user && user.userRole === requiredRole;
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
@@ -62,7 +65,6 @@ const ProtectedRoute = ({ element, requiredRole }) => {
     return <Navigate to="/" replace />;
   }
 
- 
   return element;
 };
 
@@ -106,11 +108,11 @@ function App() {
         <Route path="/ketquakiemtradinhkyhocsinh" element={<HealthCheckResultStudent />} />
         <Route path ="/capnhatketquakiemtra" element={<UpdateHealthCheckResult/>} />
 
-        <Route path="/capnhatthongtin" element={<UpdateUser/>}/>
+        <Route path="/capnhatthongtin" element={<UpdateUser/>} requiredRole="ROLE_ADMIN"/>
         <Route path="/doimatkhau" element={<UpdatePassword/>}/>
         <Route path="/admin/taomoinguoidung" element={<CreateUser/>} requiredRole="ROLE_ADMIN" />
         <Route path="/admin/capnhatnguoidung/:userId" element={<UpdateUserByAdmin/>} requiredRole="ROLE_ADMIN" />
-        <Route path="/admin/danhsachnguoidung" element={<UserList/>} />
+        <Route path="/admin/danhsachnguoidung" element={<UserList/>}requiredRole="ROLE_ADMIN" />
         <Route path="/admin/khoanguoidung/:userId" element={<BlockUser />} requiredRole="ROLE_ADMIN" />
          
         
