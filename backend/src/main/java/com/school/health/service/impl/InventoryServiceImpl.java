@@ -75,12 +75,12 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     @Override
-    public List<InventoryResponseDTO> getInventoryIntemsLowStock() {
+    public List<InventoryResponseDTO> getInventoryItemsLowStock() {
         return inventoryRepo.getAllInventoryLowStock().stream().map(inventory -> mapToDTO(inventory)).collect(Collectors.toList());
     }
 
     @Override
-    public List<InventoryResponseDTO> getInventoryIntemsExpiringSoon() {
+    public List<InventoryResponseDTO> getInventoryItemsExpiringSoon() {
         LocalDate today = LocalDate.now();
         return inventoryRepo.getInventoryExpiringSoon(today.plusDays(30)).stream().map(inventory -> mapToDTO(inventory)).collect(Collectors.toList());
     }
