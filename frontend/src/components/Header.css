@@ -1,7 +1,7 @@
 .header {
   background: #ffffff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  position: fixed;
+  position: sticky;
   top: 0;
   left: 0;
   right: 0;
@@ -471,4 +471,126 @@
     padding-left: 10px;
     padding-right: 10px;
   }
+}
+
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 32px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.header-logo {
+  background: #15803d;
+  padding: 8px;
+  border-radius: 12px;
+  margin-right: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.header-logo-icon {
+  width: 24px;
+  height: 24px;
+  color: #fff;
+}
+
+.header-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #111;
+}
+
+.header-slogan {
+  font-size: 0.95rem;
+  color: #222;
+}
+
+.header-nav {
+  display: flex;
+  gap: 32px;
+}
+
+.header-link {
+  color: #111;
+  font-weight: 500;
+  text-decoration: none;
+  font-size: 1rem;
+  transition: color 0.2s;
+}
+
+.header-link:hover {
+  color: #15803d;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-btn {
+  font-size: 1rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 24px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.header-btn-outline {
+  background: transparent;
+  color: #111;
+  border: 1.5px solid #15803d;
+}
+
+.header-btn-outline:hover {
+  color: #fff;
+  color: #15803d;
+  background: #fff;
+}
+
+.header-btn-primary {
+  background: #15803d;
+  color: #fff;
+}
+
+.header-btn-primary:hover {
+  background: #15803d;
+  color: #fff;
+}
+
+@media (max-width: 900px) {
+  .header-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    padding: 16px;
+  }
+  .header-nav {
+    gap: 16px;
+  }
+  .header-actions {
+    gap: 8px;
+  }
+}
+
+body, #root, .app, .layout {
+  overflow: visible !important;
+  height: auto !important;
 }

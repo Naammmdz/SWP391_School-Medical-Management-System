@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import HomePage from './pages/home/homePage/HomePage';
 import Login from './pages/auth/login/Login';
 import Header from './components/Header';
@@ -65,67 +65,63 @@ const ProtectedRoute = ({ element, requiredRole }) => {
   return element;
 };
 
+// Component Layout để quản lý Header và Footer
+const Layout = ({ children }) => {
+  const location = useLocation();
+  const hideHeaderFooter = location.pathname === '/login';
+
+  return (
+    <>
+      {!hideHeaderFooter && <Header />}
+      {children}
+      {!hideHeaderFooter && <Footer />}
+    </>
+  );
+};
+
 function App() {
   return (
     <>
-      <Header/>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/hososuckhoe" element={<HealthRecord />} />
-        <Route path="/sukienyte" element={<MedicalEvents/>}/>
-
-        <Route path="/khaibaothuoc" element={<MedicineDeclarations/>}/>
-        <Route path="/donthuoc" element={<NursePrescription/>}/>
-        <Route path="/donthuocdagui" element={<MedicineList/>}/>
-
-
-        <Route path="/quanlythuoc" element={<Pharmaceutical/>}/>
-
-        
-        <Route path="/quanlytiemchung" element={<VaccinationManagement/>}/>
-        <Route path="/thongbaotiemchung" element={<VaccinationNotifications/>}/>
-        <Route path ="/taosukientiemchung" element={<CreateVaccinationCampaign/>} />
-        <Route path="/capnhatthongtintiemchung" element={<UpdateVaccination/>} />
-        <Route path= "/ketquatiemchung" element={<VaccinationResult/>} />
-        <Route path ="/ketquatiemchunghocsinh" element= {<VaccinationStudentResult/>} />
-
-        <Route path="/login" element={<Login />} />
-
-        
-
-
-        <Route path="/thongke" element={<DashboardPage/>}/>
-
-        <Route path="/kiemtradinhky" element={<CreateHealthCheck/>}/>
-        <Route path="/danhsachkiemtradinhky" element={<HealthCheckList />} />
-        <Route path="/capnhatkiemtradinhky" element={<UpdateHealthCheck />} />
-        <Route path="/kiemtradinhkyhocsinh" element={<HealthCheck />} />
-        <Route path="/ketquakiemtradinhky" element={<HealthCheckResult />} />
-        <Route path="/ketquakiemtradinhkyhocsinh" element={<HealthCheckResultStudent />} />
-        <Route path ="/capnhatketquakiemtra" element={<UpdateHealthCheckResult/>} />
-
-        <Route path="/capnhatthongtin" element={<UpdateUser/>}/>
-        <Route path="/doimatkhau" element={<UpdatePassword/>}/>
-        <Route path="/admin/taomoinguoidung" element={<CreateUser/>} requiredRole="ROLE_ADMIN" />
-        <Route path="/admin/capnhatnguoidung/:userId" element={<UpdateUserByAdmin/>} requiredRole="ROLE_ADMIN" />
-        <Route path="/admin/danhsachnguoidung" element={<UserList/>} />
-        <Route path="/admin/khoanguoidung/:userId" element={<BlockUser />} requiredRole="ROLE_ADMIN" />
-         
-        
-      
-        <Route path="/taomoihocsinh" element={<CreateStudent/>} requiredRole="ROLE_ADMIN" />
-        <Route path="/danhsachhocsinh" element={<StudentList/>}/>
-        <Route path="/capnhathocsinh/:studentId" element={<UpdateStudent/>}/>
-         
-           
-        <Route path="/parent" element={<ProtectedRoute element={<ParentPages/>} requiredRole="ROLE_PARENT" />} />
-        <Route path="/nurse" element={<ProtectedRoute element={<NursePages/>} requiredRole="ROLE_NURSE" />} />
-        <Route path='/admin' element={<ProtectedRoute element={<Admin/>} requiredRole="ROLE_ADMIN" />} />
-       
-
-        <Route path='/blog' element={<Blog/>}/>
-      </Routes>
-      <Footer />
+      {/* <Header /> */}
+      <Layout>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/hososuckhoe" element={<HealthRecord />} />
+          <Route path="/sukienyte" element={<MedicalEvents/>}/>
+          <Route path="/khaibaothuoc" element={<MedicineDeclarations/>}/>
+          <Route path="/donthuoc" element={<NursePrescription/>}/>
+          <Route path="/donthuocdagui" element={<MedicineList/>}/>
+          <Route path="/quanlythuoc" element={<Pharmaceutical/>}/>
+          <Route path="/quanlytiemchung" element={<VaccinationManagement/>}/>
+          <Route path="/thongbaotiemchung" element={<VaccinationNotifications/>}/>
+          <Route path ="/taosukientiemchung" element={<CreateVaccinationCampaign/>} />
+          <Route path="/capnhatthongtintiemchung" element={<UpdateVaccination/>} />
+          <Route path= "/ketquatiemchung" element={<VaccinationResult/>} />
+          <Route path ="/ketquatiemchunghocsinh" element= {<VaccinationStudentResult/>} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/thongke" element={<DashboardPage/>}/>
+          <Route path="/kiemtradinhky" element={<CreateHealthCheck/>}/>
+          <Route path="/danhsachkiemtradinhky" element={<HealthCheckList />} />
+          <Route path="/capnhatkiemtradinhky" element={<UpdateHealthCheck />} />
+          <Route path="/kiemtradinhkyhocsinh" element={<HealthCheck />} />
+          <Route path="/ketquakiemtradinhky" element={<HealthCheckResult />} />
+          <Route path="/ketquakiemtradinhkyhocsinh" element={<HealthCheckResultStudent />} />
+          <Route path ="/capnhatketquakiemtra" element={<UpdateHealthCheckResult/>} />
+          <Route path="/capnhatthongtin" element={<UpdateUser/>}/>
+          <Route path="/doimatkhau" element={<UpdatePassword/>}/>
+          <Route path="/admin/taomoinguoidung" element={<CreateUser/>} requiredRole="ROLE_ADMIN" />
+          <Route path="/admin/capnhatnguoidung/:userId" element={<UpdateUserByAdmin/>} requiredRole="ROLE_ADMIN" />
+          <Route path="/admin/danhsachnguoidung" element={<UserList/>} />
+          <Route path="/admin/khoanguoidung/:userId" element={<BlockUser />} requiredRole="ROLE_ADMIN" />
+          <Route path="/taomoihocsinh" element={<CreateStudent/>} requiredRole="ROLE_ADMIN" />
+          <Route path="/danhsachhocsinh" element={<StudentList/>}/>
+          <Route path="/capnhathocsinh/:studentId" element={<UpdateStudent/>}/>
+          <Route path="/parent" element={<ProtectedRoute element={<ParentPages/>} requiredRole="ROLE_PARENT" />} />
+          <Route path="/nurse" element={<ProtectedRoute element={<NursePages/>} requiredRole="ROLE_NURSE" />} />
+          <Route path='/admin' element={<ProtectedRoute element={<Admin/>} requiredRole="ROLE_ADMIN" />} />
+          <Route path='/blog' element={<Blog/>}/>
+        </Routes>
+      </Layout>
     </>
   );
 }
