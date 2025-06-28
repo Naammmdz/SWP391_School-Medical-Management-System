@@ -440,21 +440,19 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
         } else if (Boolean.FALSE.equals(isParentConfirmation)) {
             spec = spec.and((root, query, cb) -> cb.isFalse(root.get("parentConfirmation")));
         }
-
-
-
         if (startDate != null && endDate != null) {
             spec = spec.and((root, query, cb) ->
+                    cb.between(root.get("date"), startDate, endDate));
+        } else if (startDate != null) {
+            spec = spec.and((root, query, cb) ->
                     cb.greaterThanOrEqualTo(root.get("date"), startDate));
-        }
-
-        if (endDate != null && startDate != null) {
+        } else if (endDate != null) {
             spec = spec.and((root, query, cb) ->
                     cb.lessThanOrEqualTo(root.get("date"), endDate));
         }
 
-        return healthCheckRepository.findAll(spec)
-                .stream()
+
+        return healthCheckRepository.findAll(spec).stream()
                 .map(heal -> HealthCheckResponseResultDTO.builder()
                         .healthCheckId(heal.getCheckId())
                         .date(heal.getDate())
@@ -473,6 +471,8 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
                         .campaignId(heal.getCampaign().getCampaignId())
                         .campaignName(heal.getCampaign().getCampaignName())
                         .scheduledDate(heal.getCampaign().getScheduledDate())
+                        .studentName(heal.getStudent().getFullName())
+                        .className(heal.getStudent().getClassName())
                         .build())
                 .collect(Collectors.toList());
     }

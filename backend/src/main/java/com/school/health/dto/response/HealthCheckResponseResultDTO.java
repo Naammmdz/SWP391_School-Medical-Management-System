@@ -31,6 +31,8 @@ public class HealthCheckResponseResultDTO {
     private String campaignName;
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate scheduledDate;
+    private String studentName;
+    private String className;
 
 }
 

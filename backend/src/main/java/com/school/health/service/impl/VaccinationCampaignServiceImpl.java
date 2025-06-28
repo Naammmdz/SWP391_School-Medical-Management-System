@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.text.Normalizer;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -391,13 +392,16 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
 
         if (startDate != null && endDate != null) {
             spec = spec.and((root, query, cb) ->
+                    cb.between(root.get("date"), startDate, endDate));
+        } else if (startDate != null) {
+            spec = spec.and((root, query, cb) ->
                     cb.greaterThanOrEqualTo(root.get("date"), startDate));
-        }
-
-        if (endDate != null && startDate != null) {
+        } else if (endDate != null) {
             spec = spec.and((root, query, cb) ->
                     cb.lessThanOrEqualTo(root.get("date"), endDate));
         }
+
+
 
         return vaccinationRepository.findAll(spec).stream()
                 .map(vac ->
@@ -414,7 +418,10 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
                                 .vaccineName(vac.getVaccineName())
                                 .campaignId(vac.getCampaign().getCampaignId())
                                 .campaignName(vac.getCampaign().getCampaignName())
-                                .scheduledDate(vac.getCampaign().getScheduledDate()).build()
+                                .scheduledDate(vac.getCampaign().getScheduledDate())
+                                .studentName(vac.getStudent().getFullName())
+                                .className(vac.getStudent().getClassName())
+                                .build()
                 )
                 .collect(Collectors.toList());
     }
@@ -436,14 +443,17 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
                                 .vaccineName(vac.getVaccineName())
                                 .campaignId(vac.getCampaign().getCampaignId())
                                 .campaignName(vac.getCampaign().getCampaignName())
-                                .scheduledDate(vac.getCampaign().getScheduledDate()).build()
+                                .scheduledDate(vac.getCampaign().getScheduledDate())
+                                .build()
                 ).filter(parent -> parent.isParentConfirmation() == true)
                 .collect(Collectors.toList());
     }
 
-
-    private String campaignName;
-    private LocalDate scheduledDate;
+    public String removeAccent(String input) {
+        if (input == null) return null;
+        String normalized = Normalizer.normalize(input, Normalizer.Form.NFD);
+        return normalized.replaceAll("\\p{M}", "");
+    }
 
 }
 
