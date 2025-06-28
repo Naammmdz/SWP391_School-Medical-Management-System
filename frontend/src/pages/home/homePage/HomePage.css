@@ -25,7 +25,7 @@
 
 .section-header h2 {
   font-size: 32px;
-  color: #15803d;
+  color: #10d569;
   margin-bottom: 10px;
   position: relative;
   padding-bottom: 15px;
@@ -39,7 +39,7 @@
   transform: translateX(-50%);
   width: 80px;
   height: 3px;
-  background-color: #15803d;
+  background-color: #10d569;
 }
 
 .section-header p {
@@ -64,8 +64,8 @@
 }
 .btn-secondary:hover, .btn-hero-secondary:hover {
   background-color: #e6ffe6;
-  color: #0ea95d;
-  border-color: #0ea95d;
+  color: #10d569;
+  border-color: #10d569;
 }
 
 .btn-sm {
@@ -77,7 +77,7 @@
 .hero-section {
   padding-top: 24px;
   padding-bottom: 24px;
-  background: linear-gradient(135deg, #dcfce7 0%, #ffffff 50%, #f0fdf4 100%);
+  background: linear-gradient(135deg, #e6ffe6 0%, #ffffff 50%, #e6ffe6 100%);
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -105,8 +105,8 @@
 .hero-badge {
   display: inline-flex;
   align-items: center;
-  background-color: #f8fafc;
-  color: #1a1a1a;
+  background-color: #e6ffe6;
+  color: #10d569;
   padding: 8px 16px;
   border-radius: 50px;
   font-size: 14px;
@@ -128,7 +128,7 @@
 }
 
 .hero-title-highlight {
-  color: #15803d;
+  color: #10d569;
   display: block;
 }
 
@@ -157,7 +157,7 @@
 }
 
 .btn-hero-primary {
-  background-color: #15803d;
+  background-color: #10d569;
   color: white;
   padding: 16px 32px;
   border-radius: 50px;
@@ -171,7 +171,7 @@
 }
 
 .btn-hero-primary:hover {
-  background-color: #166534;
+  background-color: #0ea95d;
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(21, 128, 61, 0.4);
 }
@@ -821,7 +821,6 @@
   padding: 80px 0;
   background: #fff;
   border-radius: 32px;
-  margin: 24px 0 60px 0;
 }
 .about-container {
   max-width: 1200px;
@@ -837,8 +836,8 @@
 .about-badge {
   display: inline-flex;
   align-items: center;
-  background: #d1fae5;
-  color: #059669;
+  background: #e6ffe6;
+  color: #10d569;
   padding: 8px 20px;
   border-radius: 999px;
   font-size: 1rem;
@@ -871,7 +870,7 @@
   align-items: flex-start;
 }
 .about-reason-icon {
-  background: #d1fae5;
+  background: #e6ffe6;
   padding: 12px;
   border-radius: 16px;
   margin-right: 16px;
@@ -883,7 +882,7 @@
 .about-reason-svg {
   width: 28px;
   height: 28px;
-  color: #059669;
+  color: #10d569;
 }
 .about-reason-title {
   font-size: 1.15rem;
@@ -1157,8 +1156,8 @@
   color: #10d569;
 }
 .services-card-icon-darkgreen {
-  background: #bbf7d0;
-  color: #059669;
+  background: #e6ffe6;
+  color: #10d569;
 }
 .services-card-icon-yellow {
   background: #fef9c3;

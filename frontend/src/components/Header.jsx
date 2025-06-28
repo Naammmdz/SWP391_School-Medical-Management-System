@@ -23,12 +23,12 @@ const Header = () => (
           <path d="M8 15a6 6 0 0 0 12 0v-3"></path>
           <circle cx="20" cy="10" r="2"></circle>
         </svg>
-      </div>
+              </div>
       <div>
         <span className="header-title">Trường Tiểu Học FPT</span>
         <div className="header-slogan">Hệ thống quản lý y tế</div>
-      </div>
-    </div>
+                </div>
+              </div>
     <nav className="header-nav">
       <a href="#home" className="header-link" onClick={handleSmoothScroll}>Trang chủ</a>
       <a href="#about" className="header-link" onClick={handleSmoothScroll}>Về chúng tôi</a>
@@ -38,8 +38,8 @@ const Header = () => (
     </nav>
     <div className="header-actions">
       <a className="header-btn header-btn-primary" href="/login">Đăng nhập</a>
-    </div>
-  </div>
+          </div>
+        </div>
 );
 
 export default Header;

@@ -10,7 +10,7 @@
 
 .login-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #dcfce7 0%, #ffffff 50%, #f0fdf4 100%);
+  background: linear-gradient(135deg, #e6ffe6 0%, #ffffff 50%, #e6ffe6 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -107,7 +107,7 @@
 }
 
 .login-back-link:hover {
-  color: #15803d;
+  color: #10d569;
 }
 
 .login-back-icon {
@@ -131,7 +131,7 @@
 }
 
 .login-brand-icon {
-  background-color: #15803d;
+  background-color: #10d569;
   border-radius: 12px;
   margin: 0 16px 0 0;
   flex-shrink: 0;
@@ -186,7 +186,7 @@
 }
 
 .login-title-highlight {
-  color: #15803d;
+  color: #10d569;
   display: block;
 }
 
@@ -342,8 +342,8 @@
 .login-form-badge {
   display: inline-flex !important;
   align-items: center !important;
-  background-color: #dcfce7 !important;
-  color: #15803d !important;
+  background-color: #e6ffe6 !important;
+  color: #10d569 !important;
   padding: 8px 16px !important;
   border-radius: 50px !important;
   font-size: 14px !important;
@@ -506,8 +506,8 @@
 /* Submit button */
 .login-sign-in-button {
   width: 100%;
-  background-color: #15803d;
-  color: white;
+  background-color: #10d569;
+  color: #fff;
   border: none;
   padding: 16px 24px;
   border-radius: 12px;
@@ -523,7 +523,7 @@
 }
 
 .login-sign-in-button:hover:not(:disabled) {
-  background-color: #166534;
+  background-color: #0ea95d;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
 }

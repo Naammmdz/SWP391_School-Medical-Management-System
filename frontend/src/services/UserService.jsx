@@ -1,5 +1,5 @@
 import axios from "axios";
-const API_URL = import.meta.env.VVITE_API_AUTH; ;
+const API_URL = import.meta.env.VITE_API_AUTH; ;
 const USER_URL =import.meta.env.VITE_API_USER;
 const userService = {
      getAllUsers: (config) => {

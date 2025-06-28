@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "./HomePage.css";
-// import HomePageService from "../../../services/HomePageService";
+import HomePageService from "../../../services/HomePageService";
 import Blog from "../Blog/Blog";
 // import DashboardPage from "../../dashboardPage/DashboardPage";
 import heroImage from "../../../assets/images/FPTers.png";
 import aboutImage from "../../../assets/images/1112.jpg";
+import axios from "axios";
 
 
 export default function HomePage() {
@@ -17,6 +18,7 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   // State for auth status (temporary)
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
   // State for school info
   const [schoolInfo, setSchoolInfo] = useState({});
   const [showBackToTop, setShowBackToTop] = useState(false);
@@ -62,6 +64,16 @@ export default function HomePage() {
       }
     };
 
+    // Fetch school info from API
+    const fetchSchoolInfo = async () => {
+      try {
+        const data = await HomePageService.getSchoolInfo();
+        setSchoolInfo(data);
+      } catch (error) {
+        console.error("Error fetching school info:", error);
+      }
+    };
+
     // Execute all fetch functions
     const fetchAllData = async () => {
       setIsLoading(true);
@@ -76,9 +88,26 @@ export default function HomePage() {
     fetchAllData();
 
     // Check authentication status
-    const checkAuth = () => {
+    const checkAuth = async () => {
       const token = localStorage.getItem("token");
-      setIsAuthenticated(!!token);
+      if (!token) {
+        setIsAuthenticated(false);
+        setAuthChecked(true);
+        return;
+      }
+      try {
+        // Sử dụng đúng endpoint xác thực user
+        const apiUrl = import.meta.env.VITE_API_USER || "";
+        const url = apiUrl ? `${apiUrl}/user/me` : "/api/user/me";
+        const res = await axios.get(url, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setIsAuthenticated(true);
+      } catch (error) {
+        setIsAuthenticated(false);
+        localStorage.removeItem("token");
+      }
+      setAuthChecked(true);
     };
     checkAuth();
 
@@ -126,8 +155,8 @@ export default function HomePage() {
         <div className="hero-container">
           <div className="hero-grid">
             <div className="hero-content">
-              <div className="hero-badge">
-                <span className="hero-badge-icon">🏫</span>
+              <div className="services-badge">
+                <span className="services-badge-icon">🏫</span>
                 Trường Tiểu Học Hàng Đầu
               </div>
               <h1 className="hero-title">
@@ -141,7 +170,7 @@ export default function HomePage() {
                 <Link to="/about" className="btn-hero-primary">
                   Tìm hiểu thêm
                 </Link>
-                {!isAuthenticated && (
+                {authChecked && !isAuthenticated && (
                   <Link to="/login" className="btn-hero-secondary">
                     Đăng nhập
                   </Link>
@@ -183,8 +212,8 @@ export default function HomePage() {
         <div className="about-container">
           <div className="about-grid">
             <div>
-              <div className="about-badge">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="about-badge-icon" aria-hidden="true"><path d="m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526"></path><circle cx="12" cy="8" r="6"></circle></svg>
+              <div className="services-badge">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="services-badge-icon" aria-hidden="true"><path d="m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526"></path><circle cx="12" cy="8" r="6"></circle></svg>
                 Giới thiệu về trường
               </div>
               <h2 className="about-title">Môi trường học tập an toàn và chăm sóc sức khỏe toàn diện</h2>
@@ -249,12 +278,7 @@ export default function HomePage() {
                 <li><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="services-li-check"><path d="M21.801 10A10 10 0 1 1 17 3.335"></path><path d="m9 11 3 3L22 4"></path></svg>Lưu trữ lịch sử khám chữa bệnh</li>
                 <li><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="services-li-check"><path d="M21.801 10A10 10 0 1 1 17 3.335"></path><path d="m9 11 3 3L22 4"></path></svg>Truy xuất nhanh hồ sơ học sinh</li>
               </ul>
-              <div className="services-card-more">
-                {isAuthenticated && (
-                  <a href="/hososuckhoe" className="services-card-more-btn">Truy cập</a>
-                )}
-              </div>
-            </div>
+                </div>
             {/* Card 2: Khai Báo Thuốc */}
             <div className="services-card">
               <div className="services-card-icon services-card-icon-green">
@@ -266,12 +290,7 @@ export default function HomePage() {
                 <li><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="services-li-check"><path d="M21.801 10A10 10 0 1 1 17 3.335"></path><path d="m9 11 3 3L22 4"></path></svg>Quản lý đơn thuốc học sinh</li>
                 <li><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="services-li-check"><path d="M21.801 10A10 10 0 1 1 17 3.335"></path><path d="m9 11 3 3L22 4"></path></svg>Đảm bảo an toàn sử dụng thuốc</li>
               </ul>
-              <div className="services-card-more">
-                {isAuthenticated && (
-                  <a href="/khaibaothuoc" className="services-card-more-btn">Truy cập</a>
-                )}
-              </div>
-            </div>
+                </div>
             {/* Card 3: Sự Kiện Y Tế */}
             <div className="services-card">
               <div className="services-card-icon services-card-icon-darkgreen">
@@ -283,12 +302,7 @@ export default function HomePage() {
                 <li><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="services-li-check"><path d="M21.801 10A10 10 0 1 1 17 3.335"></path><path d="m9 11 3 3L22 4"></path></svg>Thông báo tai nạn, sự cố</li>
                 <li><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="services-li-check"><path d="M21.801 10A10 10 0 1 1 17 3.335"></path><path d="m9 11 3 3L22 4"></path></svg>Lịch sử sự kiện theo năm học</li>
               </ul>
-              <div className="services-card-more">
-                {isAuthenticated && (
-                  <a href="/sukienyte" className="services-card-more-btn">Truy cập</a>
-                )}
-              </div>
-            </div>
+                </div>
             {/* Card 4: Tiêm Chủng */}
             <div className="services-card">
               <div className="services-card-icon services-card-icon-yellow">
@@ -300,12 +314,7 @@ export default function HomePage() {
                 <li><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="services-li-check"><path d="M21.801 10A10 10 0 1 1 17 3.335"></path><path d="m9 11 3 3L22 4"></path></svg>Nhắc nhở lịch tiêm định kỳ</li>
                 <li><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="services-li-check"><path d="M21.801 10A10 10 0 1 1 17 3.335"></path><path d="m9 11 3 3L22 4"></path></svg>Báo cáo tiêm chủng toàn trường</li>
               </ul>
-              <div className="services-card-more">
-                {isAuthenticated && (
-                  <a href="/tiemchung" className="services-card-more-btn">Truy cập</a>
-                )}
-              </div>
-            </div>
+                </div>
             {/* Card 5: Kiểm Tra Định Kỳ */}
             <div className="services-card">
               <div className="services-card-icon services-card-icon-purple">
@@ -322,12 +331,7 @@ export default function HomePage() {
                 <li><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="services-li-check"><path d="M21.801 10A10 10 0 1 1 17 3.335"></path><path d="m9 11 3 3L22 4"></path></svg>Kết quả kiểm tra từng học sinh</li>
                 <li><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="services-li-check"><path d="M21.801 10A10 10 0 1 1 17 3.335"></path><path d="m9 11 3 3L22 4"></path></svg>Thống kê sức khỏe toàn trường</li>
               </ul>
-              <div className="services-card-more">
-                {isAuthenticated && (
-                  <a href="/kiemtradinhky" className="services-card-more-btn">Truy cập</a>
-                )}
-              </div>
-            </div>
+                </div>
             {/* Card 6: Quản Lý Thuốc */}
             <div className="services-card">
               <div className="services-card-icon services-card-icon-indigo">
@@ -339,25 +343,15 @@ export default function HomePage() {
                 <li><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="services-li-check"><path d="M21.801 10A10 10 0 1 1 17 3.335"></path><path d="m9 11 3 3L22 4"></path></svg>Kiểm kê, xuất nhập thuốc</li>
                 <li><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="services-li-check"><path d="M21.801 10A10 10 0 1 1 17 3.335"></path><path d="m9 11 3 3L22 4"></path></svg>Báo cáo tồn kho, sử dụng</li>
               </ul>
-              <div className="services-card-more">
-                {isAuthenticated && (
-                  <a href="/quanlythuoc" className="services-card-more-btn">Truy cập</a>
-                )}
-              </div>
             </div>
           </div>
-          {!isAuthenticated && (
-            <div className="resources-login-prompt" style={{marginTop: 32, textAlign: 'center'}}>
-              <p>Đăng nhập để truy cập đầy đủ các tính năng quản lý y tế của trường</p>
-              <a href="/login" className="btn btn-secondary" style={{marginTop: 8}}>Đăng nhập ngay</a>
-            </div>
-          )}
+          
         </div>
       </section>
       
       {/* Blog Section */}
       <section id="blog" className="blog-section">
-        <Blog blogPosts={blogPosts} isLoading={isLoading} />
+      <Blog blogPosts={blogPosts} isLoading={isLoading} />
       </section>
       {/* Contact Section */}
       {/* <section className="section contact-section" id="contact">

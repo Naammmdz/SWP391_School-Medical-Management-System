@@ -1,5 +1,5 @@
 .header {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.7);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   position: sticky;
   top: 0;
@@ -11,6 +11,8 @@
   align-items: center;
   padding: 0 2rem;
   height: 72px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .nav-menu {
@@ -44,8 +46,8 @@
 }
 
 .nav-links a:hover {
-  color: #15803d;
-  background-color: #f0fdf4;
+  color: #10d569;
+  background-color: #e6ffe6;
 }
 
 .nav-links li {
@@ -76,8 +78,8 @@
 
 .nav-dropdown-btn:hover,
 .nav-dropdown-btn[aria-expanded="true"] {
-  color: #15803d;
-  background: #f0fdf4;
+  color: #10d569;
+  background: #e6ffe6;
 }
 
 .dropdown-arrow {
@@ -152,8 +154,8 @@
 }
 
 .notifications-btn:hover {
-  background-color: #f0fdf4;
-  color: #15803d;
+  background-color: #e6ffe6;
+  color: #10d569;
 }
 
 .notification-badge {
@@ -187,7 +189,7 @@
 .avatar-container {
   width: 2.5rem;
   height: 2.5rem;
-  background: #dcfce7;
+  background: #e6ffe6;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -478,11 +480,13 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px 32px;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.7);
   box-shadow: 0 2px 8px rgba(0,0,0,0.04);
   position: sticky;
   top: 0;
   z-index: 1000;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .header-left {
@@ -491,7 +495,7 @@
 }
 
 .header-logo {
-  background: #15803d;
+  background: #10d569;
   padding: 8px;
   border-radius: 12px;
   margin-right: 16px;
@@ -532,7 +536,7 @@
 }
 
 .header-link:hover {
-  color: #15803d;
+  color: #10d569;
 }
 
 .header-actions {
@@ -555,23 +559,22 @@
 
 .header-btn-outline {
   background: transparent;
-  color: #111;
-  border: 1.5px solid #15803d;
+  color: #10d569;
+  border: 1.5px solid #10d569;
 }
 
 .header-btn-outline:hover {
-  color: #fff;
-  color: #15803d;
-  background: #fff;
+  background: #e6ffe6;
+  color: #10d569;
 }
 
 .header-btn-primary {
-  background: #15803d;
+  background: #10d569;
   color: #fff;
 }
 
 .header-btn-primary:hover {
-  background: #15803d;
+  background: #0ea95d;
   color: #fff;
 }
 
