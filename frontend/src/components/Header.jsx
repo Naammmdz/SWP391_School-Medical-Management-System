@@ -112,10 +112,12 @@ const Header = () => {
 
   // Đánh dấu 1 thông báo là đã đọc
   const handleReadNotification = async (notification) => {
-    if (notification.read) return;
-    try {
-      const token = localStorage.getItem('token');
-      const config = { headers: { Authorization: `Bearer ${token}` } };
+  try {
+    const token = localStorage.getItem('token');
+    const config = { headers: { Authorization: `Bearer ${token}` } };
+
+    // Nếu chưa đọc thì đánh dấu đã đọc
+    if (!notification.read) {
       await NotificationService.removeEventListener(notification.id, config);
       setNotifications((prev) =>
         prev.map((n) =>
@@ -123,8 +125,16 @@ const Header = () => {
         )
       );
       setUnreadCount((prev) => Math.max(0, prev - 1));
-    } catch (err) {}
-  };
+    }
+
+    // 👉 Dù đã đọc hay chưa vẫn xử lý điều hướng
+    handleNotificationNavigation(notification);
+
+  } catch (err) {
+    console.error("Lỗi khi xử lý thông báo:", err);
+  }
+};
+
 
   // Đánh dấu tất cả là đã đọc
   const handleMarkAllAsRead = async () => {
@@ -136,6 +146,65 @@ const Header = () => {
       setUnreadCount(0);
     } catch (err) {}
   };
+
+  // Hàm xử lý navigation dựa trên thông báo
+  const handleNotificationNavigation = (notification) => {
+    if (!notification) return;
+  
+    const contentRaw = notification.content || notification.message || '';
+    const content = contentRaw.toLowerCase();
+    const title = (notification.title || '').toLowerCase();
+    const userRole = user?.userRole?.toUpperCase();
+  
+    console.log("🚀 Navigating with:", { content, title, userRole });
+  
+    // Check thông báo liên quan đến đơn thuốc
+    const isMedicineNotification = (
+      content.includes('đơn thuốc') || content.includes('thuốc') ||
+      content.includes('medicine') || content.includes('prescription') ||
+      title.includes('đơn thuốc') || title.includes('thuốc') ||
+      title.includes('medicine') || title.includes('prescription')
+    );
+  
+    // Check thông báo liên quan đến tiêm chủng
+    const isVaccinationNotification = (
+      content.includes('tiêm chủng') || content.includes('vaccination') ||
+      content.includes('vaccine') || content.includes('tiêm') || content.includes('chủng') ||
+      title.includes('tiêm chủng') || title.includes('vaccination') ||
+      title.includes('vaccine') || title.includes('tiêm') || title.includes('chủng')
+    );
+  
+    if (isMedicineNotification) {
+      switch (userRole) {
+        case 'ROLE_PARENT':
+          setShowNotifications(false);
+          navigate('/donthuocdagui');
+          break;
+        case 'ROLE_NURSE':
+          setShowNotifications(false);
+          navigate('/donthuoc');
+          break;
+        default:
+          break;
+      }
+    } else if (isVaccinationNotification) {
+      switch (userRole) {
+        case 'ROLE_PARENT':
+          setShowNotifications(false);
+          navigate('/thongbaotiemchung');
+          break;
+        case 'ROLE_NURSE':
+        case 'ROLE_ADMIN':
+        case 'ROLE_PRINCIPAL':
+          setShowNotifications(false);
+          navigate('/quanlytiemchung');
+          break;
+        default:
+          break;
+      }
+    }
+  };
+  
 
   let homeLink = '/';
   if (user && user.userRole) {

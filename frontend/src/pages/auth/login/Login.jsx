@@ -60,7 +60,7 @@ const Login = () => {
   return (
     <>
       <div className="login-container col-6">
-        <div className="title">Đăng nhập</div>
+        <div className="handletitle">Đăng nhập</div>
 
         <form onSubmit={handleLogin}>
           <div className="text">Email hoặc Số điện thoại</div>
