@@ -148,6 +148,15 @@ const HealthCheckService = {
       console.error('Error fetching health check campaigns for nurse:', error);
       throw error;
     }
+  },
+  filterResult : async (config) => {
+    try {
+      const response = await axios.get(`${API_URL}/filter-result`, config);
+      return response.data;
+    } catch (error) {
+      console.error('Error filtering health check results:', error);
+      throw error;
+    }
   }
 };
 

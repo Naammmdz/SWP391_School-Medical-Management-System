@@ -45,84 +45,79 @@ const MedicineDeclarations = () => {
   }, [selectedStudentId]);
 
   const handleInputChange = (e) => {
-  const { name, value } = e.target;
-  setFormData({
-    ...formData,
-    [name]: value
-  });
-};
-
-const handleImageChange = (e) => {
-  setImageFile(e.target.files[0] || null);
-};
-
-const handleSubmit = async (e) => {
-  e.preventDefault();
-
-  if (
-    !studentInfo.studentId ||
-    !formData.instruction ||
-    !formData.startDate ||
-    !formData.endDate
-  ) {
-    toast.error('Vui lòng nhập đầy đủ thông tin bắt buộc');
-    return;
-  }
-
-  if (!imageFile) {
-    toast.error('Vui lòng chọn hình ảnh đơn thuốc!');
-    return;
-  }
-
-  const duration =
-    formData.startDate && formData.endDate
-      ? Math.max(
-          1,
-          Math.ceil(
-            (new Date(formData.endDate) - new Date(formData.startDate)) /
-              (1000 * 60 * 60 * 24) +
-              1
-          )
-        )
-      : 1;
-
-  // Chuẩn bị dữ liệu theo API mới
-  const requestData = {
-    studentId: studentInfo.studentId,
-    instruction: formData.instruction,
-    duration,
-    startDate: formData.startDate,
-    endDate: formData.endDate,
-    notes: formData.notes
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value
+    });
   };
 
-  const token = localStorage.getItem('token');
+  const handleImageChange = (e) => {
+    setImageFile(e.target.files[0] || null);
+  };
 
-  setIsSubmitting(true);
-  setSubmitError(null);
-  try {
-    await MedicineDeclarationService.createMedicineSubmission(
-      { requestData, imageFile },
-      token
-    );
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-    setFormData({
-      instruction: '',
-      startDate: '',
-      endDate: '',
-      notes: ''
-    });
-    setImageFile(null);
-    setSubmitSuccess(true);
-    toast.success('Khai báo thuốc đã được gửi thành công!');
-    setTimeout(() => setSubmitSuccess(false), 5000);
-  } catch (err) {
-    setSubmitError('Có lỗi xảy ra khi gửi khai báo. Vui lòng thử lại sau.');
-    toast.error('Có lỗi xảy ra khi gửi khai báo. Vui lòng thử lại sau.');
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+    if (
+      !studentInfo.studentId ||
+      !formData.instruction ||
+      !formData.startDate ||
+      !formData.endDate
+    ) {
+      toast.error('Vui lòng nhập đầy đủ thông tin bắt buộc');
+      return;
+    }
+
+    const duration =
+      formData.startDate && formData.endDate
+        ? Math.max(
+            1,
+            Math.ceil(
+              (new Date(formData.endDate) - new Date(formData.startDate)) /
+                (1000 * 60 * 60 * 24) +
+                1
+            )
+          )
+        : 1;
+
+    // Chuẩn bị dữ liệu theo API mới
+    const requestData = {
+      studentId: studentInfo.studentId,
+      instruction: formData.instruction,
+      duration,
+      startDate: formData.startDate,
+      endDate: formData.endDate,
+      notes: formData.notes
+    };
+
+    const token = localStorage.getItem('token');
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+    try {
+      await MedicineDeclarationService.createMedicineSubmission(
+        { requestData, imageFile: imageFile || undefined },
+        token
+      );
+
+      setFormData({
+        instruction: '',
+        startDate: '',
+        endDate: '',
+        notes: ''
+      });
+      setImageFile(null);
+      setSubmitSuccess(true);
+      toast.success('Khai báo thuốc đã được gửi thành công!');
+      setTimeout(() => setSubmitSuccess(false), 5000);
+    } catch (err) {
+      setSubmitError('Có lỗi xảy ra khi gửi khai báo. Vui lòng thử lại sau.');
+      toast.error('Có lỗi xảy ra khi gửi khai báo. Vui lòng thử lại sau.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -256,13 +251,12 @@ const handleSubmit = async (e) => {
             ></textarea>
           </div>
           <div className="form-group">
-            <label>Hình ảnh đơn thuốc <span className="required">*</span></label>
+            <label>Hình ảnh đơn thuốc <span style={{ color: '#888', fontWeight: 400 }}>(không bắt buộc)</span></label>
             <input
               type="file"
               name="image"
               accept="image/*"
               onChange={handleImageChange}
-              required
             />
             {imageFile && (
               <div style={{ marginTop: 8 }}>
