@@ -1,13 +1,14 @@
 package com.school.health.event;
 
+import com.school.health.dto.response.MedicineLogResponse;
 import com.school.health.entity.MedicineLog;
 
 public class MarkMedicineTakenEvent {
-    private MedicineLog medicineLog;
-    public MarkMedicineTakenEvent(MedicineLog medicineLog) {
+    private MedicineLogResponse medicineLog;
+    public MarkMedicineTakenEvent(MedicineLogResponse medicineLog) {
         this.medicineLog = medicineLog;
     }
-    public MedicineLog getMedicineLog() {
+    public MedicineLogResponse getMedicineLog() {
         return medicineLog;
     }
 }

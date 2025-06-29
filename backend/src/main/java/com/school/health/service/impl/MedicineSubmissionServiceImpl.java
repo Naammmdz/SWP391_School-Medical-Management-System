@@ -6,6 +6,9 @@ import com.school.health.dto.request.StatusUpdateRequest;
 import com.school.health.dto.response.*;
 import com.school.health.entity.*;
 import com.school.health.enums.MedicineSubmissionStatus;
+import com.school.health.event.MarkMedicineTakenEvent;
+import com.school.health.event.MedicineSubmissionApprovedEvent;
+import com.school.health.event.MedicineSubmissionCreatedEvent;
 import com.school.health.exception.AccessDeniedException;
 import com.school.health.exception.BadRequestException;
 import com.school.health.exception.ResourceNotFoundException;
@@ -16,6 +19,7 @@ import com.school.health.repository.UserRepository;
 import com.school.health.service.MedicineSubmissionService;
 import com.school.health.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -40,8 +44,8 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
 
     @Autowired
     private UserRepository userRepository;
-    @Autowired
-    private NotificationService notificationService;
+   @Autowired
+   private ApplicationEventPublisher publisher;
 
 
     // ===== PARENT OPERATIONS =====
@@ -129,7 +133,7 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
         //Save the MedicineSubmission entity
         medicineSubmissionRepository.save(medicineSubmission);
 
-
+        publisher.publishEvent(new MedicineSubmissionCreatedEvent(medicineSubmission));
         //Return the saved submission
         return toResponse(medicineSubmission);
     }
@@ -331,7 +335,7 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
         submission.setApprovedAt(request.getApprovedAt());
 
         medicineSubmissionRepository.save(submission);
-
+        publisher.publishEvent(new MedicineSubmissionApprovedEvent(submission));
         return toResponse(submission);
     }
 
@@ -470,7 +474,7 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
             response.setImageData(log.getImageData());
         }
         // Tạo event thông báo cho phụ huynh
-
+        publisher.publishEvent(new MarkMedicineTakenEvent( response));
         return response;
     }
 
