@@ -39,7 +39,6 @@ public class User {
     @Column(name = "UserId")
     private Integer userId;
 
-
     @Column(name = "FullName", nullable = false, length = 100,columnDefinition = "NVARCHAR(255)")
     private String fullName;
 

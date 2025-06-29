@@ -2,21 +2,16 @@ package com.school.health.service;
 
 import com.school.health.dto.request.HealthCampaignRequestDTO;
 import com.school.health.dto.request.HealthCheckRequestDTO;
-import com.school.health.dto.response.HealthCampaignResponseDTO;
-import com.school.health.dto.response.HealthCheckResponseDTO;
-import com.school.health.dto.response.StudentResponseDTO;
-import com.school.health.entity.HealthCheck;
+import com.school.health.dto.response.*;
 import com.school.health.entity.HealthCheckCampaign;
-import com.school.health.entity.Student;
 import com.school.health.enums.Status;
-import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 
 public interface HealthCheckCampaignService {
-    HealthCampaignResponseDTO createCampaign(HealthCampaignRequestDTO healthCampaignRequestDTO,
-                                             int createdBy);
+    HealthCampaignResponseDTO createCampaign(HealthCampaignRequestDTO healthCampaignRequestDTO, int createdBy);
 
     List<HealthCampaignResponseDTO> getAllCampaigns();
 
@@ -38,10 +33,25 @@ public interface HealthCheckCampaignService {
 
     HealthCheckResponseDTO recordHealthCheckResult(Integer campaignId, HealthCheckRequestDTO requestDTO);
 
-    // update health check result
-    HealthCheckResponseDTO updateStudentHealthCampaign(Integer healthcheckId ,HealthCheckRequestDTO requestDTO);
+    HealthCheckResponseDTO updateStudentHealthCampaign(Integer healthcheckId, HealthCheckRequestDTO requestDTO);
 
     List<HealthCheckResponseDTO> getHealthCheckResults(Integer campaignId);
 
     List<HealthCheckResponseDTO> getAllHealthCheckResults();
+
+    List<HealthCheckResponseDTO> getResultByStudentId(Integer studentId);
+
+
+    List<HealthCheckResponseDTO> getResultWithFilterDate(LocalDate startDate, LocalDate endDate, boolean consultationAppointment);
+
+    HealthCheckResponseDTO rejectStudentVaccine(HealthCheckRequestDTO request);
+
+    List<HealthCampaignResponseDTO> getCampaignStatus(int studentId, boolean parentConfirmation);
+
+    List<HealthCampaignIsAcceptDTO> getCampaignsIsAcceptOrReject(Integer studentId);
+
+    List<HealthCheckResponseResultDTO> filterHealthCheckCampaigns(String className, String campaignName, String studentName, Boolean isParentConfirmation, LocalDate startDate, LocalDate endDate);
+
+    List<HealthCheckResponseDTO> getAllHealthCheckResultsWithParentConfirmationTrue();
+
 }

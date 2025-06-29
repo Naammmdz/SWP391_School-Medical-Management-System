@@ -23,7 +23,7 @@ public class Notification {
 
     @Column (name ="Title", columnDefinition = "NVARCHAR(100)")
     private String title;
-    @Column (name ="Message", columnDefinition = "NVARCHAR(255)")
+    @Column (name ="Message", columnDefinition = "NVARCHAR(2000)")
     private String message;
     @Column (name ="IsRead")
     private boolean isRead;

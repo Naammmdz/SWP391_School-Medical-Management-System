@@ -1,10 +1,13 @@
 package com.school.health.dto.request;
 
-import java.time.LocalDate;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-import jakarta.persistence.Column;
-import jakarta.validation.constraints.*;
-import lombok.*;
+import java.time.LocalDate;
 
 @Getter
 @Setter
@@ -13,6 +16,7 @@ import lombok.*;
 public class VaccinationRequestDTO {
     private LocalDate date;
     private Integer doseNumber;
+    @NotBlank(message = "không được để trống")
     private String adverseReaction;
     private boolean isPreviousDose;
     private String notes;

@@ -4,12 +4,13 @@ import com.school.health.dto.request.MedicineLogRequest;
 import com.school.health.dto.request.MedicineSubmissionRequest;
 import com.school.health.dto.request.StatusUpdateRequest;
 import com.school.health.dto.response.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 public interface MedicineSubmissionService {
     // PARENT operations
-    MedicineSubmissionResponse createMedicineSubmission(MedicineSubmissionRequest request, Integer parentId);
+    MedicineSubmissionResponse createMedicineSubmission(MedicineSubmissionRequest request, MultipartFile image, Integer parentId);
     List<MedicineSubmissionResponse> getAllByParent(Integer parentId, Integer studentId, String status);
     List<StudentSummaryResponse> getChildrenByParent(Integer parentId);
     void deleteByParent(Integer id, Integer parentId);
@@ -17,7 +18,8 @@ public interface MedicineSubmissionService {
     // NURSE operations
     List<MedicineSubmissionResponse> getAllForNurse(Integer studentId, Integer parentId, String status);
     HealthDashboardResponse getHealthDashboard();
-    MedicineLogResponse markMedicineTaken(Integer submissionId, MedicineLogRequest request);
+    MedicineLogResponse markMedicineTaken(Integer submissionId, MedicineLogRequest request, MultipartFile image);
+    MedicineSubmissionResponse getByIdWithLog(Integer id);
 
     // ADMIN operations
     List<MedicineSubmissionResponse> getAllForAdmin(Integer studentId, Integer parentId, String status);

@@ -1,10 +1,6 @@
 package com.school.health.controller;
 
-import com.school.health.dto.request.CreateHealthProfileDTO;
 import com.school.health.dto.request.StudentRequestDTO;
-import com.school.health.dto.request.HealthProfileFilterRequest;
-import com.school.health.dto.request.UpdateHealthProfileDTO;
-import com.school.health.dto.response.HealthProfileResponseDTO;
 import com.school.health.service.HealthProfileService;
 import com.school.health.service.impl.StudentServiceImpl;
 import jakarta.validation.Valid;
@@ -24,7 +20,7 @@ public class StudentAdminController {
     private final StudentServiceImpl studentService;
 
     @PostMapping("/create-students")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE') or hasRole('PARENT')")
     public ResponseEntity<?> createStudents(@RequestBody @Valid StudentRequestDTO studentRequest) {
         return ResponseEntity.ok(studentService.createStudent(studentRequest));
     }
@@ -36,27 +32,27 @@ public class StudentAdminController {
     }
 
     @GetMapping("list/{studentId}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> getStudentById(@PathVariable Integer studentId) {
+    @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE') or hasRole('PARENT')")
+    public ResponseEntity<?> getStudentById(@PathVariable @Valid Integer studentId) {
         return ResponseEntity.ok(studentService.getStudentById(studentId));
     }
 
     @PutMapping("/{studentId}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> updateStudent(@PathVariable Integer studentId, @RequestBody @Valid StudentRequestDTO studentRequest) {
+    @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE') or hasRole('PARENT')")
+    public ResponseEntity<?> updateStudent(@PathVariable @Valid Integer studentId, @RequestBody @Valid StudentRequestDTO studentRequest) {
         return ResponseEntity.ok(studentService.updateStudent(studentId, studentRequest));
     }
 
     @DeleteMapping("/{studentId}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> deleteStudent(@PathVariable Integer studentId) {
+    @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE') or hasRole('PARENT')")
+    public ResponseEntity<?> deleteStudent(@PathVariable @Valid Integer studentId) {
         studentService.deleteStudent(studentId);
         return ResponseEntity.ok("Xóa học sinh thành công");
     }
 
     @GetMapping("/{parentId}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> getStudentsByParentId(@PathVariable Integer parentId) {
+    @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE') or hasRole('PARENT')")
+    public ResponseEntity<?> getStudentsByParentId(@PathVariable @Valid Integer parentId) {
         return ResponseEntity.ok(studentService.getStudentsByParentId(parentId));
     }
 

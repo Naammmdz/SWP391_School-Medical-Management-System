@@ -17,9 +17,13 @@ public class HealthCampaignRequestDTO {
     @NotBlank(message = "Tên chiến dịch không được để trống")
     private String campaignName;
     // thêm field đối tượng áp dụng nữa ví dụ : lớp 3A 3B 3C hay theo khối ...
+    @NotBlank(message = "Phải nhập nhóm đối tượng")
     private String targetGroup;
+    @NotBlank(message = "Phải nhập loại khám sức khỏe")
     private String type;
+    @NotBlank(message = "Phải nhập địa điểm tổ chức")
     private String address; // địa điểm tổ chức khám
+    @NotBlank(message = "Phải nhập nhóm thực hiện")
     private String organizer; // người thực hiện chiến dịch
     private String description;
     @NotNull(message = "Ngày khám không được để trống")
