@@ -12,6 +12,9 @@ const Layout = ({ children, showSidebar = false }) => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const location = useLocation();
 
+  // Ẩn header/footer nếu là trang login
+  const isLoginPage = location.pathname === '/login';
+
   useEffect(() => {
     const userData = localStorage.getItem('user');
     try {
@@ -53,8 +56,8 @@ const Layout = ({ children, showSidebar = false }) => {
 
   return (
     <div className="app-layout">
-      {!shouldShowSidebar && <Header />}
-      {shouldShowSidebar && (
+      {!isLoginPage && !shouldShowSidebar && <Header />}
+      {shouldShowSidebar && !isLoginPage && (
         <Sidebar
           userRole={user && user.userRole}
           isCollapsed={isCollapsed}
@@ -74,7 +77,7 @@ const Layout = ({ children, showSidebar = false }) => {
       >
         {children}
       </main>
-      {!shouldHideFooter && <Footer />}
+      {!isLoginPage && !shouldHideFooter && <Footer />}
     </div>
   );
 };
