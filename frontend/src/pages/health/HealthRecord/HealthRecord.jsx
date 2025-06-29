@@ -51,6 +51,8 @@ const HealthRecord = () => {
   // Lấy id học sinh đã chọn từ localStorage (dành cho phụ huynh)
   const selectedStudentId = isParent ? localStorage.getItem('selectedStudentId') : null;
 
+  console.log('selectedStudentId:', selectedStudentId);
+
   // Fetch all health records for the table display (unfiltered)
   const fetchAllHealthRecords = useCallback(async () => {
     setIsLoading(true);
@@ -117,7 +119,6 @@ const HealthRecord = () => {
       fetchAllHealthRecords();
       fetchAllClasses();
     } else if (isParent) {
-      // Nếu chưa chọn học sinh thì không fetch hồ sơ
       if (!selectedStudentId) {
         setIsLoading(false);
         setError('Vui lòng chọn học sinh để xem hồ sơ sức khỏe!');
@@ -126,9 +127,7 @@ const HealthRecord = () => {
       }
       setIsLoading(true);
       HealthRecordService.getHealthRecordByStudentId(selectedStudentId, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
+        headers: { Authorization: `Bearer ${accessToken}` },
       })
         .then((res) => {
           if (res.data && Object.keys(res.data).length > 0) {
