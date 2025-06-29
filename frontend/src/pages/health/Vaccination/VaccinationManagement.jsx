@@ -1,790 +1,493 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Search, Plus, Edit, Trash2, FileText, Send, AlertTriangle, CheckCircle, X } from 'lucide-react';
-import "./VaccinationManagement.css";
-import { useNavigate } from 'react-router-dom';
-import VaccinationService from '../../../services/VaccinationService';
+import { AlertTriangle, CheckCircle, X, ChevronRight, Calendar, FileText, MessageCircle } from 'lucide-react';
+import vaccinationService from '../../../services/VaccinationService';
+import "./VaccinationNotifications.css";
 
-// Vaccine types options
-const vaccineTypes = [
-  { value: 'Cúm', label: 'Vắc-xin cúm' },
-  { value: 'HPV', label: 'Vắc-xin HPV' },
-  { value: 'Viêm gan B', label: 'Vắc-xin viêm gan B' },
-  { value: 'Covid-19', label: 'Vắc-xin Covid-19' },
-  { value: 'Sởi', label: 'Vắc-xin sởi' },
-  { value: 'Uốn ván', label: 'Vắc-xin uốn ván' },
-  { value: 'Thủy đậu', label: 'Vắc-xin thủy đậu' },
-  { value: 'Khác', label: 'Khác' }
-];
+const VaccinationNotifications = () => {
+  const [notifications, setNotifications] = useState([]);
+  const [activeNotification, setActiveNotification] = useState(null);
+  const [showResponseForm, setShowResponseForm] = useState(false);
+  const [responseData, setResponseData] = useState({
+    campaignId: null,
+    response: '',
+    note: '',
+  });
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [responseSuccess, setResponseSuccess] = useState(false);
 
-const statusOptions = [
-  { value: 'PENDING', label: 'Chờ phê duyệt' },
-  { value: 'APPROVED', label: 'Chấp nhận' },
-  { value: 'CANCELLED', label: 'Hủy' }
-];
-
-const VaccinationManagement = () => {
-  const navigate = useNavigate();
+  const token = localStorage.getItem('token');
   const users = JSON.parse(localStorage.getItem('users') || '[]');
-  // State for vaccination events list
-  const [vaccinationEvents, setVaccinationEvents] = useState([]);
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const isAdmin = user.userRole === 'ROLE_ADMIN';
-  const getOrganizerName = (organizerId) => {
-    if (!organizerId) return '';
-    const user = users.find(u => u.id === organizerId || u.userId === organizerId);
-    return user ? user.fullName || user.name : organizerId;
-  };
-  // State for current event form
-  const [currentEvent, setCurrentEvent] = useState({
-    id: null,
-    title: '',
-    vaccineType: '',
-    description: '',
-    scheduledDate: new Date().toISOString().split('T')[0],
-    scheduledTime: '09:00',
-    location: 'Phòng y tế trường',
-    targetClass: '',
-    status: 'Sắp tới',
-    notes: '',
-    vaccineBatch: '',
-    manufacturer: '',
-    doseAmount: '',
-    requiredDocuments: '',
-    organizer: '',
-  });
-  const [selectedStudents, setSelectedStudents] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [editing, setEditing] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [formSubmitted, setFormSubmitted] = useState(false);
-  const [responseModalOpen, setResponseModalOpen] = useState(false);
-  const [currentStudentResponses, setCurrentStudentResponses] = useState([]);
-  const [filters, setFilters] = useState({
-    searchTerm: '',
-    status: '',
-    fromDate: '',
-    toDate: '',
-    vaccineType: ''
-  });
-  const [notificationModalOpen, setNotificationModalOpen] = useState(false);
-  const [notification, setNotification] = useState({
-    eventId: null,
-    subject: '',
-    message: '',
-    deadlineDate: '',
-    requiredDocuments: '',
-    sendToAll: true,
-    specificClass: ''
-  });
 
-  // Fetch vaccination events from backend API
-  const fetchVaccinationEvents = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem('token');
-      const response = await VaccinationService.getAllVaccinationCampaigns({
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = Array.isArray(response.data) ? response.data : response.data.content || [];
-      const mappedData = data.map((item, idx) => ({
-        id: item.id || item.campaignId || idx + 1,
-        title: item.campaignName || '',
-        vaccineType: item.type || '',
-        description: item.description || '',
-        scheduledDate: item.scheduledDate || '',
-        scheduledTime: item.scheduledTime || '09:00',
-        location: item.location || 'Phòng y tế trường',
-        targetClass: item.targetGroup || '',
-        status: item.status || 'Sắp tới',
-        notes: item.notes || '',
-        vaccineBatch: item.vaccineBatch || '',
-        manufacturer: item.manufacturer || '',
-        doseAmount: item.doseAmount || '',
-        organizer: item.organizer || item.approvedBy || '', // id người tổ chức
-        requiredDocuments: item.requiredDocuments || '',
-        responses: item.responses || {
-          total: 0,
-          confirmed: 0,
-          declined: 0,
-          pending: 0
+  // Hàm lấy tên người tổ chức từ id
+  const getOrganizerName = (userId) => {
+    const user = users.find(u => u.id === userId);
+    return user ? user.fullName : 'Không xác định';
+  };
+
+  // Lấy danh sách chiến dịch tiêm chủng đã duyệt
+const fetchNotifications = async () => {
+  setLoading(true);
+  try {
+    const config = { headers: { Authorization: `Bearer ${token}` } };
+    const studentId = localStorage.getItem('selectedStudentId');
+    // Lấy thông tin học sinh từ localStorage (giả sử đã lưu object student)
+    const studentInfo = JSON.parse(localStorage.getItem('selectedStudentInfo') || '{}');
+    const studentClass = studentInfo.className || ""; // ví dụ: "3A"
+    console.log('Lớp học sinh:', studentClass);
+
+    const response = await vaccinationService.getVaccinationCampaignApproved(config);
+    const data = Array.isArray(response.data) ? response.data : [];
+   console.log('Dữ liệu chiến dịch tiêm chủng:', data);
+    // Lọc chiến dịch phù hợp với lớp học sinh
+    function removeVietnameseTones(str) {
+  return str.normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd').replace(/Đ/g, 'D');
+}
+    const filtered = data.filter(item => {
+  if (!studentClass || !item.targetGroup) return false;
+  const target = item.targetGroup.toLowerCase().trim();
+  const studentClassLower = studentClass.toLowerCase().trim();
+
+  // Chuẩn hóa tiếng Việt không dấu
+  function removeVietnameseTones(str) {
+    return str.normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd').replace(/Đ/g, 'D');
+  }
+  const targetNoSign = removeVietnameseTones(target).replace(/\s/g, '');
+  const studentClassNoSign = removeVietnameseTones(studentClassLower).replace(/\s/g, '');
+
+  // Toàn trường
+  if (targetNoSign === 'toantruong') return true;
+
+  // Khớp chính xác
+  if (targetNoSign === studentClassNoSign) return true;
+
+  // Nếu target là "khoi 4" hoặc "khối 4" thì khớp các lớp bắt đầu bằng "4"
+  const khoiMatch = targetNoSign.match(/khoi(\d+)/);
+  if (khoiMatch && studentClassNoSign.startsWith(khoiMatch[1])) return true;
+
+  // Nếu target chứa tên lớp
+  if (targetNoSign.includes(studentClassNoSign)) return true;
+  if (studentClassNoSign.includes(targetNoSign)) return true;
+
+  return false;
+});
+
+    const mapped = filtered.map(item => {
+      let status = 'Chưa phản hồi';
+      let responseNote = '';
+      let responseDate = '';
+      
+      // Lấy parentConfirm trực tiếp từ item (API response)
+      console.log('Campaign item data:', item); // Debug log
+      console.log('parentConfirm value:', item.parentConfirm); // Debug log for parentConfirm specifically
+      
+      if (item.parentConfirm !== undefined) {
+        // Sử dụng parentConfirm từ API response để xác định trạng thái
+        if (item.parentConfirm === null) {
+          status = 'Chưa phản hồi';
+          console.log('Status set to: Chưa phản hồi (parentConfirm is null)');
+        } else if (item.parentConfirm === true) {
+          status = 'Xác nhận';
+          console.log('Status set to: Xác nhận (parentConfirm is true)');
+        } else if (item.parentConfirm === false) {
+          status = 'Từ chối';
+          console.log('Status set to: Từ chối (parentConfirm is false)');
         }
-      }));
-      console.log('Fetched vaccination events:', mappedData);
-      setVaccinationEvents(mappedData);
-      const approvedCampaigns = mappedData.filter(ev => ev.status === 'APPROVED');
-      localStorage.setItem('approvedCampaigns', JSON.stringify(approvedCampaigns));
-      setLoading(false);
-    } catch (error) {
-      setLoading(false);
+        
+        // Lấy thông tin ghi chú và ngày phản hồi từ item nếu có
+        responseNote = item.note || '';
+        responseDate = item.responseDate || '';
+      } else {
+        console.log('parentConfirm is undefined, keeping default status: Chưa phản hồi');
+      }
+      
+      return {
+        id: item.campaignId,
+        title: `Thông báo tiêm chủng: ${item.campaignName}`,
+        campaignName: item.campaignName,
+        targetGroup: item.targetGroup,
+        type: item.type,
+        address: item.address,
+        organizerId: item.approvedBy,
+        description: item.description,
+        date: item.scheduledDate, // giữ nguyên, format khi hiển thị
+        status,
+        isNew: status === 'Chưa phản hồi',
+        sentDate: item.createdAt, // giữ nguyên, format khi hiển thị
+        responseNote,
+        responseDate,
+        requiredDocuments: 'Phiếu đồng ý của phụ huynh, giấy tờ tùy thân',
+        time: '',
+        location: item.address,
+      };
+    });
+    setNotifications(mapped);
+    setLoading(false);
+  } catch (error) {
+    setNotifications([]);
+    setLoading(false);
+  }
+};
+// Gửi phản hồi xác nhận/từ chối (gọi API thực tế)
+const sendResponse = async (e) => {
+  e.preventDefault();
+  if (!responseData.response) {
+    alert('Vui lòng chọn phản hồi của bạn');
+    return;
+  }
+  setSubmitting(true);
+  try {
+    // Lấy studentId từ localStorage
+    const studentId = localStorage.getItem('selectedStudentId');
+    if (!studentId) {
+      alert('Vui lòng chọn học sinh trước khi phản hồi!');
+      setSubmitting(false);
+      return;
     }
+
+    const config = { headers: { Authorization: `Bearer ${token}` } };
+    // Nếu xác nhận thì gọi API đăng ký tiêm chủng
+    if (responseData.response === 'confirm')  {
+      // Xem dữ liệu trước khi gửi
+      console.log('Gửi đăng ký tiêm chủng:', {
+        campaignId: responseData.campaignId,
+        studentId: Number(studentId),
+        
+        config
+      });
+      // Đúng thứ tự: campaignId, studentId, config
+      await vaccinationService.parentApproveCampaign(
+        responseData.campaignId,
+        Number(studentId),
+        config
+      );
+    }
+    if( responseData.response === 'decline') {
+       console.log('Gửi từ chối tiêm chủng:', {
+        campaignId: responseData.campaignId,
+        studentId: Number(studentId),
+        config
+      });
+      // Gọi API từ chối tiêm chủng
+      await vaccinationService.parentRejectCampaign(
+        responseData.campaignId,
+        Number(studentId),
+        config
+      );
+    }
+    // Nếu từ chối thì có thể gọi API khác nếu backend hỗ trợ, hoặc chỉ cập nhật UI
+
+    setNotifications(notifications.map(notification => {
+      if (notification.id === responseData.campaignId) {
+        return {
+          ...notification,
+          status: responseData.response === 'confirm' ? 'Xác nhận' : 'Từ chối',
+          responseNote: responseData.note,
+          responseDate: new Date().toISOString().split('T')[0],
+          isNew: false
+        };
+      }
+      return notification;
+    }));
+    if (activeNotification && activeNotification.id === responseData.campaignId) {
+      setActiveNotification({
+        ...activeNotification,
+        status: responseData.response === 'confirm' ? 'Xác nhận' : 'Từ chối',
+        responseNote: responseData.note,
+        responseDate: new Date().toISOString().split('T')[0],
+        isNew: false
+      });
+    }
+    setShowResponseForm(false);
+    setResponseSuccess(true);
+    setResponseData({
+      campaignId: null,
+      response: '',
+      note: ''
+    });
+    setTimeout(() => {
+      setResponseSuccess(false);
+    }, 3000);
+    setSubmitting(false);
+  } catch (error) {
+    alert('Có lỗi xảy ra khi gửi phản hồi. Vui lòng thử lại sau.');
+    setSubmitting(false);
+  }
+};
+
+  // Xử lý thay đổi form phản hồi
+  const handleResponseChange = (e) => {
+    const { name, value } = e.target;
+    setResponseData({ ...responseData, [name]: value });
   };
 
   useEffect(() => {
-    fetchVaccinationEvents();
+    fetchNotifications();
+    // eslint-disable-next-line
   }, []);
 
-  const approveVaccinationCampaign = async (event) => {
-    if (!window.confirm('Bạn có chắc muốn duyệt chiến dịch này?')) return;
-    setLoading(true);
-    try {
-      const token = localStorage.getItem('token');
-      await VaccinationService.approveVaccinationCampaign(
-        event.id,
-        { status: 'APPROVED' },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setVaccinationEvents((prev) =>
-        prev.map((e) =>
-          e.id === event.id ? { ...e, status: 'APPROVED' } : e
-        )
-      );
-    } catch (error) {
-      alert('Có lỗi khi duyệt chiến dịch!');
-    }
-    setLoading(false);
-  };
-
-  // Update vaccination event
-  const updateVaccinationEvent = async (id, updatedEvent) => {
-    setLoading(true);
-    try {
-      setVaccinationEvents(
-        vaccinationEvents.map(event => 
-          event.id === id ? {...updatedEvent, id, responses: event.responses} : event
-        )
-      );
-      setModalOpen(false);
-      setEditing(false);
-      resetForm();
-      setFormSubmitted(true);
-      setTimeout(() => {
-        setFormSubmitted(false);
-      }, 3000);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error updating vaccination event:', error);
-      setLoading(false);
-    }
-  };
-
-  // Delete vaccination event
-  const deleteVaccinationEvent = async (id) => {
-    if (window.confirm('Bạn có chắc muốn xóa sự kiện tiêm chủng này?')) {
-      setLoading(true);
-      try {
-        setVaccinationEvents(vaccinationEvents.filter(event => event.id !== id));
-        setLoading(false);
-      } catch (error) {
-        console.error('Error deleting vaccination event:', error);
-        setLoading(false);
-      }
-    }
-  };
-
-  // Open form to edit event
-  const editVaccinationEvent = (event) => {
-    navigate('/capnhatthongtintiemchung', { state: { event } });
-  };
-
-  // Reset form fields
-  const resetForm = () => {
-    setCurrentEvent({
-      id: null,
-      title: '',
-      vaccineType: '',
-      description: '',
-      scheduledDate: new Date().toISOString().split('T')[0],
-      scheduledTime: '09:00',
-      location: 'Phòng y tế trường',
-      targetGroup: '',
-      status: 'Sắp tới',
-      notes: '',
-      vaccineBatch: '',
-      manufacturer: '',
-      doseAmount: '',
-      requiredDocuments: ''
+  // Định dạng ngày
+ const formatDate = (date) => {
+  if (!date) return '';
+  if (Array.isArray(date)) {
+    // [2025, 6, 28] => "28/06/2025"
+    const [y, m, d] = date;
+    return `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
+  }
+  if (typeof date === 'string') {
+    const options = { year: 'numeric', month: 'numeric', day: 'numeric' };
+    return new Date(date).toLocaleDateString('vi-VN', options);
+  }
+  return '';
+};
+const viewNotificationDetails = (notification) => {
+  setActiveNotification(notification);
+  if (notification.status === 'Chưa phản hồi') {
+    setResponseData({
+      campaignId: notification.id,
+      response: '',
+      note: ''
     });
-    setSelectedStudents([]);
-  };
+  }
+};
+  // Đếm số thông báo mới
+  const newNotificationsCount = notifications.filter(n => n.isNew).length;
 
-  // Handle form input changes
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setCurrentEvent({...currentEvent, [name]: value});
-  };
-
-  // Handle filter changes
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters({...filters, [name]: value});
-  };
-
-  // Handle form submission
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!currentEvent.title || !currentEvent.vaccineType || !currentEvent.scheduledDate) {
-      alert('Vui lòng điền đầy đủ các trường bắt buộc');
-      return;
-    }
-    if (editing) {
-      updateVaccinationEvent(currentEvent.id, currentEvent);
-    } else {
-      createVaccinationEvent(currentEvent);
-    }
-  };
-
-  // Open notification form modal
-  const openNotificationModal = (event) => {
-    setNotification({
-      eventId: event.id,
-      subject: `Thông báo tiêm chủng: ${event.title}`,
-      message: `Kính gửi Quý phụ huynh,\n\nNhà trường tổ chức chương trình tiêm chủng ${event.vaccineType} cho học sinh vào ngày ${new Date(event.scheduledDate).toLocaleDateString('vi-VN')}.\n\nKính mong Quý phụ huynh xác nhận cho con tham gia chương trình này.\n\nTrân trọng,\nPhòng Y tế`,
-      deadlineDate: new Date(new Date().setDate(new Date().getDate() + 7)).toISOString().split('T')[0],
-      requiredDocuments: event.requiredDocuments || '',
-      sendToAll: true,
-      specificClass: ''
-    });
-    setNotificationModalOpen(true);
-  };
-
-  // Send notifications to parents
-  const sendNotifications = async (e) => {
-    e.preventDefault();
-    if (!notification.subject || !notification.message || !notification.deadlineDate) {
-      alert('Vui lòng điền đầy đủ thông tin thông báo');
-      return;
-    }
-    setLoading(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      const updatedEvents = vaccinationEvents.map(event => {
-        if (event.id === notification.eventId) {
-          return {
-            ...event,
-            notificationSent: true,
-            notificationDate: new Date().toISOString()
-          };
-        }
-        return event;
-      });
-      setVaccinationEvents(updatedEvents);
-      setNotificationModalOpen(false);
-      alert('Thông báo đã được gửi thành công đến phụ huynh!');
-      setLoading(false);
-    } catch (error) {
-      console.error('Error sending notifications:', error);
-      alert('Có lỗi xảy ra khi gửi thông báo. Vui lòng thử lại sau.');
-      setLoading(false);
-    }
-  };
-
-  // Open responses modal to see parent responses
-  const viewResponses = (event) => {
-    const mockResponses = [
-      { id: 1, studentName: 'Nguyễn Văn A', className: '10A1', status: 'Xác nhận', parentNote: 'Con đã tiêm đầy đủ', responseDate: '2023-09-10' },
-      { id: 2, studentName: 'Trần Thị B', className: '10A1', status: 'Từ chối', parentNote: 'Con bị dị ứng với thành phần vắc-xin', responseDate: '2023-09-11' },
-      { id: 3, studentName: 'Lê Văn C', className: '10A2', status: 'Xác nhận', parentNote: '', responseDate: '2023-09-12' },
-      { id: 4, studentName: 'Phạm Thị D', className: '10A2', status: 'Chưa phản hồi', parentNote: '', responseDate: '' },
-      { id: 5, studentName: 'Hoàng Văn E', className: '10A3', status: 'Xác nhận', parentNote: 'Cần theo dõi sau tiêm do có tiền sử dị ứng', responseDate: '2023-09-10' },
-    ];
-    setCurrentStudentResponses(mockResponses);
-    setResponseModalOpen(true);
-  };
-
-  // Apply filters to the vaccination events list
-  const filteredEvents = vaccinationEvents.filter(event => {
-    return (
-      (filters.searchTerm === '' || 
-        event.title.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-        event.vaccineType.toLowerCase().includes(filters.searchTerm.toLowerCase())) &&
-      (filters.status === '' || event.status === filters.status) &&
-      (filters.vaccineType === '' || event.vaccineType === filters.vaccineType) &&
-      (filters.fromDate === '' || new Date(event.scheduledDate) >= new Date(filters.fromDate)) &&
-      (filters.toDate === '' || new Date(event.scheduledDate) <= new Date(filters.toDate))
-    );
-  });
-
-  // Handle notification input changes
-  const handleNotificationChange = (e) => {
-    const { name, value } = e.target;
-    setNotification({...notification, [name]: value});
-  };
   return (
-    <div className="nurse-page vaccination-management-page">
-      <h1 className="page-title">Quản lý tiêm chủng</h1>
-      
-       <div style={{ marginBottom: 20, textAlign: 'right' }}>
-        <button
-          className="create-event-btn"
-          style={{
-            background: '#22c55e',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 4,
-            padding: '8px 16px',
-            fontWeight: 600,
-            cursor: 'pointer',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 6
-          }}
-          onClick={() => navigate('/taosukientiemchung')}
-        >
-          <Plus size={18} /> Tạo sự kiện tiêm chủng
-        </button>
+    <div className="parent-page vaccination-notifications-page">
+      <div className="page-header">
+        <h1>Thông báo tiêm chủng</h1>
+        {newNotificationsCount > 0 && (
+          <div className="new-notifications-badge">
+            {newNotificationsCount} thông báo mới
+          </div>
+        )}
       </div>
-
-      {/* Success message */}
-      <table className="events-table">
-        <thead>
-          <tr>
-            <th>Tiêu đề</th>
-            <th>Loại vắc-xin</th>
-            <th>Ngày tiêm</th>
-            <th>Đối tượng</th>
-            <th>Người tổ chức</th>
-            <th>Trạng thái</th>
-            <th>Phản hồi</th>
-            <th>Thao tác</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredEvents.length > 0 ? (
-            filteredEvents.map(event => (
-              <tr key={event.id}>
-                <td>{event.title}</td>
-                <td>{event.vaccineType}</td>
-                <td>{new Date(event.scheduledDate).toLocaleDateString('vi-VN')} {event.scheduledTime}</td>
-                <td>{event.targetClass}</td>
-                <td>{getOrganizerName(event.organizer)}</td>
-                <td>
-                  <span className={`status ${
-                    event.status === 'Hoàn thành' ? 'complete' : 
-                    event.status === 'Đã hủy' ? 'cancelled' : 
-                    event.status === 'APPROVED' ? 'approved' : 'upcoming'
-                  }`}>
-                    {event.status === 'APPROVED' ? 'Đã duyệt' : event.status}
-                  </span>
-                </td>
-                <td className="response-summary">
-                  <div className="response-counts">
-                    <span className="confirmed">{event.responses.confirmed}</span> / 
-                    <span className="declined">{event.responses.declined}</span> / 
-                    <span className="pending">{event.responses.pending}</span>
-                  </div>
-                  <div className="response-labels">
-                    <span className="confirmed-label">Xác nhận</span> /
-                    <span className="declined-label">Từ chối</span> / 
-                    <span className="pending-label">Chưa phản hồi</span>
-                  </div>
-                </td>
-                <td className="actions">
-                  <button className="edit-btn" onClick={() => editVaccinationEvent(event)}>
-                    <Edit size={16} />
-                  </button>
-                  <button className="delete-btn" onClick={() => deleteVaccinationEvent(event.id)}>
-                    <Trash2 size={16} />
-                  </button>
-                  <button className="send-btn" onClick={() => openNotificationModal(event)}>
-                    <Send size={16} />
-                  </button>
-                  <button className="view-btn" onClick={() => viewResponses(event)}>
-                    <FileText size={16} />
-                  </button>
-                  {isAdmin && event.status !== 'APPROVED' && (
-                    <button
-                      className="approve-btn"
-                      title="Chấp nhận"
-                      onClick={() => approveVaccinationCampaign(event)}
-                      style={{ marginLeft: 4, background: '#22c55e', color: '#fff', border: 'none', borderRadius: 4, padding: '4px 8px', cursor: 'pointer' }}
-                    >
-                      <CheckCircle size={16} style={{ verticalAlign: 'middle' }} /> Chấp nhận
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="8" className="no-data">Không có dữ liệu sự kiện tiêm chủng</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-      
-      
-      {/* Vaccination Event Modal */}
-      {modalOpen && (
-        <div className="modal">
-          <div className="modal-content">
-            <span className="close" onClick={() => setModalOpen(false)}>&times;</span>
-            <h2>{editing ? 'Sửa sự kiện tiêm chủng' : 'Tạo sự kiện tiêm chủng mới'}</h2>
-            
-            <form onSubmit={handleSubmit}>
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="title">Tiêu đề <span className="required">*</span></label>
-                  <input
-                    type="text"
-                    name="title"
-                    id="title"
-                    value={currentEvent.title}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="vaccineType">Loại vắc-xin <span className="required">*</span></label>
-                  <select
-                    name="vaccineType"
-                    id="vaccineType"
-                    value={currentEvent.vaccineType}
-                    onChange={handleInputChange}
-                    required
-                  >
-                    <option value="">-- Chọn loại vắc-xin --</option>
-                    {vaccineTypes.map(type => (
-                      <option key={type.value} value={type.value}>{type.label}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="scheduledDate">Ngày tiêm <span className="required">*</span></label>
-                  <input
-                    type="date"
-                    name="scheduledDate"
-                    id="scheduledDate"
-                    value={currentEvent.scheduledDate}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="scheduledTime">Giờ tiêm</label>
-                  <input
-                    type="time"
-                    name="scheduledTime"
-                    id="scheduledTime"
-                    value={currentEvent.scheduledTime}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="location">Địa điểm</label>
-                  <input
-                    type="text"
-                    name="location"
-                    id="location"
-                    value={currentEvent.location}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="targetClass">Đối tượng tiêm</label>
-                  <input
-                    type="text"
-                    name="targetClass"
-                    id="targetClass"
-                    value={currentEvent.targetClass}
-                    onChange={handleInputChange}
-                    placeholder="Ví dụ: Khối 10, Lớp 11A1"
-                  />
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="description">Mô tả</label>
-                <textarea
-                  name="description"
-                  id="description"
-                  value={currentEvent.description}
-                  onChange={handleInputChange}
-                  rows="3"
-                ></textarea>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="vaccineBatch">Lô vắc-xin</label>
-                  <input
-                    type="text"
-                    name="vaccineBatch"
-                    id="vaccineBatch"
-                    value={currentEvent.vaccineBatch}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="manufacturer">Nhà sản xuất</label>
-                  <input
-                    type="text"
-                    name="manufacturer"
-                    id="manufacturer"
-                    value={currentEvent.manufacturer}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="doseAmount">Liều lượng</label>
-                  <input
-                    type="text"
-                    name="doseAmount"
-                    id="doseAmount"
-                    value={currentEvent.doseAmount}
-                    onChange={handleInputChange}
-                    placeholder="Ví dụ: 0.5ml"
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="status">Trạng thái</label>
-                  <select
-                    name="status"
-                    id="status"
-                    value={currentEvent.status}
-                    onChange={handleInputChange}
-                  >
-                    <option value="Sắp tới">Sắp tới</option>
-                    <option value="Hoàn thành">Hoàn thành</option>
-                    <option value="Đã hủy">Đã hủy</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="requiredDocuments">Giấy tờ yêu cầu</label>
-                <textarea
-                  name="requiredDocuments"
-                  id="requiredDocuments"
-                  value={currentEvent.requiredDocuments}
-                  onChange={handleInputChange}
-                  rows="2"
-                  placeholder="Ví dụ: Phiếu đồng ý của phụ huynh, sổ tiêm chủng"
-                ></textarea>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="notes">Ghi chú</label>
-                <textarea
-                  name="notes"
-                  id="notes"
-                  value={currentEvent.notes}
-                  onChange={handleInputChange}
-                  rows="2"
-                ></textarea>
-              </div>
-
-              <div className="form-actions">
-                <button type="button" className="cancel-btn" onClick={() => setModalOpen(false)}>
-                  Hủy
-                </button>
-                <button type="submit" className="submit-btn">
-                  {editing ? 'Cập nhật' : 'Tạo mới'}
-                </button>
-              </div>
-            </form>
-          </div>
+      {responseSuccess && (
+        <div className="success-message">
+          <p>Phản hồi của bạn đã được gửi thành công!</p>
         </div>
       )}
-      
-      {/* Notification Modal */}
-      {notificationModalOpen && (
-        <div className="modal">
-          <div className="modal-content notification-modal">
-            <span className="close" onClick={() => setNotificationModalOpen(false)}>&times;</span>
-            <h2>Gửi thông báo tiêm chủng</h2>
-            
-            <form onSubmit={sendNotifications}>
-              <div className="form-group">
-                <label htmlFor="subject">Tiêu đề <span className="required">*</span></label>
-                <input
-                  type="text"
-                  name="subject"
-                  id="subject"
-                  value={notification.subject}
-                  onChange={handleNotificationChange}
-                  required
-                />
+      {loading ? (
+        <div className="loading">Đang tải thông báo...</div>
+      ) : (
+        <div className="notifications-container">
+          <div className="notifications-sidebar">
+            <h2>Danh sách thông báo</h2>
+            {notifications.length === 0 ? (
+              <div className="empty-notifications">
+                <p>Không có thông báo tiêm chủng nào</p>
               </div>
-              
-              <div className="form-group">
-                <label htmlFor="message">Nội dung thông báo <span className="required">*</span></label>
-                <textarea
-                  name="message"
-                  id="message"
-                  value={notification.message}
-                  onChange={handleNotificationChange}
-                  rows="6"
-                  required
-                ></textarea>
-              </div>
-              
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="deadlineDate">Hạn phản hồi <span className="required">*</span></label>
-                  <input
-                    type="date"
-                    name="deadlineDate"
-                    id="deadlineDate"
-                    value={notification.deadlineDate}
-                    onChange={handleNotificationChange}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="requiredDocuments">Giấy tờ yêu cầu</label>
-                  <input
-                    type="text"
-                    name="requiredDocuments"
-                    id="requiredDocuments"
-                    value={notification.requiredDocuments}
-                    onChange={handleNotificationChange}
-                    placeholder="Ví dụ: Phiếu đồng ý, sổ tiêm chủng"
-                  />
-                </div>
-              </div>
-              
-              <div className="form-group notification-target">
-                <label>Đối tượng nhận thông báo</label>
-                <div className="checkbox-group">
-                  <input
-                    type="radio"
-                    id="sendToAll"
-                    name="sendToAll"
-                    checked={notification.sendToAll}
-                    onChange={() => setNotification({...notification, sendToAll: true, specificClass: ''})}
-                  />
-                  <label htmlFor="sendToAll">Tất cả học sinh thuộc đối tượng tiêm</label>
-                </div>
-                
-                <div className="checkbox-group">
-                  <input
-                    type="radio"
-                    id="sendToSpecific"
-                    name="sendToAll"
-                    checked={!notification.sendToAll}
-                    onChange={() => setNotification({...notification, sendToAll: false})}
-                  />
-                  <label htmlFor="sendToSpecific">Lớp cụ thể</label>
-                  {!notification.sendToAll && (
-                    <input
-                      type="text"
-                      name="specificClass"
-                      value={notification.specificClass}
-                      onChange={handleNotificationChange}
-                      placeholder="Ví dụ: 10A1, 11B2"
-                      className="specific-class-input"
-                    />
-                  )}
-                </div>
-              </div>
-              
-              <div className="notification-warning">
-                <AlertTriangle size={16} />
-                <p>Thông báo sẽ được gửi đến phụ huynh của học sinh thuộc đối tượng tiêm. Phụ huynh sẽ nhận được thông báo và phiếu xác nhận tiêm chủng.</p>
-              </div>
-              
-              <div className="form-actions">
-                <button type="button" className="cancel-btn" onClick={() => setNotificationModalOpen(false)}>
-                  Hủy
-                </button>
-                <button type="submit" className="submit-btn" disabled={loading}>
-                  {loading ? 'Đang gửi...' : 'Gửi thông báo'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-      
-      {/* Parent Responses Modal */}
-      {responseModalOpen && (
-        <div className="modal">
-          <div className="modal-content responses-modal">
-            <span className="close" onClick={() => setResponseModalOpen(false)}>&times;</span>
-            <h2>Phản hồi từ phụ huynh</h2>
-            
-            <div className="response-summary-header">
-              <div className="response-stats">
-                <div className="stat-item">
-                  <span className="stat-label">Tổng số:</span>
-                  <span className="stat-value">{currentStudentResponses.length}</span>
-                </div>
-                <div className="stat-item confirmed">
-                  <CheckCircle size={16} />
-                  <span className="stat-label">Xác nhận:</span>
-                  <span className="stat-value">
-                    {currentStudentResponses.filter(r => r.status === 'Xác nhận').length}
-                  </span>
-                </div>
-                <div className="stat-item declined">
-                  <X size={16} />
-                  <span className="stat-label">Từ chối:</span>
-                  <span className="stat-value">
-                    {currentStudentResponses.filter(r => r.status === 'Từ chối').length}
-                  </span>
-                </div>
-                <div className="stat-item pending">
-                  <AlertTriangle size={16} />
-                  <span className="stat-label">Chưa phản hồi:</span>
-                  <span className="stat-value">
-                    {currentStudentResponses.filter(r => r.status === 'Chưa phản hồi').length}
-                  </span>
-                </div>
-              </div>
-            </div>
-            
-            <table className="responses-table">
-              <thead>
-                <tr>
-                  <th>Học sinh</th>
-                  <th>Lớp</th>
-                  <th>Trạng thái</th>
-                  <th>Ghi chú của phụ huynh</th>
-                  <th>Ngày phản hồi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentStudentResponses.map(response => (
-                  <tr key={response.id}>
-                    <td>{response.studentName}</td>
-                    <td>{response.className}</td>
-                    <td>
-                      <span className={`response-status ${response.status.toLowerCase().replace(' ', '-')}`}>
-                        {response.status === 'Xác nhận' && <CheckCircle size={14} />}
-                        {response.status === 'Từ chối' && <X size={14} />}
-                        {response.status === 'Chưa phản hồi' && <AlertTriangle size={14} />}
-                        {response.status}
-                      </span>
-                    </td>
-                    <td>{response.parentNote || '(Không có)'}</td>
-                    <td>{response.responseDate || '—'}</td>
-                  </tr>
+            ) : (
+              <ul className="notifications-list">
+                {notifications.map(notification => (
+                  <li 
+                    key={notification.id} 
+                    className={`notification-item ${notification.isNew ? 'new' : ''} ${activeNotification?.id === notification.id ? 'active' : ''}`}
+                    onClick={() => viewNotificationDetails(notification)}
+                  >
+                    <div className="notification-badge">
+                      {notification.status === 'Chưa phản hồi' && <AlertTriangle size={16} className="pending" />}
+                      {notification.status === 'Xác nhận' && <CheckCircle size={16} className="confirmed" />}
+                      {notification.status === 'Từ chối' && <X size={16} className="declined" />}
+                    </div>
+                    <div className="notification-details">
+                      <h3>{notification.title}</h3>
+                      <div className="notification-meta">
+                       <span className="date">{formatDate(notification.sentDate)}</span>
+                        <span className={`status ${notification.status.toLowerCase().replace(' ', '-')}`}>
+                          {notification.status}
+                        </span>
+                      </div>
+                    </div>
+                    <ChevronRight size={18} className="chevron-icon" />
+                  </li>
                 ))}
-              </tbody>
-            </table>
-            
-            <div className="form-actions">
-              <button type="button" className="close-btn" onClick={() => setResponseModalOpen(false)}>
-                Đóng
-              </button>
-              <button type="button" className="export-btn">
-                Xuất danh sách
-              </button>
-            </div>
+              </ul>
+            )}
+          </div>
+          <div className="notification-content">
+            {!activeNotification ? (
+              <div className="no-notification-selected">
+                <div className="empty-state-icon">
+                  <MessageCircle size={48} />
+                </div>
+                <h2>Chọn thông báo để xem chi tiết</h2>
+                <p>Chọn một thông báo từ danh sách bên trái để xem chi tiết và phản hồi.</p>
+              </div>
+            ) : (
+              <>
+                <div className="notification-header">
+                  <h2>{activeNotification.title}</h2>
+                  <div className="notification-meta">
+                    <span className="sent-date">
+                      <Calendar size={14} />
+                      Ngày gửi: {formatDate(activeNotification.sentDate)}
+                    </span>
+                    <span className={`status ${activeNotification.status.toLowerCase().replace(' ', '-')}`}>
+                      {activeNotification.status === 'Chưa phản hồi' && <AlertTriangle size={14} />}
+                      {activeNotification.status === 'Xác nhận' && <CheckCircle size={14} />}
+                      {activeNotification.status === 'Từ chối' && <X size={14} />}
+                      {activeNotification.status}
+                    </span>
+                  </div>
+                </div>
+                <div className="notification-body">
+                  <div className="notification-info">
+                    <div className="info-row">
+                      <div className="info-group">
+                        <label>Nhóm đối tượng:</label>
+                        <span>{activeNotification.targetGroup}</span>
+                      </div>
+                      <div className="info-group">
+                        <label>Loại Vắc Xin:</label>
+                        <span>{activeNotification.type}</span>
+                      </div>
+                    </div>
+                    <div className="info-row">
+                      <div className="info-group">
+                        <label>Ngày tiêm:</label>
+                        <span>{formatDate(activeNotification.date)}</span>
+                      </div>
+                      <div className="info-group">
+                        <label>Địa điểm:</label>
+                        <span>{activeNotification.address}</span>
+                      </div>
+                    </div>
+                    <div className="info-row">
+                      <div className="info-group">
+                        <label>Người tổ chức:</label>
+                        <span>
+                          {getOrganizerName(activeNotification.organizerId)}
+                        </span>
+                      </div>
+                      <div className="info-group">
+                        <label>Giấy tờ yêu cầu:</label>
+                        <div className="document-list">
+                          <FileText size={14} />
+                          <span>{activeNotification.requiredDocuments}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="info-row full">
+                      <div className="info-group">
+                        <label>Mô tả:</label>
+                        <span>{activeNotification.description}</span>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Show this if the user has already responded */}
+                  {activeNotification.status !== 'Chưa phản hồi' && (
+                    <div className="response-summary">
+                      <h3>Phản hồi của bạn</h3>
+                      <div className={`response-type ${activeNotification.status === 'Xác nhận' ? 'confirmed' : 'declined'}`}>
+                        {activeNotification.status === 'Xác nhận' ? (
+                          <>
+                            <CheckCircle size={16} />
+                            <span>Đã xác nhận cho con tham gia tiêm chủng</span>
+                          </>
+                        ) : (
+                          <>
+                            <X size={16} />
+                            <span>Đã từ chối cho con tham gia tiêm chủng</span>
+                          </>
+                        )}
+                      </div>
+                      {activeNotification.responseNote && (
+                        <div className="response-note">
+                          <h4>Ghi chú:</h4>
+                          <p>{activeNotification.responseNote}</p>
+                        </div>
+                      )}
+                      <div className="response-date">
+                        Phản hồi vào ngày: {formatDate(activeNotification.responseDate)}
+                      </div>
+                      <button 
+                        className="change-response-btn"
+                        onClick={() => setShowResponseForm(true)}
+                      >
+                        Thay đổi phản hồi
+                      </button>
+                    </div>
+                  )}
+                  {/* Show response form if status is pending or user wants to change response */}
+                  {(activeNotification.status === 'Chưa phản hồi' || showResponseForm) && (
+                    <div className="response-form-container">
+                      <h3>Phản hồi của phụ huynh</h3>
+                      <form className="response-form" onSubmit={sendResponse}>
+                        <div className="response-options">
+                          <div className="response-option">
+                            <input 
+                              type="radio" 
+                              id="confirm" 
+                              name="response" 
+                              value="confirm"
+                              checked={responseData.response === 'confirm'}
+                              onChange={handleResponseChange}
+                            />
+                            <label htmlFor="confirm" className="confirm-label">
+                              <CheckCircle size={16} />
+                              <span>Xác nhận cho con tham gia tiêm chủng</span>
+                            </label>
+                          </div>
+                          <div className="response-option">
+                            <input 
+                              type="radio" 
+                              id="decline" 
+                              name="response" 
+                              value="decline"
+                              checked={responseData.response === 'decline'}
+                              onChange={handleResponseChange}
+                            />
+                            <label htmlFor="decline" className="decline-label">
+                              <X size={16} />
+                              <span>Từ chối cho con tham gia tiêm chủng</span>
+                            </label>
+                          </div>
+                        </div>
+                        <div className="form-group">
+                          <label htmlFor="note">Ghi chú (không bắt buộc):</label>
+                          <textarea
+                            id="note"
+                            name="note"
+                            value={responseData.note}
+                            onChange={handleResponseChange}
+                            placeholder="Thông tin thêm hoặc lý do từ chối (nếu có)"
+                            rows="3"
+                          ></textarea>
+                        </div>
+                        <div className="form-actions">
+                          {showResponseForm && (
+                            <button 
+                              type="button" 
+                              className="cancel-btn"
+                              onClick={() => setShowResponseForm(false)}
+                            >
+                              Hủy
+                            </button>
+                          )}
+                          <button 
+                            type="submit" 
+                            className="submit-btn"
+                            disabled={submitting || !responseData.response}
+                          >
+                            {submitting ? 'Đang gửi...' : 'Gửi phản hồi'}
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
     </div>
   );
 };
-
-export default VaccinationManagement; 
+export default VaccinationNotifications;
