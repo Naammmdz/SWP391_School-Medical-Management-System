@@ -13,5 +13,4 @@ public class StudentResponseDTO {
     private boolean isActive;
     private Integer parentId;
     private LocalDateTime createdAt;
-    private boolean hasHealthProfile;
 }

@@ -418,12 +418,12 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
 
         if (className != null && !className.isBlank()) {
             spec = spec.and((root, query, cb) ->
-                    cb.equal(root.get("student").get("className"), "%" + className + "%"));
+                    cb.like(root.get("student").get("className"), "%" + className + "%"));
         }
 
         if (campaignName != null && !campaignName.isBlank()) {
             spec = spec.and((root, query, cb) ->
-                    cb.equal(root.get("campaign").get("campaignName"),"%" + campaignName + "%"));
+                    cb.like(root.get("campaign").get("campaignName"),"%" + campaignName + "%"));
         }
 
         if (studentName != null && !studentName.isBlank()) {
