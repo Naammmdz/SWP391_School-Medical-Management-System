@@ -2,6 +2,7 @@ package com.school.health.dto.request;
 
 import com.school.health.enums.Status;
 
+import com.school.health.validate.MinDaysAhead;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
