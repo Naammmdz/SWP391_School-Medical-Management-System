@@ -4,12 +4,15 @@ import com.school.health.dto.request.InventoryRequestDTO;
 import com.school.health.dto.response.InventoryResponseDTO;
 import com.school.health.entity.Inventory;
 import com.school.health.entity.User;
+import com.school.health.event.ExpiredInventoryEvent;
 import com.school.health.exception.ResourceNotFoundException;
 import com.school.health.repository.InventoryRepo;
 import com.school.health.repository.UserRepository;
 import com.school.health.service.InventoryService;
 import com.school.health.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEvent;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -21,10 +24,12 @@ import java.util.stream.Collectors;
 public class InventoryServiceImpl implements InventoryService {
     @Autowired
     private InventoryRepo inventoryRepo;
-    @Autowired
-    private NotificationService notificationService;
+
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private ApplicationEventPublisher publisher;
+
     @Override
     public List<InventoryResponseDTO> getAllInventoryItems() {
         List<Inventory> inventoryList = inventoryRepo.findAll();
@@ -70,12 +75,12 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     @Override
-    public List<InventoryResponseDTO> getInventoryIntemsLowStock() {
+    public List<InventoryResponseDTO> getInventoryItemsLowStock() {
         return inventoryRepo.getAllInventoryLowStock().stream().map(inventory -> mapToDTO(inventory)).collect(Collectors.toList());
     }
 
     @Override
-    public List<InventoryResponseDTO> getInventoryIntemsExpiringSoon() {
+    public List<InventoryResponseDTO> getInventoryItemsExpiringSoon() {
         LocalDate today = LocalDate.now();
         return inventoryRepo.getInventoryExpiringSoon(today.plusDays(30)).stream().map(inventory -> mapToDTO(inventory)).collect(Collectors.toList());
     }
@@ -83,12 +88,7 @@ public class InventoryServiceImpl implements InventoryService {
     @Scheduled(cron = "0 30 6 * * ?")
     public void checkExpiredInventory() {
         LocalDate today = LocalDate.now();
-
         List<Inventory> expiredItems = inventoryRepo.findByExpiryDateBefore(today);
-        for (Inventory item : expiredItems) {
-            String message = "Mặt hàng '" + item.getName() + "' đã hết hạn sử dụng vào " + item.getExpiryDate();
-            List<User> list = userRepository.findAllAdminAndNurse();
-            list.forEach(listUser -> { notificationService.createNotification(listUser.getUserId(),"Vật phẩm/thuốc trong kho hết hạn",message);});
-        }
+        publisher.publishEvent(new ExpiredInventoryEvent( expiredItems));
     }
 }

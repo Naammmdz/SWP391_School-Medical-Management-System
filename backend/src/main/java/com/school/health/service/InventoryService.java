@@ -12,6 +12,6 @@ public interface InventoryService {
     public InventoryResponseDTO mapToDTO(Inventory item) ;
     public InventoryResponseDTO createInventoryItem( InventoryRequestDTO requestDTO);
     public InventoryResponseDTO updateInventoryItem( Integer id, InventoryRequestDTO requestDTO);
-    public List<InventoryResponseDTO> getInventoryIntemsLowStock();
-    public List<InventoryResponseDTO> getInventoryIntemsExpiringSoon();
+    public List<InventoryResponseDTO> getInventoryItemsLowStock();
+    public List<InventoryResponseDTO> getInventoryItemsExpiringSoon();
 }

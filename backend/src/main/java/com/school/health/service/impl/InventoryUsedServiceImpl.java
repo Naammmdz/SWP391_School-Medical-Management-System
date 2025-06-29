@@ -1,12 +1,10 @@
 package com.school.health.service.impl;
 
-import com.school.health.dto.request.InventoryRequestDTO;
 import com.school.health.dto.request.InventoryUsedRequestDTO;
-import com.school.health.dto.response.InventoryResponseDTO;
 import com.school.health.dto.response.InventoryUsedResponseDTO;
 import com.school.health.entity.Inventory;
 import com.school.health.entity.InventoryUsedLog;
-import com.school.health.entity.User;
+import com.school.health.event.LowStockInventoryEvent;
 import com.school.health.exception.ResourceNotFoundException;
 import com.school.health.repository.InventoryRepo;
 import com.school.health.repository.InventoryUsedRepo;
@@ -15,9 +13,8 @@ import com.school.health.repository.UserRepository;
 import com.school.health.service.InventoryUsedLogService;
 import com.school.health.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public class InventoryUsedServiceImpl implements InventoryUsedLogService {
@@ -32,6 +29,8 @@ public class InventoryUsedServiceImpl implements InventoryUsedLogService {
     private NotificationService notificationService;
     @Autowired
     private UserRepository userRepo;
+    @Autowired
+    private ApplicationEventPublisher publisher;
     @Override
 
     public InventoryUsedResponseDTO createInventoryUsed(Integer id, InventoryUsedRequestDTO DTO) {
@@ -64,13 +63,10 @@ public class InventoryUsedServiceImpl implements InventoryUsedLogService {
         if (dto.getQuantityUsed()> item.getQuantity()) {
             throw new IllegalArgumentException("Số lượng sử dụng vượt quá tồn kho");
         }
-
         item.setQuantity(item.getQuantity() - dto.getQuantityUsed());
+        // Nếu như item sau khi dùng mà ít hơn mức minStock thì gửi Event thông báo
         if(item.getQuantity()<=item.getMinStockLevel()){
-           List<User> users = userRepo.findAllAdminAndNurse();
-            users.forEach(user -> {
-                notificationService.createNotification(user.getUserId(),"Vật phẩm/thuốc trong kho đang sắp hết",item.getName() +" đang sắp hết trong kho, vui lòng nhập thêm hàng để tránh việc thiếu sót vật tư khi xử lí các sự kiện y tế!!");
-            });
+            publisher.publishEvent(new LowStockInventoryEvent(item));
         }
         return inventoryRepo.save(item);
     }

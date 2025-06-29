@@ -42,11 +42,11 @@ public class InventoryController {
     // lấy hết các inventory sắp hết trong kho
     @GetMapping ("/low-stock")
     public ResponseEntity<List<InventoryResponseDTO>> getLowStockInventory() {
-        return ResponseEntity.ok(inventoryService.getInventoryIntemsLowStock());
+        return ResponseEntity.ok(inventoryService.getInventoryItemsLowStock());
     }
     // lấy hết các inventory cận date trong kho
     @GetMapping ("/expiring-soon")
     public ResponseEntity<List<InventoryResponseDTO>> getExpiringSoonInventory() {
-        return ResponseEntity.ok(inventoryService.getInventoryIntemsExpiringSoon());
+        return ResponseEntity.ok(inventoryService.getInventoryItemsExpiringSoon());
     }
 }
