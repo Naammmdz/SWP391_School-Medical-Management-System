@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import HomePage from './pages/home/homePage/HomePage';
 import Login from './pages/auth/login/Login';
-import Layout from './components/Layout';
+import Header from './components/Header';
+import Footer from './components/Footer';
 
 import MedicalEvents from './pages/medical/MedicalEvent/MedicalEvents';
 import MedicineDeclarations from './pages/health/MedicineDeclaration/MedicineDeclarations';
-import Pharmaceutical from './pages/medical/Pharmaceutical/Pharmaceutical';
+import Pharmaceutical from './pages/medical/Pharmaceutical/Pharmaceutical'; 
 
 import CreateVaccinationCampaign from './pages/health/Vaccination/CreateVaccinationCampaign';
 import VaccinationManagement from './pages/health/Vaccination/VaccinationManagement';
@@ -18,7 +19,7 @@ import NursePrescription from './pages/nurse/NursePrescription';
 import HealthRecord from './pages/health/HealthRecord/HealthRecord';
 import DashboardPage from './pages/dashboardPage/DashboardPage';
 
-// import ParentPages from './pages/parent/ParentPages';
+import ParentPages from './pages/parent/ParentPages';
 import NursePages from './pages/nurse/NursePages';
 import Blog from './pages/home/Blog/Blog';
 import UpdateUser from './pages/user/UpdateUser';
@@ -39,12 +40,22 @@ import CreateHealthCheck from './pages/health/HealthCheck/CreateHealthCheck';
 
 
 import HealthCheckResult from './pages/health/HealthCheck/HealthCheckResult';
+import HealthCheckResultStudent from './pages/health/HealthCheck/HealthCheckResultStudent';
+import UpdateHealthCheckResult from './pages/health/HealthCheck/UpdateHealthCheckResult';
+import UpdateVaccination from './pages/health/Vaccination/UpdateVaccination';
+import VaccinationResult from './pages/health/Vaccination/VaccinationResult';
+import VaccinationStudentResult from './pages/health/Vaccination/VaccinationStudentResult';
+import MedicineList from './pages/health/MedicineDeclaration/MedicineList';
+import MedicineLog from './pages/health/MedicineDeclaration/MedicineLog';
 
 // Component ProtectedRoute
 const ProtectedRoute = ({ element, requiredRole }) => {
   const user = JSON.parse(localStorage.getItem('user'));
   const isAuthenticated = !!user && !!localStorage.getItem('token');
-  const hasRequiredRole = user && user.userRole === requiredRole;
+  // Hỗ trợ requiredRole là string hoặc mảng
+  const hasRequiredRole = Array.isArray(requiredRole)
+    ? requiredRole.includes(user?.userRole)
+    : user && user.userRole === requiredRole;
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
@@ -54,52 +65,72 @@ const ProtectedRoute = ({ element, requiredRole }) => {
     return <Navigate to="/" replace />;
   }
 
-
   return element;
 };
 
 function App() {
   return (
-    <Routes>
-      {/* Public routes - không cần sidebar */}
-      <Route path="/" element={<Layout><HomePage /></Layout>} />
-      <Route path="/login" element={<Layout><Login /></Layout>} />
-      <Route path='/blog' element={<Layout><Blog /></Layout>} />
+    <>
+      <Header/>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/hososuckhoe" element={<HealthRecord />} />
+        <Route path="/sukienyte" element={<MedicalEvents/>}/>
 
-      {/* Protected routes - có sidebar */}
-      <Route path="/hososuckhoe" element={<Layout showSidebar><HealthRecord /></Layout>} />
-      <Route path="/sukienyte" element={<Layout showSidebar><MedicalEvents /></Layout>} />
-      <Route path="/khaibaothuoc" element={<Layout showSidebar><MedicineDeclarations /></Layout>} />
-      <Route path="/quanlythuoc" element={<Layout showSidebar><Pharmaceutical /></Layout>} />
-      
-      <Route path="/quanlytiemchung" element={<Layout showSidebar><VaccinationManagement /></Layout>} />
-      <Route path="/thongbaotiemchung" element={<Layout showSidebar><VaccinationNotifications /></Layout>} />
-      
-      <Route path="/donthuoc" element={<Layout showSidebar><NursePrescription /></Layout>} />
-      <Route path="/thongke" element={<Layout showSidebar><DashboardPage /></Layout>} />
+        <Route path="/khaibaothuoc" element={<MedicineDeclarations/>}/>
+        <Route path="/donthuoc" element={<NursePrescription/>}/>
+        <Route path="/donthuocdagui" element={<MedicineList/>}/>
+        <Route path="/chouongthuoc" element={<MedicineLog/>}/>
 
-      <Route path="/kiemtradinhky" element={<Layout showSidebar><CreateHealthCheck /></Layout>} />
-      <Route path="/danhsachkiemtradinhky" element={<Layout showSidebar><HealthCheckList /></Layout>} />
-      <Route path="/capnhatkiemtradinhky" element={<Layout showSidebar><UpdateHealthCheck /></Layout>} />
-      <Route path="/kiemtradinhkyhocsinh" element={<Layout showSidebar><HealthCheck /></Layout>} />
-      <Route path="/ketquakiemtradinhky" element={<Layout showSidebar><HealthCheckResult /></Layout>} />
 
-      <Route path="/capnhatthongtin" element={<Layout showSidebar><UpdateUser /></Layout>} />
-      <Route path="/doimatkhau" element={<Layout showSidebar><UpdatePassword /></Layout>} />
-      <Route path="/admin/taomoinguoidung" element={<Layout showSidebar><CreateUser /></Layout>} />
-      <Route path="/admin/capnhatnguoidung/:userId" element={<Layout showSidebar><UpdateUserByAdmin /></Layout>} />
-      <Route path="/admin/danhsachnguoidung" element={<Layout showSidebar><UserList /></Layout>} />
-      <Route path="/admin/khoanguoidung/:userId" element={<Layout showSidebar><BlockUser /></Layout>} />
+        <Route path="/quanlythuoc" element={<Pharmaceutical/>}/>
+
+        
+        <Route path="/quanlytiemchung" element={<VaccinationManagement/>}/>
+        <Route path="/thongbaotiemchung" element={<VaccinationNotifications/>}/>
+        <Route path ="/taosukientiemchung" element={<CreateVaccinationCampaign/>} />
+        <Route path="/capnhatthongtintiemchung" element={<UpdateVaccination/>} />
+        <Route path= "/ketquatiemchung" element={<VaccinationResult/>} />
+        <Route path ="/ketquatiemchunghocsinh" element= {<VaccinationStudentResult/>} />
+
+        <Route path="/login" element={<Login />} />
+
+        
+
+
+        <Route path="/thongke" element={<DashboardPage/>}/>
+
+        <Route path="/kiemtradinhky" element={<CreateHealthCheck/>}/>
+        <Route path="/danhsachkiemtradinhky" element={<HealthCheckList />} />
+        <Route path="/capnhatkiemtradinhky" element={<UpdateHealthCheck />} />
+        <Route path="/kiemtradinhkyhocsinh" element={<HealthCheck />} />
+        <Route path="/ketquakiemtradinhky" element={<HealthCheckResult />} />
+        <Route path="/ketquakiemtradinhkyhocsinh" element={<HealthCheckResultStudent />} />
+        <Route path ="/capnhatketquakiemtra" element={<UpdateHealthCheckResult/>} />
+
+        <Route path="/capnhatthongtin" element={<UpdateUser/>} requiredRole="ROLE_ADMIN"/>
+        <Route path="/doimatkhau" element={<UpdatePassword/>}/>
+        <Route path="/admin/taomoinguoidung" element={<CreateUser/>} requiredRole="ROLE_ADMIN" />
+        <Route path="/admin/capnhatnguoidung/:userId" element={<UpdateUserByAdmin/>} requiredRole="ROLE_ADMIN" />
+        <Route path="/admin/danhsachnguoidung" element={<UserList/>}requiredRole="ROLE_ADMIN" />
+        <Route path="/admin/khoanguoidung/:userId" element={<BlockUser />} requiredRole="ROLE_ADMIN" />
+         
+        
       
-      <Route path="/taomoihocsinh" element={<Layout showSidebar><CreateStudent /></Layout>} />
-      <Route path="/danhsachhocsinh" element={<Layout showSidebar><StudentList /></Layout>} />
-      <Route path="/capnhathocsinh/:studentId" element={<Layout showSidebar><UpdateStudent /></Layout>} />
-      
-      <Route path="/taosukientiemchung" element={<Layout showSidebar><CreateVaccinationCampaign /></Layout>} />
-      
-      <Route path="/nurse" element={<ProtectedRoute element={<Layout showSidebar><NursePages /></Layout>} requiredRole="ROLE_NURSE" />} />
-      <Route path='/admin' element={<ProtectedRoute element={<Layout showSidebar><Admin /></Layout>} requiredRole="ROLE_ADMIN" />} />
-    </Routes>
+        <Route path="/taomoihocsinh" element={<CreateStudent/>} requiredRole="ROLE_ADMIN" />
+        <Route path="/danhsachhocsinh" element={<StudentList/>}/>
+        <Route path="/capnhathocsinh/:studentId" element={<UpdateStudent/>}/>
+         
+           
+        <Route path="/parent" element={<ProtectedRoute element={<ParentPages/>} requiredRole="ROLE_PARENT" />} />
+        <Route path="/nurse" element={<ProtectedRoute element={<NursePages/>} requiredRole="ROLE_NURSE" />} />
+        <Route path='/admin' element={<ProtectedRoute element={<Admin/>} requiredRole="ROLE_ADMIN" />} />
+       
+
+        <Route path='/blog' element={<Blog/>}/>
+      </Routes>
+      <Footer />
+    </>
   );
 }
 

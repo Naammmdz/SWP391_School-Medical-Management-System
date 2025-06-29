@@ -9,7 +9,7 @@ const HealthCheckService = {
       const response = await axios.post(API_URL, campaignData, config); // <-- sửa lại vị trí
       return response.data;
     } catch (error) {
-      console.error('Error creating health check campaign:', error);
+      console.error('Lỗi khi tạo chiến dịch:', error);
       throw error;
     }
   },
@@ -18,7 +18,7 @@ const HealthCheckService = {
       const response = await axios.get(API_URL, config);
       return response.data;
     } catch (error) {
-      console.error('Error fetching health check campaigns:', error);
+      console.error('Lỗi khi lấy dữ liệu:', error);
       throw error;
     }
   },
@@ -27,7 +27,7 @@ const HealthCheckService = {
       const response = await axios.put(`${API_URL}/${id}`, campaignData,config);
       return response.data;
     } catch (error) {
-      console.error('Error updating health check campaign:', error);
+      console.error('Lỗi cập nhật chiến dịch:', error);
       throw error;
     }
   },
@@ -36,7 +36,7 @@ const HealthCheckService = {
       const response = await axios.get(`${API_URL}/${id}`, config);
       return response.data;
     } catch (error) {
-      console.error('Error fetching health check campaign by ID:', error);
+      console.error('Lỗi khi lấy dữ liệu:', error);
       throw error;
     }
   },
@@ -45,7 +45,7 @@ const HealthCheckService = {
       const response = await axios.put(`${API_URL}/${id}/approve`, {}, config);
       return response.data;
     } catch (error) {
-      console.error('Error approving health check campaign:', error);
+      console.error('Lỗi khi xác nhận :', error);
       throw error;
     }
   },
@@ -54,7 +54,7 @@ const HealthCheckService = {
       const response = await axios.get(`${API_URL}/approved`, config);
       return response.data;
     } catch (error) {
-      console.error('Error fetching approved health check campaigns:', error);
+      console.error('Lỗi khi lấy dữ liệu:', error);
       throw error;
     }
   },
@@ -63,7 +63,7 @@ const HealthCheckService = {
       const response = await axios.post(`${API_URL}/result/${id}`, result, config);
       return response.data;
     } catch (error) {
-      console.error('Error fetching health check result:', error);
+      console.error('Lỗi khi cập nhật sức khỏe:', error);
       throw error;
     }
   },
@@ -72,7 +72,7 @@ const HealthCheckService = {
       const response = await axios.get(`${API_URL}/result/${id}`, config);
       return response.data;
     } catch (error) {
-      console.error('Error fetching health check result:', error);
+      console.error('Lỗi khi lấy dữ liệu:', error);
       throw error;
     }
   },
@@ -81,7 +81,7 @@ const HealthCheckService = {
       const response = await axios.get(`${API_URL}/results-campaign/all`, config);
       return response.data;
     } catch (error) {
-      console.error('Error fetching all health check results:', error);
+      console.error('Lỗi khi lấy dữ liệu:', error);
       throw error;
     }
   },
@@ -90,7 +90,7 @@ const HealthCheckService = {
       const response = await axios.get(`${API_URL}/results-campaign/student/${studentId}`, config);
       return response.data;
     } catch (error) {
-      console.error('Error fetching health check results by student ID:', error);
+      console.error('Lỗi khi lấy dữ liệu:', error);
       throw error;
     }
   },
@@ -146,6 +146,15 @@ const HealthCheckService = {
       return response.data;
     } catch (error) {
       console.error('Error fetching health check campaigns for nurse:', error);
+      throw error;
+    }
+  },
+  filterResult : async (config) => {
+    try {
+      const response = await axios.get(`${API_URL}/filter-result`, config);
+      return response.data;
+    } catch (error) {
+      console.error('Error filtering health check results:', error);
       throw error;
     }
   }

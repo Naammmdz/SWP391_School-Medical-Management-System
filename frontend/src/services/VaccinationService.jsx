@@ -58,6 +58,16 @@ const VaccinationService = {
     },
     getVaccinationParentConfirmation: (campaignId, config) => {
         return axios.get(`${vaccinationApiUrl}/${campaignId}/students-registrations`, config);
-    }
+    },
+    getVaccinationParentConfirmed: (config) => {
+        return axios.get(`${vaccinationApiUrl}/results-campaign/parent-confirmation-true`, config);
+    },
+    filterResult : (config) => {
+        return axios.get(`${vaccinationApiUrl}/filter-result`, config);
+    },
+    updateVaccinationResult: (VaccinCheckId, data, config) => {
+        return axios.put(`${vaccinationApiUrl}/${VaccinCheckId}/update`, data, config);
+    },
+    
 }
 export default VaccinationService;

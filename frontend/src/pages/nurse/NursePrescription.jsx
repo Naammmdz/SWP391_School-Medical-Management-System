@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Table, Tag, Button, Modal, Space, Typography, Popconfirm, message, Input } from 'antd';
-import { CheckCircleOutlined, DeleteOutlined, EditOutlined, UserOutlined, TeamOutlined, InfoCircleOutlined, MedicineBoxOutlined } from '@ant-design/icons';
+import { Card, Table, Tag, Button, Popconfirm, message, Space, Typography } from 'antd';
+import { CheckCircleOutlined, DeleteOutlined, EditOutlined, UserOutlined, TeamOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import MedicineDeclarationService from '../../services/MedicineDeclarationService';
 import dayjs from 'dayjs';
+import { useNavigate } from 'react-router-dom';
 
 const { Title, Text } = Typography;
 
@@ -15,11 +16,8 @@ const statusColors = {
 const MedicineDeclarationsList = () => {
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [viewDetail, setViewDetail] = useState(null);
   const [studentClassMap, setStudentClassMap] = useState({});
-  const [markTakenLoading, setMarkTakenLoading] = useState(false);
-  const [markTakenNotes, setMarkTakenNotes] = useState('');
-  const [selectedSubmission, setSelectedSubmission] = useState(null);
+  const navigate = useNavigate();
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const isParent = user.userRole === 'ROLE_PARENT';
@@ -27,7 +25,6 @@ const MedicineDeclarationsList = () => {
   // Lấy thông tin lớp học từ localStorage
   useEffect(() => {
     const students = JSON.parse(localStorage.getItem('students') || '[]');
-    // Tạo map studentId -> className
     const map = {};
     students.forEach(s => {
       map[s.studentId] = s.className;
@@ -43,7 +40,6 @@ const MedicineDeclarationsList = () => {
       const config = { headers: { Authorization: `Bearer ${token}` } };
       const data = await MedicineDeclarationService.getMedicineSubmissions(config);
       setSubmissions(Array.isArray(data) ? data : []);
-      console.log('Fetched submissions:', data);
     } catch (err) {
       message.error('Không thể tải danh sách đơn thuốc!');
     }
@@ -81,7 +77,6 @@ const MedicineDeclarationsList = () => {
       message.success('Cập nhật trạng thái thành công!');
       fetchData();
     } catch (err) {
-      console.error("Chi tiết lỗi:", err.response?.data || err);
       message.error('Cập nhật trạng thái thất bại!');
     }
   };
@@ -98,31 +93,6 @@ const MedicineDeclarationsList = () => {
     } catch (err) {
       message.error('Xóa đơn thuốc thất bại!');
     }
-  };
-
-  // Gọi API markMedicineTaken
-  const handleMarkTaken = async () => {
-    if (!viewDetail) return;
-    setMarkTakenLoading(true);
-    try {
-      const token = localStorage.getItem('token');
-      const nurse = JSON.parse(localStorage.getItem('user') || '{}');
-      const data = {
-        givenByUserId: nurse.id,
-        givenAt: dayjs().format('YYYY-MM-DD'),
-        notes: markTakenNotes
-      };
-      await MedicineDeclarationService.markMedicineTaken(viewDetail.id, data, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      message.success('Đã ghi nhận học sinh đã uống thuốc!');
-      setMarkTakenNotes('');
-      setViewDetail(null);
-      fetchData();
-    } catch (err) {
-      message.error('Ghi nhận uống thuốc thất bại!');
-    }
-    setMarkTakenLoading(false);
   };
 
   const columns = [
@@ -191,7 +161,7 @@ const MedicineDeclarationsList = () => {
         <Button
           icon={<InfoCircleOutlined />}
           size="small"
-          onClick={() => setViewDetail(record)}
+          onClick={() => navigate('/chouongthuoc', { state: { submission: record } })}
         >
           Xem chi tiết
         </Button>
@@ -300,71 +270,8 @@ const MedicineDeclarationsList = () => {
           }}
         />
       </Card>
-
-      {/* Modal xem chi tiết thuốc + cho uống thuốc */}
-     
-      <Modal
-        open={!!viewDetail}
-        title={
-          <span>
-            <MedicineBoxOutlined /> Chi tiết thuốc cho học sinh: <b>{viewDetail?.studentName}</b>
-          </span>
-        }
-        onCancel={() => {
-          setViewDetail(null);
-          setMarkTakenNotes('');
-        }}
-        footer={
-          !isParent && viewDetail?.submissionStatus === 'APPROVED' ? (
-            <Space>
-              <Input.TextArea
-                rows={2}
-                placeholder="Ghi chú (nếu có)"
-                value={markTakenNotes}
-                onChange={e => setMarkTakenNotes(e.target.value)}
-                style={{ width: 220 }}
-              />
-              <Button
-                icon={<MedicineBoxOutlined />}
-                type="primary"
-                loading={markTakenLoading}
-                onClick={handleMarkTaken}
-              >
-                Xác nhận đã uống thuốc
-              </Button>
-            </Space>
-          ) : null
-        }
-        width={500}
-      >
-        {viewDetail && (
-  <div>
-    <p><b>Phụ huynh:</b> {viewDetail.parentName}</p>
-    <p><b>Hướng dẫn sử dụng:</b> {viewDetail.instruction}</p>
-    <p><b>Thời gian dùng:</b> {viewDetail.startDate} → {viewDetail.endDate} ({viewDetail.duration} ngày)</p>
-    <p><b>Ghi chú:</b> {viewDetail.notes}</p>
-    <h4>Hình ảnh đơn thuốc:</h4>
-    {console.log('imageData:', viewDetail.imageData)}
-    {viewDetail.imageData ? (
-      <img
-        src={viewDetail.imageData}
-        alt="Đơn thuốc"
-        style={{
-          maxWidth: 350,
-          maxHeight: 250,
-          borderRadius: 8,
-          border: '1px solid #eee',
-          marginTop: 8
-        }}
-      />
-    ) : (
-      <p style={{ color: '#888' }}>Không có hình ảnh đơn thuốc.</p>
-    )}
-  </div>
-)}
-
-      </Modal>
     </div>
   );
 };
+
 export default MedicineDeclarationsList;

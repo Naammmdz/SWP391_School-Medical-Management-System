@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { Modal, Button, Input, Select, Checkbox, DatePicker, message, Table, Card, Space } from 'antd';
+import { Modal, Button, Input, Select, Checkbox, DatePicker, message, Table, Card, Space, Form, Alert } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import HealthCheckService from '../../../services/HealthCheckService';
 import dayjs from 'dayjs';
@@ -43,12 +43,18 @@ const HealthCheckResult = () => {
   });
   const [loadingSubmit, setLoadingSubmit] = useState(false);
 
-  // Lấy danh sách tất cả kết quả kiểm tra sức khỏe cho y tá
+  // Filter form
+  const [filterForm] = Form.useForm();
   const [allResults, setAllResults] = useState([]);
   const [allResultsLoading, setAllResultsLoading] = useState(false);
-  // 
+
+  // State for detail modal
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [detailRecord, setDetailRecord] = useState(null);
+
+  // Lọc chiến dịch có xác nhận PH
   const visibleCampaigns = useMemo(() => {
-    return approvedCampaigns.filter(c =>  c.parentConfirmation !== false);
+    return approvedCampaigns.filter(c => c.parentConfirmation !== false);
   }, [approvedCampaigns]);
   // Map campaignId -> campaignName
   const campaignIdToName = useMemo(() => {
@@ -73,8 +79,8 @@ const HealthCheckResult = () => {
       : { fullName: 'Không xác định', className: 'Không xác định' };
   };
 
+  // Lấy danh sách chiến dịch đã duyệt và kết quả kiểm tra sức khỏe (lọc)
   useEffect(() => {
-    // Lấy danh sách chiến dịch đã duyệt
     const fetchCampaigns = async () => {
       setLoadingCampaigns(true);
       try {
@@ -82,6 +88,7 @@ const HealthCheckResult = () => {
         const config = { headers: { Authorization: `Bearer ${token}` } };
         const data = await HealthCheckService.getHealthCheckApproved(config);
         setApprovedCampaigns(Array.isArray(data) ? data : []);
+        console.log('Approved campaigns loaded:', data);
       } catch (err) {
         setApprovedCampaigns([]);
       }
@@ -89,21 +96,44 @@ const HealthCheckResult = () => {
     };
     fetchCampaigns();
 
-    // Lấy tất cả kết quả kiểm tra sức khỏe cho y tá
-    const fetchAllResults = async () => {
-      setAllResultsLoading(true);
-      try {
-        const token = localStorage.getItem('token');
-        const config = { headers: { Authorization: `Bearer ${token}` } };
-        const data = await HealthCheckService.getAllHealthCheckResult(config);
-        setAllResults(Array.isArray(data) ? data : []);
-      } catch (err) {
-        setAllResults([]);
-      }
-      setAllResultsLoading(false);
-    };
-    fetchAllResults();
+    fetchFilteredResults();
   }, []);
+
+  // Lọc kết quả kiểm tra sức khỏe
+  const fetchFilteredResults = async (filterValues = {}) => {
+  setAllResultsLoading(true);
+  try {
+    const token = localStorage.getItem('token');
+    const config = {
+      headers: { Authorization: `Bearer ${token}` },
+      params: filterValues
+    };
+    const res = await HealthCheckService.filterResult(config);
+    setAllResults(Array.isArray(res) ? res : []);
+    console.log('Filtered results loaded:', res);
+  } catch (err) {
+    console.error('Lỗi khi lọc kết quả:', err);
+    setAllResults([]);
+  }
+  setAllResultsLoading(false);
+};
+
+
+  // Xử lý filter
+const handleFilter = (values) => {
+  const filterValues = {};
+
+  if (values.className) filterValues.className = values.className.trim();
+  if (values.studentName) filterValues.studentName = values.studentName.trim();
+  if (values.campaignName) filterValues.campaignName = values.campaignName;
+  if (values.parentConfirmation !== undefined) filterValues.isParentConfirmation = values.parentConfirmation;
+  if (values.startDate) filterValues.startDate = values.startDate.format('YYYY-MM-DD');
+  if (values.endDate) filterValues.endDate = values.endDate.format('YYYY-MM-DD');
+
+  console.log('Đang gửi query:', filterValues);
+  fetchFilteredResults(filterValues);
+};
+
 
   // Khi nhấn nút "Ghi nhận kết quả" trên từng chiến dịch
   const handleOpenStudentsModal = async (campaign) => {
@@ -197,7 +227,7 @@ const HealthCheckResult = () => {
         studentId: '',
         campaignId: ''
       });
-      // Reload lại danh sách kết quả nếu cần
+      fetchFilteredResults(filterForm.getFieldsValue());
     } catch (err) {
       message.error('Ghi nhận kết quả thất bại!');
     }
@@ -205,251 +235,159 @@ const HealthCheckResult = () => {
   };
 
   // Cột cho bảng tất cả kết quả kiểm tra sức khỏe
- const columns = [
-  { 
-    title: 'Học sinh', 
-    dataIndex: 'studentId', 
-    key: 'studentId',
-    render: (studentId) => getStudentInfo(studentId).fullName
-  },
-  { 
-    title: 'Lớp', 
-    dataIndex: 'studentId', 
-    key: 'className',
-    render: (studentId) => getStudentInfo(studentId).className
-  },
-  {
-    title: 'Chiến dịch',
-    dataIndex: 'campaignId',
-    key: 'campaignId',
-    render: (campaignId) => campaignIdToName[campaignId] || `Mã: ${campaignId}`
-  },
-  { title: 'Ngày khám', dataIndex: 'date', key: 'date' },
-  { title: 'Chiều cao (cm)', dataIndex: 'height', key: 'height' },
-  { title: 'Cân nặng (kg)', dataIndex: 'weight', key: 'weight' },
-  { title: 'Thị lực trái', dataIndex: 'eyesightLeft', key: 'eyesightLeft' },
-  { title: 'Thị lực phải', dataIndex: 'eyesightRight', key: 'eyesightRight' },
-  { title: 'Huyết áp', dataIndex: 'bloodPressure', key: 'bloodPressure' },
-  { title: 'Thính lực trái', dataIndex: 'hearingLeft', key: 'hearingLeft' },
-  { title: 'Thính lực phải', dataIndex: 'hearingRight', key: 'hearingRight' },
-  { title: 'Nhiệt độ', dataIndex: 'temperature', key: 'temperature' },
-  { title: 'Ghi chú', dataIndex: 'notes', key: 'notes' },
-  {
-    title: 'Trạng thái',
-    key: 'status',
-    render: (_, record) => {
-      // Tìm campaign trong visibleCampaigns để lấy parentConfirmation
-      const campaign = visibleCampaigns.find(c => c.campaignId === record.campaignId);
-      if (campaign && campaign.parentConfirmation === false) {
-        return (
-          <Button type="default" disabled>
-            Học sinh không tham gia đợt kiểm tra này
-          </Button>
-        );
-      }
-      return (
-        <Button
-          type="dashed"
-          onClick={() => navigate('/capnhatketquakiemtra', { state: { result: record } })}
-        >
-          Cập nhật
-        </Button>
-      );
+  const columns = [
+    { 
+      title: 'Học sinh', 
+      dataIndex: 'studentId', 
+      key: 'studentId',
+      render: (studentId) => getStudentInfo(studentId).fullName
     },
-    width: 210
-  }
-];
+    { 
+      title: 'Lớp', 
+      dataIndex: 'studentId', 
+      key: 'className',
+      render: (studentId) => getStudentInfo(studentId).className
+    },
+    {
+      title: 'Chiến dịch',
+      dataIndex: 'campaignName',
+      key: 'campaignName',
+      render: (campaignName) => campaignName || '-'
+    },
+    {
+      title: 'Ngày khám',
+      dataIndex: 'date',
+      key: 'date',
+      render: (date) => {
+        if (!date || !Array.isArray(date)) return '-';
+        const [y, m, d] = date;
+        if (!y || !m || !d) return '-';
+        const pad = (n) => n.toString().padStart(2, '0');
+        return `${pad(d)}/${pad(m)}/${y}`;
+      }
+    },
+    { title: 'Ghi chú', dataIndex: 'notes', key: 'notes', render: (v, record) => record.parentConfirmation === false ? 'Phụ huynh từ chối khám' : (v || '-') },
+    {
+      title: 'Cập nhật',
+      key: 'actions',
+      render: (_, record) =>
+        record.parentConfirmation ? (
+          <Button
+            type="link"
+            onClick={e => {
+              e.stopPropagation();
+              navigate('/capnhatketquakiemtra', { state: { result: record } });
+            }}
+          >
+            Cập nhật kết quả
+          </Button>
+        ) : null,
+      width: 140
+    }
+  ];
+
+  // Xem chi tiết popup
+  const handleRowClick = (record) => {
+    setDetailRecord(record);
+    setDetailModalOpen(true);
+  };
 
   return (
-     <div style={{ maxWidth: 1200, margin: '32px auto' }}>
+    <div style={{ maxWidth: 1200, margin: '32px auto' }}>
       <h2>Danh sách chiến dịch kiểm tra sức khỏe đã duyệt</h2>
-      <Space direction="vertical" style={{ width: '100%' }}>
-        {loadingCampaigns ? (
-          <div>Đang tải danh sách chiến dịch...</div>
-        ) : visibleCampaigns.length === 0 ? (
-          <div>Không có chiến dịch nào đã duyệt.</div>
-        ) : (
-          visibleCampaigns.map(campaign => (
-            <Card
-              key={campaign.campaignId}
-              title={campaign.campaignName}
-              style={{ marginBottom: 16 }}
-              extra={
-                <Button type="primary" onClick={() => handleOpenStudentsModal(campaign)}>
-                  Ghi nhận kết quả
-                </Button>
-              }
+      {/* Filter form */}
+      <Card title="Lọc kết quả kiểm tra sức khỏe" bordered style={{ marginBottom: 24 }}>
+        <Form layout="inline" form={filterForm} onFinish={handleFilter}>
+          <Form.Item name="className" label="Lớp">
+            <Input placeholder="Nhập tên lớp" />
+          </Form.Item>
+          <Form.Item name="campaignName" label="Chiến dịch">
+            <Select
+              showSearch
+              allowClear
+              placeholder="Chọn chiến dịch"
+              optionFilterProp="children"
+              style={{ minWidth: 180 }}
             >
-              <div>
-                <b>Đối tượng:</b> {campaign.targetGroup} &nbsp;|&nbsp;
-                <b>Ngày khám:</b> {campaign.scheduledDate}
-              </div>
-              <div>
-                <b>Mô tả:</b> {campaign.description}
-              </div>
-            </Card>
-          ))
-        )}
-      </Space>
+              {approvedCampaigns.map(campaign => (
+                <Option key={campaign.campaignId} value={campaign.campaignName}>
+                  {campaign.campaignName}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+      <Form.Item name="parentConfirmation" label="Xác nhận PH">
+  <Select allowClear placeholder="Chọn trạng thái" style={{ minWidth: 150 }}>
+    <Option value={true}>Đã xác nhận</Option>
+    <Option value={false}>Chưa xác nhận</Option>
+  </Select>
+</Form.Item>
 
-      {/* Modal chọn học sinh và ghi nhận kết quả */}
-      <Modal
-        title={
-          selectedCampaign
-            ? `Danh sách học sinh đã đăng ký: ${selectedCampaign.campaignName}`
-            : 'Danh sách học sinh đã đăng ký'
-        }
-        open={modalOpen}
-        onCancel={() => {
-          setModalOpen(false);
-          setSelectedStudent(null);
-        }}
-        footer={null}
-        width={selectedStudent ? 900 : 600}
-      >
-        {!selectedStudent ? (
-          loadingStudents ? (
-            <div>Đang tải danh sách học sinh...</div>
-          ) : registeredStudents.length === 0 ? (
-            <div>Không có học sinh nào đã đăng ký tham gia chiến dịch này.</div>
-          ) : (
-            <Table
-              dataSource={registeredStudents}
-              rowKey={record => record.studentId}
-              pagination={false}
-              columns={[
-                {
-                  title: 'Họ và tên',
-                  dataIndex: 'studentId',
-                  key: 'studentName',
-                  render: (studentId) => getStudentInfo(studentId).fullName
-                },
-                {
-                  title: 'Lớp',
-                  dataIndex: 'studentId',
-                  key: 'className',
-                  render: (studentId) => getStudentInfo(studentId).className
-                },
-                {
-                  title: 'Phụ huynh',
-                  dataIndex: 'parentId',
-                  key: 'parentName',
-                  render: (parentId) => getParentName(parentId)
-                },
-                {
-                  title: 'Hành động',
-                  key: 'action',
-                  render: (_, record) => (
-                    <Button type="primary" onClick={() => handleSelectStudent(record)}>
-                      Ghi nhận kết quả
-                    </Button>
-                  )
-                }
-              ]}
-            />
-          )
-        ) : (
-          <div className="health-check-form">
-            <h3>Ghi nhận kết quả cho: {getStudentInfo(selectedStudent.studentId).fullName}</h3>
-            <div style={{ marginBottom: 12 }}>
-              <label>Ngày khám <span style={{ color: 'red' }}>*</span></label>
-              <DatePicker
-                value={form.date ? dayjs(form.date) : null}
-                onChange={handleDateChange}
-                format="YYYY-MM-DD"
-                style={{ width: '100%' }}
-              />
-            </div>
-            <div style={{ marginBottom: 12 }}>
-              <label>Chiều cao (cm) <span style={{ color: 'red' }}>*</span></label>
-              <Input
-                name="height"
-                type="number"
-                min={0}
-                value={form.height}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div style={{ marginBottom: 12 }}>
-              <label>Cân nặng (kg) <span style={{ color: 'red' }}>*</span></label>
-              <Input
-                name="weight"
-                type="number"
-                min={0}
-                value={form.weight}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div style={{ marginBottom: 12 }}>
-              <label>Thị lực trái</label>
-              <Input name="eyesightLeft" value={form.eyesightLeft} onChange={handleChange} />
-            </div>
-            <div style={{ marginBottom: 12 }}>
-              <label>Thị lực phải</label>
-              <Input name="eyesightRight" value={form.eyesightRight} onChange={handleChange} />
-            </div>
-            <div style={{ marginBottom: 12 }}>
-              <label>Huyết áp</label>
-              <Input name="bloodPressure" value={form.bloodPressure} onChange={handleChange} />
-            </div>
-            <div style={{ marginBottom: 12 }}>
-              <label>Thính lực trái</label>
-              <Input name="hearingLeft" value={form.hearingLeft} onChange={handleChange} />
-            </div>
-            <div style={{ marginBottom: 12 }}>
-              <label>Thính lực phải</label>
-              <Input name="hearingRight" value={form.hearingRight} onChange={handleChange} />
-            </div>
-            <div style={{ marginBottom: 12 }}>
-              <label>Nhiệt độ</label>
-              <Input name="temperature" value={form.temperature} onChange={handleChange} />
-            </div>
-            <div style={{ marginBottom: 12 }}>
-              <Checkbox
-                name="consultationAppointment"
-                checked={form.consultationAppointment}
-                onChange={handleChange}
-              >
-                Đặt lịch tư vấn
-              </Checkbox>
-            </div>
-            <div style={{ marginBottom: 12 }}>
-              <label>Ghi chú</label>
-              <Input.TextArea name="notes" value={form.notes} onChange={handleChange} />
-            </div>
-            <div style={{ marginBottom: 12 }}>
-              <Checkbox
-                name="parentConfirmation"
-                checked={form.parentConfirmation}
-                onChange={handleChange}
-              >
-                Đã xác nhận với phụ huynh
-              </Checkbox>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <Button style={{ marginRight: 8 }} onClick={() => setSelectedStudent(null)}>
-                Quay lại
-              </Button>
-              <Button type="primary" loading={loadingSubmit} onClick={handleSubmit}>
-                Lưu kết quả
-              </Button>
-            </div>
-          </div>
-        )}
-      </Modal>
+          <Form.Item name="studentName" label="Học sinh">
+            <Input placeholder="Tên học sinh" />
+          </Form.Item>
+          <Form.Item name="startDate" label="Từ ngày">
+            <DatePicker format="YYYY-MM-DD" />
+          </Form.Item>
+          <Form.Item name="endDate" label="Đến ngày">
+            <DatePicker format="YYYY-MM-DD" />
+          </Form.Item>
+          <Form.Item>
+            <Button type="primary" htmlType="submit">Tìm kiếm</Button>
+          </Form.Item>
+          <Form.Item>
+            <Button onClick={() => { filterForm.resetFields(); fetchFilteredResults(); }}>Xóa</Button>
+          </Form.Item>
+        </Form>
+      </Card>
 
       {/* Bảng tất cả kết quả kiểm tra sức khỏe cho y tá */}
       <h2 style={{ marginTop: 40 }}>Tất cả kết quả kiểm tra sức khỏe</h2>
       <Table
         dataSource={allResults}
         columns={columns}
-        rowKey={record => `${record.studentId}-${record.campaignId}`}
+        rowKey={record => `${record.studentId}-${record.campaignId}-${record.healthCheckId}`}
         loading={allResultsLoading}
         scroll={{ x: true }}
+        onRow={record => ({ onClick: () => handleRowClick(record) })}
         pagination={{ pageSize: 10 }}
       />
+      {/* Chi tiết modal */}
+      <Modal
+        open={detailModalOpen}
+        title={detailRecord ? `Chi tiết kiểm tra sức khỏe: ${getStudentInfo(detailRecord.studentId).fullName}` : ''}
+        onCancel={() => setDetailModalOpen(false)}
+        footer={detailRecord && detailRecord.parentConfirmation ? (
+          <Button
+            type="primary"
+            onClick={() => {
+              setDetailModalOpen(false);
+              navigate('/capnhatketquakiemtra', { state: { result: detailRecord } });
+            }}
+          >
+            Cập nhật kết quả
+          </Button>
+        ) : null}
+        width={600}
+      >
+        {detailRecord && (
+          <div style={{ lineHeight: 2 }}>
+            <div><b>Học sinh:</b> {getStudentInfo(detailRecord.studentId).fullName}</div>
+            <div><b>Lớp:</b> {getStudentInfo(detailRecord.studentId).className}</div>
+            <div><b>Chiến dịch:</b> {detailRecord.campaignName || '-'}</div>
+            <div><b>Ngày khám:</b> {Array.isArray(detailRecord.date) ? `${detailRecord.date[2].toString().padStart(2, '0')}/${detailRecord.date[1].toString().padStart(2, '0')}/${detailRecord.date[0]}` : '-'}</div>
+            <div><b>Chiều cao (cm):</b> {detailRecord.height || '-'}</div>
+            <div><b>Cân nặng (kg):</b> {detailRecord.weight || '-'}</div>
+            <div><b>Thị lực trái:</b> {detailRecord.eyesightLeft || '-'}</div>
+            <div><b>Thị lực phải:</b> {detailRecord.eyesightRight || '-'}</div>
+            <div><b>Huyết áp:</b> {detailRecord.bloodPressure || '-'}</div>
+            <div><b>Thính lực trái:</b> {detailRecord.hearingLeft || '-'}</div>
+            <div><b>Thính lực phải:</b> {detailRecord.hearingRight || '-'}</div>
+            <div><b>Nhiệt độ:</b> {detailRecord.temperature || '-'}</div>
+            <div><b>Ghi chú:</b> {detailRecord.parentConfirmation === false ? 'Phụ huynh từ chối khám' : (detailRecord.notes || '-')}</div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

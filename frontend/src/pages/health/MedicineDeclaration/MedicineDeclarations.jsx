@@ -69,11 +69,6 @@ const MedicineDeclarations = () => {
       return;
     }
 
-    if (!imageFile) {
-      toast.error('Vui lòng chọn hình ảnh đơn thuốc!');
-      return;
-    }
-
     const duration =
       formData.startDate && formData.endDate
         ? Math.max(
@@ -86,30 +81,24 @@ const MedicineDeclarations = () => {
           )
         : 1;
 
-    // Tạo formData để gửi multipart/form-data
-    const form = new FormData();
-    form.append('studentId', studentInfo.studentId);
-    form.append('instruction', formData.instruction);
-    form.append('duration', duration);
-    form.append('startDate', formData.startDate);
-    form.append('endDate', formData.endDate);
-    form.append('notes', formData.notes);
-    form.append('image', imageFile);
+    // Chuẩn bị dữ liệu theo API mới
+    const requestData = {
+      studentId: studentInfo.studentId,
+      instruction: formData.instruction,
+      duration,
+      startDate: formData.startDate,
+      endDate: formData.endDate,
+      notes: formData.notes
+    };
 
     const token = localStorage.getItem('token');
 
     setIsSubmitting(true);
     setSubmitError(null);
-
     try {
       await MedicineDeclarationService.createMedicineSubmission(
-        form,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
-          }
-        }
+        { requestData, imageFile: imageFile || undefined },
+        token
       );
 
       setFormData({
@@ -262,13 +251,12 @@ const MedicineDeclarations = () => {
             ></textarea>
           </div>
           <div className="form-group">
-            <label>Hình ảnh đơn thuốc <span className="required">*</span></label>
+            <label>Hình ảnh đơn thuốc <span style={{ color: '#888', fontWeight: 400 }}>(không bắt buộc)</span></label>
             <input
               type="file"
               name="image"
               accept="image/*"
               onChange={handleImageChange}
-              required
             />
             {imageFile && (
               <div style={{ marginTop: 8 }}>
