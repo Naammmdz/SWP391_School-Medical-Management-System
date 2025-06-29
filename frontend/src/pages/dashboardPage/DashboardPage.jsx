@@ -13,19 +13,18 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import './DashboardPage.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
-// Register ChartJS components
 ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  Title,
-  Tooltip,
-  Legend
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    BarElement,
+    ArcElement,
+    Title,
+    Tooltip,
+    Legend
 );
 
 const DashboardPage = () => {
@@ -37,7 +36,7 @@ const DashboardPage = () => {
     vaccinatedStudents: 0,
   });
 
-  const [healthTrend, setHealthTrend] = useState({
+  const [healthTrend] = useState({
     labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'],
     datasets: [
       {
@@ -57,7 +56,7 @@ const DashboardPage = () => {
     ],
   });
 
-  const [vaccinationData, setVaccinationData] = useState({
+  const [vaccinationData] = useState({
     labels: ['Đã tiêm', 'Chưa tiêm', 'Đang chờ'],
     datasets: [
       {
@@ -67,7 +66,7 @@ const DashboardPage = () => {
     ],
   });
 
-  const [diseaseDistribution, setDiseaseDistribution] = useState({
+  const [diseaseDistribution] = useState({
     labels: ['Cảm cúm', 'Sốt', 'Đau đầu', 'Dị ứng', 'Khác'],
     datasets: [
       {
@@ -85,8 +84,6 @@ const DashboardPage = () => {
   });
 
   useEffect(() => {
-    // Fetch data from API
-    // For now using mock data
     setStats({
       totalStudents: 1000,
       healthyStudents: 850,
@@ -107,99 +104,116 @@ const DashboardPage = () => {
   };
 
   return (
-    <div className="dashboard-container">
-      <div className="dashboard-header">
-        <h1 className="dashboard-title">Thống kê sức khỏe học sinh</h1>
-        <p className="dashboard-subtitle">Tổng quan về tình hình sức khỏe học sinh trong trường</p>
+      <div className="container-fluid">
+        <div className="row">
+          {/* SIDEBAR */}
+          <div className="col-md-1 bg-dark text-white min-vh-100 p-2 position-fixed" style={{top: '80px', left: 0, zIndex: 1000, height: 'calc(100vh - 80px)'}}>
+            <h4 className="text-center mb-4">📚 Admin</h4>
+            <nav className="nav flex-column">
+              <a className="nav-link text-white" href="#">📊 Tổng quan</a>
+              <a className="nav-link text-white" href="#">👨‍⚕️ Hồ sơ y tế</a>
+              <a className="nav-link text-white" href="#">💉 Tiêm chủng</a>
+              <a className="nav-link text-white" href="#">🔔 Thông báo</a>
+              <a className="nav-link text-white mt-4" href="#">🚪 Đăng xuất</a>
+            </nav>
+          </div>
+
+          {/* MAIN CONTENT */}
+          <div className="col-md-1"></div>
+          <div className="col-md-11 p-4">
+            <h2 className="fw-bold mb-4">📈 Thống kê sức khỏe học sinh</h2>
+
+            {/* STAT CARDS */}
+            <div className="row g-4">
+              {[
+                {
+                  title: 'Học sinh khỏe mạnh',
+                  icon: <Heart size={24} />,
+                  value: stats.healthyStudents,
+                  change: '5%',
+                  trend: <TrendingUp size={16} />,
+                  color: 'success',
+                },
+                {
+                  title: 'Học sinh bệnh',
+                  icon: <Activity size={24} />,
+                  value: stats.sickStudents,
+                  change: '3%',
+                  trend: <TrendingDown size={16} />,
+                  color: 'danger',
+                },
+                {
+                  title: 'Đã kiểm tra sức khỏe',
+                  icon: <Stethoscope size={24} />,
+                  value: stats.checkedStudents,
+                  change: '8%',
+                  trend: <TrendingUp size={16} />,
+                  color: 'primary',
+                },
+                {
+                  title: 'Đã tiêm chủng',
+                  icon: <Syringe size={24} />,
+                  value: stats.vaccinatedStudents,
+                  change: '12%',
+                  trend: <TrendingUp size={16} />,
+                  color: 'warning',
+                },
+              ].map((stat, idx) => (
+                  <div className="col-md-6 col-lg-3" key={idx}>
+                    <div className={`card border-${stat.color} shadow-sm`}>
+                      <div className="card-body">
+                        <div className="d-flex justify-content-between align-items-center mb-2">
+                          <span className="fw-semibold">{stat.title}</span>
+                          <span className={`text-${stat.color}`}>{stat.icon}</span>
+                        </div>
+                        <h3 className="fw-bold">{stat.value}</h3>
+                        <p className={`mb-0 small text-${stat.color}`}>
+                          {stat.trend} {stat.change} so với tháng trước
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+              ))}
+            </div>
+
+            {/* CHARTS */}
+            <div className="row mt-5 g-4">
+              <div className="col-lg-6">
+                <div className="card h-100 shadow">
+                  <div className="card-header bg-light fw-bold">📈 Xu hướng sức khỏe học sinh</div>
+                  <div className="card-body">
+                    <div style={{ height: '300px' }}>
+                      <Line data={healthTrend} options={chartOptions} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-lg-6">
+                <div className="card h-100 shadow">
+                  <div className="card-header bg-light fw-bold">💉 Tình hình tiêm chủng</div>
+                  <div className="card-body">
+                    <div style={{ height: '300px' }}>
+                      <Pie data={vaccinationData} options={chartOptions} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-12">
+                <div className="card shadow">
+                  <div className="card-header bg-light fw-bold">🦠 Phân bố bệnh</div>
+                  <div className="card-body">
+                    <div style={{ height: '300px' }}>
+                      <Bar data={diseaseDistribution} options={chartOptions} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div> {/* END MAIN CONTENT */}
+        </div>
       </div>
-
-      <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-header">
-            <span className="stat-title">Học sinh khỏe mạnh</span>
-            <div className="stat-icon healthy">
-              <Heart size={24} />
-            </div>
-          </div>
-          <div className="stat-value">{stats.healthyStudents}</div>
-          <div className="stat-change positive">
-            <TrendingUp size={16} />
-            <span>5% so với tháng trước</span>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-header">
-            <span className="stat-title">Học sinh bệnh</span>
-            <div className="stat-icon sick">
-              <Activity size={24} />
-            </div>
-          </div>
-          <div className="stat-value">{stats.sickStudents}</div>
-          <div className="stat-change negative">
-            <TrendingDown size={16} />
-            <span>3% so với tháng trước</span>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-header">
-            <span className="stat-title">Đã kiểm tra sức khỏe</span>
-            <div className="stat-icon checked">
-              <Stethoscope size={24} />
-            </div>
-          </div>
-          <div className="stat-value">{stats.checkedStudents}</div>
-          <div className="stat-change positive">
-            <TrendingUp size={16} />
-            <span>8% so với tháng trước</span>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-header">
-            <span className="stat-title">Đã tiêm chủng</span>
-            <div className="stat-icon vaccinated">
-              <Syringe size={24} />
-            </div>
-          </div>
-          <div className="stat-value">{stats.vaccinatedStudents}</div>
-          <div className="stat-change positive">
-            <TrendingUp size={16} />
-            <span>12% so với tháng trước</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="charts-grid">
-        <div className="chart-card">
-          <div className="chart-header">
-            <h3 className="chart-title">Xu hướng sức khỏe học sinh</h3>
-          </div>
-          <div className="chart-container">
-            <Line data={healthTrend} options={chartOptions} />
-          </div>
-        </div>
-
-        <div className="chart-card">
-          <div className="chart-header">
-            <h3 className="chart-title">Tình hình tiêm chủng</h3>
-          </div>
-          <div className="chart-container">
-            <Pie data={vaccinationData} options={chartOptions} />
-          </div>
-        </div>
-
-        <div className="chart-card">
-          <div className="chart-header">
-            <h3 className="chart-title">Phân bố bệnh</h3>
-          </div>
-          <div className="chart-container">
-            <Bar data={diseaseDistribution} options={chartOptions} />
-          </div>
-        </div>
-      </div>
-    </div>
   );
 };
 

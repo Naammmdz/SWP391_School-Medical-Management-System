@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, GraduationCap } from 'lucide-react';
+import { Users, GraduationCap, Stethoscope, Syringe } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import './Admin.css';
 import DashboardPage from '../dashboardPage/DashboardPage';
@@ -7,73 +7,60 @@ import DashboardPage from '../dashboardPage/DashboardPage';
 const Admin = () => {
   const navigate = useNavigate();
 
-  // Navigation functions
-  const navigateToUserManagement = () => {
-    navigate('/admin/danhsachnguoidung');
-  };
-
-  const navigateToStudentManagement = () => {
-    navigate('/danhsachhocsinh');
-  };
-  const navigateToHealthCheckManagement = () => {
-    navigate('/danhsachkiemtradinhky');
-  };
-  const navigateToVaccinationManagement = () => {
-    navigate('/quanlytiemchung'); 
-  }
+  const managementCards = [
+    {
+      title: "Quản lý người dùng",
+      description: "Quản lý thông tin, phân quyền và trạng thái người dùng.",
+      icon: <Users size={32} />,
+      action: () => navigate('/admin/danhsachnguoidung'),
+      className: "card-users"
+    },
+    {
+      title: "Quản lý học sinh",
+      description: "Quản lý thông tin học sinh, lớp học và phụ huynh.",
+      icon: <GraduationCap size={32} />,
+      action: () => navigate('/danhsachhocsinh'),
+      className: "card-students"
+    },
+    {
+      title: "Quản lý kiểm tra định kỳ",
+      description: "Quản lý các đợt và kết quả kiểm tra sức khỏe định kỳ.",
+      icon: <Stethoscope size={32} />,
+      action: () => navigate('/danhsachkiemtradinhky'),
+      className: "card-health-check"
+    },
+    {
+      title: "Quản lý tiêm chủng",
+      description: "Quản lý các chiến dịch và kết quả tiêm chủng.",
+      icon: <Syringe size={32} />,
+      action: () => navigate('/quanlytiemchung'),
+      className: "card-vaccination"
+    }
+  ];
 
   return (
-    <>
-      <DashboardPage />
-      <div className="admin-page">
-        <div className="admin-header">
-          <h1>Quản lý hệ thống</h1>
-        </div>
-        
-        <div className="management-sections">
-          <div className="management-card" onClick={navigateToUserManagement}>
-            <div className="card-icon">
-              <Users size={32} />
-            </div>
-            <div className="card-content">
-              <h2>Quản lý người dùng</h2>
-              <p>Quản lý thông tin người dùng, phân quyền và trạng thái hoạt động</p>
-            </div>
-          </div>
+      <>
+        <DashboardPage />
+        <div className="admin-page" style={{marginLeft: '8.33%'}}>
+          <header className="admin-header">
+            <h1>Bảng điều khiển quản trị</h1>
+          </header>
 
-          <div className="management-card" onClick={navigateToStudentManagement}>
-            <div className="card-icon">
-              <GraduationCap size={32} />
-            </div>
-            <div className="card-content">
-              <h2>Quản lý học sinh</h2>
-              <p>Quản lý thông tin học sinh, lớp học và phụ huynh</p>
-            </div>
-          </div>
-            
-            <div className="management-card" onClick={navigateToHealthCheckManagement}>
-            <div className="card-icon">
-              <GraduationCap size={32} />
-            </div>
-            <div className="card-content">
-              <h2>Quản lý kiểm tra định kỳ</h2>
-              <p>Quản lý thông tin kiểm tra sức khỏe học sinh</p>
-            </div>
-          </div>
-               
-               <div className="management-card" onClick={navigateToVaccinationManagement}>
-            <div className="card-icon">
-              <GraduationCap size={32} />
-            </div>
-            <div className="card-content">
-              <h2>Quản lý sự kiện tiêm chủng</h2>
-              <p>Quản lý thông tin tiêm chủng, kết quả tiêm chủng</p>
-            </div>
-          </div>
-
+          <main className="management-sections">
+            {managementCards.map((card, index) => (
+                <div key={index} className={`management-card ${card.className}`} onClick={card.action}>
+                  <div className="card-icon">
+                    {card.icon}
+                  </div>
+                  <div className="card-content">
+                    <h2>{card.title}</h2>
+                    <p>{card.description}</p>
+                  </div>
+                </div>
+            ))}
+          </main>
         </div>
-      </div>
-    </>
+      </>
   );
 };
 
