@@ -6,7 +6,7 @@ import Layout from './components/Layout';
 
 import MedicalEvents from './pages/medical/MedicalEvent/MedicalEvents';
 import MedicineDeclarations from './pages/health/MedicineDeclaration/MedicineDeclarations';
-import Pharmaceutical from './pages/medical/Pharmaceutical/Pharmaceutical'; 
+import Pharmaceutical from './pages/medical/Pharmaceutical/Pharmaceutical';
 
 import CreateVaccinationCampaign from './pages/health/Vaccination/CreateVaccinationCampaign';
 import VaccinationManagement from './pages/health/Vaccination/VaccinationManagement';
@@ -54,7 +54,7 @@ const ProtectedRoute = ({ element, requiredRole }) => {
     return <Navigate to="/" replace />;
   }
 
- 
+
   return element;
 };
 

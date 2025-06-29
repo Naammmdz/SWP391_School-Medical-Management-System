@@ -1,5 +1,6 @@
 package com.school.health.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.school.health.enums.Status;
 import jakarta.persistence.*;
 import lombok.*;
@@ -42,6 +43,7 @@ public class HealthCheckCampaign {
     private Status status;
     @CreationTimestamp
     @Column(name = "CreatedAt")
+//    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
 
 
