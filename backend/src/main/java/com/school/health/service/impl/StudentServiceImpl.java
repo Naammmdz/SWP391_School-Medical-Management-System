@@ -84,7 +84,6 @@ public class StudentServiceImpl implements StudentService {
         dto.setClassName(student.getClassName());
         dto.setParentId(student.getParent().getUserId());
         dto.setCreatedAt(student.getCreatedAt());
-        dto.setHasHealthProfile(student.getHealthProfile() != null);
         dto.setActive(student.isActive());
         return dto;
     }
