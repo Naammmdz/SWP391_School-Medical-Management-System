@@ -31,18 +31,70 @@ const MedicineLog = () => {
   const [dailyImages, setDailyImages] = useState({});
   const [markTakenDayLoading, setMarkTakenDayLoading] = useState({});
   const [refresh, setRefresh] = useState(false);
+  const [medicineLogsStatus, setMedicineLogsStatus] = useState({});
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const isParent = user.userRole === 'ROLE_PARENT';
 
+  // Fetch medicine logs status
+  const fetchMedicineLogsStatus = async () => {
+    if (!submission || !submission.id) {
+      console.log('No submission or submission ID:', submission);
+      return;
+    }
+    
+    console.log('Fetching medicine logs for submission:', submission.id);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await MedicineDeclarationService.getMedicineSubmissionById(submission.id, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      console.log('Medicine submission response:', response);
+      
+      if (response.data && response.data.medicineLogs) {
+        console.log('Found medicine logs:', response.data.medicineLogs);
+        const logsMap = {};
+        response.data.medicineLogs.forEach(log => {
+          console.log('Processing log:', log);
+          // Ensure date format consistency
+          const logDate = dayjs(log.givenAt).format('YYYY-MM-DD');
+          console.log('Log date formatted:', logDate, 'Original:', log.givenAt);
+          logsMap[logDate] = {
+            status: log.status,
+            notes: log.notes,
+            givenByName: log.givenByName,
+            imageData: log.imageData
+          };
+        });
+        console.log('Final logs map:', logsMap);
+        setMedicineLogsStatus(logsMap);
+      } else {
+        console.log('No medicine logs found in response');
+      }
+    } catch (error) {
+      console.error('Error fetching medicine logs:', error);
+    }
+  };
+
   useEffect(() => {
     if (!submission) {
       navigate('/donthuoc');
+    } else {
+      fetchMedicineLogsStatus();
     }
-  }, [submission, navigate]);
+  }, [submission, navigate, refresh]);
 
   const handleMarkTakenByDay = async (date) => {
     if (!submission) return;
+    
+    // Prevent double submission
+    const logStatus = medicineLogsStatus[date];
+    if (logStatus?.status === true) {
+      message.warning('Thuốc ngày này đã được ghi nhận rồi!');
+      return;
+    }
+    
     setMarkTakenDayLoading(prev => ({ ...prev, [date]: true }));
     try {
       const token = localStorage.getItem('token');
@@ -70,7 +122,20 @@ const MedicineLog = () => {
       message.success(`Đã ghi nhận uống thuốc ngày ${dayjs(date).format('DD/MM/YYYY')}`);
       setDailyNotes(prev => ({ ...prev, [date]: '' }));
       setDailyImages(prev => ({ ...prev, [date]: null }));
-      setRefresh(r => !r);
+      // Immediately update the status for this date
+      setMedicineLogsStatus(prev => ({
+        ...prev,
+        [date]: {
+          status: true,
+          notes: dailyNotes[date] || '',
+          givenByName: nurse.fullName || nurse.username || 'Bạn',
+          imageData: null
+        }
+      }));
+      // Also trigger a full refresh
+      setTimeout(() => {
+        fetchMedicineLogsStatus();
+      }, 500);
     } catch (err) {
       message.error('Ghi nhận uống thuốc thất bại!');
     }
@@ -241,6 +306,18 @@ const MedicineLog = () => {
               const today = dayjs().format('YYYY-MM-DD');
               const isTodayOrPast = dayjs(date).isSameOrBefore(today, 'day');
               const isToday = dayjs(date).isSame(today, 'day');
+              const logStatus = medicineLogsStatus[date];
+              const isCheckedIn = logStatus?.status === true;
+              
+              console.log(`Date ${date}:`, {
+                logStatus,
+                isCheckedIn,
+                isTodayOrPast,
+                isToday,
+                'Available dates in medicineLogsStatus': Object.keys(medicineLogsStatus),
+                'Looking for date': date,
+                'Full medicineLogsStatus': medicineLogsStatus
+              });
               
               return (
                 <Col xs={24} lg={12} key={date}>
@@ -248,79 +325,157 @@ const MedicineLog = () => {
                     size="small"
                     style={{
                       borderRadius: 12,
-                      border: isToday ? '2px solid #15803d' : '1px solid #f0f0f0',
-                      background: isToday ? '#f0fdf4' : 'white'
+                      border: isCheckedIn ? '2px solid #52c41a' : 
+                             isToday ? '2px solid #15803d' : '1px solid #f0f0f0',
+                      background: isCheckedIn ? '#f6ffed' : 
+                                 isToday ? '#f0fdf4' : 'white'
                     }}
                     title={
                       <Space>
-                        <CalendarOutlined style={{ color: isToday ? '#15803d' : '#666' }} />
-                        <Text strong style={{ color: isToday ? '#15803d' : '#333' }}>
+                        <CalendarOutlined style={{ 
+                          color: isCheckedIn ? '#52c41a' : 
+                                isToday ? '#15803d' : '#666' 
+                        }} />
+                        <Text strong style={{ 
+                          color: isCheckedIn ? '#52c41a' : 
+                                isToday ? '#15803d' : '#333' 
+                        }}>
                           {dayjs(date).format('DD/MM/YYYY')}
                         </Text>
-                        {isToday && <Tag color="green">Hôm nay</Tag>}
-                        {!isTodayOrPast && <Tag color="orange">Tương lai</Tag>}
+                        {isCheckedIn && <Tag color="green" icon={<CheckCircleOutlined />}>Đã uống</Tag>}
+                        {isToday && !isCheckedIn && <Tag color="blue">Hôm nay</Tag>}
+                        {!isTodayOrPast && !isCheckedIn && <Tag color="orange">Tương lai</Tag>}
                       </Space>
                     }
                   >
                     <Space direction="vertical" style={{ width: '100%' }} size={12}>
+                      {isCheckedIn && (
+                        <Alert
+                          message="Đã ghi nhận uống thuốc"
+                          description={
+                            <div>
+                              {logStatus.givenByName && (
+                                <Text type="secondary" style={{ fontSize: 12 }}>
+                                  Ghi nhận bởi: {logStatus.givenByName}
+                                </Text>
+                              )}
+                              {logStatus.notes && (
+                                <div style={{ marginTop: 4 }}>
+                                  <Text type="secondary" style={{ fontSize: 12 }}>
+                                    Ghi chú: {logStatus.notes}
+                                  </Text>
+                                </div>
+                              )}
+                            </div>
+                          }
+                          type="success"
+                          showIcon
+                          style={{ marginBottom: 12 }}
+                        />
+                      )}
                       <div>
                         <Text strong style={{ fontSize: 12, color: '#666' }}>Ghi chú:</Text>
                         <TextArea
                           rows={2}
                           placeholder="Ghi chú về việc uống thuốc..."
-                          value={dailyNotes[date] || ''}
+                          value={isCheckedIn ? (logStatus?.notes || '') : (dailyNotes[date] || '')}
                           onChange={e => setDailyNotes(prev => ({ ...prev, [date]: e.target.value }))}
-                          disabled={!isTodayOrPast}
+                          disabled={!isTodayOrPast || isCheckedIn}
+                          readOnly={isCheckedIn}
                           style={{ marginTop: 4, borderRadius: 8 }}
                         />
                       </div>
                       
                       <div>
                         <Text strong style={{ fontSize: 12, color: '#666' }}>Ảnh xác nhận:</Text>
-                        <Upload
-                          accept="image/*"
-                          beforeUpload={() => false}
-                          onChange={(info) => {
-                            const file = info.file.originFileObj || info.file;
-                            setDailyImages(prev => ({ ...prev, [date]: file }));
-                          }}
-                          disabled={!isTodayOrPast}
-                          maxCount={1}
-                          listType="picture-card"
-                          style={{ marginTop: 4 }}
-                        >
-                          {!dailyImages[date] && (
-                            <div>
-                              <CameraOutlined />
-                              <div style={{ marginTop: 8, fontSize: 12 }}>Tải ảnh</div>
-                            </div>
-                          )}
-                        </Upload>
-                        {dailyImages[date] && (
-                          <Image
-                            src={URL.createObjectURL(dailyImages[date])}
-                            alt="Ảnh xác nhận"
-                            style={{
-                              width: 80,
-                              height: 80,
-                              borderRadius: 8,
-                              objectFit: 'cover',
-                              marginTop: 8
+                        {!isCheckedIn && (
+                          <Upload
+                            accept="image/*"
+                            beforeUpload={() => false}
+                            onChange={(info) => {
+                              const file = info.file.originFileObj || info.file;
+                              setDailyImages(prev => ({ ...prev, [date]: file }));
                             }}
-                          />
+                            disabled={!isTodayOrPast}
+                            maxCount={1}
+                            listType="picture-card"
+                            style={{ marginTop: 4 }}
+                          >
+                            {!dailyImages[date] && (
+                              <div>
+                                <CameraOutlined />
+                                <div style={{ marginTop: 8, fontSize: 12 }}>Tải ảnh</div>
+                              </div>
+                            )}
+                          </Upload>
+                        )}
+                        {/* Show existing image for checked-in logs */}
+                        {isCheckedIn && logStatus?.imageData && (
+                          <div style={{ marginTop: 8 }}>
+                            <Text strong style={{ fontSize: 12, color: '#666' }}>Ảnh đã ghi nhận:</Text>
+                            <div style={{ marginTop: 4 }}>
+                              <Image
+                                src={logStatus.imageData}
+                                alt="Ảnh xác nhận"
+                                style={{
+                                  width: 120,
+                                  height: 120,
+                                  borderRadius: 8,
+                                  objectFit: 'cover',
+                                  border: '2px solid #52c41a'
+                                }}
+                              />
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Show current upload for non-checked-in logs */}
+                        {!isCheckedIn && dailyImages[date] && (
+                          <div style={{ marginTop: 8 }}>
+                            <Text strong style={{ fontSize: 12, color: '#666' }}>Ảnh sẽ gửi:</Text>
+                            <div style={{ marginTop: 4 }}>
+                              <Image
+                                src={URL.createObjectURL(dailyImages[date])}
+                                alt="Ảnh xác nhận"
+                                style={{
+                                  width: 80,
+                                  height: 80,
+                                  borderRadius: 8,
+                                  objectFit: 'cover'
+                                }}
+                              />
+                            </div>
+                          </div>
                         )}
                       </div>
                       
-                      <Button
-                        type="primary"
-                        icon={<CheckCircleOutlined />}
-                        loading={markTakenDayLoading[date]}
-                        onClick={() => handleMarkTakenByDay(date)}
-                        disabled={!isTodayOrPast || !dailyImages[date]}
-                        style={{ borderRadius: 8, width: '100%' }}
-                      >
-                        Xác nhận đã uống thuốc
-                      </Button>
+                      {!isCheckedIn ? (
+                        <Button
+                          type="primary"
+                          icon={<CheckCircleOutlined />}
+                          loading={markTakenDayLoading[date]}
+                          onClick={() => handleMarkTakenByDay(date)}
+                          disabled={!isTodayOrPast || !dailyImages[date]}
+                          style={{ borderRadius: 8, width: '100%' }}
+                        >
+                          Xác nhận đã uống thuốc
+                        </Button>
+                      ) : (
+                        <Button
+                          type="default"
+                          icon={<CheckCircleOutlined />}
+                          disabled
+                          style={{ 
+                            borderRadius: 8, 
+                            width: '100%',
+                            backgroundColor: '#f6ffed',
+                            borderColor: '#52c41a',
+                            color: '#52c41a'
+                          }}
+                        >
+                          ✓ Đã xác nhận
+                        </Button>
+                      )}
                     </Space>
                   </Card>
                 </Col>

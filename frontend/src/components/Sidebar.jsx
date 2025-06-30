@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import './Sidebar.css';
 import {
   HomeOutlined,
@@ -21,6 +21,7 @@ import {
   ArrowRightOutlined,
 } from '@ant-design/icons';
 import studentService from '../services/StudentService';
+import NotificationService from '../services/NotificationService';
 import axios from "axios";
 
 // Icons - sử dụng emoji hoặc text thay thế lucide-react
@@ -143,7 +144,6 @@ const getNavGroupsForRole = (role) => {
           { path: '/donthuoc', name: 'Đơn thuốc', icon: 'clipboard', badge: '2' },
           { path: '/sukienyte', name: 'Sự kiện y tế', icon: 'activity', badge: '1' },
           { path: '/quanlythuoc', name: 'Quản lý thuốc', icon: 'pill' },
-          { path: '/chouongthuoc', name: 'Chờ uống thuốc', icon: 'pill' },
         ]
       },
       {
@@ -260,6 +260,7 @@ const navGroups = [
 
 const Sidebar = ({ userRole, onToggleCollapse, className = "" }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [hoveredItem, setHoveredItem] = useState(null);
   const [openGroup, setOpenGroup] = useState(-1); // Will be set based on current URL
   const [hasInitialized, setHasInitialized] = useState(false); // Track if we've done initial setup
@@ -267,6 +268,13 @@ const Sidebar = ({ userRole, onToggleCollapse, className = "" }) => {
   const [listHeights, setListHeights] = useState([]);
   const [studentList, setStudentList] = useState([]);
   const [selectedStudentId, setSelectedStudentId] = useState(localStorage.getItem("selectedStudentId") || "");
+  
+  // Notification state
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const notificationsRef = useRef(null);
+  
   // const user = JSON.parse(localStorage.getItem("user") || "{}");
   // const token = localStorage.getItem("token");
 
@@ -380,6 +388,157 @@ const Sidebar = ({ userRole, onToggleCollapse, className = "" }) => {
         });
     }
   }, [user.userRole, user.userId, token]);
+
+  // Fetch notifications and unread count
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!token || !user) {
+          return;
+        }
+        
+        const config = { headers: { Authorization: `Bearer ${token}` } };
+        const data = await NotificationService.getAllNotifications(config);
+        console.log('🔔 Raw notification data:', data);
+        
+        setNotifications(Array.isArray(data) ? data : []);
+        
+        const count = await NotificationService.countUnreadNotifications(config);
+        console.log('🔔 Raw unread count:', count);
+        console.log('🔔 Count type:', typeof count);
+        
+        setUnreadCount(count || 0);
+        
+        // Debug: Check each notification's read status
+        if (Array.isArray(data)) {
+          const unreadFromData = data.filter(n => !n.read && !n.isRead).length;
+          console.log('🔔 Unread from data analysis:', unreadFromData);
+          console.log('🔔 Notification read status:');
+          data.forEach((n, i) => {
+            console.log(`  ${i + 1}. ID: ${n.id}, Read: ${n.read}, IsRead: ${n.isRead}, Title: "${n.title}"`);
+          });
+        }
+        
+        console.log('🔔 Final state - unreadCount:', count || 0);
+      } catch (err) {
+        console.error('🔔 Error fetching notifications:', err);
+        setNotifications([]);
+        setUnreadCount(0);
+      }
+    };
+    
+    fetchNotifications();
+  }, []);
+
+  // Handle clicking outside notifications to close
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        notificationsRef.current &&
+        !notificationsRef.current.contains(event.target)
+      ) {
+        setShowNotifications(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Handle reading a notification
+  const handleReadNotification = async (notification) => {
+    try {
+      const token = localStorage.getItem('token');
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+
+      // If unread then mark as read
+      if (!notification.read) {
+        await NotificationService.removeEventListener(notification.id, config);
+        setNotifications((prev) =>
+          prev.map((n) =>
+            n.id === notification.id ? { ...n, read: true } : n
+          )
+        );
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      }
+
+      // Handle navigation based on notification
+      handleNotificationNavigation(notification);
+
+    } catch (err) {
+      console.error("Error handling notification:", err);
+    }
+  };
+
+  // Mark all notifications as read
+  const handleMarkAllAsRead = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      await NotificationService.markAllAsRead(config);
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+      setUnreadCount(0);
+    } catch (err) {}
+  };
+
+
+  // Handle notification navigation
+  const handleNotificationNavigation = (notification) => {
+    if (!notification) return;
+  
+    const contentRaw = notification.content || notification.message || '';
+    const content = contentRaw.toLowerCase();
+    const title = (notification.title || '').toLowerCase();
+    const userRole = user?.userRole?.toUpperCase();
+  
+  
+    // Check notification about medicine
+    const isMedicineNotification = (
+      content.includes('đơn thuốc') || content.includes('thuốc') ||
+      content.includes('medicine') || content.includes('prescription') ||
+      title.includes('đơn thuốc') || title.includes('thuốc') ||
+      title.includes('medicine') || title.includes('prescription')
+    );
+  
+    // Check notification about vaccination
+    const isVaccinationNotification = (
+      content.includes('tiêm chủng') || content.includes('vaccination') ||
+      content.includes('vaccine') || content.includes('tiêm') || content.includes('chủng') ||
+      title.includes('tiêm chủng') || title.includes('vaccination') ||
+      title.includes('vaccine') || title.includes('tiêm') || title.includes('chủng')
+    );
+  
+    if (isMedicineNotification) {
+      switch (userRole) {
+        case 'ROLE_PARENT':
+          setShowNotifications(false);
+          navigate('/donthuocdagui');
+          break;
+        case 'ROLE_NURSE':
+          setShowNotifications(false);
+          navigate('/donthuoc');
+          break;
+        default:
+          break;
+      }
+    } else if (isVaccinationNotification) {
+      switch (userRole) {
+        case 'ROLE_PARENT':
+          setShowNotifications(false);
+          navigate('/thongbaotiemchung');
+          break;
+        case 'ROLE_NURSE':
+        case 'ROLE_ADMIN':
+        case 'ROLE_PRINCIPAL':
+          setShowNotifications(false);
+          navigate('/quanlytiemchung');
+          break;
+        default:
+          break;
+      }
+    }
+  };
 
   const handleToggleGroup = useCallback((idx) => {
     setOpenGroup(openGroup === idx ? -1 : idx);
@@ -516,12 +675,81 @@ const Sidebar = ({ userRole, onToggleCollapse, className = "" }) => {
 
       {/* Back to Homepage ở cuối */}
       <div className="sidebar-back-home">
-        <Link to="/" className="sidebar-nav-link">
-          <div className="sidebar-nav-content">
-            <ArrowLeftOutlined style={{fontSize: 20}} />
-            <span className="sidebar-nav-text">Trang chủ</span>
+        <div ref={notificationsRef} style={{ position: 'relative' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Link to="/" className="sidebar-nav-link" style={{ flex: 1 }}>
+              <div className="sidebar-nav-content">
+                <ArrowLeftOutlined style={{fontSize: 20}} />
+                <span className="sidebar-nav-text">Trang chủ</span>
+              </div>
+            </Link>
+            <button
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '8px',
+                borderRadius: '4px',
+                marginLeft: '8px',
+                position: 'relative',
+                display: 'flex',
+                alignItems: 'center',
+                color: '#10d569',
+                transition: 'all 0.2s ease'
+              }}
+              onClick={() => setShowNotifications(prev => !prev)}
+              onMouseEnter={(e) => {
+                e.target.style.background = '#2a2a2a';
+                e.target.style.color = '#fff';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = 'none';
+                e.target.style.color = '#10d569';
+              }}
+              aria-label="Toggle notifications"
+            >
+              <BellOutlined style={{ fontSize: '18px', fontWeight: 'bold' }} />
+              {unreadCount > 0 && (
+                <span className="notification-badge sidebar-notification-badge">{unreadCount}</span>
+              )}
+            </button>
           </div>
-        </Link>
+          {showNotifications && (
+            <div className="notifications-popup">
+              <div className="notifications-header">
+                <span>Thông báo</span>
+                <button
+                  className="mark-all-btn"
+                  onClick={() => handleMarkAllAsRead()}
+                  disabled={unreadCount === 0}
+                >
+                  Đánh dấu tất cả đã đọc
+                </button>
+              </div>
+              <div className="notifications-list">
+                {notifications.length === 0 ? (
+                  <div className="notification-item empty">Không có thông báo.</div>
+                ) : (
+                  notifications.map((n) => (
+                    <div
+                      key={n.id}
+                      className={`notification-item${n.read ? '' : ' unread'}`}
+                      onClick={() => handleReadNotification(n)}
+                      style={{ cursor: n.read ? 'default' : 'pointer' }}
+                    >
+                      <div className="notification-title">{n.title || 'Thông báo'}</div>
+                      <div className="notification-content">{n.content}</div>
+                      <div className="notification-time">
+                        {n.createdAt ? new Date(n.createdAt).toLocaleString() : ''}
+                      </div>
+                      {!n.read && <span className="notification-dot" />}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Footer */}

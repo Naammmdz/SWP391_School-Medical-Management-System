@@ -95,5 +95,20 @@ getMedicineLog :  async (config, medicineId) => {
     throw error;
   }
 },
+
+getMedicineSubmissionById: async (id, config) => {
+  try {
+    console.log('Service: Fetching submission with ID:', id);
+    console.log('Service: API URL:', `${API_URL}/${id}`);
+    console.log('Service: Config:', config);
+    const response = await axios.get(`${API_URL}/${id}`, config);
+    console.log('Service: Response received:', response);
+    return response;
+  } catch (error) {
+    console.error("Error fetching medicine submission by ID:", error);
+    console.error("Error details:", error.response?.data);
+    throw error;
+  }
+},
 }
 export default MedicineDeclarationService;
