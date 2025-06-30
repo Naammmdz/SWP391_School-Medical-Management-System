@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class VaccinationCampaignResponseDTO {
     private int campaignId;
     private String campaignName;
@@ -24,4 +25,5 @@ public class VaccinationCampaignResponseDTO {
     private LocalDateTime approvedAt;
     private Status status;
     private LocalDateTime createdAt;
+    private boolean isParentConfirm;
 }
