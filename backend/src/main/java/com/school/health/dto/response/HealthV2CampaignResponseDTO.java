@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class HealthCampaignResponseDTO {
+public class HealthV2CampaignResponseDTO {
     private int campaignId;
     private String campaignName;
     private String targetGroup;
@@ -25,5 +25,5 @@ public class HealthCampaignResponseDTO {
     private LocalDateTime approvedAt;
     private Status status;
     private LocalDateTime createdAt;
-
+    private boolean isParentConfirm;
 }

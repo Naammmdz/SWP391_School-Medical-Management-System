@@ -3,15 +3,15 @@ package com.school.health.dto.response;
 import com.school.health.enums.Status;
 import lombok.*;
 
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class HealthCampaignResponseDTO {
+public class VaccineV2CampaignResponseDTO {
     private int campaignId;
     private String campaignName;
     private String targetGroup;
@@ -25,5 +25,5 @@ public class HealthCampaignResponseDTO {
     private LocalDateTime approvedAt;
     private Status status;
     private LocalDateTime createdAt;
-
+    private boolean isParentConfirm;
 }

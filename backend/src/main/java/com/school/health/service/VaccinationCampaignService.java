@@ -2,10 +2,7 @@ package com.school.health.service;
 
 import com.school.health.dto.request.VaccinationCampaignRequestDTO;
 import com.school.health.dto.request.VaccinationRequestDTO;
-import com.school.health.dto.response.StudentResponseDTO;
-import com.school.health.dto.response.VaccinationCampaignResponseDTO;
-import com.school.health.dto.response.VaccinationResponseDTO;
-import com.school.health.dto.response.VaccinationResponseResultDTO;
+import com.school.health.dto.response.*;
 import com.school.health.entity.VaccinationCampaign;
 import com.school.health.enums.Status;
 
@@ -29,7 +26,7 @@ public interface VaccinationCampaignService {
 
     List<StudentResponseDTO> getStudentsRegistrations(Integer campaignId);
 
-    List<VaccinationCampaignResponseDTO> getApprovedVaccination();
+    List<VaccineV2CampaignResponseDTO> getApprovedVaccination();
 
     VaccinationResponseDTO registerStudentVaccine(VaccinationRequestDTO request);
 
