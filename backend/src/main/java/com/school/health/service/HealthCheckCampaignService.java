@@ -25,7 +25,7 @@ public interface HealthCheckCampaignService {
 
     List<StudentResponseDTO> getStudentsRegistrations(int campaignId);
 
-    List<HealthCampaignResponseDTO> getApprovedCampaigns();
+    List<HealthV2CampaignResponseDTO> getApprovedCampaigns();
 
     HealthCheckResponseDTO registerStudentHealthCheck(HealthCheckRequestDTO request);
 

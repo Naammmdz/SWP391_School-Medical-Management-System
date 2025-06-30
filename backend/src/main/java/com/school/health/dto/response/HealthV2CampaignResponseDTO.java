@@ -1,5 +1,6 @@
 package com.school.health.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.school.health.enums.Status;
 import lombok.*;
 
@@ -19,11 +20,14 @@ public class HealthV2CampaignResponseDTO {
     private String address; // địa điểm tổ chức khám
     private String organizer; // người thực hiện chiến dịch
     private String description;
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate scheduledDate;
     private int createdBy;
     private int approvedBy;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime approvedAt;
     private Status status;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
     private boolean isParentConfirm;
 }
