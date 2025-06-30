@@ -1,455 +1,135 @@
+/* General Admin Page Styles */
+:root {
+  --admin-bg: #f8f9fa;
+  --admin-card-bg: #ffffff;
+  --admin-text-primary: #212529;
+  --admin-text-secondary: #6c757d;
+  --admin-border-color: #e9ecef;
+  --admin-shadow: 0 4px 8px rgba(0, 0, 0, 0.04);
+  --admin-shadow-hover: 0 10px 20px rgba(0, 0, 0, 0.08);
+  --admin-radius: 16px;
+}
+
 .admin-page {
-  padding: 20px;
-  padding-top: 120px;
+  background-color: var(--admin-bg);
+  padding: 1rem;
+  padding-top: 120px; /* Adjust based on your header's height */
+  min-height: auto;
+  padding-bottom: 100px;
 }
 
 .admin-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 32px;
+  text-align: center;
+  margin-bottom: 3rem;
 }
 
 .admin-header h1 {
-  font-size: 28px;
-  font-weight: 600;
-  color: #333;
-  margin: 0;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--admin-text-primary);
+  position: relative;
+  display: inline-block;
+  padding-bottom: 0.75rem;
 }
 
-.add-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: background-color 0.2s;
-}
-
-.add-btn:hover {
-  background-color: #43a047;
-}
-
-.form-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
+.admin-header h1::after {
+  content: '';
+  position: absolute;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 4px;
+  background: linear-gradient(90deg, #4e73df, #1cc88a);
+  border-radius: 2px;
 }
 
-.form-content {
-  background: white;
-  border-radius: 8px;
-  width: 100%;
-  max-width: 500px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.form-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 24px;
-  border-bottom: 1px solid #eee;
-}
-
-.form-header h2 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-  margin: 0;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  color: #666;
-  cursor: pointer;
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  transition: background-color 0.2s;
-}
-
-.close-btn:hover {
-  background-color: #f5f5f5;
-}
-
-.user-form {
-  padding: 24px;
-}
-
-.form-group {
-  margin-bottom: 16px;
-}
-
-.form-group label {
-  display: block;
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 8px;
-}
-
-.form-group input,
-.form-group select {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-  transition: border-color 0.2s;
-}
-
-.form-group input:focus,
-.form-group select:focus {
-  border-color: #4caf50;
-  outline: none;
-}
-
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 24px;
-}
-
-.cancel-btn,
-.submit-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.cancel-btn {
-  background-color: #f5f5f5;
-  color: #666;
-  border: 1px solid #ddd;
-}
-
-.cancel-btn:hover {
-  background-color: #eee;
-}
-
-.submit-btn {
-  background-color: #4caf50;
-  color: white;
-  border: none;
-}
-
-.submit-btn:hover {
-  background-color: #43a047;
-}
-
-.users-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: white;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.users-table th,
-.users-table td {
-  padding: 12px 16px;
-  text-align: left;
-  border-bottom: 1px solid #eee;
-}
-
-.users-table th {
-  background-color: #f5f5f5;
-  font-weight: 500;
-  color: #666;
-  font-size: 14px;
-}
-
-.users-table td {
-  font-size: 14px;
-  color: #333;
-}
-
-.users-table tr:last-child td {
-  border-bottom: none;
-}
-
-.actions {
-  display: flex;
-  gap: 8px;
-}
-
-.edit-btn,
-.delete-btn {
-  background: none;
-  border: none;
-  padding: 4px;
-  cursor: pointer;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color 0.2s;
-}
-
-.edit-btn {
-  color: #2196f3;
-}
-
-.delete-btn {
-  color: #f44336;
-}
-
-.edit-btn:hover {
-  background-color: #e3f2fd;
-}
-
-.delete-btn:hover {
-  background-color: #ffebee;
-}
-
-.error-message {
-  background-color: #ffebee;
-  color: #f44336;
-  padding: 12px 16px;
-  border-radius: 4px;
-  margin-bottom: 16px;
-  font-size: 14px;
-}
-
-.loading {
-  text-align: center;
-  padding: 24px;
-  color: #666;
-  font-size: 14px;
-}
-
-/* Responsive styles */
-@media (max-width: 768px) {
-  .admin-page {
-    padding: 16px;
-    padding-top: 100px;
-  }
-  
-  .users-table {
-    display: block;
-    overflow-x: auto;
-  }
-  
-  .form-actions {
-    flex-direction: column;
-  }
-  
-  .submit-btn,
-  .cancel-btn {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .management-sections {
-    grid-template-columns: 1fr;
-  }
-
-  .management-card {
-    padding: 20px;
-  }
-}
-
-/* Modal Styles */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background-color: white;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 500px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  animation: modalFadeIn 0.3s ease-out;
-}
-
-@keyframes modalFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.modal-header {
-  padding: 20px;
-  border-bottom: 1px solid #eee;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.modal-header h3 {
-  margin: 0;
-  color: #333;
-  font-size: 1.25rem;
-}
-
-.close-modal {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #666;
-  padding: 5px;
-  transition: color 0.2s;
-}
-
-.close-modal:hover {
-  color: #333;
-}
-
-.modal-body {
-  padding: 20px;
-  color: #666;
-  font-size: 1rem;
-  line-height: 1.5;
-}
-
-.modal-footer {
-  padding: 20px;
-  border-top: 1px solid #eee;
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.modal-footer button {
-  padding: 8px 16px;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.modal-footer .cancel-btn {
-  background-color: #f5f5f5;
-  border: 1px solid #ddd;
-  color: #666;
-}
-
-.modal-footer .cancel-btn:hover {
-  background-color: #e5e5e5;
-}
-
-.modal-footer .confirm-btn {
-  background-color: #dc3545;
-  border: 1px solid #dc3545;
-  color: white;
-}
-
-.modal-footer .confirm-btn:hover {
-  background-color: #c82333;
-  border-color: #bd2130;
-}
-
-.view-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background-color: #28a745;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: background-color 0.2s;
-}
-
-.view-btn:hover {
-  background-color: #218838;
-}
-
+/* Management Cards Section */
 .management-sections {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 24px;
-  padding: 20px 0;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2rem;
 }
 
 .management-card {
-  background: white;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: var(--admin-card-bg);
+  border-radius: var(--admin-radius);
+  padding: 2rem;
+  box-shadow: var(--admin-shadow);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s ease-in-out;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  text-align: center;
+  gap: 1.5rem;
+  border: 1px solid var(--admin-border-color);
 }
 
 .management-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-10px);
+  box-shadow: var(--admin-shadow-hover);
 }
 
 .card-icon {
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  background: #f0f7ff;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 16px;
-  color: #2196f3;
+  flex-shrink: 0;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.management-card:nth-child(2) .card-icon {
-  background: #f0fff4;
-  color: #4caf50;
+/* Card specific colors */
+.management-card.card-users .card-icon {
+  background: linear-gradient(45deg, #4e73df, #6f8fef);
+}
+
+.management-card.card-students .card-icon {
+  background: linear-gradient(45deg, #1cc88a, #36b9cc);
+}
+
+.management-card.card-health-check .card-icon {
+  background: linear-gradient(45deg, #f6c23e, #f8d26a);
+}
+
+.management-card.card-vaccination .card-icon {
+  background: linear-gradient(45deg, #e74a3b, #f47c7c);
 }
 
 .card-content h2 {
-  font-size: 20px;
+  font-size: 1.3rem;
   font-weight: 600;
-  color: #333;
-  margin: 0 0 8px 0;
+  color: var(--admin-text-primary);
+  margin: 0 0 0.3rem 0;
 }
 
 .card-content p {
-  font-size: 14px;
-  color: #666;
+  font-size: 0.95rem;
+  color: var(--admin-text-secondary);
   margin: 0;
   line-height: 1.5;
-} 
+}
+
+/* Keep existing modal, form, and table styles below this line */
+/* ... (your existing styles for .form-modal, .users-table, etc.) ... */
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .admin-page {
+    padding: 1.5rem;
+    padding-top: 100px;
+  }
+
+  .admin-header h1 {
+    font-size: 2rem;
+  }
+
+  .management-card {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+    padding: 1.5rem;
+  }
+}

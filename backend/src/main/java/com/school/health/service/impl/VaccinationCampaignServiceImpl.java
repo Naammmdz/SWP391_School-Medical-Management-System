@@ -18,7 +18,10 @@ import org.springframework.stereotype.Service;
 
 import java.text.Normalizer;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -226,8 +229,41 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
 
     @Override
     public List<VaccinationCampaignResponseDTO> getApprovedVaccination() {
-        return vaccinationCampaignRepository.findByStatus(Status.APPROVED).stream().map(this::mapToResponseDTO).collect(Collectors.toList());
+        List<VaccinationCampaign> campaigns = vaccinationCampaignRepository.findByStatus(Status.APPROVED);
+        List<Vaccination> vaccinations = vaccinationRepository.findByCampaign(campaigns);
+
+        // Group vaccination theo campaignId
+        Map<Integer, List<Vaccination>> vacMap = vaccinations.stream()
+                .collect(Collectors.groupingBy(v -> v.getCampaign().getCampaignId()));
+
+        // Trả về danh sách DTO
+        return campaigns.stream().map(campaign -> {
+            List<Vaccination> vacList = vacMap.getOrDefault(campaign.getCampaignId(), new ArrayList<>());
+
+            // Kiểm tra xem có ai đã xác nhận phụ huynh chưa
+            boolean isParentConfirm = vacList.stream().anyMatch(Vaccination::isParentConfirmation);
+
+            return VaccinationCampaignResponseDTO.builder()
+                    .campaignId(campaign.getCampaignId())
+                    .campaignName(campaign.getCampaignName())
+                    .targetGroup(campaign.getTargetGroup())
+                    .type(campaign.getType())
+                    .address(campaign.getAddress())
+                    .organizer(campaign.getOrganizer())
+                    .description(campaign.getDescription())
+                    .scheduledDate(campaign.getScheduledDate())
+                    .createdBy(campaign.getCreatedBy())
+                    .approvedBy(campaign.getApprovedBy())
+                    .approvedAt(campaign.getApprovedAt())
+                    .status(campaign.getStatus())
+                    .createdAt(campaign.getCreatedAt())
+                    .isParentConfirm(isParentConfirm)
+                    .build();
+        }).collect(Collectors.toList());
     }
+
+
+
 
     @Override
     public VaccinationResponseDTO registerStudentVaccine(VaccinationRequestDTO vaccineRequest) {
@@ -370,12 +406,12 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
 
         if (className != null && !className.isBlank()) {
             spec = spec.and((root, query, cb) ->
-                    cb.like(root.get("student").get("className"),"%" + className + "%"));
+                    cb.like(root.get("student").get("className"), "%" + className + "%"));
         }
 
         if (campaignName != null && !campaignName.isBlank()) {
             spec = spec.and((root, query, cb) ->
-                    cb.like(root.get("campaign").get("campaignName"),"%" + campaignName + "%"));
+                    cb.like(root.get("campaign").get("campaignName"), "%" + campaignName + "%"));
         }
 
         if (studentName != null && !studentName.isBlank()) {
@@ -400,7 +436,6 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
             spec = spec.and((root, query, cb) ->
                     cb.lessThanOrEqualTo(root.get("date"), endDate));
         }
-
 
 
         return vaccinationRepository.findAll(spec).stream()

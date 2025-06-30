@@ -7,6 +7,7 @@ import com.school.health.dto.response.*;
 import com.school.health.entity.HealthCheck;
 import com.school.health.entity.HealthCheckCampaign;
 import com.school.health.entity.Student;
+import com.school.health.entity.Vaccination;
 import com.school.health.enums.Status;
 import com.school.health.repository.HealthCheckCampaignRepository;
 import com.school.health.repository.HealthCheckRepository;
@@ -20,7 +21,9 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.school.health.enums.Status.APPROVED;
@@ -236,8 +239,34 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
     @Override
     public List<HealthCampaignResponseDTO> getApprovedCampaigns() {
         List<HealthCheckCampaign> approvedCampaigns = healthCheckCampaignRepository.findByStatus(APPROVED);
-        return approvedCampaigns.stream().map(this::mapToResponseDTO).collect(Collectors.toList());
+        List<HealthCheck> healthChecks = healthCheckRepository.findByCampaign(approvedCampaigns);
+        Map<Integer, List<HealthCheck>> vacMap = healthChecks.stream()
+                .collect(Collectors.groupingBy(v -> v.getCampaign().getCampaignId()));
+        return approvedCampaigns.stream().map(campaign -> {
+            List<HealthCheck> vacList = vacMap.getOrDefault(campaign.getCampaignId(), new ArrayList<>());
+
+            // Kiểm tra xem có ai đã xác nhận phụ huynh chưa
+            boolean isParentConfirm = vacList.stream().anyMatch(HealthCheck::isParentConfirmation);
+
+            return HealthCampaignResponseDTO.builder()
+                    .campaignId(campaign.getCampaignId())
+                    .campaignName(campaign.getCampaignName())
+                    .targetGroup(campaign.getTargetGroup())
+                    .type(campaign.getType())
+                    .address(campaign.getAddress())
+                    .organizer(campaign.getOrganizer())
+                    .description(campaign.getDescription())
+                    .scheduledDate(campaign.getScheduledDate())
+                    .createdBy(campaign.getCreatedBy())
+                    .approvedBy(campaign.getApprovedBy())
+                    .approvedAt(campaign.getApprovedAt())
+                    .status(campaign.getStatus())
+                    .createdAt(campaign.getCreatedAt())
+                    .isParentConfirm(isParentConfirm)
+                    .build();
+        }).collect(Collectors.toList());
     }
+
 
     @Override
     public HealthCheckResponseDTO registerStudentHealthCheck(HealthCheckRequestDTO request) {
