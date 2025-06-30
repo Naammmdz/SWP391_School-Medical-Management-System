@@ -67,13 +67,6 @@ const VaccinationNotifications = () => {
 const fetchNotifications = async () => {
   setLoading(true);
   try {
-    // Only parents should see vaccination notifications
-    if (userRole !== 'ROLE_PARENT') {
-      setNotifications([]);
-      setLoading(false);
-      return;
-    }
-    
     const config = { headers: { Authorization: `Bearer ${token}` } };
     const studentId = localStorage.getItem('selectedStudentId');
     // Lấy thông tin học sinh từ localStorage (giả sử đã lưu object student)
@@ -125,14 +118,29 @@ const fetchNotifications = async () => {
       let status = 'Chưa phản hồi';
       let responseNote = '';
       let responseDate = '';
-      if (item.responses && studentId) {
-        const studentRes = item.responses.find(r => String(r.studentId) === String(studentId));
-        if (studentRes) {
-          if (studentRes.status === 'CONFIRMED') status = 'Xác nhận';
-          if (studentRes.status === 'REJECTED') status = 'Từ chối';
-          responseNote = studentRes.note || '';
-          responseDate = studentRes.responseDate || '';
+      
+      // Lấy parentConfirm trực tiếp từ item (API response)
+      console.log('Campaign item data:', item); // Debug log
+      console.log('parentConfirm value:', item.parentConfirm); // Debug log for parentConfirm specifically
+      
+      if (item.parentConfirm !== undefined) {
+        // Sử dụng parentConfirm từ API response để xác định trạng thái
+        if (item.parentConfirm === null) {
+          status = 'Chưa phản hồi';
+          console.log('Status set to: Chưa phản hồi (parentConfirm is null)');
+        } else if (item.parentConfirm === true) {
+          status = 'Xác nhận';
+          console.log('Status set to: Xác nhận (parentConfirm is true)');
+        } else if (item.parentConfirm === false) {
+          status = 'Từ chối';
+          console.log('Status set to: Từ chối (parentConfirm is false)');
         }
+        
+        // Lấy thông tin ghi chú và ngày phản hồi từ item nếu có
+        responseNote = item.note || '';
+        responseDate = item.responseDate || '';
+      } else {
+        console.log('parentConfirm is undefined, keeping default status: Chưa phản hồi');
       }
       return {
     id: item.campaignId,
