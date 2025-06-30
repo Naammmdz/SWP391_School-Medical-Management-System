@@ -228,7 +228,7 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
     }
 
     @Override
-    public List<VaccinationCampaignResponseDTO> getApprovedVaccination() {
+    public List<VaccineV2CampaignResponseDTO> getApprovedVaccination() {
         List<VaccinationCampaign> campaigns = vaccinationCampaignRepository.findByStatus(Status.APPROVED);
         List<Vaccination> vaccinations = vaccinationRepository.findByCampaign(campaigns);
 
@@ -243,7 +243,7 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
             // Kiểm tra xem có ai đã xác nhận phụ huynh chưa
             boolean isParentConfirm = vacList.stream().anyMatch(Vaccination::isParentConfirmation);
 
-            return VaccinationCampaignResponseDTO.builder()
+            return VaccineV2CampaignResponseDTO.builder()
                     .campaignId(campaign.getCampaignId())
                     .campaignName(campaign.getCampaignName())
                     .targetGroup(campaign.getTargetGroup())

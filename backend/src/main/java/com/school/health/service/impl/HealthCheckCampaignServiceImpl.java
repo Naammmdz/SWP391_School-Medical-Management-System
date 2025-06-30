@@ -237,7 +237,7 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
     }
 
     @Override
-    public List<HealthCampaignResponseDTO> getApprovedCampaigns() {
+    public List<HealthV2CampaignResponseDTO> getApprovedCampaigns() {
         List<HealthCheckCampaign> approvedCampaigns = healthCheckCampaignRepository.findByStatus(APPROVED);
         List<HealthCheck> healthChecks = healthCheckRepository.findByCampaign(approvedCampaigns);
         Map<Integer, List<HealthCheck>> vacMap = healthChecks.stream()
@@ -248,7 +248,7 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
             // Kiểm tra xem có ai đã xác nhận phụ huynh chưa
             boolean isParentConfirm = vacList.stream().anyMatch(HealthCheck::isParentConfirmation);
 
-            return HealthCampaignResponseDTO.builder()
+            return HealthV2CampaignResponseDTO.builder()
                     .campaignId(campaign.getCampaignId())
                     .campaignName(campaign.getCampaignName())
                     .targetGroup(campaign.getTargetGroup())

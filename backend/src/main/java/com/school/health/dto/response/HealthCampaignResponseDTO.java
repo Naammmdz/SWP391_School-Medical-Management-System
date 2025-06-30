@@ -25,5 +25,5 @@ public class HealthCampaignResponseDTO {
     private LocalDateTime approvedAt;
     private Status status;
     private LocalDateTime createdAt;
-    private boolean isParentConfirm;
+
 }
