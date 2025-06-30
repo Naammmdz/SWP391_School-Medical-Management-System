@@ -72,6 +72,8 @@ const getNavGroupsForRole = (role) => {
         items: [
           { path: '/danhsachnguoidung', name: 'Danh sách người dùng', icon: 'users' },
           { path: '/taomoinguoidung', name: 'Tạo người dùng mới', icon: 'users' },
+          { path: '/capnhatnguoidung', name: 'Cập nhật người dùng', icon: 'users' },
+          { path: '/khoanguoidung', name: 'Khóa người dùng', icon: 'shield' },
         ]
       },
       {
@@ -79,13 +81,39 @@ const getNavGroupsForRole = (role) => {
         items: [
           { path: '/danhsachhocsinh', name: 'Danh sách học sinh', icon: 'bookUser' },
           { path: '/taomoihocsinh', name: 'Thêm học sinh mới', icon: 'bookUser' },
+          { path: '/capnhathocsinh', name: 'Cập nhật học sinh', icon: 'bookUser' },
         ]
       },
       {
         title: 'Tiêm chủng',
         items: [
-          { path: '/taosukientiemchung', name: 'Tạo chiến dịch', icon: 'syringe' },
+          { path: '/taosukientiemchung', name: 'Tạo chiến dịch tiêm chủng', icon: 'syringe' },
           { path: '/quanlytiemchung', name: 'Quản lý tiêm chủng', icon: 'syringe' },
+          { path: '/capnhatthongtintiemchung', name: 'Cập nhật thông tin tiêm chủng', icon: 'syringe' },
+          { path: '/capnhattiemchung', name: 'Cập nhật tiêm chủng', icon: 'syringe' },
+          { path: '/ketquatiemchung', name: 'Kết quả tiêm chủng', icon: 'report' },
+          { path: '/ketquatiemchunghocsinh', name: 'Kết quả tiêm chủng học sinh', icon: 'report' },
+        ]
+      },
+      {
+        title: 'Khám sức khỏe',
+        items: [
+          { path: '/kiemtradinhky', name: 'Tạo kiểm tra định kỳ', icon: 'stethoscope' },
+          { path: '/danhsachkiemtradinhky', name: 'Danh sách kiểm tra định kỳ', icon: 'stethoscope' },
+          { path: '/capnhatkiemtradinhky', name: 'Cập nhật kiểm tra định kỳ', icon: 'stethoscope' },
+          { path: '/kiemtradinhkyhocsinh', name: 'Kiểm tra định kỳ học sinh', icon: 'stethoscope' },
+          { path: '/ketquakiemtradinhky', name: 'Kết quả kiểm tra định kỳ', icon: 'report' },
+          { path: '/ketquakiemtradinhkyhocsinh', name: 'Kết quả kiểm tra học sinh', icon: 'report' },
+          { path: '/capnhatketquakiemtra', name: 'Cập nhật kết quả kiểm tra', icon: 'report' },
+        ]
+      },
+      {
+        title: 'Y tế & Thuốc',
+        items: [
+          { path: '/sukienyte', name: 'Sự kiện y tế', icon: 'activity' },
+          { path: '/quanlythuoc', name: 'Quản lý thuốc', icon: 'pill' },
+          { path: '/khaibaothuoc', name: 'Khai báo thuốc', icon: 'briefcase' },
+          { path: '/donthuocdagui', name: 'Đơn thuốc đã gửi', icon: 'clipboard' },
         ]
       }
     ],
@@ -100,18 +128,39 @@ const getNavGroupsForRole = (role) => {
       {
         title: 'Khám sức khỏe',
         items: [
-          { path: '/kiemtradinhky', name: 'Tạo lịch khám', icon: 'stethoscope' },
-          { path: '/danhsachkiemtradinhky', name: 'Danh sách khám', icon: 'stethoscope' },
-          { path: '/kiemtradinhkyhocsinh', name: 'Thực hiện khám', icon: 'stethoscope' },
-          { path: '/hososuckhoe', name: 'Hồ sơ sức khỏe', icon: 'heart' },
+          { path: '/kiemtradinhky', name: 'Tạo kiểm tra định kỳ', icon: 'stethoscope' },
+          { path: '/danhsachkiemtradinhky', name: 'Danh sách kiểm tra định kỳ', icon: 'stethoscope' },
+          { path: '/capnhatkiemtradinhky', name: 'Cập nhật kiểm tra định kỳ', icon: 'stethoscope' },
+          { path: '/kiemtradinhkyhocsinh', name: 'Kiểm tra định kỳ học sinh', icon: 'stethoscope' },
+          { path: '/ketquakiemtradinhky', name: 'Kết quả kiểm tra định kỳ', icon: 'report' },
+          { path: '/ketquakiemtradinhkyhocsinh', name: 'Kết quả kiểm tra học sinh', icon: 'report' },
+          { path: '/capnhatketquakiemtra', name: 'Cập nhật kết quả kiểm tra', icon: 'report' },
         ]
       },
       {
         title: 'Y tế & Điều trị',
         items: [
           { path: '/donthuoc', name: 'Đơn thuốc', icon: 'clipboard', badge: '2' },
-          { path: '/sukienyte', name: 'Sự cố y tế', icon: 'activity', badge: '1' },
-          { path: '/quanlythuoc', name: 'Kho thuốc', icon: 'pill' },
+          { path: '/sukienyte', name: 'Sự kiện y tế', icon: 'activity', badge: '1' },
+          { path: '/quanlythuoc', name: 'Quản lý thuốc', icon: 'pill' },
+          { path: '/chouongthuoc', name: 'Chờ uống thuốc', icon: 'pill' },
+        ]
+      },
+      {
+        title: 'Tiêm chủng',
+        items: [
+          { path: '/quanlytiemchung', name: 'Quản lý tiêm chủng', icon: 'syringe' },
+          { path: '/capnhatthongtintiemchung', name: 'Cập nhật thông tin tiêm chủng', icon: 'syringe' },
+          { path: '/capnhattiemchung', name: 'Cập nhật tiêm chủng', icon: 'syringe' },
+          { path: '/ketquatiemchung', name: 'Kết quả tiêm chủng', icon: 'report' },
+          { path: '/ketquatiemchunghocsinh', name: 'Kết quả tiêm chủng học sinh', icon: 'report' },
+        ]
+      },
+      {
+        title: 'Khai báo thuốc',
+        items: [
+          { path: '/khaibaothuoc', name: 'Khai báo thuốc', icon: 'briefcase' },
+          { path: '/donthuocdagui', name: 'Đơn thuốc đã gửi', icon: 'clipboard' },
         ]
       }
     ],
@@ -128,6 +177,21 @@ const getNavGroupsForRole = (role) => {
         items: [
           { path: '/khaibaothuoc', name: 'Khai báo thuốc', icon: 'briefcase' },
           { path: '/donthuocdagui', name: 'Đơn thuốc đã gửi', icon: 'clipboard' },
+          { path: '/chouongthuoc', name: 'Chờ uống thuốc', icon: 'pill' },
+        ]
+      },
+      {
+        title: 'Kết quả sức khỏe',
+        items: [
+          { path: '/ketquakiemtradinhkyhocsinh', name: 'Kết quả kiểm tra sức khỏe', icon: 'report' },
+          { path: '/ketquatiemchunghocsinh', name: 'Kết quả tiêm chủng', icon: 'report' },
+        ]
+      },
+      {
+        title: 'Cài đặt tài khoản',
+        items: [
+          { path: '/capnhatthongtin', name: 'Cập nhật thông tin', icon: 'users' },
+          { path: '/doimatkhau', name: 'Đổi mật khẩu', icon: 'shield' },
         ]
       }
     ]
