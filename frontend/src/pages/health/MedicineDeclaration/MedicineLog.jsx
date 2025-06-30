@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Card, Typography, Button, Input, message, Descriptions } from 'antd';
-import { MedicineBoxOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { Card, Typography, Button, Input, message, Descriptions, Space, Row, Col, Image, Tag, Divider, Alert, Upload } from 'antd';
+import { MedicineBoxOutlined, ArrowLeftOutlined, UserOutlined, CalendarOutlined, FileTextOutlined, CameraOutlined, CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import MedicineDeclarationService from '../../../services/MedicineDeclarationService';
 import dayjs from 'dayjs';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 
 dayjs.extend(isSameOrBefore);
 
-const { Title, Text } = Typography;
+const { Title, Text, Paragraph } = Typography;
+const { TextArea } = Input;
 
 const generateDates = (start, end) => {
   const dates = [];
@@ -79,111 +80,255 @@ const MedicineLog = () => {
   if (!submission) return null;
 
   return (
-    <div style={{ maxWidth: 700, margin: '32px auto' }}>
-      <Card
-        bordered={false}
-        style={{
-          borderRadius: 16,
-          boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
-          padding: 24,
-          background: '#f9fafb'
-        }}
-      >
-        <Button
-          icon={<ArrowLeftOutlined />}
-          onClick={() => navigate(-1)}
-          style={{ marginBottom: 16 }}
-        >
-          Quay lại
-        </Button>
-        <Title level={3} style={{ color: '#2563eb', marginBottom: 16 }}>
-          <MedicineBoxOutlined /> Chi tiết thuốc cho học sinh: <b>{submission.studentName}</b>
-        </Title>
-        <p><b>Phụ huynh:</b> {submission.parentName}</p>
-        <p><b>Hướng dẫn sử dụng:</b> {submission.instruction}</p>
-        <p><b>Thời gian dùng:</b> {submission.startDate} → {submission.endDate} ({submission.duration} ngày)</p>
-        <p><b>Ghi chú:</b> {submission.notes}</p>
-        <h4>Hình ảnh đơn thuốc:</h4>
-        {submission.imageData ? (
-          <img
-            src={submission.imageData}
-            alt="Đơn thuốc"
-            style={{
-              maxWidth: 350,
-              maxHeight: 250,
-              borderRadius: 8,
-              border: '1px solid #eee',
-              marginTop: 8
-            }}
-          />
-        ) : (
-          <p style={{ color: '#888' }}>Không có hình ảnh đơn thuốc.</p>
-        )}
+    <div style={{ maxWidth: 1000, margin: '0 auto', padding: 24 }}>
+      {/* Header */}
+      <Row justify="space-between" align="middle" style={{ marginBottom: 32, marginTop: 50 }}>
+        <Col>
+          <Button
+            icon={<ArrowLeftOutlined />}
+            onClick={() => navigate(-1)}
+            size="large"
+            style={{ borderRadius: 8 }}
+          >
+            Quay lại
+          </Button>
+        </Col>
+        <Col>
+          <Title level={2} style={{ margin: 0, color: '#15803d' }}>
+            <MedicineBoxOutlined style={{ marginRight: 12 }} />
+            Chi tiết thuốc
+          </Title>
+        </Col>
+        <Col />
+      </Row>
 
-        {/* Danh sách các ngày uống thuốc */}
-        {!isParent && submission.submissionStatus === 'APPROVED' && (
-          <div style={{ marginTop: 24 }}>
-            <h4>Chấm công uống thuốc từng ngày:</h4>
+      {/* Thông tin học sinh và thuốc */}
+      <Card
+        style={{
+          marginBottom: 24,
+          borderRadius: 16,
+          boxShadow: '0 4px 16px rgba(0,0,0,0.07)',
+          background: 'linear-gradient(135deg, #059669 0%, #065f46 100%)',
+          color: 'white'
+        }}
+        bordered={false}
+      >
+        <Space align="center" size={16}>
+          <div style={{
+            width: 64,
+            height: 64,
+            borderRadius: '50%',
+            background: 'rgba(255,255,255,0.2)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <UserOutlined style={{ fontSize: 32, color: 'white' }} />
+          </div>
+          <div>
+            <Title level={3} style={{ margin: 0, color: 'white' }}>{submission.studentName}</Title>
+            <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: 16 }}>
+              Phụ huynh: {submission.parentName}
+            </Text>
+          </div>
+        </Space>
+      </Card>
+
+      {/* Chi tiết đơn thuốc */}
+      <Card
+        title={
+          <span style={{ fontSize: 18, fontWeight: 600 }}>
+            <FileTextOutlined style={{ marginRight: 8, color: '#15803d' }} />
+            Thông tin đơn thuốc
+          </span>
+        }
+        style={{ marginBottom: 24, borderRadius: 16, boxShadow: '0 4px 16px rgba(0,0,0,0.07)' }}
+        bodyStyle={{ padding: 24 }}
+      >
+        <Row gutter={[24, 16]}>
+          <Col xs={24} md={12}>
+            <div style={{ marginBottom: 16 }}>
+              <Text strong style={{ color: '#666', fontSize: 14 }}>Hướng dẫn sử dụng:</Text>
+              <Paragraph style={{ margin: '4px 0 0 0', fontSize: 15 }}>
+                {submission.instruction}
+              </Paragraph>
+            </div>
+            
+            <Row gutter={[16, 8]}>
+              <Col span={12}>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
+                  <CalendarOutlined style={{ color: '#52c41a', marginRight: 6 }} />
+                  <Text strong style={{ fontSize: 12 }}>Bắt đầu:</Text>
+                </div>
+                <Text style={{ fontSize: 13 }}>{dayjs(submission.startDate).format('DD/MM/YYYY')}</Text>
+              </Col>
+              <Col span={12}>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
+                  <CalendarOutlined style={{ color: '#fa8c16', marginRight: 6 }} />
+                  <Text strong style={{ fontSize: 12 }}>Kết thúc:</Text>
+                </div>
+                <Text style={{ fontSize: 13 }}>{dayjs(submission.endDate).format('DD/MM/YYYY')}</Text>
+              </Col>
+            </Row>
+
+            <div style={{ marginTop: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
+                <ClockCircleOutlined style={{ color: '#15803d', marginRight: 6 }} />
+                <Text strong style={{ fontSize: 12 }}>Thời gian:</Text>
+              </div>
+              <Tag color="blue">{submission.duration} ngày</Tag>
+            </div>
+
+            {submission.notes && (
+              <div style={{ marginTop: 16 }}>
+                <Text strong style={{ color: '#666', fontSize: 14 }}>Ghi chú:</Text>
+                <Paragraph style={{ margin: '4px 0 0 0', fontSize: 13, color: '#666' }}>
+                  {submission.notes}
+                </Paragraph>
+              </div>
+            )}
+          </Col>
+          
+          <Col xs={24} md={12}>
+            <div>
+              <Text strong style={{ color: '#666', fontSize: 14 }}>Hình ảnh đơn thuốc:</Text>
+              <div style={{ marginTop: 8 }}>
+                {submission.imageData ? (
+                  <Image
+                    src={submission.imageData}
+                    alt="Đơn thuốc"
+                    style={{
+                      width: '100%',
+                      maxWidth: 300,
+                      borderRadius: 12,
+                      border: '1px solid #f0f0f0'
+                    }}
+                  />
+                ) : (
+                  <div style={{
+                    height: 200,
+                    background: '#f5f5f5',
+                    borderRadius: 12,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexDirection: 'column'
+                  }}>
+                    <FileTextOutlined style={{ fontSize: 32, color: '#d9d9d9', marginBottom: 8 }} />
+                    <Text type="secondary">Không có hình ảnh đơn thuốc</Text>
+                  </div>
+                )}
+              </div>
+            </div>
+          </Col>
+        </Row>
+      </Card>
+
+      {/* Ghi nhận uống thuốc (chỉ cho y tá) */}
+      {!isParent && submission.submissionStatus === 'APPROVED' && (
+        <Card
+          title={
+            <span style={{ fontSize: 18, fontWeight: 600 }}>
+              <CheckCircleOutlined style={{ marginRight: 8, color: '#52c41a' }} />
+              Ghi nhận uống thuốc từng ngày
+            </span>
+          }
+          style={{ borderRadius: 16, boxShadow: '0 4px 16px rgba(0,0,0,0.07)' }}
+          bodyStyle={{ padding: 24 }}
+        >
+          <Row gutter={[16, 24]}>
             {generateDates(submission.startDate, submission.endDate).map(date => {
               const today = dayjs().format('YYYY-MM-DD');
               const isTodayOrPast = dayjs(date).isSameOrBefore(today, 'day');
+              const isToday = dayjs(date).isSame(today, 'day');
+              
               return (
-                <Descriptions
-                  key={date}
-                  column={1}
-                  bordered
-                  size="small"
-                  style={{ marginBottom: 16, background: '#f6f8fa' }}
-                  title={dayjs(date).format('DD/MM/YYYY')}
-                >
-                  <Descriptions.Item label="Ghi chú">
-                    <Input.TextArea
-                      rows={2}
-                      placeholder="Ghi chú (nếu có)"
-                      value={dailyNotes[date] || ''}
-                      onChange={e => setDailyNotes(prev => ({ ...prev, [date]: e.target.value }))}
-                      disabled={!isTodayOrPast}
-                      style={{ width: 220 }}
-                    />
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Ảnh xác nhận">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={e => setDailyImages(prev => ({ ...prev, [date]: e.target.files[0] || null }))}
-                      disabled={!isTodayOrPast}
-                    />
-                    {dailyImages[date] && (
-                      <img
-                        src={URL.createObjectURL(dailyImages[date])}
-                        alt="Ảnh xác nhận"
-                        style={{
-                          maxWidth: 120,
-                          maxHeight: 80,
-                          borderRadius: 6,
-                          border: '1px solid #eee',
-                          marginTop: 8
-                        }}
-                      />
-                    )}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="">
-                    <Button
-                      icon={<MedicineBoxOutlined />}
-                      type="primary"
-                      loading={markTakenDayLoading[date]}
-                      onClick={() => handleMarkTakenByDay(date)}
-                      disabled={!isTodayOrPast || !dailyImages[date]}
-                    >
-                      Xác nhận đã uống thuốc ngày {dayjs(date).format('DD/MM/YYYY')}
-                    </Button>
-                  </Descriptions.Item>
-                </Descriptions>
+                <Col xs={24} lg={12} key={date}>
+                  <Card
+                    size="small"
+                    style={{
+                      borderRadius: 12,
+                      border: isToday ? '2px solid #15803d' : '1px solid #f0f0f0',
+                      background: isToday ? '#f0fdf4' : 'white'
+                    }}
+                    title={
+                      <Space>
+                        <CalendarOutlined style={{ color: isToday ? '#15803d' : '#666' }} />
+                        <Text strong style={{ color: isToday ? '#15803d' : '#333' }}>
+                          {dayjs(date).format('DD/MM/YYYY')}
+                        </Text>
+                        {isToday && <Tag color="green">Hôm nay</Tag>}
+                        {!isTodayOrPast && <Tag color="orange">Tương lai</Tag>}
+                      </Space>
+                    }
+                  >
+                    <Space direction="vertical" style={{ width: '100%' }} size={12}>
+                      <div>
+                        <Text strong style={{ fontSize: 12, color: '#666' }}>Ghi chú:</Text>
+                        <TextArea
+                          rows={2}
+                          placeholder="Ghi chú về việc uống thuốc..."
+                          value={dailyNotes[date] || ''}
+                          onChange={e => setDailyNotes(prev => ({ ...prev, [date]: e.target.value }))}
+                          disabled={!isTodayOrPast}
+                          style={{ marginTop: 4, borderRadius: 8 }}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Text strong style={{ fontSize: 12, color: '#666' }}>Ảnh xác nhận:</Text>
+                        <Upload
+                          accept="image/*"
+                          beforeUpload={() => false}
+                          onChange={(info) => {
+                            const file = info.file.originFileObj || info.file;
+                            setDailyImages(prev => ({ ...prev, [date]: file }));
+                          }}
+                          disabled={!isTodayOrPast}
+                          maxCount={1}
+                          listType="picture-card"
+                          style={{ marginTop: 4 }}
+                        >
+                          {!dailyImages[date] && (
+                            <div>
+                              <CameraOutlined />
+                              <div style={{ marginTop: 8, fontSize: 12 }}>Tải ảnh</div>
+                            </div>
+                          )}
+                        </Upload>
+                        {dailyImages[date] && (
+                          <Image
+                            src={URL.createObjectURL(dailyImages[date])}
+                            alt="Ảnh xác nhận"
+                            style={{
+                              width: 80,
+                              height: 80,
+                              borderRadius: 8,
+                              objectFit: 'cover',
+                              marginTop: 8
+                            }}
+                          />
+                        )}
+                      </div>
+                      
+                      <Button
+                        type="primary"
+                        icon={<CheckCircleOutlined />}
+                        loading={markTakenDayLoading[date]}
+                        onClick={() => handleMarkTakenByDay(date)}
+                        disabled={!isTodayOrPast || !dailyImages[date]}
+                        style={{ borderRadius: 8, width: '100%' }}
+                      >
+                        Xác nhận đã uống thuốc
+                      </Button>
+                    </Space>
+                  </Card>
+                </Col>
               );
             })}
-          </div>
-        )}
-      </Card>
+          </Row>
+        </Card>
+      )}
     </div>
   );
 };

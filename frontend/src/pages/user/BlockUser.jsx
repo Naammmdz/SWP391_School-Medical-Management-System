@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { Card, Button, Alert, Spin, Typography, Space, Row, Col, Descriptions } from 'antd';
+import { CloseOutlined, ExclamationCircleOutlined, StopOutlined, UserOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import userService from '../../services/UserService';
 import './BlockUser.css';
+
+const { Title, Text } = Typography;
 
 const BlockUser = () => {
   const navigate = useNavigate();
@@ -48,7 +51,7 @@ const BlockUser = () => {
       setSuccessMessage('Vô hiệu hóa người dùng thành công!');
       setTimeout(() => {
         setSuccessMessage(null);
-        navigate('/admin/danhsachnguoidung');
+        navigate('/danhsachnguoidung');
       }, 2000);
     } catch (error) {
       setError('Failed to block user');
@@ -60,68 +63,141 @@ const BlockUser = () => {
   }, [userId]);
 
   if (loading) {
-    return <div className="loading">Đang tải dữ liệu...</div>;
+    return (
+      <div style={{ maxWidth: 800, margin: '0 auto', padding: 24, marginTop: 50, textAlign: 'center' }}>
+        <Spin size="large" />
+        <div style={{ marginTop: 16 }}>
+          <Text>Đang tải dữ liệu...</Text>
+        </div>
+      </div>
+    );
   }
 
   if (!user) {
-    return <div className="error-message">Không tìm thấy người dùng</div>;
+    return (
+      <div style={{ maxWidth: 800, margin: '0 auto', padding: 24, marginTop: 50 }}>
+        <Alert
+          message="Không tìm thấy người dùng"
+          type="error"
+          showIcon
+          style={{ borderRadius: 12 }}
+        />
+      </div>
+    );
   }
 
   return (
-    <div className="block-user-page">
-      <div className="block-user-header">
-        <h1>Vô hiệu hóa người dùng</h1>
-      </div>
+    <div style={{ maxWidth: 800, margin: '0 auto', padding: 24 }}>
+      {/* Header */}
+      <Row justify="space-between" align="middle" style={{ marginBottom: 32, marginTop: 50 }}>
+        <Col>
+          <Title level={2} style={{ margin: 0, color: '#ef4444' }}>
+            <StopOutlined style={{ marginRight: 12 }} />
+            Vô hiệu hóa người dùng
+          </Title>
+        </Col>
+      </Row>
 
       {successMessage && (
-        <div className="success-message">
-          <h2>{successMessage}</h2>
-        </div>
+        <Alert
+          message={successMessage}
+          type="success"
+          showIcon
+          style={{ marginBottom: 24, borderRadius: 12 }}
+        />
       )}
 
       {error && (
-        <div className="error-message">
-          {error}
-        </div>
+        <Alert
+          message="Lỗi"
+          description={error}
+          type="error"
+          showIcon
+          style={{ marginBottom: 24, borderRadius: 12 }}
+        />
       )}
 
-      <div className="user-info">
-        <h2>Thông tin người dùng</h2>
-        <div className="info-group">
-          <label>Họ và tên:</label>
-          <span>{user.fullName}</span>
-        </div>
-        <div className="info-group">
-          <label>Email:</label>
-          <span>{user.email}</span>
-        </div>
-        <div className="info-group">
-          <label>Số điện thoại:</label>
-          <span>{user.phone}</span>
-        </div>
-        <div className="info-group">
-          <label>Trạng thái hiện tại:</label>
-          <span>
-            {user.isActive === true || user.isActive === "true"
-              ? "Đang hoạt động"
-              : "Ngừng hoạt động"}
-          </span>
-        </div>
-      </div>
+      {/* User Info Card */}
+      <Card
+        style={{ 
+          borderRadius: 16, 
+          boxShadow: '0 4px 16px rgba(0,0,0,0.07)', 
+          marginBottom: 32
+        }}
+        title={
+          <Space>
+            <UserOutlined style={{ color: '#15803d' }} />
+            <span style={{ fontSize: 18, fontWeight: 600, color: '#15803d' }}>
+              Thông tin người dùng
+            </span>
+          </Space>
+        }
+      >
+        <Descriptions column={1} size="large">
+          <Descriptions.Item label="Họ và tên">
+            <Text strong>{user.fullName}</Text>
+          </Descriptions.Item>
+          <Descriptions.Item label="Email">
+            {user.email}
+          </Descriptions.Item>
+          <Descriptions.Item label="Số điện thoại">
+            {user.phone}
+          </Descriptions.Item>
+          <Descriptions.Item label="Trạng thái hiện tại">
+            <Text type={user.isActive ? 'success' : 'danger'}>
+              {user.isActive === true || user.isActive === "true"
+                ? "Đang hoạt động"
+                : "Ngừng hoạt động"}
+            </Text>
+          </Descriptions.Item>
+        </Descriptions>
+      </Card>
 
-      <div className="confirmation-section">
-        <h3>Xác nhận vô hiệu hóa</h3>
-        <p>Bạn có chắc chắn muốn vô hiệu hóa người dùng này?</p>
-        <div className="action-buttons">
-          <button onClick={() => navigate('/admin/danhsachnguoidung')} className="cancel-btn">
-            <X size={16} />
-            Hủy
-          </button>
-          <button onClick={blockUser} className="confirm-btn">
-            Xác nhận vô hiệu hóa
-          </button>
+      {/* Confirmation Card */}
+      <Card
+        style={{ 
+          borderRadius: 16, 
+          boxShadow: '0 4px 16px rgba(0,0,0,0.07)', 
+          borderColor: '#ff4d4f'
+        }}
+        title={
+          <Space>
+            <ExclamationCircleOutlined style={{ color: '#ff4d4f' }} />
+            <span style={{ fontSize: 18, fontWeight: 600, color: '#ff4d4f' }}>
+              Xác nhận vô hiệu hóa
+            </span>
+          </Space>
+        }
+      >
+        <div style={{ textAlign: 'center', padding: '24px 0' }}>
+          <Text style={{ fontSize: 16, marginBottom: 24, display: 'block' }}>
+            Bạn có chắc chắn muốn vô hiệu hóa người dùng này?
+          </Text>
+          <Text type="secondary" style={{ fontSize: 14, marginBottom: 32, display: 'block' }}>
+            Hành động này sẽ ngừng kích hoạt tài khoản của người dùng.
+          </Text>
+          <Space size={16}>
+            <Button
+              onClick={() => navigate('/danhsachnguoidung')}
+              icon={<CloseOutlined />}
+              size="large"
+              style={{ borderRadius: 8, minWidth: 120 }}
+            >
+              Hủy
+            </Button>
+            <Button
+              type="primary"
+              danger
+              onClick={blockUser}
+              icon={<StopOutlined />}
+              size="large"
+              style={{ borderRadius: 8, minWidth: 160 }}
+            >
+              Xác nhận vô hiệu hóa
+            </Button>
+          </Space>
         </div>
-      </div>
+      </Card>
     </div>
   );
 };

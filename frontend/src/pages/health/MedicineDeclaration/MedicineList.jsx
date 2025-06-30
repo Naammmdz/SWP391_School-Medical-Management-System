@@ -174,7 +174,7 @@ const MedicineList = () => {
         </div>
 
         <div style={{ marginBottom: 16 }}>
-          <Title level={5} style={{ marginBottom: 8, color: "#1890ff" }}>
+          <Title level={5} style={{ marginBottom: 8, color: "#15803d" }}>
             <FileTextOutlined style={{ marginRight: 8 }} />
             Hướng dẫn sử dụng
           </Title>
@@ -279,7 +279,7 @@ const MedicineList = () => {
 
   return (
     <div style={{ maxWidth: 1200, margin: "0 auto", padding: 24 }}>
-      <Title level={2} style={{ textAlign: "center", marginBottom: 32, color: "#3b5998", marginTop: 50 }}>
+      <Title level={2} style={{ textAlign: "center", marginBottom: 32, color: "#15803d", marginTop: 50 }}>
         <MedicineBoxOutlined style={{ marginRight: 12 }} />
         Đơn thuốc đã gửi
       </Title>
@@ -304,7 +304,7 @@ const MedicineList = () => {
             marginBottom: 32, 
             borderRadius: 16, 
             boxShadow: "0 4px 16px rgba(0,0,0,0.07)",
-            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          background: "linear-gradient(135deg, #059669 0%, #065f46 100%)",
             color: "white"
           }}
           bordered={false}
@@ -337,7 +337,7 @@ const MedicineList = () => {
       <Card
         title={
           <span style={{ fontSize: 18, fontWeight: 600 }}>
-            <FileTextOutlined style={{ marginRight: 8, color: "#1890ff" }} />
+            <FileTextOutlined style={{ marginRight: 8, color: "#15803d" }} />
             Chi tiết đơn thuốc
           </span>
         }
@@ -403,7 +403,7 @@ const MedicineList = () => {
                 key={log.id || idx}
                 style={{ marginBottom: 16, borderRadius: 12 }}
                 title={
-                  <span style={{ color: "#1890ff", fontWeight: 600 }}>
+                  <span style={{ color: "#15803d", fontWeight: 600 }}>
                     <CheckCircleOutlined style={{ marginRight: 8 }} />
                     Lần uống thuốc {idx + 1}
                   </span>
@@ -419,7 +419,7 @@ const MedicineList = () => {
                   </Col>
                   <Col span={12}>
                     <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
-                      <CalendarOutlined style={{ color: "#1890ff", marginRight: 8 }} />
+                      <CalendarOutlined style={{ color: "#15803d", marginRight: 8 }} />
                       <Text strong>Ngày giờ uống:</Text>
                     </div>
                     <Text>

@@ -48,7 +48,7 @@ const Layout = ({ children, showSidebar = false }) => {
   const hideFooterPaths = [
     '/thongke', '/dashboard', '/admin', '/parent', '/nurse',
     '/hososuckhoe', '/sukienyte', '/khaibaothuoc', '/quanlythuoc', '/quanlytiemchung', '/thongbaotiemchung',
-    '/kiemtradinhky', '/danhsachkiemtradinhky', '/capnhatkiemtradinhky', '/kiemtradinhkyhocsinh', '/ketquakiemtradinhky', '/capnhatthongtin', '/doimatkhau', '/admin/taomoinguoidung', '/admin/capnhatnguoidung', '/admin/danhsachnguoidung', '/admin/khoanguoidung', '/taomoihocsinh', '/danhsachhocsinh', '/capnhathocsinh', '/taosukientiemchung', '/ketquatiemchung', '/ketquatiemchunghocsinh', '/capnhatthongtintiemchung', '/blog'
+    '/kiemtradinhky', '/danhsachkiemtradinhky', '/capnhatkiemtradinhky', '/kiemtradinhkyhocsinh', '/ketquakiemtradinhky', '/capnhatthongtin', '/doimatkhau', '/admin/taomoinguoidung', '/admin/capnhatnguoidung', '/admin/danhsachnguoidung', '/admin/khoanguoidung', '/taomoihocsinh', '/danhsachhocsinh', '/capnhathocsinh', '/taosukientiemchung', '/ketquatiemchung', '/ketquatiemchunghocsinh', '/capnhatthongtintiemchung', '/blog', '/donthuocdagui'
   ];
   const shouldHideFooter = hideFooterPaths.some(path => location.pathname.startsWith(path));
 

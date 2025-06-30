@@ -1,7 +1,42 @@
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, CheckCircle, X, ChevronRight, Calendar, FileText, MessageCircle } from 'lucide-react';
+import {
+  Card,
+  List,
+  Badge,
+  Button,
+  Radio,
+  Input,
+  Spin,
+  Empty,
+  Tag,
+  Space,
+  Typography,
+  Row,
+  Col,
+  Descriptions,
+  Alert,
+  Form,
+  message,
+  Divider,
+  Avatar,
+  Tooltip
+} from 'antd';
+import {
+  BellOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  ExclamationCircleOutlined,
+  CalendarOutlined,
+  UserOutlined,
+  EnvironmentOutlined,
+  FileTextOutlined,
+  MedicineBoxOutlined
+} from '@ant-design/icons';
 import vaccinationService from '../../../services/VaccinationService';
 import "./VaccinationNotifications.css";
+
+const { Title, Text, Paragraph } = Typography;
+const { TextArea } = Input;
 
 const VaccinationNotifications = () => {
   const [notifications, setNotifications] = useState([]);
@@ -15,9 +50,12 @@ const VaccinationNotifications = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [responseSuccess, setResponseSuccess] = useState(false);
+  const [form] = Form.useForm();
 
   const token = localStorage.getItem('token');
   const users = JSON.parse(localStorage.getItem('users') || '[]');
+  const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+  const userRole = currentUser?.userRole;
 
   // Hàm lấy tên người tổ chức từ id
   const getOrganizerName = (userId) => {
@@ -25,10 +63,17 @@ const VaccinationNotifications = () => {
     return user ? user.fullName : 'Không xác định';
   };
 
-  // Lấy danh sách chiến dịch tiêm chủng đã duyệt
+// Lấy danh sách chiến dịch tiêm chủng đã duyệt
 const fetchNotifications = async () => {
   setLoading(true);
   try {
+    // Only parents should see vaccination notifications
+    if (userRole !== 'ROLE_PARENT') {
+      setNotifications([]);
+      setLoading(false);
+      return;
+    }
+    
     const config = { headers: { Authorization: `Bearer ${token}` } };
     const studentId = localStorage.getItem('selectedStudentId');
     // Lấy thông tin học sinh từ localStorage (giả sử đã lưu object student)
@@ -117,10 +162,9 @@ const fetchNotifications = async () => {
   }
 };
 // Gửi phản hồi xác nhận/từ chối (gọi API thực tế)
-const sendResponse = async (e) => {
-  e.preventDefault();
-  if (!responseData.response) {
-    alert('Vui lòng chọn phản hồi của bạn');
+const sendResponse = async (values) => {
+  if (!values.response) {
+    message.error('Vui lòng chọn phản hồi của bạn');
     return;
   }
   setSubmitting(true);
@@ -128,37 +172,36 @@ const sendResponse = async (e) => {
     // Lấy studentId từ localStorage
     const studentId = localStorage.getItem('selectedStudentId');
     if (!studentId) {
-      alert('Vui lòng chọn học sinh trước khi phản hồi!');
+      message.error('Vui lòng chọn học sinh trước khi phản hồi!');
       setSubmitting(false);
       return;
     }
 
     const config = { headers: { Authorization: `Bearer ${token}` } };
     // Nếu xác nhận thì gọi API đăng ký tiêm chủng
-    if (responseData.response === 'confirm')  {
+    if (values.response === 'confirm')  {
       // Xem dữ liệu trước khi gửi
       console.log('Gửi đăng ký tiêm chủng:', {
-        campaignId: responseData.campaignId,
+        campaignId: activeNotification.id,
         studentId: Number(studentId),
-        
         config
       });
       // Đúng thứ tự: campaignId, studentId, config
       await vaccinationService.parentApproveCampaign(
-        responseData.campaignId,
+        activeNotification.id,
         Number(studentId),
         config
       );
     }
-    if( responseData.response === 'decline') {
+    if( values.response === 'decline') {
        console.log('Gửi từ chối tiêm chủng:', {
-        campaignId: responseData.campaignId,
+        campaignId: activeNotification.id,
         studentId: Number(studentId),
         config
       });
       // Gọi API từ chối tiêm chủng
       await vaccinationService.parentRejectCampaign(
-        responseData.campaignId,
+        activeNotification.id,
         Number(studentId),
         config
       );
@@ -166,47 +209,48 @@ const sendResponse = async (e) => {
     // Nếu từ chối thì có thể gọi API khác nếu backend hỗ trợ, hoặc chỉ cập nhật UI
 
     setNotifications(notifications.map(notification => {
-      if (notification.id === responseData.campaignId) {
+      if (notification.id === activeNotification.id) {
         return {
           ...notification,
-          status: responseData.response === 'confirm' ? 'Xác nhận' : 'Từ chối',
-          responseNote: responseData.note,
+          status: values.response === 'confirm' ? 'Xác nhận' : 'Từ chối',
+          responseNote: values.note || '',
           responseDate: new Date().toISOString().split('T')[0],
           isNew: false
         };
       }
       return notification;
     }));
-    if (activeNotification && activeNotification.id === responseData.campaignId) {
+    if (activeNotification && activeNotification.id === activeNotification.id) {
       setActiveNotification({
         ...activeNotification,
-        status: responseData.response === 'confirm' ? 'Xác nhận' : 'Từ chối',
-        responseNote: responseData.note,
+        status: values.response === 'confirm' ? 'Xác nhận' : 'Từ chối',
+        responseNote: values.note || '',
         responseDate: new Date().toISOString().split('T')[0],
         isNew: false
       });
     }
     setShowResponseForm(false);
-    setResponseSuccess(true);
-    setResponseData({
-      campaignId: null,
-      response: '',
-      note: ''
-    });
-    setTimeout(() => {
-      setResponseSuccess(false);
-    }, 3000);
+    message.success('Phản hồi của bạn đã được gửi thành công!');
+    form.resetFields();
     setSubmitting(false);
   } catch (error) {
-    alert('Có lỗi xảy ra khi gửi phản hồi. Vui lòng thử lại sau.');
+    message.error('Có lỗi xảy ra khi gửi phản hồi. Vui lòng thử lại sau.');
     setSubmitting(false);
   }
 };
 
-  // Xử lý thay đổi form phản hồi
-  const handleResponseChange = (e) => {
-    const { name, value } = e.target;
-    setResponseData({ ...responseData, [name]: value });
+  // Get status color and icon
+  const getStatusConfig = (status) => {
+    switch (status) {
+      case 'Chưa phản hồi':
+        return { color: 'orange', icon: <ExclamationCircleOutlined />, text: 'Chờ phản hồi' };
+      case 'Xác nhận':
+        return { color: 'green', icon: <CheckCircleOutlined />, text: 'Đã xác nhận' };
+      case 'Từ chối':
+        return { color: 'red', icon: <CloseCircleOutlined />, text: 'Đã từ chối' };
+      default:
+        return { color: 'default', icon: null, text: status };
+    }
   };
 
   useEffect(() => {
@@ -230,247 +274,352 @@ const sendResponse = async (e) => {
 };
 const viewNotificationDetails = (notification) => {
   setActiveNotification(notification);
-  if (notification.status === 'Chưa phản hồi') {
-    setResponseData({
-      campaignId: notification.id,
-      response: '',
-      note: ''
-    });
-  }
+  setShowResponseForm(false);
+  form.resetFields();
 };
   // Đếm số thông báo mới
   const newNotificationsCount = notifications.filter(n => n.isNew).length;
 
   return (
-    <div className="parent-page vaccination-notifications-page">
-      <div className="page-header">
-        <h1>Thông báo tiêm chủng</h1>
-        {newNotificationsCount > 0 && (
-          <div className="new-notifications-badge">
-            {newNotificationsCount} thông báo mới
-          </div>
-        )}
-      </div>
-      {responseSuccess && (
-        <div className="success-message">
-          <p>Phản hồi của bạn đã được gửi thành công!</p>
-        </div>
-      )}
-      {loading ? (
-        <div className="loading">Đang tải thông báo...</div>
-      ) : (
-        <div className="notifications-container">
-          <div className="notifications-sidebar">
-            <h2>Danh sách thông báo</h2>
-            {notifications.length === 0 ? (
-              <div className="empty-notifications">
-                <p>Không có thông báo tiêm chủng nào</p>
+    <div className="vaccination-notifications-page">
+      {/* Header */}
+      <Card className="header-card">
+        <Row align="middle" justify="space-between">
+          <Col>
+            <Space size="large">
+              <Avatar 
+                size={48} 
+                icon={<BellOutlined />} 
+                style={{ backgroundColor: '#1890ff' }}
+              />
+              <div>
+                <Title level={2} style={{ margin: 0, color: '#1890ff' }}>
+                  Thông báo tiêm chủng
+                </Title>
+                <Text type="secondary">
+                  Quản lý và phản hồi các thông báo tiêm chủng của con em
+                </Text>
               </div>
-            ) : (
-              <ul className="notifications-list">
-                {notifications.map(notification => (
-                  <li 
-                    key={notification.id} 
-                    className={`notification-item ${notification.isNew ? 'new' : ''} ${activeNotification?.id === notification.id ? 'active' : ''}`}
-                    onClick={() => viewNotificationDetails(notification)}
-                  >
-                    <div className="notification-badge">
-                      {notification.status === 'Chưa phản hồi' && <AlertTriangle size={16} className="pending" />}
-                      {notification.status === 'Xác nhận' && <CheckCircle size={16} className="confirmed" />}
-                      {notification.status === 'Từ chối' && <X size={16} className="declined" />}
-                    </div>
-                    <div className="notification-details">
-                      <h3>{notification.title}</h3>
-                      <div className="notification-meta">
-                       <span className="date">{formatDate(notification.sentDate)}</span>
-                        <span className={`status ${notification.status.toLowerCase().replace(' ', '-')}`}>
-                          {notification.status}
-                        </span>
-                      </div>
-                    </div>
-                    <ChevronRight size={18} className="chevron-icon" />
-                  </li>
-                ))}
-              </ul>
+            </Space>
+          </Col>
+          <Col>
+            {newNotificationsCount > 0 && (
+              <Badge count={newNotificationsCount} style={{ backgroundColor: '#ff4d4f' }}>
+                <Button type="primary" size="large" icon={<BellOutlined />}>
+                  Thông báo mới
+                </Button>
+              </Badge>
             )}
-          </div>
-          <div className="notification-content">
-            {!activeNotification ? (
-              <div className="no-notification-selected">
-                <div className="empty-state-icon">
-                  <MessageCircle size={48} />
-                </div>
-                <h2>Chọn thông báo để xem chi tiết</h2>
-                <p>Chọn một thông báo từ danh sách bên trái để xem chi tiết và phản hồi.</p>
+          </Col>
+        </Row>
+      </Card>
+
+      <Row gutter={[24, 24]} style={{ marginTop: 24 }}>
+        {/* Sidebar - Notifications List */}
+        <Col xs={24} lg={8}>
+          <Card 
+            title={
+              <Space>
+                <BellOutlined style={{ color: '#1890ff' }} />
+                <span>Danh sách thông báo</span>
+                <Badge count={notifications.length} style={{ backgroundColor: '#52c41a' }} />
+              </Space>
+            }
+            bodyStyle={{ padding: 0 }}
+            style={{ height: '600px', overflow: 'hidden' }}
+          >
+            {loading ? (
+              <div style={{ textAlign: 'center', padding: '50px 0' }}>
+                <Spin size="large" />
+                <div style={{ marginTop: 16 }}>Đang tải thông báo...</div>
               </div>
+            ) : notifications.length === 0 ? (
+              <Empty 
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description="Không có thông báo tiêm chủng nào"
+                style={{ padding: '50px 20px' }}
+              />
             ) : (
-              <>
-                <div className="notification-header">
-                  <h2>{activeNotification.title}</h2>
-                  <div className="notification-meta">
-                    <span className="sent-date">
-                      <Calendar size={14} />
-                      Ngày gửi: {formatDate(activeNotification.sentDate)}
-                    </span>
-                    <span className={`status ${activeNotification.status.toLowerCase().replace(' ', '-')}`}>
-                      {activeNotification.status === 'Chưa phản hồi' && <AlertTriangle size={14} />}
-                      {activeNotification.status === 'Xác nhận' && <CheckCircle size={14} />}
-                      {activeNotification.status === 'Từ chối' && <X size={14} />}
-                      {activeNotification.status}
-                    </span>
-                  </div>
-                </div>
-                <div className="notification-body">
-                  <div className="notification-info">
-                    <div className="info-row">
-                      <div className="info-group">
-                        <label>Nhóm đối tượng:</label>
-                        <span>{activeNotification.targetGroup}</span>
-                      </div>
-                      <div className="info-group">
-                        <label>Loại Vắc Xin:</label>
-                        <span>{activeNotification.type}</span>
-                      </div>
-                    </div>
-                    <div className="info-row">
-                      <div className="info-group">
-                        <label>Ngày tiêm:</label>
-                        <span>{formatDate(activeNotification.date)}</span>
-                      </div>
-                      <div className="info-group">
-                        <label>Địa điểm:</label>
-                        <span>{activeNotification.address}</span>
-                      </div>
-                    </div>
-                    <div className="info-row">
-                      <div className="info-group">
-                        <label>Người tổ chức:</label>
-                        <span>
-                          {getOrganizerName(activeNotification.organizerId)}
-                        </span>
-                      </div>
-                      <div className="info-group">
-                        <label>Giấy tờ yêu cầu:</label>
-                        <div className="document-list">
-                          <FileText size={14} />
-                          <span>{activeNotification.requiredDocuments}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="info-row full">
-                      <div className="info-group">
-                        <label>Mô tả:</label>
-                        <span>{activeNotification.description}</span>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Show this if the user has already responded */}
-                  {activeNotification.status !== 'Chưa phản hồi' && (
-                    <div className="response-summary">
-                      <h3>Phản hồi của bạn</h3>
-                      <div className={`response-type ${activeNotification.status === 'Xác nhận' ? 'confirmed' : 'declined'}`}>
-                        {activeNotification.status === 'Xác nhận' ? (
-                          <>
-                            <CheckCircle size={16} />
-                            <span>Đã xác nhận cho con tham gia tiêm chủng</span>
-                          </>
-                        ) : (
-                          <>
-                            <X size={16} />
-                            <span>Đã từ chối cho con tham gia tiêm chủng</span>
-                          </>
-                        )}
-                      </div>
-                      {activeNotification.responseNote && (
-                        <div className="response-note">
-                          <h4>Ghi chú:</h4>
-                          <p>{activeNotification.responseNote}</p>
-                        </div>
-                      )}
-                      <div className="response-date">
-                        Phản hồi vào ngày: {formatDate(activeNotification.responseDate)}
-                      </div>
-                      <button 
-                        className="change-response-btn"
-                        onClick={() => setShowResponseForm(true)}
-                      >
-                        Thay đổi phản hồi
-                      </button>
-                    </div>
-                  )}
-                  {/* Show response form if status is pending or user wants to change response */}
-                  {(activeNotification.status === 'Chưa phản hồi' || showResponseForm) && (
-                    <div className="response-form-container">
-                      <h3>Phản hồi của phụ huynh</h3>
-                      <form className="response-form" onSubmit={sendResponse}>
-                        <div className="response-options">
-                          <div className="response-option">
-                            <input 
-                              type="radio" 
-                              id="confirm" 
-                              name="response" 
-                              value="confirm"
-                              checked={responseData.response === 'confirm'}
-                              onChange={handleResponseChange}
+              <List
+                dataSource={notifications}
+                style={{ height: '540px', overflow: 'auto' }}
+                renderItem={(notification) => {
+                  const statusConfig = getStatusConfig(notification.status);
+                  return (
+                    <List.Item 
+                      className={`notification-item ${
+                        activeNotification?.id === notification.id ? 'active' : ''
+                      }`}
+                      onClick={() => viewNotificationDetails(notification)}
+                      style={{
+                        cursor: 'pointer',
+                        padding: '16px 20px',
+                        borderLeft: activeNotification?.id === notification.id 
+                          ? '4px solid #1890ff' 
+                          : '4px solid transparent',
+                        backgroundColor: activeNotification?.id === notification.id 
+                          ? '#f0f9ff' 
+                          : 'white'
+                      }}
+                    >
+                      <List.Item.Meta
+                        avatar={
+                          <Badge dot={notification.isNew} color="red">
+                            <Avatar 
+                              icon={<MedicineBoxOutlined />}
+                              style={{ backgroundColor: statusConfig.color === 'orange' ? '#fa8c16' : statusConfig.color === 'green' ? '#52c41a' : '#ff4d4f' }}
                             />
-                            <label htmlFor="confirm" className="confirm-label">
-                              <CheckCircle size={16} />
-                              <span>Xác nhận cho con tham gia tiêm chủng</span>
-                            </label>
+                          </Badge>
+                        }
+                        title={
+                          <div>
+                            <Text strong ellipsis style={{ fontSize: '14px' }}>
+                              {notification.title}
+                            </Text>
                           </div>
-                          <div className="response-option">
-                            <input 
-                              type="radio" 
-                              id="decline" 
-                              name="response" 
-                              value="decline"
-                              checked={responseData.response === 'decline'}
-                              onChange={handleResponseChange}
-                            />
-                            <label htmlFor="decline" className="decline-label">
-                              <X size={16} />
-                              <span>Từ chối cho con tham gia tiêm chủng</span>
-                            </label>
-                          </div>
-                        </div>
-                        <div className="form-group">
-                          <label htmlFor="note">Ghi chú (không bắt buộc):</label>
-                          <textarea
-                            id="note"
-                            name="note"
-                            value={responseData.note}
-                            onChange={handleResponseChange}
-                            placeholder="Thông tin thêm hoặc lý do từ chối (nếu có)"
-                            rows="3"
-                          ></textarea>
-                        </div>
-                        <div className="form-actions">
-                          {showResponseForm && (
-                            <button 
-                              type="button" 
-                              className="cancel-btn"
-                              onClick={() => setShowResponseForm(false)}
+                        }
+                        description={
+                          <Space direction="vertical" size={4} style={{ width: '100%' }}>
+                            <Text type="secondary" style={{ fontSize: '12px' }}>
+                              <CalendarOutlined /> {formatDate(notification.sentDate)}
+                            </Text>
+                            <Tag 
+                              icon={statusConfig.icon} 
+                              color={statusConfig.color}
+                              style={{ fontSize: '11px' }}
                             >
-                              Hủy
-                            </button>
+                              {statusConfig.text}
+                            </Tag>
+                          </Space>
+                        }
+                      />
+                    </List.Item>
+                  );
+                }}
+              />
+            )}
+          </Card>
+        </Col>
+
+        {/* Main Content */}
+        <Col xs={24} lg={16}>
+          <Card style={{ height: '600px', overflow: 'auto' }}>
+            {!activeNotification ? (
+              <Empty 
+                image={Empty.PRESENTED_IMAGE_DEFAULT}
+                description={
+                  <div>
+                    <Title level={4}>Chọn thông báo để xem chi tiết</Title>
+                    <Text type="secondary">
+                      Chọn một thông báo từ danh sách bên trái để xem chi tiết và phản hồi.
+                    </Text>
+                  </div>
+                }
+                style={{ padding: '80px 0' }}
+              />
+            ) : (
+              <div>
+                {/* Notification Header */}
+                <div style={{ marginBottom: 24 }}>
+                  <Space direction="vertical" size={8} style={{ width: '100%' }}>
+                    <Title level={3} style={{ margin: 0, color: '#1890ff' }}>
+                      {activeNotification.title}
+                    </Title>
+                    <Space size={16}>
+                      <Text type="secondary">
+                        <CalendarOutlined /> Ngày gửi: {formatDate(activeNotification.sentDate)}
+                      </Text>
+                      <Tag 
+                        icon={getStatusConfig(activeNotification.status).icon}
+                        color={getStatusConfig(activeNotification.status).color}
+                      >
+                        {getStatusConfig(activeNotification.status).text}
+                      </Tag>
+                    </Space>
+                  </Space>
+                </div>
+
+                <Divider />
+
+                {/* Notification Details */}
+                <Descriptions 
+                  title="Thông tin chi tiết"
+                  bordered
+                  column={{ xs: 1, sm: 2 }}
+                  style={{ marginBottom: 24 }}
+                >
+                  <Descriptions.Item 
+                    label={<span><UserOutlined /> Nhóm đối tượng</span>}
+                  >
+                    <Tag color="blue">{activeNotification.targetGroup}</Tag>
+                  </Descriptions.Item>
+                  <Descriptions.Item 
+                    label={<span><MedicineBoxOutlined /> Loại vắc-xin</span>}
+                  >
+                    <Tag color="green">{activeNotification.type}</Tag>
+                  </Descriptions.Item>
+                  <Descriptions.Item 
+                    label={<span><CalendarOutlined /> Ngày tiêm</span>}
+                  >
+                    {formatDate(activeNotification.date)}
+                  </Descriptions.Item>
+                  <Descriptions.Item 
+                    label={<span><EnvironmentOutlined /> Địa điểm</span>}
+                  >
+                    {activeNotification.address}
+                  </Descriptions.Item>
+                  <Descriptions.Item 
+                    label={<span><UserOutlined /> Người tổ chức</span>}
+                  >
+                    {getOrganizerName(activeNotification.organizerId)}
+                  </Descriptions.Item>
+                  <Descriptions.Item 
+                    label={<span><FileTextOutlined /> Giấy tờ yêu cầu</span>}
+                  >
+                    {activeNotification.requiredDocuments}
+                  </Descriptions.Item>
+                  <Descriptions.Item 
+                    label="Mô tả" 
+                    span={2}
+                  >
+                    <Paragraph>{activeNotification.description}</Paragraph>
+                  </Descriptions.Item>
+                </Descriptions>
+
+                {/* Response Summary */}
+                {activeNotification.status !== 'Chưa phản hồi' && (
+                  <Alert
+                    message="Phản hồi của bạn"
+                    description={
+                      <div>
+                        <Space direction="vertical" size={8}>
+                          <Text strong>
+                            {activeNotification.status === 'Xác nhận' ? (
+                              <span style={{ color: '#52c41a' }}>
+                                <CheckCircleOutlined /> Đã xác nhận cho con tham gia tiêm chủng
+                              </span>
+                            ) : (
+                              <span style={{ color: '#ff4d4f' }}>
+                                <CloseCircleOutlined /> Đã từ chối cho con tham gia tiêm chủng
+                              </span>
+                            )}
+                          </Text>
+                          {activeNotification.responseNote && (
+                            <div>
+                              <Text strong>Ghi chú: </Text>
+                              <Text>{activeNotification.responseNote}</Text>
+                            </div>
                           )}
-                          <button 
-                            type="submit" 
-                            className="submit-btn"
-                            disabled={submitting || !responseData.response}
+                          <Text type="secondary">
+                            Phản hồi vào ngày: {formatDate(activeNotification.responseDate)}
+                          </Text>
+                        </Space>
+                        <Button 
+                          type="link" 
+                          onClick={() => setShowResponseForm(true)}
+                          style={{ padding: 0, marginTop: 8 }}
+                        >
+                          Thay đổi phản hồi
+                        </Button>
+                      </div>
+                    }
+                    type={activeNotification.status === 'Xác nhận' ? 'success' : 'error'}
+                    style={{ marginBottom: 24 }}
+                  />
+                )}
+
+                {/* Response Form */}
+                {(activeNotification.status === 'Chưa phản hồi' || showResponseForm) && (
+                  <Card 
+                    title={
+                      <Space>
+                        <BellOutlined style={{ color: '#1890ff' }} />
+                        <span>Phản hồi của phụ huynh</span>
+                      </Space>
+                    }
+                    style={{ backgroundColor: '#fafafa' }}
+                  >
+                    <Form
+                      form={form}
+                      layout="vertical"
+                      onFinish={sendResponse}
+                    >
+                      <Form.Item
+                        name="response"
+                        label="Quyết định của bạn"
+                        rules={[{ required: true, message: 'Vui lòng chọn phản hồi!' }]}
+                      >
+                        <Radio.Group size="large">
+                          <Space direction="vertical" size={12}>
+                            <Radio.Button 
+                              value="confirm" 
+                              style={{ 
+                                width: '100%', 
+                                height: 'auto', 
+                                padding: '12px 16px',
+                                border: '2px solid #52c41a',
+                                color: '#52c41a'
+                              }}
+                            >
+                              <Space>
+                                <CheckCircleOutlined />
+                                <span>Xác nhận cho con tham gia tiêm chủng</span>
+                              </Space>
+                            </Radio.Button>
+                            <Radio.Button 
+                              value="decline"
+                              style={{ 
+                                width: '100%', 
+                                height: 'auto', 
+                                padding: '12px 16px',
+                                border: '2px solid #ff4d4f',
+                                color: '#ff4d4f'
+                              }}
+                            >
+                              <Space>
+                                <CloseCircleOutlined />
+                                <span>Từ chối cho con tham gia tiêm chủng</span>
+                              </Space>
+                            </Radio.Button>
+                          </Space>
+                        </Radio.Group>
+                      </Form.Item>
+
+                      <Form.Item
+                        name="note"
+                        label="Ghi chú (không bắt buộc)"
+                      >
+                        <TextArea
+                          placeholder="Thông tin thêm hoặc lý do từ chối (nếu có)"
+                          rows={3}
+                        />
+                      </Form.Item>
+
+                      <Form.Item>
+                        <Space>
+                          {showResponseForm && (
+                            <Button onClick={() => setShowResponseForm(false)}>
+                              Hủy
+                            </Button>
+                          )}
+                          <Button 
+                            type="primary" 
+                            htmlType="submit" 
+                            loading={submitting}
+                            size="large"
                           >
                             {submitting ? 'Đang gửi...' : 'Gửi phản hồi'}
-                          </button>
-                        </div>
-                      </form>
-                    </div>
-                  )}
-                </div>
-              </>
+                          </Button>
+                        </Space>
+                      </Form.Item>
+                    </Form>
+                  </Card>
+                )}
+              </div>
             )}
-          </div>
-        </div>
-      )}
+          </Card>
+        </Col>
+      </Row>
     </div>
   );
 };

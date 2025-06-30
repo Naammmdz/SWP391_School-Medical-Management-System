@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Send, Info } from 'lucide-react';
+import { Card, Form, Input, DatePicker, Upload, Button, Alert, Spin, Typography, Space, Row, Col, message, Image } from 'antd';
+import { SendOutlined, InfoCircleOutlined, MedicineBoxOutlined, UploadOutlined, PlusOutlined, FileTextOutlined, CalendarOutlined, UserOutlined } from '@ant-design/icons';
 import './MedicineDeclarations.css';
 import MedicineDeclarationService from '../../../services/MedicineDeclarationService';
-import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
+import dayjs from 'dayjs';
+
+const { Title, Text, Paragraph } = Typography;
+const { TextArea } = Input;
+const { RangePicker } = DatePicker;
 
 const MedicineDeclarations = () => {
   const navigate = useNavigate();
+  const [form] = Form.useForm();
   const selectedStudentId = localStorage.getItem('selectedStudentId');
 
   // State cho thông tin học sinh
@@ -16,18 +22,9 @@ const MedicineDeclarations = () => {
     classroom: ''
   });
 
-  const [formData, setFormData] = useState({
-    instruction: '',
-    startDate: '',
-    endDate: '',
-    notes: ''
-  });
-
   const [imageFile, setImageFile] = useState(null);
-
+  const [imagePreview, setImagePreview] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [submitError, setSubmitError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // Lấy thông tin học sinh từ localStorage (danh sách students đã lưu)
@@ -44,76 +41,63 @@ const MedicineDeclarations = () => {
     setIsLoading(false);
   }, [selectedStudentId]);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
+  const handleImageUpload = (info) => {
+    const file = info.file.originFileObj || info.file;
+    if (file) {
+      setImageFile(file);
+      // Tạo preview
+      const reader = new FileReader();
+      reader.onload = (e) => setImagePreview(e.target.result);
+      reader.readAsDataURL(file);
+    }
   };
 
-  const handleImageChange = (e) => {
-    setImageFile(e.target.files[0] || null);
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (
-      !studentInfo.studentId ||
-      !formData.instruction ||
-      !formData.startDate ||
-      !formData.endDate
-    ) {
-      toast.error('Vui lòng nhập đầy đủ thông tin bắt buộc');
+  const handleSubmit = async (values) => {
+    if (!studentInfo.studentId) {
+      message.error('Không tìm thấy thông tin học sinh');
       return;
     }
 
-    const duration =
-      formData.startDate && formData.endDate
-        ? Math.max(
-            1,
-            Math.ceil(
-              (new Date(formData.endDate) - new Date(formData.startDate)) /
-                (1000 * 60 * 60 * 24) +
-                1
-            )
-          )
-        : 1;
+    const { dateRange, instruction, notes } = values;
+    const [startDate, endDate] = dateRange || [];
+    
+    if (!startDate || !endDate) {
+      message.error('Vui lòng chọn thời gian sử dụng thuốc');
+      return;
+    }
+
+    const duration = Math.max(1, endDate.diff(startDate, 'day') + 1);
 
     // Chuẩn bị dữ liệu theo API mới
     const requestData = {
       studentId: studentInfo.studentId,
-      instruction: formData.instruction,
+      instruction,
       duration,
-      startDate: formData.startDate,
-      endDate: formData.endDate,
-      notes: formData.notes
+      startDate: startDate.format('YYYY-MM-DD'),
+      endDate: endDate.format('YYYY-MM-DD'),
+      notes: notes || ''
     };
 
     const token = localStorage.getItem('token');
 
     setIsSubmitting(true);
-    setSubmitError(null);
     try {
       await MedicineDeclarationService.createMedicineSubmission(
         { requestData, imageFile: imageFile || undefined },
         token
       );
 
-      setFormData({
-        instruction: '',
-        startDate: '',
-        endDate: '',
-        notes: ''
-      });
+      form.resetFields();
       setImageFile(null);
-      setSubmitSuccess(true);
-      toast.success('Khai báo thuốc đã được gửi thành công!');
-      setTimeout(() => setSubmitSuccess(false), 5000);
+      setImagePreview(null);
+      message.success('Khai báo thuốc đã được gửi thành công!');
     } catch (err) {
-      setSubmitError('Có lỗi xảy ra khi gửi khai báo. Vui lòng thử lại sau.');
-      toast.error('Có lỗi xảy ra khi gửi khai báo. Vui lòng thử lại sau.');
+      message.error('Có lỗi xảy ra khi gửi khai báo. Vui lòng thử lại sau.');
     } finally {
       setIsSubmitting(false);
     }
@@ -121,166 +105,212 @@ const MedicineDeclarations = () => {
 
   if (isLoading) {
     return (
-      <div className="parent-page medicine-declaration-page">
-        <div className="page-header">
-          <h1>Khai Báo Thuốc</h1>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: 24, marginTop: 50 }}>
+        <Spin size="large" />
+        <div style={{ textAlign: 'center', marginTop: 16 }}>
+          <Text>Đang tải thông tin học sinh...</Text>
         </div>
-        <div className="loading">Đang tải thông tin học sinh...</div>
+      </div>
+    );
+  }
+
+  if (!studentInfo.studentId) {
+    return (
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: 24, marginTop: 50 }}>
+        <Alert
+          message="Chưa chọn học sinh"
+          description="Vui lòng chọn học sinh để tiếp tục khai báo thuốc."
+          type="warning"
+          showIcon
+          style={{ marginBottom: 24 }}
+        />
       </div>
     );
   }
 
   return (
-    <div className="parent-page medicine-declaration-page">
-      <div className="page-header">
-        <h1>Khai Báo Thuốc</h1>
-        <button
-          className="view-sent-medicine-btn"
-          style={{
-            float: 'right',
-            marginTop: '-40px',
-            background: '#2563eb',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 6,
-            padding: '8px 18px',
-            fontWeight: 600,
-            cursor: 'pointer'
-          }}
-          onClick={() => navigate('/donthuocdagui')}
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: 24 }}>
+      {/* Header */}
+      <Row justify="space-between" align="middle" style={{ marginBottom: 32, marginTop: 50 }}>
+        <Col>
+          <Title level={2} style={{ margin: 0, color: '#15803d' }}>
+            <MedicineBoxOutlined style={{ marginRight: 12 }} />
+            Khai báo thuốc
+          </Title>
+        </Col>
+        <Col>
+          <Button
+            type="primary"
+            icon={<FileTextOutlined />}
+            size="large"
+            onClick={() => navigate('/donthuocdagui')}
+            style={{ borderRadius: 8 }}
+          >
+            Xem đơn thuốc đã gửi
+          </Button>
+        </Col>
+      </Row>
+
+      {/* Thông tin học sinh */}
+      <Card
+        style={{ 
+          marginBottom: 24, 
+          borderRadius: 16, 
+          boxShadow: '0 4px 16px rgba(0,0,0,0.07)',
+          background: 'linear-gradient(135deg, #059669 0%, #065f46 100%)',
+          color: 'white'
+        }}
+        bordered={false}
+      >
+        <Space align="center" size={16}>
+          <div style={{
+            width: 64,
+            height: 64,
+            borderRadius: '50%',
+            background: 'rgba(255,255,255,0.2)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <UserOutlined style={{ fontSize: 32, color: 'white' }} />
+          </div>
+          <div>
+            <Title level={3} style={{ margin: 0, color: 'white' }}>{studentInfo.studentName}</Title>
+            <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: 16 }}>
+              Lớp: {studentInfo.classroom}
+            </Text>
+          </div>
+        </Space>
+      </Card>
+
+      {/* Hướng dẫn */}
+      <Alert
+        message="Hướng dẫn khai báo thuốc"
+        description={
+          <ul style={{ margin: '8px 0 0 0', paddingLeft: 20 }}>
+            <li>Vui lòng mô tả tình trạng bệnh và hướng dẫn sử dụng thuốc</li>
+            <li>Điền đầy đủ thông tin về thuốc cần sử dụng</li>
+            <li>Nhân viên y tế sẽ kiểm tra và xử lý khai báo</li>
+            <li>Mọi thông tin sẽ được bảo mật và chỉ sử dụng cho mục đích chăm sóc sức khỏe của học sinh</li>
+          </ul>
+        }
+        type="info"
+        showIcon
+        icon={<InfoCircleOutlined />}
+        style={{ marginBottom: 24, borderRadius: 12 }}
+      />
+
+      {/* Form khai báo */}
+      <Card
+        title={
+          <span style={{ fontSize: 18, fontWeight: 600 }}>
+            <MedicineBoxOutlined style={{ marginRight: 8, color: '#15803d' }} />
+            Thông tin thuốc cần sử dụng
+          </span>
+        }
+        style={{ borderRadius: 16, boxShadow: '0 4px 16px rgba(0,0,0,0.07)' }}
+        bodyStyle={{ padding: 32 }}
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}
+          requiredMark={false}
         >
-          Xem Đơn Thuốc Đã Gửi
-        </button>
-      </div>
-
-      {submitSuccess && (
-        <div className="success-message">
-          <p>Khai báo thuốc đã được gửi thành công! Nhân viên y tế sẽ xem xét và liên hệ nếu cần thêm thông tin.</p>
-        </div>
-      )}
-
-      {submitError && (
-        <div className="error-message">
-          <p>{submitError}</p>
-        </div>
-      )}
-
-      <div className="declaration-container">
-        <div className="info-card">
-          <div className="info-icon">
-            <Info size={20} />
-          </div>
-          <div className="info-content">
-            <h3>Hướng dẫn khai báo thuốc</h3>
-            <ul>
-              <li>Vui lòng mô tả tình trạng bệnh và hướng dẫn sử dụng thuốc</li>
-              <li>Điền đầy đủ thông tin về thuốc cần sử dụng</li>
-              <li>Nhân viên y tế sẽ kiểm tra và xử lý khai báo</li>
-              <li>Mọi thông tin sẽ được bảo mật và chỉ sử dụng cho mục đích chăm sóc sức khỏe của học sinh</li>
-            </ul>
-          </div>
-        </div>
-
-        <form className="declaration-form" onSubmit={handleSubmit} encType="multipart/form-data">
-          <h2>Thông tin học sinh</h2>
-          <div className="form-row">
-            <div className="form-group">
-              <label>Tên học sinh</label>
-              <input
-                type="text"
-                value={studentInfo.studentName}
-                disabled
-                className="disabled-input"
-              />
-            </div>
-            <div className="form-group">
-              <label>Lớp</label>
-              <input
-                type="text"
-                value={studentInfo.classroom}
-                disabled
-                className="disabled-input"
-              />
-            </div>
-          </div>
-
-          <h2>Thông tin thuốc</h2>
-          <div className="form-group">
-            <label>Hướng dẫn sử dụng thuốc <span className="required">*</span></label>
-            <textarea
-              name="instruction"
-              value={formData.instruction}
-              onChange={handleInputChange}
-              rows="2"
-              placeholder="Hướng dẫn cụ thể về liều lượng, thời gian uống thuốc"
-              required
-              maxLength={255}
-            ></textarea>
-          </div>
-          <div className="form-row">
-            <div className="form-group">
-              <label>Ngày bắt đầu <span className="required">*</span></label>
-              <input
-                type="date"
-                name="startDate"
-                value={formData.startDate}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>Ngày kết thúc <span className="required">*</span></label>
-              <input
-                type="date"
-                name="endDate"
-                value={formData.endDate}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-          </div>
-          <div className="form-group">
-            <label>Ghi chú thêm</label>
-            <textarea
-              name="notes"
-              value={formData.notes}
-              onChange={handleInputChange}
-              rows="2"
+          <Form.Item
+            label="Hướng dẫn sử dụng thuốc"
+            name="instruction"
+            rules={[{ required: true, message: 'Vui lòng nhập hướng dẫn sử dụng thuốc!' }]}
+            style={{ marginBottom: 24 }}
+          >
+            <TextArea
+              rows={4}
+              placeholder="Mô tả chi tiết về thuốc, liều lượng, cách sử dụng..."
               maxLength={500}
-              placeholder="Thông tin thêm mà nhân viên y tế cần biết"
-            ></textarea>
-          </div>
-          <div className="form-group">
-            <label>Hình ảnh đơn thuốc <span style={{ color: '#888', fontWeight: 400 }}>(không bắt buộc)</span></label>
-            <input
-              type="file"
-              name="image"
-              accept="image/*"
-              onChange={handleImageChange}
+              showCount
+              style={{ borderRadius: 8 }}
             />
-            {imageFile && (
-              <div style={{ marginTop: 8 }}>
-                <img
-                  src={URL.createObjectURL(imageFile)}
+          </Form.Item>
+
+          <Form.Item
+            label="Thời gian sử dụng thuốc"
+            name="dateRange"
+            rules={[{ required: true, message: 'Vui lòng chọn thời gian sử dụng thuốc!' }]}
+            style={{ marginBottom: 24 }}
+          >
+            <RangePicker
+              style={{ width: '100%', borderRadius: 8, height: 40 }}
+              placeholder={['Ngày bắt đầu', 'Ngày kết thúc']}
+              format="DD/MM/YYYY"
+              disabledDate={(current) => current && current < dayjs().startOf('day')}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Ghi chú thêm"
+            name="notes"
+            style={{ marginBottom: 24 }}
+          >
+            <TextArea
+              rows={3}
+              placeholder="Thông tin thêm mà nhân viên y tế cần biết..."
+              maxLength={300}
+              showCount
+              style={{ borderRadius: 8 }}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Hình ảnh đơn thuốc (không bắt buộc)"
+            style={{ marginBottom: 32 }}
+          >
+            <Upload
+              listType="picture-card"
+              maxCount={1}
+              accept="image/*"
+              beforeUpload={() => false}
+              onChange={handleImageUpload}
+              onRemove={removeImage}
+              style={{ borderRadius: 8 }}
+            >
+              {!imageFile && (
+                <div>
+                  <PlusOutlined />
+                  <div style={{ marginTop: 8 }}>Tải ảnh lên</div>
+                </div>
+              )}
+            </Upload>
+            {imagePreview && (
+              <div style={{ marginTop: 16 }}>
+                <Image
+                  src={imagePreview}
                   alt="Preview"
-                  style={{ maxWidth: 200, maxHeight: 120, borderRadius: 6, border: '1px solid #eee' }}
+                  style={{ maxWidth: 200, borderRadius: 8 }}
                 />
               </div>
             )}
-          </div>
+          </Form.Item>
 
-          <div className="form-actions">
-            <button type="submit" className="submit-button" disabled={isSubmitting}>
-              {isSubmitting ? 'Đang gửi...' : (
-                <>
-                  <Send size={16} />
-                  Gửi Thuốc
-                </>
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
+          <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
+            <Button
+              type="primary"
+              htmlType="submit"
+              size="large"
+              loading={isSubmitting}
+              icon={<SendOutlined />}
+              style={{ 
+                borderRadius: 8, 
+                height: 48, 
+                minWidth: 120,
+                fontSize: 16,
+                fontWeight: 600
+              }}
+            >
+              {isSubmitting ? 'Đang gửi...' : 'Gửi khai báo'}
+            </Button>
+          </Form.Item>
+        </Form>
+      </Card>
     </div>
   );
 };
