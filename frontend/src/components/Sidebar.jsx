@@ -129,6 +129,7 @@ const getNavGroupsForRole = (role) => {
       {
         title: 'Khám sức khỏe',
         items: [
+          { path: '/hososuckhoe', name: 'Hồ sơ sức khỏe', icon: 'heart' },
           { path: '/kiemtradinhky', name: 'Tạo kiểm tra định kỳ', icon: 'stethoscope' },
           { path: '/danhsachkiemtradinhky', name: 'Danh sách kiểm tra định kỳ', icon: 'stethoscope' },
           { path: '/capnhatkiemtradinhky', name: 'Cập nhật kiểm tra định kỳ', icon: 'stethoscope' },
