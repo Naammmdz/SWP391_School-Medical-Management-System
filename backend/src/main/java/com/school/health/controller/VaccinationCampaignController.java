@@ -152,16 +152,16 @@ public class VaccinationCampaignController {
         return ResponseEntity.ok(vaccinationCampaignService.getResultByStudentId(studentId));
     }
 
-    @GetMapping("/filter/result")
-    @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN') or hasRole('NURSE')")
-    public ResponseEntity<?> getResultWithFilter(@RequestParam(required = false) LocalDate startDate, @RequestParam(required = false) LocalDate endDate) {
-        if (startDate != null && endDate != null) {
-            if (startDate.isAfter(endDate)) {
-                throw new RuntimeException("startDate is after endDate");
-            }
-        }
-        return ResponseEntity.ok(vaccinationCampaignService.getResultWithFilterDate(startDate, endDate));
-    }
+//    @GetMapping("/filter/result")
+//    @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN') or hasRole('NURSE')")
+//    public ResponseEntity<?> getResultWithFilter(@RequestParam(required = false) LocalDate startDate, @RequestParam(required = false) LocalDate endDate) {
+//        if (startDate != null && endDate != null) {
+//            if (startDate.isAfter(endDate)) {
+//                throw new RuntimeException("startDate is after endDate");
+//            }
+//        }
+//        return ResponseEntity.ok(vaccinationCampaignService.getResultWithFilterDate(startDate, endDate));
+//    }
 
     @GetMapping("/student/{studentId}/campaign-parentConfirmation/{parentConfirmation}")
     @PreAuthorize("hasRole('PARENT') or hasRole('NURSE') or hasRole('ADMIN')")
@@ -176,18 +176,19 @@ public class VaccinationCampaignController {
             @RequestParam(required = false) String className,
             @RequestParam(required = false) String campaignName,
             @RequestParam(required = false) String studentName,
+            @RequestParam(required = false) Boolean parentConfirmation,
             @RequestParam(required = false) LocalDate startDate,
             @RequestParam(required = false) LocalDate endDate
     ) {
-        return ResponseEntity.ok(vaccinationCampaignService.filterVaccinationCampaigns(className, campaignName, studentName, startDate, endDate));
+        return ResponseEntity.ok(vaccinationCampaignService.filterVaccinationCampaigns(className, campaignName, studentName, parentConfirmation, startDate, endDate));
     }
 
-    // Get all vaccination results with parent confirmation is true
-    @GetMapping("/results-campaign/parent-confirmation-true")
-    @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN') or hasRole('NURSE')")
-    public ResponseEntity<?> getAllVaccinationResultsWithParentConfirmationTrue() {
-        return ResponseEntity.ok(vaccinationCampaignService.getAllVaccinationResultsWithParentConfirmationTrue());
-    }
+//    // Get all vaccination results with parent confirmation is true
+//    @GetMapping("/results-campaign/parent-confirmation-true")
+//    @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN') or hasRole('NURSE')")
+//    public ResponseEntity<?> getAllVaccinationResultsWithParentConfirmationTrue() {
+//        return ResponseEntity.ok(vaccinationCampaignService.getAllVaccinationResultsWithParentConfirmationTrue());
+//    }
 
 
 }

@@ -482,7 +482,7 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
     public MedicineSubmissionResponse getByIdWithLog(Integer id) {
         MedicineSubmission submission = medicineSubmissionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Submission not found: " + id));
-
+// hàm này mục đích là để trả về thông tin đơn thuốc bao gồm cả logs, dành cho NURSE
         return toResponse(submission, true);
     }
 }

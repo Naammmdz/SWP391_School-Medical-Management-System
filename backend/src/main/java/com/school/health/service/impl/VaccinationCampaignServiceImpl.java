@@ -3,10 +3,7 @@ package com.school.health.service.impl;
 import com.school.health.dto.request.VaccinationCampaignRequestDTO;
 import com.school.health.dto.request.VaccinationRequestDTO;
 
-import com.school.health.dto.response.HealthCampaignResponseDTO;
-import com.school.health.dto.response.StudentResponseDTO;
-import com.school.health.dto.response.VaccinationCampaignResponseDTO;
-import com.school.health.dto.response.VaccinationResponseDTO;
+import com.school.health.dto.response.*;
 import com.school.health.entity.HealthCheckCampaign;
 
 import com.school.health.entity.Student;
@@ -23,6 +20,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.text.Normalizer;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -40,7 +38,9 @@ private final ApplicationEventPublisher eventPublisher;
         VaccinationCampaign campaign = mapToEntity(vaccinationCampaignRequestDTO);
         campaign.setCreatedBy(createdBy);
         VaccinationCampaign savedCampaign = vaccinationCampaignRepository.save(campaign);
+
         eventPublisher.publishEvent(new VaccinationCampaignCreatedEvent(savedCampaign));
+
         return mapToResponseDTO(savedCampaign);
     }
 
@@ -112,7 +112,9 @@ private final ApplicationEventPublisher eventPublisher;
         campaign.setStatus(Status.APPROVED);
 
         VaccinationCampaign approvedCampaign = vaccinationCampaignRepository.save(campaign);
+
         eventPublisher.publishEvent(new VaccinationCampaignApprovedEvent(approvedCampaign));
+
         return mapToResponseDTO(approvedCampaign);
     }
 
@@ -158,6 +160,7 @@ private final ApplicationEventPublisher eventPublisher;
         VaccinationResponseDTO responseDTO = mapToResponseDTO(vaccination);
         return responseDTO;
     }
+
     // rejectStudentVaccine
     @Override
     public VaccinationResponseDTO rejectStudentVaccine(VaccinationRequestDTO vaccineRequest) {
@@ -260,7 +263,7 @@ private final ApplicationEventPublisher eventPublisher;
     @Override
     public List<VaccinationResponseDTO> getResultByStudentId(Integer studentId) {
         List<Vaccination> vaccine = vaccinationRepository.findByStudentId(studentId);
-        if(vaccine.isEmpty()){
+        if (vaccine.isEmpty()) {
             throw new RuntimeException("Vaccination not found : " + studentId);
         }
         return vaccine.stream().map(this::mapToResponseDTO).collect(Collectors.toList());
@@ -268,12 +271,12 @@ private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public List<VaccinationResponseDTO> getResultWithFilterDate(LocalDate startDate, LocalDate endDate) {
-        return vaccinationRepository.findResultWithDate( startDate, endDate ).stream().map(this::mapToResponseDTO).collect(Collectors.toList());
+        return vaccinationRepository.findResultWithDate(startDate, endDate).stream().map(this::mapToResponseDTO).collect(Collectors.toList());
     }
 
     @Override
     public List<VaccinationCampaignResponseDTO> getCampaignStatus(int studentId, boolean parentConfirmation) {
-        List<VaccinationCampaign> campaign = vaccinationCampaignRepository.findCampaignsByStudentIdAndParentConfirmation(studentId,parentConfirmation);
+        List<VaccinationCampaign> campaign = vaccinationCampaignRepository.findCampaignsByStudentIdAndParentConfirmation(studentId, parentConfirmation);
         if (campaign.isEmpty()) {
             throw new RuntimeException("No health campaigns found for student with ID: " + studentId + " and parent confirmation: " + parentConfirmation);
         }
@@ -284,48 +287,94 @@ private final ApplicationEventPublisher eventPublisher;
 
 
     @Override
-    public List<VaccinationResponseDTO> filterVaccinationCampaigns(String className, String campaignName, String studentName, LocalDate startDate, LocalDate endDate) {
+    public List<VaccinationResponseResultDTO> filterVaccinationCampaigns(String className, String campaignName, String studentName, Boolean parentConfirmation, LocalDate startDate, LocalDate endDate) {
         Specification<Vaccination> spec = Specification.where(null);
 
         if (className != null && !className.isBlank()) {
             spec = spec.and((root, query, cb) ->
-                    cb.equal(root.get("student").get("className"), className));
+                    cb.like(root.get("student").get("className"),"%" + className + "%"));
         }
 
         if (campaignName != null && !campaignName.isBlank()) {
             spec = spec.and((root, query, cb) ->
-                    cb.equal(root.get("campaign").get("campaignName"), campaignName));
+                    cb.like(root.get("campaign").get("campaignName"),"%" + campaignName + "%"));
         }
 
         if (studentName != null && !studentName.isBlank()) {
             spec = spec.and((root, query, cb) ->
                     cb.like(cb.lower(root.get("student").get("fullName")), "%" + studentName.toLowerCase() + "%"));
         }
+        if (Boolean.TRUE.equals(parentConfirmation)) {
+            spec = spec.and((root, query, cb) -> cb.isTrue(root.get("parentConfirmation")));
+        } else if (Boolean.FALSE.equals(parentConfirmation)) {
+            spec = spec.and((root, query, cb) -> cb.isFalse(root.get("parentConfirmation")));
+        }
+// else null => không thêm gì vào spec
+
 
         if (startDate != null && endDate != null) {
             spec = spec.and((root, query, cb) ->
+                    cb.between(root.get("date"), startDate, endDate));
+        } else if (startDate != null) {
+            spec = spec.and((root, query, cb) ->
                     cb.greaterThanOrEqualTo(root.get("date"), startDate));
-        }
-
-        if (endDate != null && startDate != null) {
+        } else if (endDate != null) {
             spec = spec.and((root, query, cb) ->
                     cb.lessThanOrEqualTo(root.get("date"), endDate));
         }
 
-        return vaccinationRepository.findAll(spec)
-                .stream()
-                .map(this::mapToResponseDTO)
+
+
+        return vaccinationRepository.findAll(spec).stream()
+                .map(vac ->
+                        VaccinationResponseResultDTO.builder()
+                                .vaccinationId(vac.getVaccinationId())
+                                .date(vac.getDate())
+                                .adverseReaction(vac.getAdverseReaction())
+                                .doseNumber(vac.getDoseNumber())
+                                .notes(vac.getNotes())
+                                .parentConfirmation(vac.isParentConfirmation())
+                                .result(vac.getResult())
+                                .studentId(vac.getStudent().getStudentId())
+                                .isPreviousDose(vac.isPreviousDose())
+                                .vaccineName(vac.getVaccineName())
+                                .campaignId(vac.getCampaign().getCampaignId())
+                                .campaignName(vac.getCampaign().getCampaignName())
+                                .scheduledDate(vac.getCampaign().getScheduledDate())
+                                .studentName(vac.getStudent().getFullName())
+                                .className(vac.getStudent().getClassName())
+                                .build()
+                )
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<VaccinationResponseDTO> getAllVaccinationResultsWithParentConfirmationTrue() {
+    public List<VaccinationResponseResultDTO> getAllVaccinationResultsWithParentConfirmationTrue() {
         return vaccinationRepository.findAll().stream()
-                .map(this::mapToResponseDTO)
-                .filter(a -> a.isParentConfirmation()) // Nếu ở đây không có get true hay false
-                // thì mặc định là true tại vì a.isParentConfirmation() trả về true nếu muốn trả về false
-                // thì phải dùng a.isParentConfirmation() == false
+                .map(vac ->
+                        VaccinationResponseResultDTO.builder()
+                                .vaccinationId(vac.getVaccinationId())
+                                .date(vac.getDate())
+                                .adverseReaction(vac.getAdverseReaction())
+                                .doseNumber(vac.getDoseNumber())
+                                .notes(vac.getNotes())
+                                .parentConfirmation(vac.isParentConfirmation())
+                                .result(vac.getResult())
+                                .studentId(vac.getStudent().getStudentId())
+                                .isPreviousDose(vac.isPreviousDose())
+                                .vaccineName(vac.getVaccineName())
+                                .campaignId(vac.getCampaign().getCampaignId())
+                                .campaignName(vac.getCampaign().getCampaignName())
+                                .scheduledDate(vac.getCampaign().getScheduledDate())
+                                .build()
+                ).filter(parent -> parent.isParentConfirmation() == true)
                 .collect(Collectors.toList());
+    }
+
+    public String removeAccent(String input) {
+        if (input == null) return null;
+        String normalized = Normalizer.normalize(input, Normalizer.Form.NFD);
+        return normalized.replaceAll("\\p{M}", "");
     }
 
 }

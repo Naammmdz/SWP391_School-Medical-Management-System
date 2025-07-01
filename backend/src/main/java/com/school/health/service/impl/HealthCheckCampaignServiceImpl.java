@@ -1,11 +1,9 @@
 package com.school.health.service.impl;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.school.health.dto.request.HealthCampaignRequestDTO;
 import com.school.health.dto.request.HealthCheckRequestDTO;
-import com.school.health.dto.response.HealthCampaignIsAcceptDTO;
-import com.school.health.dto.response.HealthCampaignResponseDTO;
-import com.school.health.dto.response.HealthCheckResponseDTO;
-import com.school.health.dto.response.StudentResponseDTO;
+import com.school.health.dto.response.*;
 import com.school.health.entity.HealthCheck;
 import com.school.health.entity.HealthCheckCampaign;
 import com.school.health.entity.Student;
@@ -18,6 +16,7 @@ import com.school.health.repository.StudentRepository;
 import com.school.health.repository.UserRepository;
 import com.school.health.service.HealthCheckCampaignService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -31,7 +30,7 @@ import static com.school.health.enums.Status.APPROVED;
 @Service
 @RequiredArgsConstructor
 public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignService {
-
+    private final ApplicationEventPublisher eventPublisher;
     private final HealthCheckCampaignRepository healthCheckCampaignRepository;
     private final HealthCheckRepository healthCheckRepository;
     private final StudentRepository studentRepository;
@@ -41,7 +40,9 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
         HealthCheckCampaign campaign = mapToEntity(healthCampaignRequestDTO);
         campaign.setCreatedBy(createdBy);
         HealthCheckCampaign savedCampaign = healthCheckCampaignRepository.save(campaign);
+
         eventPublisher.publishEvent(new HealthCheckCampaignCreatedEvent(savedCampaign));
+
         return mapToResponseDTO(savedCampaign);
     }
 
@@ -334,17 +335,17 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
     }
 
     @Override
-    public List<HealthCheckResponseDTO> filterHealthCheckCampaigns(String className, String campaignName, String studentName, LocalDate startDate, LocalDate endDate) {
+    public List<HealthCheckResponseResultDTO> filterHealthCheckCampaigns(String className, String campaignName, String studentName, Boolean isParentConfirmation, LocalDate startDate, LocalDate endDate) {
         Specification<HealthCheck> spec = Specification.where(null);
 
         if (className != null && !className.isBlank()) {
             spec = spec.and((root, query, cb) ->
-                    cb.equal(root.get("student").get("className"), className));
+                    cb.like(root.get("student").get("className"), "%" + className + "%"));
         }
 
         if (campaignName != null && !campaignName.isBlank()) {
             spec = spec.and((root, query, cb) ->
-                    cb.equal(root.get("campaign").get("campaignName"), campaignName));
+                    cb.like(root.get("campaign").get("campaignName"),"%" + campaignName + "%"));
         }
 
         if (studentName != null && !studentName.isBlank()) {
@@ -352,27 +353,61 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
                     cb.like(cb.lower(root.get("student").get("fullName")), "%" + studentName.toLowerCase() + "%"));
         }
 
+        // Kiểm tra isParentConfirmation và áp dụng điều kiện tương ứng
+        // nếu isParentConfirmation là true, thì lọc các kết quả có parentConfirmation là true
+        // nếu isParentConfirmation là false, thì lọc các kết quả có parentConfirmation là false
+        // nếu isParentConfirmation là null, thì in ra hết
+        if (Boolean.TRUE.equals(isParentConfirmation)) {
+            spec = spec.and((root, query, cb) -> cb.isTrue(root.get("parentConfirmation")));
+        } else if (Boolean.FALSE.equals(isParentConfirmation)) {
+            spec = spec.and((root, query, cb) -> cb.isFalse(root.get("parentConfirmation")));
+        }
         if (startDate != null && endDate != null) {
             spec = spec.and((root, query, cb) ->
+                    cb.between(root.get("date"), startDate, endDate));
+        } else if (startDate != null) {
+            spec = spec.and((root, query, cb) ->
                     cb.greaterThanOrEqualTo(root.get("date"), startDate));
-        }
-
-        if (endDate != null && startDate != null) {
+        } else if (endDate != null) {
             spec = spec.and((root, query, cb) ->
                     cb.lessThanOrEqualTo(root.get("date"), endDate));
         }
 
-        return healthCheckRepository.findAll(spec)
-                .stream()
-                .map(this::mapToHealthCheckResponseDTO)
+
+        return healthCheckRepository.findAll(spec).stream()
+                .map(heal -> HealthCheckResponseResultDTO.builder()
+                        .healthCheckId(heal.getCheckId())
+                        .date(heal.getDate())
+                        .height(heal.getHeight())
+                        .weight(heal.getWeight())
+                        .eyesightLeft(heal.getEyesightLeft())
+                        .eyesightRight(heal.getEyesightRight())
+                        .bloodPressure(heal.getBloodPressure())
+                        .hearingLeft(heal.getHearingLeft())
+                        .hearingRight(heal.getHearingRight())
+                        .temperature(heal.getTemperature())
+                        .consultationAppointment(heal.isConsultationAppointment())
+                        .notes(heal.getNotes())
+                        .parentConfirmation(heal.isParentConfirmation())
+                        .studentId(heal.getStudent().getStudentId())
+                        .campaignId(heal.getCampaign().getCampaignId())
+                        .campaignName(heal.getCampaign().getCampaignName())
+                        .scheduledDate(heal.getCampaign().getScheduledDate())
+                        .studentName(heal.getStudent().getFullName())
+                        .className(heal.getStudent().getClassName())
+                        .build())
                 .collect(Collectors.toList());
     }
+
+
+
+
 
     @Override
     public List<HealthCheckResponseDTO> getAllHealthCheckResultsWithParentConfirmationTrue() {
         return healthCheckRepository.findAll().stream()
                 .map(this::mapToHealthCheckResponseDTO)
-                .filter(healthCheckResponseDTO -> healthCheckResponseDTO.isParentConfirmation())
+                .filter(healthCheckResponseDTO -> healthCheckResponseDTO.isParentConfirmation() == true)
                 .collect(Collectors.toList());
     }
 
