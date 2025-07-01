@@ -1,0 +1,599 @@
+.header {
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 2rem;
+  height: 72px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.nav-menu {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  position: relative;
+  z-index: 2001;
+}
+
+.nav-menu.active {
+  z-index: 2002;
+}
+
+.nav-links {
+  display: flex;
+  gap: 2rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-links a {
+  color: #1e293b;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 1rem;
+  transition: color 0.2s, background 0.2s;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+}
+
+.nav-links a:hover {
+  color: #10d569;
+  background-color: #e6ffe6;
+}
+
+.nav-links li {
+  display: flex;
+  align-items: center;
+}
+
+/* Dropdown styles for nav */
+.dropdown {
+  position: relative;
+  z-index: 2003;
+}
+
+.nav-dropdown-btn {
+  background: none;
+  border: none;
+  color: #1e293b;
+  font-weight: 500;
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.3em;
+  transition: color 0.2s, background 0.2s;
+}
+
+.nav-dropdown-btn:hover,
+.nav-dropdown-btn[aria-expanded="true"] {
+  color: #10d569;
+  background: #e6ffe6;
+}
+
+.dropdown-arrow {
+  font-size: 0.7em;
+  margin-left: 0.3em;
+  transition: transform 0.2s;
+}
+
+.dropdown[aria-expanded="true"] .dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+/* Sửa lại user-dropdown-menu để không bị che và click được */
+.user-dropdown-menu {
+  position: absolute;
+  right: 0;
+  top: 120%;
+  background: #fff;
+  color: #222;
+  border-radius: 8px;
+  min-width: 220px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+  z-index: 3000;
+  padding: 0.5rem 0;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: none;
+  border: none;
+  color: #0c0b0b;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font-size: 1rem;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.dropdown-item:hover {
+  background: #22aea7;
+  color: #fff;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  position: relative;
+  z-index: 2002;
+}
+
+.user-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.notifications-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: all 0.2s;
+  position: relative;
+  z-index: 2003;
+}
+
+.notifications-btn:hover {
+  background-color: #e6ffe6;
+  color: #10d569;
+}
+
+.notification-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: #dc2626;
+  color: white;
+  font-size: 0.75rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: 1rem;
+  transform: translate(25%, -25%);
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s;
+  position: relative;
+  z-index: 2003;
+}
+
+.user-profile:hover {
+  background-color: #f0fdf4;
+}
+
+.avatar-container {
+  width: 2.5rem;
+  height: 2.5rem;
+  background: #e6ffe6;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #15803d;
+}
+
+.username-role-dropdown {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  cursor: pointer;
+  outline: none;
+  position: relative;
+}
+
+.username {
+  color: #1e293b;
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+.user-role {
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.dropdown-arrow {
+  margin-left: 6px;
+}
+
+.logout-btn {
+  background-color: #41dc7f;
+  color: #fff;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(19, 176, 182, 0.08);
+  margin-left: 1rem;
+}
+
+.logout-btn:hover,
+.logout-btn:focus {
+  background-color: #15803d;
+  outline: none;
+}
+
+.mobile-menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  color: #1e293b;
+  z-index: 3001;
+}
+
+.menu-icon {
+  width: 24px;
+  height: 24px;
+}
+
+@media (max-width: 1200px) {
+  .nav-links {
+    gap: 1rem;
+  }
+  .nav-links a,
+  .nav-dropdown-btn {
+    padding: 0.5rem;
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 992px) {
+  .header {
+    padding: 0 1rem;
+  }
+  .nav-links {
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    height: auto;
+    padding: 0.5rem 0.5rem 0 0.5rem;
+    z-index: 2000;
+  }
+
+  .nav-menu {
+    position: fixed;
+    top: 72px;
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    padding: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transform: translateY(-100%);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 3000;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .nav-menu.active {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+    z-index: 3001;
+  }
+
+  .nav-links {
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .user-controls {
+    gap: 0.5rem;
+  }
+
+  .mobile-menu-btn {
+    display: block;
+  }
+
+  .user-profile {
+    padding: 0.5rem;
+  }
+
+  .user-dropdown-menu {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+    min-width: 180px;
+    padding: 0.5rem 0;
+    position: absolute;
+    z-index: 4000;
+  }
+
+  .nav-links a,
+  .nav-dropdown-btn {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+  }
+}
+
+/* --- Notifications Dropdown --- */
+.notifications-dropdown {
+  position: absolute;
+  top: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 340px;
+  max-width: 95vw;
+  background: #fff;
+  color: #111;
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  border: 1px solid #e5e7eb;
+  z-index: 4000;
+  padding: 0.5rem 0 0.5rem 0;
+  margin-top: 8px;
+}
+
+.notifications-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px 8px 20px;
+  border-bottom: 1px solid #e5e7eb;
+  font-weight: 600;
+  font-size: 1.05rem;
+  background: #fff;
+  color: #111;
+}
+
+.mark-all-btn {
+  background: #111;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 4px 12px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.mark-all-btn:disabled {
+  background: #e5e7eb;
+  color: #888;
+  cursor: not-allowed;
+}
+
+.notifications-list {
+  max-height: 340px;
+  overflow-y: auto;
+  background: #fff;
+}
+
+.notification-item {
+  padding: 14px 20px 10px 20px;
+  border-bottom: 1px solid #f1f1f1;
+  background: #fff;
+  color: #111;
+  transition: background 0.2s, color 0.2s;
+  position: relative;
+  font-size: 1rem;
+}
+.notification-item:last-child {
+  border-bottom: none;
+}
+.notification-item.unread {
+  background: #111;
+  color: #fff;
+}
+.notification-item.unread .notification-title,
+.notification-item.unread .notification-content,
+.notification-item.unread .notification-time {
+  color: #fff;
+}
+.notification-item .notification-title {
+  font-weight: 600;
+  margin-bottom: 2px;
+  color: #111;
+}
+.notification-item .notification-content {
+  font-size: 0.97rem;
+  color: #222;
+  margin-bottom: 2px;
+}
+.notification-item .notification-time {
+  font-size: 0.85rem;
+  color: #888;
+}
+.notification-item.unread .notification-time {
+  color: #e5e7eb;
+}
+.notification-item.unread .notification-content {
+  color: #e5e7eb;
+}
+.notification-item.empty {
+  text-align: center;
+  color: #888;
+  background: #fff;
+  padding: 24px 0;
+  border-bottom: none;
+}
+.notification-dot {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 10px;
+  height: 10px;
+  background: #dc2626;
+  border-radius: 50%;
+  display: inline-block;
+  border: 2px solid #fff;
+}
+
+@media (max-width: 600px) {
+  .notifications-dropdown {
+    min-width: 90vw;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.5rem 0;
+  }
+  .notifications-header, .notification-item {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+}
+
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 32px;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.header-logo {
+  background: #10d569;
+  padding: 8px;
+  border-radius: 12px;
+  margin-right: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.header-logo-icon {
+  width: 24px;
+  height: 24px;
+  color: #fff;
+}
+
+.header-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #111;
+}
+
+.header-slogan {
+  font-size: 0.95rem;
+  color: #222;
+}
+
+.header-nav {
+  display: flex;
+  gap: 32px;
+}
+
+.header-link {
+  color: #111;
+  font-weight: 500;
+  text-decoration: none;
+  font-size: 1rem;
+  transition: color 0.2s;
+}
+
+.header-link:hover {
+  color: #10d569;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-btn {
+  font-size: 1rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 24px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.header-btn-outline {
+  background: transparent;
+  color: #10d569;
+  border: 1.5px solid #10d569;
+}
+
+.header-btn-outline:hover {
+  background: #e6ffe6;
+  color: #10d569;
+}
+
+.header-btn-primary {
+  background: #10d569;
+  color: #fff;
+}
+
+.header-btn-primary:hover {
+  background: #0ea95d;
+  color: #fff;
+}
+
+@media (max-width: 900px) {
+  .header-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    padding: 16px;
+  }
+  .header-nav {
+    gap: 16px;
+  }
+  .header-actions {
+    gap: 8px;
+  }
+}
+
+body, #root, .app, .layout {
+  overflow: visible !important;
+  height: auto !important;
+}
