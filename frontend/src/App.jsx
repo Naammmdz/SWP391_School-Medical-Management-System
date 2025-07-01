@@ -45,6 +45,8 @@ import CreateHealthCheck from './pages/health/HealthCheck/CreateHealthCheck';
 import HealthCheckResult from './pages/health/HealthCheck/HealthCheckResult';
 import HealthCheckResultStudent from './pages/health/HealthCheck/HealthCheckResultStudent';
 import UpdateHealthCheckResult from './pages/health/HealthCheck/UpdateHealthCheckResult';
+import ImportInventory from './pages/medical/Inventory/ImportInventory';
+import InventoryList from './pages/medical/Inventory/InventoryList';
 
 // Component ProtectedRoute
 const ProtectedRoute = ({ element, requiredRole }) => {
@@ -111,6 +113,11 @@ function App() {
       <Route path="/taomoihocsinh" element={<Layout showSidebar><CreateStudent /></Layout>} />
       <Route path="/danhsachhocsinh" element={<Layout showSidebar><StudentList /></Layout>} />
       <Route path="/capnhathocsinh/:studentId" element={<Layout showSidebar><UpdateStudent /></Layout>} />
+
+      <Route path="/themvattu" element={<Layout showSidebar><ImportInventory/> </Layout>} />
+      <Route path="/quanlyvattuyte" element={<Layout showSidebar><InventoryList/></Layout>} />
+      
+     
       
       <Route path="/nurse" element={<ProtectedRoute element={<Layout showSidebar><NursePages /></Layout>} requiredRole="ROLE_NURSE" />} />
       <Route path='/admin' element={<ProtectedRoute element={<Layout showSidebar><Admin /></Layout>} requiredRole="ROLE_ADMIN" />} />

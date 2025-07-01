@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import VaccinationService from '../../../services/VaccinationService';
 
+
 const CreateVaccinationCampaign = () => {
   const [form, setForm] = useState({
     campaignName: '',
@@ -10,8 +11,7 @@ const CreateVaccinationCampaign = () => {
     address: '',
     organizer: '',
     description: '',
-    scheduledDate: '',
-    status: 'CRAFT'
+    scheduledDate: ''
   });
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -58,7 +58,7 @@ const CreateVaccinationCampaign = () => {
 
   return (
     <div className="create-vaccination-campaign-container">
-      <h2>Tạo chiến dịch tiêm chủng</h2>
+      <h2>Tạo chiến dịch tiêm chủng mới</h2>
       <form onSubmit={handleSubmit} className="campaign-form">
         <div className="form-group">
           <label>Tên chiến dịch <span style={{color: 'red'}}>*</span></label>
@@ -97,7 +97,7 @@ const CreateVaccinationCampaign = () => {
             name="address"
             value={form.address}
             onChange={handleChange}
-            required
+required
           />
         </div>
         <div className="form-group">
@@ -111,14 +111,6 @@ const CreateVaccinationCampaign = () => {
           />
         </div>
         <div className="form-group">
-          <label>Mô tả</label>
-          <textarea
-            name="description"
-            value={form.description}
-            onChange={handleChange}
-          />
-        </div>
-        <div className="form-group">
           <label>Ngày tiêm chủng <span style={{color: 'red'}}>*</span></label>
           <input
             type="date"
@@ -129,15 +121,13 @@ const CreateVaccinationCampaign = () => {
             min={new Date().toISOString().split('T')[0]}
           />
         </div>
-        {/* Trạng thái mặc định là nháp, không cho nhập */}
-        <div className="form-group">
-          <label>Trạng thái</label>
-          <input
-            type="text"
-            name="status"
-            value="Nháp"
-            readOnly
-            disabled
+        <div className="form-group full-width">
+          <label>Mô tả</label>
+          <textarea
+            name="description"
+            value={form.description}
+            onChange={handleChange}
+            rows="4"
           />
         </div>
         <button type="submit" className="btn btn-primary">Tạo chiến dịch</button>

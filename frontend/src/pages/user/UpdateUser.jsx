@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import userService from '../../services/UserService';
+import { FaUser, FaEnvelope, FaPhone, FaCheckCircle, FaSpinner } from 'react-icons/fa'; // Import icons
 import './UpdateUser.css';
 
 const UpdateUser = () => {
@@ -11,7 +12,6 @@ const UpdateUser = () => {
     const [error, setError] = useState(null);
     const [updateSuccess, setUpdateSuccess] = useState(false);
 
-    // Lấy accessToken từ localStorage
     const [accessToken, setAccessToken] = useState(localStorage.getItem('token'));
 
     useEffect(() => {
@@ -58,11 +58,8 @@ const UpdateUser = () => {
             }
         )
             .then((res) => {
-                // Nếu backend trả về token mới trong res.data.token hoặc res.headers['authorization']
-                // Ưu tiên lấy từ headers nếu có
                 let newToken = null;
                 if (res.headers && res.headers['authorization']) {
-                    // Trường hợp backend trả về dạng "Bearer <token>"
                     const authHeader = res.headers['authorization'];
                     if (authHeader.startsWith('Bearer ')) {
                         newToken = authHeader.substring(7);
@@ -84,7 +81,7 @@ const UpdateUser = () => {
             });
     };
 
-    if (isLoading) return <div>Loading...</div>;
+    if (isLoading) return <div className="loading"><FaSpinner className="spinner" /> Loading...</div>;
     if (error) return <div className="error">{error}</div>;
 
     return (
@@ -92,22 +89,22 @@ const UpdateUser = () => {
             <h2>Cập nhật thông tin cá nhân</h2>
             <form onSubmit={handleSubmit(onSubmit)}>
                 <div className="form-group">
-                    <label htmlFor="fullName">Họ và tên</label>
+                    <label htmlFor="fullName"><FaUser className="icon" /> Họ và tên</label>
                     <input id="fullName" {...register('fullName', { required: true })} />
                     {errors.fullName && <span className="error">Họ và tên không được để trống</span>}
                 </div>
                 <div className="form-group">
-                    <label htmlFor="email">Email</label>
+                    <label htmlFor="email"><FaEnvelope className="icon" /> Email</label>
                     <input id="email" type="email" {...register('email', { required: true })} />
                     {errors.email && <span className="error">Email không được để trống</span>}
                 </div>
                 <div className="form-group">
-                    <label htmlFor="phone">Số điện thoại</label>
+                    <label htmlFor="phone"><FaPhone className="icon" /> Số điện thoại</label>
                     <input id="phone" {...register('phone', { required: true })} />
                     {errors.phone && <span className="error">Số điện thoại không được để trống</span>}
                 </div>
                 <div className="form-group">
-                    <label htmlFor="isActive">Trạng thái hoạt động</label>
+                    <label htmlFor="isActive"><FaCheckCircle className="icon" /> Trạng thái hoạt động</label>
                     <input
                         id="isActive"
                         value={watch('isActive') === 'true' ? 'Đang hoạt động' : 'Ngừng hoạt động'}
@@ -118,7 +115,7 @@ const UpdateUser = () => {
                 </div>
                 <button type="submit">Cập nhật</button>
             </form>
-            {updateSuccess && <div className="success">Cập nhật thành công!</div>}
+            {updateSuccess && <div className="success"><FaCheckCircle className="icon" /> Cập nhật thành công!</div>}
         </div>
     );
 };

@@ -119,10 +119,10 @@ const CreateHealthCheck = () => {
 
             <Form.Item
               name="organizer"
-              label="Người thực hiện"
-              rules={[{ required: true, message: 'Vui lòng nhập người thực hiện!' }]}
+              label="Đơn vị thực hiện"
+              rules={[{ required: true, message: 'Vui lòng nhập đơn vị thực hiện!' }]}
             >
-              <Input prefix={<UserOutlined />} placeholder="Nhập tên người thực hiện" />
+              <Input prefix={<UserOutlined />} placeholder="Nhập tổ chức thực hiện" />
             </Form.Item>
 
             <Form.Item

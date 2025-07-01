@@ -1,74 +1,103 @@
 /* UpdateUser.css */
 .update-user {
-    max-width: 400px;
+    max-width: 450px;
     margin: 40px auto;
-    padding: 32px 24px;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+    padding: 32px 28px;
+    background: #fafafa;
+    border-radius: 15px;
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
 }
 
 .update-user h2 {
     text-align: center;
     margin-bottom: 24px;
-    color: #2d3a4b;
+    color: #1e293b;
 }
 
 .update-user .form-group {
-    margin-bottom: 18px;
+    margin-bottom: 22px;
 }
 
 .update-user .form-group label {
-    display: block;
-    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
     font-weight: 500;
-    color: #333;
+    color: #334155;
+}
+
+.update-user .form-group label .icon {
+    margin-right: 6px;
+    color: #1976d2;
 }
 
 .update-user .form-group input {
     width: 100%;
-    padding: 8px 10px;
-    border: 1px solid #cfd8dc;
-    border-radius: 5px;
-    font-size: 15px;
+    padding: 10px 14px;
+    border: 1px solid #cbd5e0;
+    border-radius: 6px;
+    font-size: 16px;
     transition: border 0.2s;
 }
 
 .update-user .form-group input:focus {
-    border-color: #1976d2;
+    border-color: #2563eb;
     outline: none;
 }
 
 .update-user .error {
-    color: #d32f2f;
+    color: #ef4444;
     font-size: 13px;
     margin-top: 4px;
     display: block;
 }
 
 .update-user .success {
-    color: #388e3c;
-    background: #e8f5e9;
-    padding: 10px;
-    border-radius: 5px;
-    margin: 16px 0;
+    color: #16a34a;
+    background: #d1fae5;
+    padding: 12px;
+    border-radius: 6px;
+    margin: 20px 0;
     text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.update-user .success .icon {
+    margin-right: 8px;
+}
+
+.update-user .loading {
+    text-align: center;
+    color: #1d4ed8;
+    font-size: 16px;
+}
+
+.update-user .spinner {
+    margin-right: 8px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 .update-user button[type="submit"] {
     width: 100%;
-    padding: 10px 0;
-    background: #1976d2;
+    padding: 12px 0;
+    background: #2563eb;
     color: #fff;
     border: none;
-    border-radius: 5px;
-    font-size: 16px;
+    border-radius: 6px;
+    font-size: 17px;
     font-weight: 500;
     cursor: pointer;
-    margin-top: 10px;
+    margin-top: 12px;
     transition: background 0.2s;
 }
 
 .update-user button[type="submit"]:hover {
-    background: #1565c0;
+    background: #1d4ed8;
 }

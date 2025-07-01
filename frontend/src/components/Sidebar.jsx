@@ -93,7 +93,7 @@ const getNavGroupsForRole = (role) => {
           { path: '/capnhatthongtintiemchung', name: 'Cập nhật thông tin tiêm chủng', icon: 'syringe' },
           { path: '/capnhattiemchung', name: 'Cập nhật tiêm chủng', icon: 'syringe' },
           { path: '/ketquatiemchung', name: 'Kết quả tiêm chủng', icon: 'report' },
-          { path: '/ketquatiemchunghocsinh', name: 'Kết quả tiêm chủng học sinh', icon: 'report' },
+          
         ]
       },
       {
@@ -104,7 +104,7 @@ const getNavGroupsForRole = (role) => {
           { path: '/capnhatkiemtradinhky', name: 'Cập nhật kiểm tra định kỳ', icon: 'stethoscope' },
           { path: '/kiemtradinhkyhocsinh', name: 'Kiểm tra định kỳ học sinh', icon: 'stethoscope' },
           { path: '/ketquakiemtradinhky', name: 'Kết quả kiểm tra định kỳ', icon: 'report' },
-          { path: '/ketquakiemtradinhkyhocsinh', name: 'Kết quả kiểm tra học sinh', icon: 'report' },
+          
           { path: '/capnhatketquakiemtra', name: 'Cập nhật kết quả kiểm tra', icon: 'report' },
         ]
       },
@@ -135,7 +135,7 @@ const getNavGroupsForRole = (role) => {
           { path: '/capnhatkiemtradinhky', name: 'Cập nhật kiểm tra định kỳ', icon: 'stethoscope' },
           { path: '/kiemtradinhkyhocsinh', name: 'Kiểm tra định kỳ học sinh', icon: 'stethoscope' },
           { path: '/ketquakiemtradinhky', name: 'Kết quả kiểm tra định kỳ', icon: 'report' },
-          { path: '/ketquakiemtradinhkyhocsinh', name: 'Kết quả kiểm tra học sinh', icon: 'report' },
+          
           { path: '/capnhatketquakiemtra', name: 'Cập nhật kết quả kiểm tra', icon: 'report' },
         ]
       },
@@ -154,7 +154,7 @@ const getNavGroupsForRole = (role) => {
           { path: '/capnhatthongtintiemchung', name: 'Cập nhật thông tin tiêm chủng', icon: 'syringe' },
           { path: '/capnhattiemchung', name: 'Cập nhật tiêm chủng', icon: 'syringe' },
           { path: '/ketquatiemchung', name: 'Kết quả tiêm chủng', icon: 'report' },
-          { path: '/ketquatiemchunghocsinh', name: 'Kết quả tiêm chủng học sinh', icon: 'report' },
+         
         ]
       },
       {
