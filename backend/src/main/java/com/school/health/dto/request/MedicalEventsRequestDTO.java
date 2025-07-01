@@ -18,5 +18,5 @@ public class MedicalEventsRequestDTO {
     private String handlingMeasures;          // Biện pháp xử lý
     private SeverityLevel severityLevel;      // Mức độ nghiêm trọng (Enum)
     private MedicalEventStatus status;        // Trạng thái xử lý (Enum)
-    private int createdBy;                    // ID người tạo (User)
+
 }

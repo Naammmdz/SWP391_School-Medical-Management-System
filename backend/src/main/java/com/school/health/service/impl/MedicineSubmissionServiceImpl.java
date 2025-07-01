@@ -456,7 +456,7 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
 
         return toLogResponse(log);
     }
-// TODO ---------------------------
+
     private MedicineLogResponse toLogResponse(MedicineLog log) {
         MedicineLogResponse response = new MedicineLogResponse();
         response.setId(log.getMedicineLogId());

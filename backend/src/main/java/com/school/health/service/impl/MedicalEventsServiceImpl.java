@@ -6,12 +6,16 @@ import com.school.health.dto.response.MedicalEventsResponseDTO;
 import com.school.health.entity.MedicalEvent;
 import com.school.health.entity.Student;
 import com.school.health.entity.User;
+import com.school.health.enums.MedicalEventStatus;
+import com.school.health.enums.Status;
+import com.school.health.event.MedicalEventPendingConfirmationEvent;
 import com.school.health.exception.ResourceNotFoundException;
 import com.school.health.repository.MedicalEventsRepository;
 import com.school.health.repository.StudentRepository;
 import com.school.health.repository.UserRepository;
 import com.school.health.service.MedicalEvents;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -26,53 +30,78 @@ public class MedicalEventsServiceImpl implements MedicalEvents {
     @Autowired
     private StudentRepository studentRepository;
 
-
+    @Autowired
+    private ApplicationEventPublisher publisher;
 
     @Override
-    public MedicalEventsResponseDTO createMedicalEvents(int createBy, MedicalEventsRequestDTO medicalEventsRequestDTO) {
-        MedicalEvent medicalEvent = new MedicalEvent();
-        medicalEvent.setStudent(studentRepository.getReferenceById(medicalEventsRequestDTO.getStuId()));
-        medicalEvent.setEventType(medicalEventsRequestDTO.getEventType());
-        medicalEvent.setDescription(medicalEventsRequestDTO.getDescription());
-        medicalEvent.setCreatedBy(userRepository.getReferenceById(createBy));
-        medicalEvent.setRelatedMedicinesUsed(medicalEventsRequestDTO.getRelatedMedicinesUsed());
-        medicalEvent.setNotes(medicalEventsRequestDTO.getNotes());
-        medicalEventsRepository.save(medicalEvent);
-        return mapToResponseDTO(medicalEvent);
+    public MedicalEventsResponseDTO createMedicalEvents(int createBy, MedicalEventsRequestDTO dto) {
+        MedicalEvent entity = new MedicalEvent();
 
+        entity.setStudent(studentRepository.getReferenceById(dto.getStuId()));
+        entity.setTitle(dto.getTitle());
+        entity.setEventType(dto.getEventType());
+        entity.setEventDate(dto.getEventDate());
+        entity.setLocation(dto.getLocation());
+        entity.setDescription(dto.getDescription());
+        entity.setCreatedBy(userRepository.getReferenceById(createBy));
+        entity.setRelatedMedicinesUsed(dto.getRelatedMedicinesUsed());
+        entity.setNotes(dto.getNotes());
+        entity.setHandlingMeasures(dto.getHandlingMeasures());
+        entity.setSeverityLevel(dto.getSeverityLevel());
+        entity.setStatus(dto.getStatus());
+
+        medicalEventsRepository.save(entity);
+        if (entity.getStatus().equals(MedicalEventStatus.PENDING_CONFIRMATION)){
+            publisher.publishEvent(new MedicalEventPendingConfirmationEvent(entity));
+        }
+        return mapToResponseDTO(entity);
     }
 
     @Override
     public MedicalEventsResponseDTO getMedicalEvents(int id) {
-        return mapToResponseDTO(medicalEventsRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Medical Events Not Found")));
+        return mapToResponseDTO(
+                medicalEventsRepository.findById(id)
+                        .orElseThrow(() -> new ResourceNotFoundException("Medical Event Not Found")));
     }
 
     @Override
-    public List<MedicalEventsResponseDTO> getAllMedicalEvents(MedicalEventsFiltersRequestDTO medicalEventsFiltersRequestDTO) {
-        List<MedicalEvent> list = medicalEventsRepository.findByFilter(medicalEventsFiltersRequestDTO.getFrom(), medicalEventsFiltersRequestDTO.getTo(), medicalEventsFiltersRequestDTO.getEventType(), medicalEventsFiltersRequestDTO.getStuId(), medicalEventsFiltersRequestDTO.getCreatedBy());
-        return list.stream().map(x -> mapToResponseDTO(x)).collect(Collectors.toList());
+    public List<MedicalEventsResponseDTO> getAllMedicalEvents(MedicalEventsFiltersRequestDTO filters) {
+        List<MedicalEvent> list = medicalEventsRepository.findByFilter(
+                filters.getFrom(), filters.getTo(), filters.getEventType(), filters.getStuId(), filters.getCreatedBy()
+        );
+
+        return list.stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
     public MedicalEventsResponseDTO updateMedicalEvents(int id, MedicalEventsRequestDTO dto) {
-        MedicalEvent entity = medicalEventsRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Medical Event Not Found"));
+        MedicalEvent entity = medicalEventsRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Medical Event Not Found"));
 
-        // Cập nhật có điều kiện
-        if (dto.getStuId()!= 0) { // int mặc định là 0
-            Student student = studentRepository.getReferenceById(dto.getStuId());
-            entity.setStudent(student);
+        if (dto.getStuId() != 0) {
+            entity.setStudent(studentRepository.getReferenceById(dto.getStuId()));
+        }
+
+        if (dto.getTitle() != null && !dto.getTitle().isBlank()) {
+            entity.setTitle(dto.getTitle());
         }
 
         if (dto.getEventType() != null && !dto.getEventType().isBlank()) {
             entity.setEventType(dto.getEventType());
         }
 
-        if (dto.getDescription() != null && !dto.getDescription().isBlank()) {
-            entity.setDescription(dto.getDescription());
+        if (dto.getEventDate() != null) {
+            entity.setEventDate(dto.getEventDate());
         }
 
-        if (dto.getCreatedAt() != null) {
-            entity.setCreatedAt(dto.getCreatedAt());
+        if (dto.getLocation() != null && !dto.getLocation().isBlank()) {
+            entity.setLocation(dto.getLocation());
+        }
+
+        if (dto.getDescription() != null && !dto.getDescription().isBlank()) {
+            entity.setDescription(dto.getDescription());
         }
 
         if (dto.getRelatedMedicinesUsed() != null && !dto.getRelatedMedicinesUsed().isBlank()) {
@@ -83,23 +112,41 @@ public class MedicalEventsServiceImpl implements MedicalEvents {
             entity.setNotes(dto.getNotes());
         }
 
+        if (dto.getHandlingMeasures() != null && !dto.getHandlingMeasures().isBlank()) {
+            entity.setHandlingMeasures(dto.getHandlingMeasures());
+        }
+
+        if (dto.getSeverityLevel() != null) {
+            entity.setSeverityLevel(dto.getSeverityLevel());
+        }
+
+        if (dto.getStatus() != null) {
+            entity.setStatus(dto.getStatus());
+        }
+
         medicalEventsRepository.save(entity);
         return mapToResponseDTO(entity);
     }
 
     @Override
-    public MedicalEventsResponseDTO mapToResponseDTO(MedicalEvent medicalEvent) {
-        MedicalEventsResponseDTO medicalEventsResponseDTO = new MedicalEventsResponseDTO();
-        medicalEventsResponseDTO.setId(medicalEvent.getId());
-        medicalEventsResponseDTO.setStuId(medicalEvent.getStudent().getStudentId());
-        medicalEventsResponseDTO.setEventType(medicalEvent.getEventType());
-        medicalEventsResponseDTO.setDescription(medicalEvent.getDescription());
-        medicalEventsResponseDTO.setCreatedAt(medicalEvent.getCreatedAt());
-        medicalEventsResponseDTO.setCreatedBy(medicalEvent.getCreatedBy().getUserId());
-        medicalEventsResponseDTO.setRelatedMedicinesUsed(medicalEvent.getRelatedMedicinesUsed());
-        medicalEventsResponseDTO.setNotes(medicalEvent.getNotes());
-        return medicalEventsResponseDTO;
-    }
-    //create MedicalEvents
+    public MedicalEventsResponseDTO mapToResponseDTO(MedicalEvent event) {
+        MedicalEventsResponseDTO dto = new MedicalEventsResponseDTO();
 
+        dto.setId(event.getId());
+        dto.setStuId(event.getStudent().getStudentId());
+        dto.setTitle(event.getTitle());
+        dto.setEventType(event.getEventType());
+        dto.setEventDate(event.getEventDate());
+        dto.setLocation(event.getLocation());
+        dto.setDescription(event.getDescription());
+        dto.setCreatedAt(event.getCreatedAt());
+        dto.setCreatedBy(event.getCreatedBy().getUserId());
+        dto.setRelatedMedicinesUsed(event.getRelatedMedicinesUsed());
+        dto.setNotes(event.getNotes());
+        dto.setHandlingMeasures(event.getHandlingMeasures());
+        dto.setSeverityLevel(event.getSeverityLevel());
+        dto.setStatus(event.getStatus());
+
+        return dto;
+    }
 }

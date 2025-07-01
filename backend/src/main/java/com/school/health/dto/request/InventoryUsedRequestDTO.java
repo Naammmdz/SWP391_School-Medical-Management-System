@@ -4,6 +4,7 @@ import com.school.health.repository.InventoryRepo;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -11,8 +12,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class InventoryUsedRequestDTO {
 
 
-    @Min(value = 1,message = "Quantity đã dùng phải lớn hơn 1")
+    @NotNull(message = "Số lượng đã dùng không được để trống")
+    @Min(value = 1, message = "Số lượng đã dùng phải lớn hơn 0")
     private Integer quantityUsed;
-    private Integer relatedEvenId;
-    private String notes;
+
+    @NotNull(message = "Sự kiện y tế liên quan không được để trống")
+    private Integer relatedEventId;
+
+    private String notes; // Ghi chú (có thể null)
 }
