@@ -1,43 +1,163 @@
-/* Vaccination Management styles */
+/* Modern Vaccination Management styles */
 .vaccination-management-page {
-  padding: 2rem;
+  padding: 24px;
+  max-width: 1600px;
+  margin: 0 auto;
+  margin-top: 80px;
+  background: #f0f2f5;
+  min-height: 100vh;
 }
 
-/* Date filters */
-.date-filters {
+/* Header Card */
+.header-card {
+  margin-bottom: 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: none;
+  overflow: hidden;
+}
+
+.header-content {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: space-between;
+  gap: 24px;
 }
 
-.date-filters span {
-  color: #64748b;
-  font-size: 0.875rem;
+.header-avatar {
+  background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+  flex-shrink: 0;
 }
 
-/* Status badges */
-.status {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.25rem 0.5rem;
-  border-radius: 1rem;
-  font-size: 0.75rem;
+.header-text {
+  flex: 1;
+}
+
+.header-title {
+  margin-bottom: 8px !important;
+  color: #262626;
+  font-weight: 600;
+}
+
+.header-description {
+  color: #8c8c8c;
+  font-size: 16px;
+}
+
+.create-btn {
+  height: 48px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+  border: none;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(82, 196, 26, 0.3);
+  padding: 0 24px;
+}
+
+.create-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(82, 196, 26, 0.4);
+}
+
+/* Statistics Row */
+.stats-row {
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.stat-card .ant-statistic-title {
+  color: #8c8c8c;
   font-weight: 500;
 }
 
-.status.complete {
-  background-color: #dcfce7;
-  color: #15803d;
+.stat-card .ant-statistic-content {
+  color: #262626;
+  font-weight: 600;
 }
 
-.status.upcoming {
-  background-color: #dbeafe;
-  color: #1d4ed8;
+/* Filter Card */
+.filter-card {
+  margin-bottom: 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: none;
 }
 
-.status.cancelled {
-  background-color: #fee2e2;
-  color: #dc2626;
+.filter-card .ant-input,
+.filter-card .ant-select-selector,
+.filter-card .ant-picker {
+  border-radius: 8px;
+  border: 1px solid #d9d9d9;
+}
+
+.filter-card .ant-input:focus,
+.filter-card .ant-input:hover,
+.filter-card .ant-select-focused .ant-select-selector,
+.filter-card .ant-select-selector:hover,
+.filter-card .ant-picker:hover,
+.filter-card .ant-picker.ant-picker-focused {
+  border-color: #52c41a;
+  box-shadow: 0 0 0 2px rgba(82, 196, 26, 0.2);
+}
+
+/* Table Card */
+.table-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: none;
+  overflow: hidden;
+}
+
+.table-card .ant-table {
+  font-size: 14px;
+}
+
+.table-card .ant-table-thead > tr > th {
+  background: #fafafa;
+  border-bottom: 2px solid #f0f0f0;
+  color: #262626;
+  font-weight: 600;
+}
+
+.table-card .ant-table-tbody > tr:hover > td {
+  background: #f6ffed !important;
+}
+
+.table-card .ant-pagination {
+  margin-top: 16px;
+  text-align: center;
+}
+
+/* Action Dropdown */
+.table-card .ant-dropdown-menu {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.table-card .ant-dropdown-menu-item {
+  border-radius: 6px;
+  margin: 4px;
+}
+
+.table-card .ant-dropdown-menu-item:hover {
+  background: #f6ffed;
+  color: #52c41a;
+}
+
+.table-card .ant-dropdown-menu-item-danger:hover {
+  background: #fff2f0;
+  color: #ff4d4f;
 }
 
 /* Response summary */
@@ -268,19 +388,135 @@
   background-color: #dbeafe;
 }
 
+/* Modal Styles */
+.notification-modal .ant-modal-header {
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.notification-modal .ant-form-item-label > label {
+  color: #262626;
+  font-weight: 500;
+}
+
+.notification-modal .ant-input,
+.notification-modal .ant-input.ant-input,
+.notification-modal .ant-picker,
+.notification-modal .ant-select-selector {
+  border-radius: 8px;
+}
+
+.notification-modal .ant-input:focus,
+.notification-modal .ant-input:hover,
+.notification-modal .ant-picker:hover,
+.notification-modal .ant-picker.ant-picker-focused,
+.notification-modal .ant-select-focused .ant-select-selector {
+  border-color: #52c41a;
+  box-shadow: 0 0 0 2px rgba(82, 196, 26, 0.2);
+}
+
+.notification-modal .ant-btn-primary {
+  background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+  border: none;
+  border-radius: 8px;
+  height: 40px;
+  font-weight: 600;
+}
+
+.response-modal .ant-modal-header {
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.response-modal .ant-statistic-title {
+  color: #8c8c8c;
+  font-weight: 500;
+}
+
+.response-modal .ant-statistic-content {
+  font-weight: 600;
+}
+
+.response-modal .ant-table-thead > tr > th {
+  background: #fafafa;
+  color: #262626;
+  font-weight: 600;
+}
+
+/* Tag Styles */
+.vaccination-management-page .ant-tag {
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-weight: 500;
+  border: none;
+}
+
+/* Custom Tags */
+.vaccination-management-page .ant-tag.ant-tag-blue {
+  background: #e6f7ff;
+  color: #1890ff;
+}
+
+.vaccination-management-page .ant-tag.ant-tag-purple {
+  background: #f9f0ff;
+  color: #722ed1;
+}
+
+.vaccination-management-page .ant-tag.ant-tag-green {
+  background: #f6ffed;
+  color: #52c41a;
+}
+
+.vaccination-management-page .ant-tag.ant-tag-orange {
+  background: #fff7e6;
+  color: #fa8c16;
+}
+
+.vaccination-management-page .ant-tag.ant-tag-red {
+  background: #fff2f0;
+  color: #ff4d4f;
+}
+
 /* Responsive styles */
+@media (max-width: 1200px) {
+  .vaccination-management-page {
+    max-width: 100%;
+    padding: 16px;
+  }
+}
+
 @media (max-width: 768px) {
-  .filter-options {
+  .vaccination-management-page {
+    margin-top: 60px;
+    padding: 12px;
+  }
+
+  .header-content {
     flex-direction: column;
-    gap: 0.75rem;
+    text-align: center;
+    gap: 16px;
   }
-  
-  .date-filters {
-    flex-wrap: wrap;
+
+  .create-btn {
+    width: 100%;
   }
-  
-  .response-stats {
+
+  .stats-row .ant-col {
+    margin-bottom: 16px;
+  }
+
+  .filter-card .ant-row {
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 12px;
   }
-} 
+
+  .table-card .ant-table {
+    font-size: 12px;
+  }
+
+  .response-modal {
+    margin: 0 8px;
+  }
+
+  .notification-modal {
+    margin: 0 8px;
+  }
+}
