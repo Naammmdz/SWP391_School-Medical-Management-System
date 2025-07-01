@@ -2,36 +2,49 @@ import React, { useCallback, useState, useEffect } from 'react';
 import VaccinationService from '../../../services/VaccinationService';
 import dayjs from 'dayjs';
 import {
-  Box,
   Card,
-  CardContent,
-  Typography,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
+  Modal,
+  Form,
+  Input,
   Select,
-  MenuItem,
   Checkbox,
-  FormControlLabel,
   Alert,
-  Chip,
-  Grid,
-  Paper,
-  InputLabel,
-  FormControl,
+  Tag,
+  Row,
+  Col,
   Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  CircularProgress
-} from '@mui/material';
-import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+  Spin,
+  Typography,
+  Space,
+  DatePicker,
+  message,
+  Tooltip,
+  Badge,
+  Descriptions,
+  Empty,
+  Divider
+} from 'antd';
+import {
+  SearchOutlined,
+  ClearOutlined,
+  EditOutlined,
+  EyeOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  ExclamationCircleOutlined,
+  MedicineBoxOutlined,
+  UserOutlined,
+  CalendarOutlined,
+  TeamOutlined,
+  FilterOutlined,
+  ReloadOutlined
+} from '@ant-design/icons';
+import './VaccinationResult.css';
+
+const { Title, Text } = Typography;
+const { Option } = Select;
+const { RangePicker } = DatePicker;
 
 const resultOptions = [
   { value: 'SUCCESS', label: 'Thành công', color: 'success' },
@@ -39,10 +52,17 @@ const resultOptions = [
   { value: 'DELAYED', label: 'Hoãn', color: 'warning' },
 ];
 
-const resultLabel = {
-  SUCCESS: <Chip label="Thành công" color="success" size="small" />,
-  FAILED: <Chip label="Thất bại" color="error" size="small" />,
-  DELAYED: <Chip label="Hoãn" color="warning" size="small" />,
+const getResultTag = (result) => {
+  switch (result) {
+    case 'SUCCESS':
+      return <Tag color="green" icon={<CheckCircleOutlined />}>Thành công</Tag>;
+    case 'FAILED':
+      return <Tag color="red" icon={<CloseCircleOutlined />}>Thất bại</Tag>;
+    case 'DELAYED':
+      return <Tag color="orange" icon={<ExclamationCircleOutlined />}>Hoãn</Tag>;
+    default:
+      return <Tag>{result}</Tag>;
+  }
 };
 
 const VaccinationResult = () => {
@@ -57,6 +77,8 @@ const VaccinationResult = () => {
   const [studentInfoMap, setStudentInfoMap] = useState({});
   const [openDetail, setOpenDetail] = useState(false);
   const [updateForm, setUpdateForm] = useState({});
+  const [form] = Form.useForm();
+  const [updateFormRef] = Form.useForm();
 
   // Lấy danh sách chiến dịch đã duyệt từ API
   const fetchApprovedCampaigns = useCallback(async () => {
@@ -205,226 +227,383 @@ const VaccinationResult = () => {
     setLoadingSubmit(false);
   };
 
-  // Các cột cơ bản
+  // Table columns configuration
   const columns = [
-    { title: 'Học sinh', key: 'studentId', render: (row) => getStudentName(row.studentId, row) },
-    { title: 'Lớp', key: 'className', render: (row) => getStudentClass(row.studentId) },
-    { title: 'Chiến dịch', key: 'campaignId', render: (row) => getCampaignInfo(row.campaignId).campaignName || row.campaignId },
-    { title: 'Ngày tiêm', key: 'date', render: (row) => row.date || (Array.isArray(getCampaignInfo(row.campaignId).scheduledDate) ? getCampaignInfo(row.campaignId).scheduledDate.join('-') : '') },
-    { title: 'Kết quả', key: 'result', render: (row) => resultLabel[row.result] || row.result },
-    { title: 'Xác nhận PH', key: 'parentConfirmation', render: (row) => row.parentConfirmation ? <Chip label="Đã xác nhận" color="success" size="small" /> : <Chip label="Chưa" size="small" /> },
+    {
+      title: 'Học sinh',
+      dataIndex: 'studentId',
+      key: 'studentId',
+      render: (studentId, record) => getStudentName(studentId, record)
+    },
+    {
+      title: 'Lớp',
+      dataIndex: 'studentId',
+      key: 'className',
+      render: (studentId) => getStudentClass(studentId)
+    },
+    {
+      title: 'Chiến dịch',
+      dataIndex: 'campaignId',
+      key: 'campaignId',
+      render: (campaignId) => getCampaignInfo(campaignId).campaignName || campaignId
+    },
+    {
+      title: 'Ngày tiêm',
+      dataIndex: 'date',
+      key: 'date',
+      render: (date, record) => {
+        if (date) return date;
+        const campaign = getCampaignInfo(record.campaignId);
+        return Array.isArray(campaign.scheduledDate) ? campaign.scheduledDate.join('-') : '';
+      }
+    },
+    {
+      title: 'Kết quả',
+      dataIndex: 'result',
+      key: 'result',
+      render: (result) => getResultTag(result)
+    },
+    {
+      title: 'Xác nhận PH',
+      dataIndex: 'parentConfirmation',
+      key: 'parentConfirmation',
+      render: (parentConfirmation) => (
+        parentConfirmation ? 
+          <Tag color="green" icon={<CheckCircleOutlined />}>Đã xác nhận</Tag> : 
+          <Tag color="orange">Chưa xác nhận</Tag>
+      )
+    },
     {
       title: 'Thao tác',
       key: 'actions',
-      render: (row) => (
-        <Button variant="outlined" size="small" onClick={() => handleOpenDetail(row)}>
+      render: (_, record) => (
+        <Button 
+          type="primary" 
+          size="small" 
+          icon={<EyeOutlined />}
+          onClick={() => handleOpenDetail(record)}
+        >
           Xem chi tiết
         </Button>
-      ),
-    },
+      )
+    }
   ];
 
   return (
-    <Box sx={{ maxWidth: 1100, mx: 'auto', mt: 4, mb: 4 }}>
-      {/* Filter form */}
-      <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" gutterBottom>Lọc kết quả tiêm chủng đã xác nhận PH</Typography>
-        <Box component="form" onSubmit={handleFilter} sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-          <TextField label="Lớp" name="className" size="small" onChange={handleFilterChange} sx={{ minWidth: 120 }} />
-          <FormControl sx={{ minWidth: 180 }} size="small">
-            <InputLabel>Chiến dịch</InputLabel>
-            <Select
-              label="Chiến dịch"
-              name="campaignName"
-              onChange={handleFilterChange}
-              defaultValue=""
-            >
-              <MenuItem value=""><em>Chọn chiến dịch</em></MenuItem>
-              {approvedCampaigns.map(campaign => (
-                <MenuItem key={campaign.campaignId} value={campaign.campaignName}>{campaign.campaignName}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <FormControl sx={{ minWidth: 150 }} size="small">
-            <InputLabel>Xác nhận PH</InputLabel>
-            <Select
-              label="Xác nhận PH"
-              name="parentConfirmation"
-              onChange={handleFilterChange}
-              defaultValue=""
-            >
-              <MenuItem value=""><em>Chọn trạng thái</em></MenuItem>
-              <MenuItem value={true}>Đã xác nhận</MenuItem>
-              <MenuItem value={false}>Chưa xác nhận</MenuItem>
-            </Select>
-          </FormControl>
-          <TextField label="Tên học sinh" name="studentName" size="small" onChange={handleFilterChange} sx={{ minWidth: 120 }} />
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <DatePicker
-              label="Từ ngày"
-              onChange={value => handleDateChange('startDate', value)}
-              slotProps={{ textField: { size: 'small', sx: { minWidth: 120 } } }}
-            />
-            <DatePicker
-              label="Đến ngày"
-              onChange={value => handleDateChange('endDate', value)}
-              slotProps={{ textField: { size: 'small', sx: { minWidth: 120 } } }}
-            />
-          </LocalizationProvider>
-          <Button type="submit" variant="contained" color="primary">Tìm kiếm</Button>
-          <Button variant="outlined" onClick={() => { setFilterForm({}); fetchConfirmedResults(); }}>Xóa</Button>
-        </Box>
-      </Paper>
+    <div className="vaccination-result" style={{ maxWidth: 1200, margin: '0 auto', padding: '24px' }}>
+      {/* Header */}
+      <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
+        <Col>
+          <Title level={2} style={{ margin: 0, color: '#15803d' }}>
+            <MedicineBoxOutlined style={{ marginRight: 12 }} />
+            Kết quả tiêm chủng
+          </Title>
+        </Col>
+        <Col>
+          <Button 
+            type="primary" 
+            icon={<ReloadOutlined />}
+            onClick={() => fetchConfirmedResults(filterForm)}
+          >
+            Làm mới
+          </Button>
+        </Col>
+      </Row>
 
-      {/* Bảng kết quả */}
-      <Paper elevation={3} sx={{ p: 2 }}>
-        <Typography variant="h6" gutterBottom>Kết quả tiêm chủng đã xác nhận PH</Typography>
-        <TableContainer>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                {columns.map(col => (
-                  <TableCell key={col.key}>{col.title}</TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {confirmedLoading ? (
-                <TableRow>
-                  <TableCell colSpan={columns.length} align="center">
-                    <CircularProgress size={28} />
-                  </TableCell>
-                </TableRow>
-              ) : confirmedResults.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={columns.length} align="center">
-                    Không có dữ liệu
-                  </TableCell>
-                </TableRow>
-              ) : (
-                confirmedResults.map(row => (
-                  <TableRow key={`${row.studentId}-${row.campaignId}-${row.date}`}>
-                    {columns.map(col => (
-                      <TableCell key={col.key}>{col.render(row)}</TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Paper>
+      {/* Filter Card */}
+      <Card 
+        title={
+          <Space>
+            <FilterOutlined />
+            <span>Lọc kết quả tiêm chủng</span>
+          </Space>
+        }
+        style={{ marginBottom: 24, borderRadius: 8 }}
+      >
+        <Form layout="vertical" onFinish={handleFilter}>
+          <Row gutter={[16, 16]}>
+            <Col xs={24} sm={12} md={6}>
+              <Form.Item label="Tên lớp">
+                <Input
+                  name="className"
+                  placeholder="Nhập tên lớp"
+                  value={filterForm.className || ''}
+                  onChange={handleFilterChange}
+                  allowClear
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <Form.Item label="Chiến dịch">
+                <Select
+                  name="campaignName"
+                  placeholder="Chọn chiến dịch"
+                  value={filterForm.campaignName || undefined}
+                  onChange={(value) => setFilterForm(prev => ({ ...prev, campaignName: value }))}
+                  allowClear
+                >
+                  {approvedCampaigns.map(campaign => (
+                    <Option key={campaign.campaignId} value={campaign.campaignName}>
+                      {campaign.campaignName}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <Form.Item label="Xác nhận phụ huynh">
+                <Select
+                  name="parentConfirmation"
+                  placeholder="Chọn trạng thái"
+                  value={filterForm.parentConfirmation}
+                  onChange={(value) => setFilterForm(prev => ({ ...prev, parentConfirmation: value }))}
+                  allowClear
+                >
+                  <Option value={true}>Đã xác nhận</Option>
+                  <Option value={false}>Chưa xác nhận</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <Form.Item label="Tên học sinh">
+                <Input
+                  name="studentName"
+                  placeholder="Nhập tên học sinh"
+                  value={filterForm.studentName || ''}
+                  onChange={handleFilterChange}
+                  allowClear
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <Form.Item label="Từ ngày">
+                <DatePicker
+                  style={{ width: '100%' }}
+                  placeholder="Chọn ngày bắt đầu"
+                  onChange={(value) => handleDateChange('startDate', value)}
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <Form.Item label="Đến ngày">
+                <DatePicker
+                  style={{ width: '100%' }}
+                  placeholder="Chọn ngày kết thúc"
+                  onChange={(value) => handleDateChange('endDate', value)}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row justify="end" gutter={[8, 8]}>
+            <Col>
+              <Button icon={<ClearOutlined />} onClick={() => { setFilterForm({}); fetchConfirmedResults(); }}>
+                Xóa bộ lọc
+              </Button>
+            </Col>
+            <Col>
+              <Button type="primary" htmlType="submit" icon={<SearchOutlined />}>
+                Tìm kiếm
+              </Button>
+            </Col>
+          </Row>
+        </Form>
+      </Card>
 
-      {/* Dialog chi tiết */}
-      <Dialog open={openDetail} onClose={handleCloseDetail} maxWidth="md" fullWidth>
-        <DialogTitle>
-          {selectedResult ? `Cập nhật kết quả cho: ${getStudentName(selectedResult.studentId, selectedResult)}` : ''}
-        </DialogTitle>
-        <DialogContent dividers>
-          {submitStatus === 'success' && (
-            <Alert severity="success" sx={{ mb: 2 }}>Cập nhật kết quả tiêm chủng thành công!</Alert>
-          )}
-          {submitStatus === 'error' && (
-            <Alert severity="error" sx={{ mb: 2 }}>Cập nhật thất bại! Vui lòng kiểm tra lại thông tin.</Alert>
-          )}
-          {selectedResult && (
-            <Box component="form" onSubmit={handleUpdateSubmit} sx={{ mt: 1 }}>
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <TextField label="Tên học sinh" value={getStudentName(selectedResult.studentId, selectedResult)} fullWidth disabled margin="dense" />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField label="Tên chiến dịch" value={getCampaignInfo(selectedResult.campaignId).campaignName || selectedResult.campaignId} fullWidth disabled margin="dense" />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <LocalizationProvider dateAdapter={AdapterDayjs}>
-                    <DatePicker
-                      label="Ngày tiêm"
-                      value={updateForm.date}
-                      onChange={handleUpdateDate}
-                      format="YYYY-MM-DD"
-                      slotProps={{ textField: { fullWidth: true, margin: 'dense', disabled: true } }}
-                    />
-                  </LocalizationProvider>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField label="Tên vắc-xin" value={selectedResult.vaccineName || getCampaignInfo(selectedResult.campaignId).type || ''} fullWidth disabled margin="dense" />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Số mũi tiêm"
-                    name="doseNumber"
+      {/* Results Table */}
+      <Card
+        title={
+          <Space>
+            <TeamOutlined />
+            <span>Kết quả tiêm chủng đã xác nhận</span>
+            <Badge count={confirmedResults.length} style={{ backgroundColor: '#15803d' }} />
+          </Space>
+        }
+        style={{ borderRadius: 8 }}
+      >
+        <Table
+          columns={columns}
+          dataSource={confirmedResults}
+          loading={confirmedLoading}
+          rowKey={(record) => `${record.studentId}-${record.campaignId}-${record.date || 'no-date'}`}
+          pagination={{
+            pageSize: 10,
+            showSizeChanger: true,
+            showQuickJumper: true,
+            showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} kết quả`
+          }}
+          locale={{
+            emptyText: (
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description="Không có dữ liệu"
+              />
+            )
+          }}
+          scroll={{ x: 800 }}
+        />
+      </Card>
+
+      {/* Detail Modal */}
+      <Modal
+        title={
+          <Space>
+            <EditOutlined />
+            <span>Cập nhật kết quả tiêm chủng</span>
+          </Space>
+        }
+        open={openDetail}
+        onCancel={handleCloseDetail}
+        width={800}
+        footer={null}
+      >
+        {submitStatus === 'success' && (
+          <Alert
+            message="Cập nhật kết quả tiêm chủng thành công!"
+            type="success"
+            showIcon
+            style={{ marginBottom: 16 }}
+          />
+        )}
+        {submitStatus === 'error' && (
+          <Alert
+            message="Cập nhật thất bại! Vui lòng kiểm tra lại thông tin."
+            type="error"
+            showIcon
+            style={{ marginBottom: 16 }}
+          />
+        )}
+        
+        {selectedResult && (
+          <Form layout="vertical" onFinish={handleUpdateSubmit}>
+            <Row gutter={[16, 16]}>
+              <Col xs={24} sm={12}>
+                <Form.Item label="Tên học sinh">
+                  <Input
+                    value={getStudentName(selectedResult.studentId, selectedResult)}
+                    disabled
+                  />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Form.Item label="Tên chiến dịch">
+                  <Input
+                    value={getCampaignInfo(selectedResult.campaignId).campaignName || selectedResult.campaignId}
+                    disabled
+                  />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Form.Item label="Ngày tiêm">
+                  <DatePicker
+                    style={{ width: '100%' }}
+                    value={updateForm.date}
+                    onChange={handleUpdateDate}
+                    format="YYYY-MM-DD"
+                    disabled
+                  />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Form.Item label="Tên vắc-xin">
+                  <Input
+                    value={selectedResult.vaccineName || getCampaignInfo(selectedResult.campaignId).type || ''}
+                    disabled
+                  />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Form.Item label="Số mũi tiêm" required>
+                  <Input
                     type="number"
+                    name="doseNumber"
                     value={updateForm.doseNumber || ''}
                     onChange={handleUpdateChange}
-                    fullWidth
                     required
-                    margin="dense"
                   />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Phản ứng sau tiêm"
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Form.Item label="Phản ứng sau tiêm" required>
+                  <Input
                     name="adverseReaction"
                     value={updateForm.adverseReaction || ''}
                     onChange={handleUpdateChange}
-                    fullWidth
                     required
-                    margin="dense"
                   />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    label="Ghi chú"
+                </Form.Item>
+              </Col>
+              <Col xs={24}>
+                <Form.Item label="Ghi chú">
+                  <Input.TextArea
                     name="notes"
                     value={updateForm.notes || ''}
                     onChange={handleUpdateChange}
-                    fullWidth
-                    multiline
-                    rows={2}
-                    margin="dense"
+                    rows={3}
                   />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <FormControlLabel
-                    control={<Checkbox checked={!!updateForm.parentConfirmation} name="parentConfirmation" onChange={handleUpdateChange} />}
-                    label="Xác nhận của phụ huynh"
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <FormControl fullWidth margin="dense">
-                    <InputLabel>Kết quả</InputLabel>
-                    <Select
-                      name="result"
-                      value={updateForm.result || ''}
-                      label="Kết quả"
-                      onChange={handleUpdateChange}
-                      required
-                    >
-                      {resultOptions.map(opt => (
-                        <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12}>
-                  <FormControlLabel
-                    control={<Checkbox checked={!!updateForm.previousDose} name="previousDose" onChange={handleUpdateChange} />}
-                    label="Đã tiêm mũi trước"
-                  />
-                </Grid>
-              </Grid>
-              <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
-                <Button type="submit" variant="contained" color="primary" disabled={loadingSubmit}>
-                  {loadingSubmit ? <CircularProgress size={20} /> : 'Cập nhật kết quả'}
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Form.Item>
+                  <Checkbox
+                    checked={!!updateForm.parentConfirmation}
+                    name="parentConfirmation"
+                    onChange={handleUpdateChange}
+                  >
+                    Xác nhận của phụ huynh
+                  </Checkbox>
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Form.Item label="Kết quả" required>
+                  <Select
+                    name="result"
+                    value={updateForm.result || undefined}
+                    onChange={(value) => setUpdateForm(prev => ({ ...prev, result: value }))}
+                    required
+                    placeholder="Chọn kết quả"
+                  >
+                    {resultOptions.map(opt => (
+                      <Option key={opt.value} value={opt.value}>{opt.label}</Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              </Col>
+              <Col xs={24}>
+                <Form.Item>
+                  <Checkbox
+                    checked={!!updateForm.previousDose}
+                    name="previousDose"
+                    onChange={handleUpdateChange}
+                  >
+                    Đã tiêm mũi trước
+                  </Checkbox>
+                </Form.Item>
+              </Col>
+            </Row>
+            
+            <Divider />
+            
+            <Row justify="end" gutter={[8, 8]}>
+              <Col>
+                <Button onClick={handleCloseDetail}>
+                  Hủy
                 </Button>
-                <Button variant="outlined" onClick={handleCloseDetail}>Hủy</Button>
-              </Box>
-            </Box>
-          )}
-        </DialogContent>
-      </Dialog>
-    </Box>
+              </Col>
+              <Col>
+                <Button 
+                  type="primary" 
+                  htmlType="submit" 
+                  loading={loadingSubmit}
+                  icon={<CheckCircleOutlined />}
+                >
+                  Cập nhật kết quả
+                </Button>
+              </Col>
+            </Row>
+          </Form>
+        )}
+      </Modal>
+    </div>
   );
 };
 

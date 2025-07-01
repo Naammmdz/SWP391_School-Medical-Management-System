@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Header from './Header';
 import Footer from './Footer';
 import Sidebar from './Sidebar';
+import Chatbot from './Chatbot';
 import './Layout.css';
 import { useLocation } from 'react-router-dom';
 
@@ -78,6 +79,9 @@ const Layout = ({ children, showSidebar = false }) => {
         {children}
       </main>
       {!isLoginPage && !shouldHideFooter && <Footer />}
+      
+      {/* Chatbot - only appears on homepage */}
+      {location.pathname === '/' && <Chatbot />}
     </div>
   );
 };

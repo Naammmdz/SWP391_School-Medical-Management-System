@@ -1,0 +1,45 @@
+/* Basic styles for the VaccinationResult component */
+
+.vaccination-result {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.filter-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.filter-form .ant-input {
+  min-width: 120px;
+}
+
+.filter-form .ant-select {
+  min-width: 150px;
+}
+
+.table-container {
+  margin-top: 24px;
+}
+
+.detail-dialog .ant-alert {
+  margin-bottom: 16px;
+}
+
+.detail-dialog .form-control {
+  margin-bottom: 16px;
+}
+
+.detail-dialog .checkbox-label {
+  margin: 8px 0;
+}
+
+.submit-buttons {
+  display: flex;
+  gap: 16px;
+  margin-top: 24px;
+}
+

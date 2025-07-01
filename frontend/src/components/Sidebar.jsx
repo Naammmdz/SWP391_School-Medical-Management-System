@@ -19,7 +19,28 @@ import {
   FolderOpenOutlined,
   ArrowLeftOutlined,
   ArrowRightOutlined,
+  CloseOutlined,
+  CheckOutlined,
+  ExclamationCircleOutlined,
+  MedicineBoxFilled,
+  AlertOutlined,
+  ClockCircleOutlined,
+  DeleteOutlined
 } from '@ant-design/icons';
+import {
+  Badge,
+  Dropdown,
+  List,
+  Typography,
+  Button,
+  Empty,
+  Divider,
+  Space,
+  Tag,
+  Avatar,
+  Tooltip,
+  message
+} from 'antd';
 import studentService from '../services/StudentService';
 import NotificationService from '../services/NotificationService';
 import axios from "axios";
@@ -701,7 +722,7 @@ const Sidebar = ({ userRole, onToggleCollapse, className = "" }) => {
               onClick={() => setShowNotifications(prev => !prev)}
               onMouseEnter={(e) => {
                 e.target.style.background = '#2a2a2a';
-                e.target.style.color = '#fff';
+                e.target.style.color = '#ffffff';
               }}
               onMouseLeave={(e) => {
                 e.target.style.background = 'none';
