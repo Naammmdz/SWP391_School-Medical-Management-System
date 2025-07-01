@@ -1,0 +1,351 @@
+import React, { useEffect, useState } from 'react';
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  TextField,
+  Select,
+  MenuItem,
+  InputLabel,
+  FormControl,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Grid,
+  CircularProgress,
+  Chip,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Alert
+} from '@mui/material';
+import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import InventoryService from '../../../services/InventoryService';
+import dayjs from 'dayjs';
+
+const typeOptions = [
+  { value: '', label: 'Tất cả' },
+  { value: 'medical supplies', label: 'Vật tư y tế' },
+  { value: 'medicine', label: 'Thuốc' },
+];
+
+const InventoryList = () => {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [filter, setFilter] = useState({ name: '', type: '' });
+  const [editOpen, setEditOpen] = useState(false);
+  const [editItem, setEditItem] = useState(null);
+  const [editForm, setEditForm] = useState({});
+  const [editError, setEditError] = useState('');
+  const [editSuccess, setEditSuccess] = useState('');
+  const [editLoading, setEditLoading] = useState(false);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      const res = await InventoryService.getInventoryList(config);
+      setData(Array.isArray(res) ? res : []);
+    } catch (err) {
+      setData([]);
+    }
+    setLoading(false);
+  };
+
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilter(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Lọc dữ liệu theo filter
+  const filteredData = data.filter(item => {
+    const matchName = item.name.toLowerCase().includes(filter.name.toLowerCase());
+    const matchType = filter.type ? (item.type === filter.type) : true;
+    return matchName && matchType;
+  });
+
+  const formatDate = (arr) => {
+    if (!arr || !Array.isArray(arr) || arr.length !== 3) return '';
+    const [y, m, d] = arr;
+    return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  };
+
+  const formatDateTime = (str) => {
+    if (!str) return '';
+    const d = new Date(str);
+    return d.toLocaleDateString('vi-VN');
+  };
+
+  // ====== Edit Dialog Logic ======
+  const handleEditOpen = (item) => {
+    setEditItem(item);
+    setEditForm({
+      name: item.name,
+      type: item.type,
+      unit: item.unit,
+      quantity: item.quantity,
+      minStockLevel: item.minStockLevel || '',
+      expiryDate: item.expiryDate ? dayjs(`${item.expiryDate[0]}-${item.expiryDate[1]}-${item.expiryDate[2]}`) : null,
+    });
+    setEditError('');
+    setEditSuccess('');
+    setEditOpen(true);
+  };
+
+  const handleEditClose = () => {
+    setEditOpen(false);
+    setEditItem(null);
+    setEditError('');
+    setEditSuccess('');
+    setEditForm({});
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditDateChange = (value) => {
+    setEditForm(prev => ({ ...prev, expiryDate: value }));
+  };
+
+  const validateEdit = () => {
+    if (!editForm.name || !editForm.type || !editForm.unit || !editForm.quantity || !editForm.expiryDate) {
+      setEditError('Vui lòng nhập đầy đủ thông tin.');
+      return false;
+    }
+    if (isNaN(editForm.quantity) || Number(editForm.quantity) <= 0) {
+      setEditError('Số lượng phải lớn hơn 0.');
+      return false;
+    }
+    if (editForm.minStockLevel !== '' && (isNaN(editForm.minStockLevel) || Number(editForm.minStockLevel) < 0)) {
+      setEditError('Tồn kho tối thiểu không hợp lệ.');
+      return false;
+    }
+    if (!dayjs(editForm.expiryDate).isValid() || dayjs(editForm.expiryDate).isBefore(dayjs(), 'day')) {
+      setEditError('Hạn sử dụng phải là ngày trong tương lai.');
+      return false;
+    }
+    setEditError('');
+    return true;
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    setEditSuccess('');
+    if (!validateEdit()) return;
+    setEditLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      const payload = {
+        name: editForm.name,
+        type: editForm.type,
+        unit: editForm.unit,
+        quantity: Number(editForm.quantity),
+        minStockLevel: editForm.minStockLevel === '' ? undefined : Number(editForm.minStockLevel),
+        expiryDate: dayjs(editForm.expiryDate).format('YYYY-MM-DD'),
+      };
+      await InventoryService.updateInventory(editItem.itemId, payload, config);
+      setEditSuccess('Cập nhật thành công!');
+      await fetchData();
+      setTimeout(() => {
+        handleEditClose();
+      }, 1000);
+    } catch (err) {
+      setEditError('Cập nhật thất bại. Vui lòng thử lại.');
+    }
+    setEditLoading(false);
+  };
+
+  return (
+    <Box sx={{ maxWidth: 1100, mx: 'auto', mt: 4, mb: 4 }}>
+      <Card elevation={3} sx={{ mb: 3 }}>
+        <CardContent>
+          <Typography variant="h5" gutterBottom>
+            Danh sách vật tư/thuốc trong kho
+          </Typography>
+          <Grid container spacing={2} sx={{ mb: 1 }}>
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField
+                label="Tìm theo tên"
+                name="name"
+                value={filter.name}
+                onChange={handleFilterChange}
+                fullWidth
+                size="small"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Loại</InputLabel>
+                <Select
+                  label="Loại"
+                  name="type"
+                  value={filter.type}
+                  onChange={handleFilterChange}
+                >
+                  {typeOptions.map(opt => (
+                    <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
+      <Paper elevation={2}>
+        <TableContainer>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>Tên</TableCell>
+                <TableCell>Loại</TableCell>
+                <TableCell>Đơn vị</TableCell>
+                <TableCell>Số lượng</TableCell>
+                <TableCell>Hạn sử dụng</TableCell>
+                <TableCell>Ngày nhập kho</TableCell>
+                <TableCell>Thao tác</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={7} align="center">
+                    <CircularProgress size={28} />
+                  </TableCell>
+                </TableRow>
+              ) : filteredData.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} align="center">
+                    Không có dữ liệu
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredData.map(item => (
+                  <TableRow key={item.itemId}>
+                    <TableCell>{item.name}</TableCell>
+                    <TableCell>
+                      {item.type === 'medical supplies' ? <Chip label="Vật tư y tế" color="primary" size="small" /> : <Chip label="Thuốc" color="success" size="small" />}
+                    </TableCell>
+                    <TableCell>{item.unit}</TableCell>
+                    <TableCell>{item.quantity}</TableCell>
+                    <TableCell>{formatDate(item.expiryDate)}</TableCell>
+                    <TableCell>{formatDateTime(item.createdAt)}</TableCell>
+                    <TableCell>
+                      <Button variant="outlined" size="small" onClick={() => handleEditOpen(item)}>
+                        Cập nhật
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
+
+      {/* Dialog cập nhật */}
+      <Dialog open={editOpen} onClose={handleEditClose} maxWidth="sm" fullWidth>
+        <DialogTitle>Cập nhật vật tư/thuốc</DialogTitle>
+        <DialogContent dividers>
+          {editError && <Alert severity="error" sx={{ mb: 2 }}>{editError}</Alert>}
+          {editSuccess && <Alert severity="success" sx={{ mb: 2 }}>{editSuccess}</Alert>}
+          <Box component="form" onSubmit={handleEditSubmit} sx={{ mt: 1 }}>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <TextField
+                  label="Tên vật tư/thuốc"
+                  name="name"
+                  value={editForm.name || ''}
+                  onChange={handleEditChange}
+                  fullWidth
+                  required
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <FormControl fullWidth required>
+                  <InputLabel>Loại</InputLabel>
+                  <Select
+                    name="type"
+                    value={editForm.type || ''}
+                    label="Loại"
+                    onChange={handleEditChange}
+                  >
+                    <MenuItem value="medical supplies">Vật tư y tế</MenuItem>
+                    <MenuItem value="medicine">Thuốc</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Đơn vị"
+                  name="unit"
+                  value={editForm.unit || ''}
+                  onChange={handleEditChange}
+                  fullWidth
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Số lượng"
+                  name="quantity"
+                  type="number"
+                  value={editForm.quantity || ''}
+                  onChange={handleEditChange}
+                  fullWidth
+                  required
+                  inputProps={{ min: 1 }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Tồn kho tối thiểu"
+                  name="minStockLevel"
+                  type="number"
+                  value={editForm.minStockLevel || ''}
+                  onChange={handleEditChange}
+                  fullWidth
+                  inputProps={{ min: 0 }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <DatePicker
+                    label="Hạn sử dụng"
+                    value={editForm.expiryDate || null}
+                    onChange={handleEditDateChange}
+                    format="YYYY-MM-DD"
+                    slotProps={{ textField: { fullWidth: true, required: true } }}
+                  />
+                </LocalizationProvider>
+              </Grid>
+            </Grid>
+            <DialogActions sx={{ mt: 2 }}>
+              <Button onClick={handleEditClose} variant="outlined">Hủy</Button>
+              <Button type="submit" variant="contained" color="primary" disabled={editLoading}>
+                {editLoading ? 'Đang cập nhật...' : 'Cập nhật'}
+              </Button>
+            </DialogActions>
+          </Box>
+        </DialogContent>
+      </Dialog>
+    </Box>
+  );
+};
+
+export default InventoryList;
