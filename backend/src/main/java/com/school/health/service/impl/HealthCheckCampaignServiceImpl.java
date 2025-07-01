@@ -4,10 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.school.health.dto.request.HealthCampaignRequestDTO;
 import com.school.health.dto.request.HealthCheckRequestDTO;
 import com.school.health.dto.response.*;
-import com.school.health.entity.HealthCheck;
-import com.school.health.entity.HealthCheckCampaign;
-import com.school.health.entity.Student;
-import com.school.health.entity.Vaccination;
+import com.school.health.entity.*;
 import com.school.health.enums.Status;
 import com.school.health.repository.HealthCheckCampaignRepository;
 import com.school.health.repository.HealthCheckRepository;
@@ -18,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -237,16 +236,33 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
     }
 
     @Override
-    public List<HealthV2CampaignResponseDTO> getApprovedCampaigns() {
-        List<HealthCheckCampaign> approvedCampaigns = healthCheckCampaignRepository.findByStatus(APPROVED);
-        List<HealthCheck> healthChecks = healthCheckRepository.findByCampaign(approvedCampaigns);
-        Map<Integer, List<HealthCheck>> vacMap = healthChecks.stream()
-                .collect(Collectors.groupingBy(v -> v.getCampaign().getCampaignId()));
-        return approvedCampaigns.stream().map(campaign -> {
-            List<HealthCheck> vacList = vacMap.getOrDefault(campaign.getCampaignId(), new ArrayList<>());
+    public List<HealthV2CampaignResponseDTO> getApprovedCampaigns(int parentId) {
 
-            // Kiểm tra xem có ai đã xác nhận phụ huynh chưa
-            boolean isParentConfirm = vacList.stream().anyMatch(HealthCheck::isParentConfirmation);
+        // B3: Lấy danh sách học sinh thuộc phụ huynh
+        List<Student> students = studentRepository.findByParentId(parentId);
+
+        // B4: Lấy danh sách health check theo học sinh
+        List<HealthCheck> healthChecks = healthCheckRepository.findByStudentIn(students);
+
+        Map<Integer, List<HealthCheck>> checksByCampaign = healthChecks.stream()
+                .collect(Collectors.groupingBy(h -> h.getCampaign().getCampaignId()));
+
+        // B5: Lấy campaign đã được duyệt
+        List<HealthCheckCampaign> approvedCampaigns = healthCheckCampaignRepository.findByStatus(Status.APPROVED);
+
+        return approvedCampaigns.stream().map(campaign -> {
+            List<HealthCheck> checks = checksByCampaign.getOrDefault(campaign.getCampaignId(), new ArrayList<>());
+
+            String confirmStatus;
+            if (checks.isEmpty()) {
+                confirmStatus = "Chưa phản hồi";
+            } else if (checks.stream().allMatch(HealthCheck::isParentConfirmation)) {
+                confirmStatus = "Đã đồng ý";
+            } else if (checks.stream().noneMatch(HealthCheck::isParentConfirmation)) {
+                confirmStatus = "Đã từ chối";
+            } else {
+                confirmStatus = "Một số đã đồng ý";
+            }
 
             return HealthV2CampaignResponseDTO.builder()
                     .campaignId(campaign.getCampaignId())
@@ -262,10 +278,11 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
                     .approvedAt(campaign.getApprovedAt())
                     .status(campaign.getStatus())
                     .createdAt(campaign.getCreatedAt())
-                    .isParentConfirm(isParentConfirm)
+                    .parentConfirmStatus(confirmStatus)
                     .build();
         }).collect(Collectors.toList());
     }
+
 
 
     @Override

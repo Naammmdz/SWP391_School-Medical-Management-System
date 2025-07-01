@@ -1,9 +1,6 @@
 package com.school.health.repository;
 
-import com.school.health.entity.HealthCheck;
-import com.school.health.entity.HealthCheckCampaign;
-import com.school.health.entity.Vaccination;
-import com.school.health.entity.VaccinationCampaign;
+import com.school.health.entity.*;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -30,5 +27,9 @@ public interface HealthCheckRepository extends JpaRepository<HealthCheck, Intege
 
     @Query("SELECT v FROM HealthCheck v WHERE v.campaign IN :campaigns")
     List<HealthCheck> findByCampaign(List<HealthCheckCampaign> campaigns);
+
+    // findByStudentIn
+    @Query("SELECT hc FROM HealthCheck hc WHERE hc.student IN :students AND hc.campaign.status = 'APPROVED'")
+    List<HealthCheck> findByStudentIn(List<Student> students);
 }
 

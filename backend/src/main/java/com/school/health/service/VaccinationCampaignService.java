@@ -26,7 +26,7 @@ public interface VaccinationCampaignService {
 
     List<StudentResponseDTO> getStudentsRegistrations(Integer campaignId);
 
-    List<VaccineV2CampaignResponseDTO> getApprovedVaccination();
+    List<VaccineV2CampaignResponseDTO> getApprovedCampaigns(int parentId);
 
     VaccinationResponseDTO registerStudentVaccine(VaccinationRequestDTO request);
 

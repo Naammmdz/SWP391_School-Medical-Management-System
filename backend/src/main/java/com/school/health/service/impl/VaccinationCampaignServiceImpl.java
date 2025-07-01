@@ -4,16 +4,15 @@ import com.school.health.dto.request.VaccinationCampaignRequestDTO;
 import com.school.health.dto.request.VaccinationRequestDTO;
 
 import com.school.health.dto.response.*;
-import com.school.health.entity.HealthCheckCampaign;
+import com.school.health.entity.*;
 
-import com.school.health.entity.Student;
-import com.school.health.entity.Vaccination;
-import com.school.health.entity.VaccinationCampaign;
 import com.school.health.enums.Status;
 import com.school.health.repository.*;
 import com.school.health.service.VaccinationCampaignService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.text.Normalizer;
@@ -228,20 +227,33 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
     }
 
     @Override
-    public List<VaccineV2CampaignResponseDTO> getApprovedVaccination() {
-        List<VaccinationCampaign> campaigns = vaccinationCampaignRepository.findByStatus(Status.APPROVED);
-        List<Vaccination> vaccinations = vaccinationRepository.findByCampaign(campaigns);
+    public List<VaccineV2CampaignResponseDTO> getApprovedCampaigns(int parentId) {
 
-        // Group vaccination theo campaignId
-        Map<Integer, List<Vaccination>> vacMap = vaccinations.stream()
-                .collect(Collectors.groupingBy(v -> v.getCampaign().getCampaignId()));
+        // B3: Lấy danh sách học sinh thuộc phụ huynh
+        List<Student> students = studentRepository.findByParentId(parentId);
 
-        // Trả về danh sách DTO
-        return campaigns.stream().map(campaign -> {
-            List<Vaccination> vacList = vacMap.getOrDefault(campaign.getCampaignId(), new ArrayList<>());
+        // B4: Lấy danh sách health check theo học sinh
+        List<Vaccination> healthChecks = vaccinationRepository.findByStudentIn(students);
 
-            // Kiểm tra xem có ai đã xác nhận phụ huynh chưa
-            boolean isParentConfirm = vacList.stream().anyMatch(Vaccination::isParentConfirmation);
+        Map<Integer, List<Vaccination>> checksByCampaign = healthChecks.stream()
+                .collect(Collectors.groupingBy(h -> h.getCampaign().getCampaignId()));
+
+        // B5: Lấy campaign đã được duyệt
+        List<VaccinationCampaign> approvedCampaigns = vaccinationCampaignRepository.findByStatus(Status.APPROVED);
+
+        return approvedCampaigns.stream().map(campaign -> {
+            List<Vaccination> checks = checksByCampaign.getOrDefault(campaign.getCampaignId(), new ArrayList<>());
+
+            String confirmStatus;
+            if (checks.isEmpty()) {
+                confirmStatus = "Chưa phản hồi";
+            } else if (checks.stream().allMatch(Vaccination::isParentConfirmation)) {
+                confirmStatus = "Đã đồng ý";
+            } else if (checks.stream().noneMatch(Vaccination::isParentConfirmation)) {
+                confirmStatus = "Đã từ chối";
+            } else {
+                confirmStatus = "Một số đã đồng ý";
+            }
 
             return VaccineV2CampaignResponseDTO.builder()
                     .campaignId(campaign.getCampaignId())
@@ -257,10 +269,11 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
                     .approvedAt(campaign.getApprovedAt())
                     .status(campaign.getStatus())
                     .createdAt(campaign.getCreatedAt())
-                    .isParentConfirm(isParentConfirm)
+                    .isParentConfirm(confirmStatus)
                     .build();
         }).collect(Collectors.toList());
     }
+
 
 
 

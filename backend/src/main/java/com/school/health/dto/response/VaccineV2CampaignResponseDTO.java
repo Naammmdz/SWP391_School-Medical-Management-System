@@ -29,5 +29,6 @@ public class VaccineV2CampaignResponseDTO {
     private Status status;
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
-    private boolean isParentConfirm;
+
+    private String isParentConfirm;
 }

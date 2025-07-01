@@ -82,8 +82,10 @@ public class VaccinationCampaignController {
     // Lấy danh sách chiến dịch tiêm chủng đã được phê duyệt
     @GetMapping("/approved")
     @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN') or hasRole('NURSE')")
-    public ResponseEntity<?> getApprovedVaccinationCampaigns() {
-        return ResponseEntity.ok(vaccinationCampaignService.getApprovedVaccination());
+    public ResponseEntity<?> getApprovedVaccinationCampaigns(Authentication authentication) {
+        UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
+        Integer userId = userPrincipal.getId();
+        return ResponseEntity.ok(vaccinationCampaignService.getApprovedCampaigns(userId));
     }
 
     // Đăng ký học sinh tham gia chiến dịch tiêm chủng. Tức là phụ huynh sẽ đăng ký cho con mình tham gia chiến dịch tiêm chủng
