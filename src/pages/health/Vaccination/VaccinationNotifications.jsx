@@ -121,20 +121,21 @@ const fetchNotifications = async () => {
       
       // Lấy parentConfirm trực tiếp từ item (API response)
       console.log('Campaign item data:', item); // Debug log
-      console.log('parentConfirm value:', item.parentConfirm); // Debug log for parentConfirm specifically
+      console.log('parentConfirm value:', item.isParentConfirm); // Debug log for parentConfirm specifically
       
-      if (item.parentConfirm !== undefined) {
+      if (item.isParentConfirm !== undefined) {
         // Sử dụng parentConfirm từ API response để xác định trạng thái
-        if (item.parentConfirm === null) {
+        if (item.isParentConfirm === null) {
           status = 'Chưa phản hồi';
           console.log('Status set to: Chưa phản hồi (parentConfirm is null)');
-        } else if (item.parentConfirm === true) {
+        } else if (item.isParentConfirm === 'Đã đồng ý') {
           status = 'Xác nhận';
           console.log('Status set to: Xác nhận (parentConfirm is true)');
-        } else if (item.parentConfirm === false) {
+        } else if (item.isParentConfirm === 'Đã từ chối') {
           status = 'Từ chối';
           console.log('Status set to: Từ chối (parentConfirm is false)');
         }
+       
         
         // Lấy thông tin ghi chú và ngày phản hồi từ item nếu có
         responseNote = item.note || '';

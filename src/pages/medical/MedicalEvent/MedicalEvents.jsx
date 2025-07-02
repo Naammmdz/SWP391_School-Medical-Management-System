@@ -16,6 +16,18 @@ const handlingMethods = [
   { value: 'Khác', label: 'Khác' }
 ];
 
+// 1. Add severity and status options
+const severityOptions = [
+  { value: 'MINOR', label: 'Nhẹ' },
+  { value: 'MODERATE', label: 'Trung bình' },
+  { value: 'SERIOUS', label: 'Nặng' },
+  { value: 'CRITICAL', label: 'Cấp cứu' },
+];
+const statusOptions = [
+  { value: 'PROCESSING', label: 'Đang xử lý' },
+  { value: 'RESOLVED', label: 'Đã xử lý' },
+];
+
 const MedicalEvents = () => {
   // State cho danh sách sự cố y tế
   const [medicalEvents, setMedicalEvents] = useState([]);
@@ -23,15 +35,18 @@ const MedicalEvents = () => {
   const [currentEvent, setCurrentEvent] = useState({
     id: null,
     title: '',
-    incidentType: '',
-    date: new Date().toISOString().split('T')[0],
-    handlingMethod: '',
-    description: '',
-    studentName: '',
-    studentClass: '',
+    eventType: '',
+    eventDate: new Date().toISOString().split('T')[0],
     location: '',
-    status: 'Đang xử lý',
-    severity: 'Nhẹ'
+    description: '',
+    relatedMedicinesUsed: '',
+    notes: '',
+    handlingMeasures: '',
+    severityLevel: 'MINOR',
+    status: 'PROCESSING',
+    stuId: '',
+    studentName: '', // for display only
+    studentClass: '', // for display only
   });
   // State cho chế độ chỉnh sửa
   const [editing, setEditing] = useState(false);
@@ -47,6 +62,10 @@ const MedicalEvents = () => {
     toDate: '',
     status: ''
   });
+
+  // 2. Add state for students and selected student
+  const [students, setStudents] = useState([]);
+  const [selectedStudent, setSelectedStudent] = useState(null);
 
   // Hàm gọi API để lấy danh sách sự cố y tế
   const fetchMedicalEvents = async () => {
@@ -161,22 +180,34 @@ const MedicalEvents = () => {
   // Xử lý submit form
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!currentEvent.title || !currentEvent.incidentType || !currentEvent.date) {
+    if (!currentEvent.title || !currentEvent.eventType || !currentEvent.eventDate || !currentEvent.stuId) {
       alert('Vui lòng điền đầy đủ các trường bắt buộc');
       return;
     }
-
+    const eventData = {
+      title: currentEvent.title,
+      stuId: currentEvent.stuId,
+      eventType: currentEvent.eventType,
+      eventDate: currentEvent.eventDate,
+      location: currentEvent.location,
+      description: currentEvent.description,
+      relatedMedicinesUsed: currentEvent.relatedMedicinesUsed,
+      notes: currentEvent.notes,
+      handlingMeasures: currentEvent.handlingMeasures,
+      severityLevel: currentEvent.severityLevel,
+      status: currentEvent.status,
+    };
     if (editing) {
-      updateMedicalEvent(currentEvent.id, currentEvent);
+      updateMedicalEvent(currentEvent.id, eventData);
     } else {
-      addMedicalEvent(currentEvent);
+      addMedicalEvent(eventData);
     }
   };
 
   // Xử lý thay đổi input
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setCurrentEvent({...currentEvent, [name]: value});
+    setCurrentEvent(prev => ({ ...prev, [name]: value }));
   };
 
   // Xử lý thay đổi filter
@@ -202,6 +233,58 @@ const MedicalEvents = () => {
   useEffect(() => {
     fetchMedicalEvents();
   }, []);
+
+  // 4. Load students from localStorage on mount
+  useEffect(() => {
+    const storedStudents = JSON.parse(localStorage.getItem('students') || '[]');
+    setStudents(storedStudents);
+  }, []);
+
+  // 5. Handle student selection
+  const handleStudentChange = (e) => {
+    const stuId = e.target.value;
+    const student = students.find(s => String(s.studentId) === String(stuId));
+    setSelectedStudent(student);
+    setCurrentEvent(prev => ({
+      ...prev,
+      stuId: student ? student.studentId : '',
+      studentName: student ? student.fullName : '',
+      studentClass: student ? student.className : '',
+    }));
+  };
+
+  // 8. Update addMedicalEvent to use correct API and data
+  const addMedicalEvent = async (event) => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      await MedicalEventService.createMedicalEvent(event, config);
+      fetchMedicalEvents();
+      setModalOpen(false);
+      setCurrentEvent({
+        id: null,
+        title: '',
+        eventType: '',
+        eventDate: new Date().toISOString().split('T')[0],
+        location: '',
+        description: '',
+        relatedMedicinesUsed: '',
+        notes: '',
+        handlingMeasures: '',
+        severityLevel: 'MINOR',
+        status: 'PROCESSING',
+        stuId: '',
+        studentName: '',
+        studentClass: '',
+      });
+      setSelectedStudent(null);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error adding medical event:', error);
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="medical-events-page">
@@ -257,15 +340,18 @@ const MedicalEvents = () => {
           setCurrentEvent({
             id: null,
             title: '',
-            incidentType: '',
-            date: new Date().toISOString().split('T')[0],
-            handlingMethod: '',
+            eventType: '',
+            eventDate: new Date().toISOString().split('T')[0],
+            location: '',
             description: '',
+            relatedMedicinesUsed: '',
+            notes: '',
+            handlingMeasures: '',
+            severityLevel: 'MINOR',
+            status: 'PROCESSING',
+            stuId: '',
             studentName: '',
             studentClass: '',
-            location: '',
-            status: 'Đang xử lý',
-            severity: 'Nhẹ'
           });
           setModalOpen(true);
         }}
@@ -340,6 +426,25 @@ const MedicalEvents = () => {
             <form onSubmit={handleSubmit}>
               <div className="form-row">
                 <div className="form-group">
+                  <label htmlFor="stuId">Học sinh <span className="required">*</span></label>
+                  <select
+                    name="stuId"
+                    id="stuId"
+                    value={currentEvent.stuId}
+                    onChange={handleStudentChange}
+                    required
+                  >
+                    <option value="">-- Chọn học sinh --</option>
+                    {students.map(student => (
+                      <option key={student.studentId} value={student.studentId}>
+                        {student.fullName} - {student.className}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="form-row">
+                <div className="form-group">
                   <label htmlFor="title">Tiêu đề sự cố <span className="required">*</span></label>
                   <input
                     type="text"
@@ -351,44 +456,25 @@ const MedicalEvents = () => {
                   />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="incidentType">Loại sự cố <span className="required">*</span></label>
-                  <input type="text" name="" required/>
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="studentName">Tên học sinh <span className="required">*</span></label>
+                  <label htmlFor="eventType">Loại sự cố <span className="required">*</span></label>
                   <input
                     type="text"
-                    name="studentName"
-                    id="studentName"
-                    value={currentEvent.studentName}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="studentClass">Lớp <span className="required">*</span></label>
-                  <input
-                    type="text"
-                    name="studentClass"
-                    id="studentClass"
-                    value={currentEvent.studentClass}
+                    name="eventType"
+                    id="eventType"
+                    value={currentEvent.eventType}
                     onChange={handleInputChange}
                     required
                   />
                 </div>
               </div>
-
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="date">Ngày xảy ra <span className="required">*</span></label>
+                  <label htmlFor="eventDate">Ngày xảy ra <span className="required">*</span></label>
                   <input
                     type="date"
-                    name="date"
-                    id="date"
-                    value={currentEvent.date}
+                    name="eventDate"
+                    id="eventDate"
+                    value={currentEvent.eventDate}
                     onChange={handleInputChange}
                     required
                   />
@@ -404,14 +490,13 @@ const MedicalEvents = () => {
                   />
                 </div>
               </div>
-
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="handlingMethod">Biện pháp xử lý</label>
+                  <label htmlFor="handlingMeasures">Biện pháp xử lý</label>
                   <select
-                    name="handlingMethod"
-                    id="handlingMethod"
-                    value={currentEvent.handlingMethod}
+                    name="handlingMeasures"
+                    id="handlingMeasures"
+                    value={currentEvent.handlingMeasures}
                     onChange={handleInputChange}
                   >
                     <option value="">-- Chọn biện pháp xử lý --</option>
@@ -421,31 +506,19 @@ const MedicalEvents = () => {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label htmlFor="severity">Mức độ nghiêm trọng</label>
+                  <label htmlFor="severityLevel">Mức độ nghiêm trọng</label>
                   <select
-                    name="severity"
-                    id="severity"
-                    value={currentEvent.severity}
+                    name="severityLevel"
+                    id="severityLevel"
+                    value={currentEvent.severityLevel}
                     onChange={handleInputChange}
                   >
-                    <option value="Nhẹ">Nhẹ</option>
-                    <option value="Trung bình">Trung bình</option>
-                    <option value="Nặng">Nặng</option>
+                    {severityOptions.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
                   </select>
                 </div>
               </div>
-
-              <div className="form-group">
-                <label htmlFor="description">Mô tả chi tiết</label>
-                <textarea
-                  name="description"
-                  id="description"
-                  value={currentEvent.description}
-                  onChange={handleInputChange}
-                  rows="4"
-                ></textarea>
-              </div>
-
               <div className="form-row">
                 <div className="form-group">
                   <label htmlFor="status">Trạng thái</label>
@@ -455,10 +528,41 @@ const MedicalEvents = () => {
                     value={currentEvent.status}
                     onChange={handleInputChange}
                   >
-                    <option value="Đang xử lý">Đang xử lý</option>
-                    <option value="Đã xử lý">Đã xử lý</option>
+                    {statusOptions.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
                   </select>
                 </div>
+                <div className="form-group">
+                  <label htmlFor="relatedMedicinesUsed">Thuốc/supplies đã dùng</label>
+                  <input
+                    type="text"
+                    name="relatedMedicinesUsed"
+                    id="relatedMedicinesUsed"
+                    value={currentEvent.relatedMedicinesUsed}
+                    onChange={handleInputChange}
+                  />
+                </div>
+              </div>
+              <div className="form-group">
+                <label htmlFor="notes">Ghi chú</label>
+                <textarea
+                  name="notes"
+                  id="notes"
+                  value={currentEvent.notes}
+                  onChange={handleInputChange}
+                  rows="2"
+                ></textarea>
+              </div>
+              <div className="form-group">
+                <label htmlFor="description">Mô tả chi tiết</label>
+                <textarea
+                  name="description"
+                  id="description"
+                  value={currentEvent.description}
+                  onChange={handleInputChange}
+                  rows="4"
+                ></textarea>
               </div>
 
               <div className="form-actions">
