@@ -23,7 +23,8 @@ import {
   Badge,
   Descriptions,
   Empty,
-  Divider
+  Divider,
+  Tabs
 } from 'antd';
 import {
   SearchOutlined,
@@ -79,6 +80,7 @@ const VaccinationResult = () => {
   const [updateForm, setUpdateForm] = useState({});
   const [form] = Form.useForm();
   const [updateFormRef] = Form.useForm();
+  const [parentConfirmationTab, setParentConfirmationTab] = useState('confirmed'); // 'confirmed' | 'not_confirmed'
 
   // Lấy danh sách chiến dịch đã duyệt từ API
   const fetchApprovedCampaigns = useCallback(async () => {
@@ -111,9 +113,15 @@ const VaccinationResult = () => {
     setConfirmedLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const config = { headers: { Authorization: `Bearer ${token}` }, params: filterValues };
+      // Luôn gửi parentConfirmation đúng kiểu boolean theo tab
+      const params = {
+        ...filterValues,
+        parentConfirmation: parentConfirmationTab === 'confirmed',
+      };
+      const config = { headers: { Authorization: `Bearer ${token}` }, params };
       let res = await VaccinationService.filterResult(config);
       setConfirmedResults(Array.isArray(res.data) ? res.data : []);
+      console.log(res.data);
     } catch (err) {
       setConfirmedResults([]);
     }
@@ -138,9 +146,12 @@ const VaccinationResult = () => {
   };
 
   // Xử lý filter
-  const handleFilter = (e) => {
-    e.preventDefault();
-    fetchConfirmedResults(filterForm);
+  const handleFilter = (values) => {
+    setFilterForm(values);
+    fetchConfirmedResults({
+      ...values,
+      parentConfirmation: parentConfirmationTab === 'confirmed',
+    });
   };
 
   const handleFilterChange = (e) => {
@@ -176,23 +187,13 @@ const VaccinationResult = () => {
   };
 
   // Cập nhật kết quả
-  const handleUpdateChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setUpdateForm(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
-  };
-
-  const handleUpdateDate = (value) => {
-    setUpdateForm(prev => ({ ...prev, date: value }));
-  };
-
-  const handleUpdateSubmit = async (e) => {
-    e.preventDefault();
+  const handleUpdateSubmit = async (values) => {
     setLoadingSubmit(true);
     setSubmitStatus(null);
     try {
       let dateArr = [];
-      if (updateForm.date && dayjs.isDayjs(updateForm.date)) {
-        dateArr = [updateForm.date.year(), updateForm.date.month() + 1, updateForm.date.date()];
+      if (values.date && dayjs.isDayjs(values.date)) {
+        dateArr = [values.date.year(), values.date.month() + 1, values.date.date()];
       } else if (Array.isArray(selectedResult.date)) {
         dateArr = selectedResult.date;
       } else if (selectedResult.date && typeof selectedResult.date === 'string') {
@@ -204,15 +205,15 @@ const VaccinationResult = () => {
       const payload = {
         vaccinationId: selectedResult.vaccinationId,
         date: dateArr,
-        doseNumber: updateForm.doseNumber,
-        adverseReaction: updateForm.adverseReaction,
-        notes: updateForm.notes,
-        parentConfirmation: updateForm.parentConfirmation,
-        result: updateForm.result,
+        doseNumber: values.doseNumber,
+        adverseReaction: values.adverseReaction,
+        notes: values.notes,
+        parentConfirmation: values.parentConfirmation,
+        result: values.result,
         vaccineName: selectedResult.vaccineName || getCampaignInfo(selectedResult.campaignId).type || '',
         studentId: selectedResult.studentId,
         campaignId: selectedResult.campaignId,
-        previousDose: updateForm.previousDose,
+        previousDose: values.previousDose,
       };
       const token = localStorage.getItem('token');
       await VaccinationService.updateVaccinationResult(selectedResult.vaccinationId, payload, {
@@ -225,6 +226,14 @@ const VaccinationResult = () => {
       setSubmitStatus('error');
     }
     setLoadingSubmit(false);
+  };
+
+  const handleParentConfirmationTabChange = (key) => {
+    setParentConfirmationTab(key);
+    fetchConfirmedResults({
+      ...filterForm,
+      parentConfirmation: key === 'confirmed',
+    });
   };
 
   // Table columns configuration
@@ -270,21 +279,23 @@ const VaccinationResult = () => {
       render: (parentConfirmation) => (
         parentConfirmation ? 
           <Tag color="green" icon={<CheckCircleOutlined />}>Đã xác nhận</Tag> : 
-          <Tag color="orange">Chưa xác nhận</Tag>
+          <Tag color="orange">Đã từ chối</Tag>
       )
     },
     {
       title: 'Thao tác',
       key: 'actions',
       render: (_, record) => (
-        <Button 
-          type="primary" 
-          size="small" 
-          icon={<EyeOutlined />}
-          onClick={() => handleOpenDetail(record)}
-        >
-          Xem chi tiết
-        </Button>
+        record.parentConfirmation ? (
+          <Button 
+            type="primary" 
+            size="small" 
+            icon={<EyeOutlined />}
+            onClick={() => handleOpenDetail(record)}
+          >
+            Xem chi tiết
+          </Button>
+        ) : null
       )
     }
   ];
@@ -351,20 +362,6 @@ const VaccinationResult = () => {
               </Form.Item>
             </Col>
             <Col xs={24} sm={12} md={6}>
-              <Form.Item label="Xác nhận phụ huynh">
-                <Select
-                  name="parentConfirmation"
-                  placeholder="Chọn trạng thái"
-                  value={filterForm.parentConfirmation}
-                  onChange={(value) => setFilterForm(prev => ({ ...prev, parentConfirmation: value }))}
-                  allowClear
-                >
-                  <Option value={true}>Đã xác nhận</Option>
-                  <Option value={false}>Chưa xác nhận</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12} md={6}>
               <Form.Item label="Tên học sinh">
                 <Input
                   name="studentName"
@@ -396,17 +393,36 @@ const VaccinationResult = () => {
           </Row>
           <Row justify="end" gutter={[8, 8]}>
             <Col>
-              <Button icon={<ClearOutlined />} onClick={() => { setFilterForm({}); fetchConfirmedResults(); }}>
+              <Button icon={<ClearOutlined />} onClick={() => { setFilterForm({}); fetchConfirmedResults({ parentConfirmation: parentConfirmationTab === 'confirmed' }); }}>
                 Xóa bộ lọc
               </Button>
             </Col>
             <Col>
-              <Button type="primary" htmlType="submit" icon={<SearchOutlined />}>
-                Tìm kiếm
-              </Button>
+              <Button 
+            type="primary" 
+            
+            onClick={() => fetchConfirmedResults(filterForm)}
+          >
+            Tìm kiếm
+          </Button>
             </Col>
           </Row>
         </Form>
+      </Card>
+
+      {/* Tabs filter xác nhận PH */}
+      <Card style={{ marginBottom: 16 }}>
+        <Tabs
+          activeKey={parentConfirmationTab}
+          onChange={handleParentConfirmationTabChange}
+          items={[{
+            key: 'confirmed',
+            label: <Button type={parentConfirmationTab === 'confirmed' ? 'primary' : 'default'}>Đã xác nhận</Button>,
+          }, {
+            key: 'not_confirmed',
+            label: <Button type={parentConfirmationTab === 'not_confirmed' ? 'primary' : 'default'}>Đã từ chối</Button>,
+          }]}
+        />
       </Card>
 
       {/* Results Table */}
@@ -424,7 +440,7 @@ const VaccinationResult = () => {
           columns={columns}
           dataSource={confirmedResults}
           loading={confirmedLoading}
-          rowKey={(record) => `${record.studentId}-${record.campaignId}-${record.date || 'no-date'}`}
+          rowKey={record => record.vaccinationId ? String(record.vaccinationId) : `${record.studentId}-${record.campaignId}-${record.date || 'no-date'}`}
           pagination={{
             pageSize: 10,
             showSizeChanger: true,
@@ -474,7 +490,7 @@ const VaccinationResult = () => {
         )}
         
         {selectedResult && (
-          <Form layout="vertical" onFinish={handleUpdateSubmit}>
+          <Form layout="vertical" onFinish={handleUpdateSubmit} initialValues={updateForm}>
             <Row gutter={[16, 16]}>
               <Col xs={24} sm={12}>
                 <Form.Item label="Tên học sinh">
@@ -493,11 +509,9 @@ const VaccinationResult = () => {
                 </Form.Item>
               </Col>
               <Col xs={24} sm={12}>
-                <Form.Item label="Ngày tiêm">
+                <Form.Item label="Ngày tiêm" name="date">
                   <DatePicker
                     style={{ width: '100%' }}
-                    value={updateForm.date}
-                    onChange={handleUpdateDate}
                     format="YYYY-MM-DD"
                     disabled
                   />
@@ -512,56 +526,30 @@ const VaccinationResult = () => {
                 </Form.Item>
               </Col>
               <Col xs={24} sm={12}>
-                <Form.Item label="Số mũi tiêm" required>
-                  <Input
-                    type="number"
-                    name="doseNumber"
-                    value={updateForm.doseNumber || ''}
-                    onChange={handleUpdateChange}
-                    required
-                  />
+                <Form.Item label="Số mũi tiêm" name="doseNumber" rules={[{ required: true, message: 'Vui lòng nhập số mũi tiêm' }]}> 
+                  <Input type="number" />
                 </Form.Item>
               </Col>
               <Col xs={24} sm={12}>
-                <Form.Item label="Phản ứng sau tiêm" required>
-                  <Input
-                    name="adverseReaction"
-                    value={updateForm.adverseReaction || ''}
-                    onChange={handleUpdateChange}
-                    required
-                  />
+                <Form.Item label="Phản ứng sau tiêm" name="adverseReaction" rules={[{ required: true, message: 'Vui lòng nhập phản ứng sau tiêm' }]}> 
+                  <Input />
                 </Form.Item>
               </Col>
               <Col xs={24}>
-                <Form.Item label="Ghi chú">
-                  <Input.TextArea
-                    name="notes"
-                    value={updateForm.notes || ''}
-                    onChange={handleUpdateChange}
-                    rows={3}
-                  />
+                <Form.Item label="Ghi chú" name="notes">
+                  <Input.TextArea rows={3} />
                 </Form.Item>
               </Col>
               <Col xs={24} sm={12}>
-                <Form.Item>
-                  <Checkbox
-                    checked={!!updateForm.parentConfirmation}
-                    name="parentConfirmation"
-                    onChange={handleUpdateChange}
-                  >
+                <Form.Item name="parentConfirmation" valuePropName="checked">
+                  <Checkbox>
                     Xác nhận của phụ huynh
                   </Checkbox>
                 </Form.Item>
               </Col>
               <Col xs={24} sm={12}>
-                <Form.Item label="Kết quả" required>
-                  <Select
-                    name="result"
-                    value={updateForm.result || undefined}
-                    onChange={(value) => setUpdateForm(prev => ({ ...prev, result: value }))}
-                    required
-                    placeholder="Chọn kết quả"
-                  >
+                <Form.Item label="Kết quả" name="result" rules={[{ required: true, message: 'Vui lòng chọn kết quả' }]}> 
+                  <Select placeholder="Chọn kết quả">
                     {resultOptions.map(opt => (
                       <Option key={opt.value} value={opt.value}>{opt.label}</Option>
                     ))}
@@ -569,12 +557,8 @@ const VaccinationResult = () => {
                 </Form.Item>
               </Col>
               <Col xs={24}>
-                <Form.Item>
-                  <Checkbox
-                    checked={!!updateForm.previousDose}
-                    name="previousDose"
-                    onChange={handleUpdateChange}
-                  >
+                <Form.Item name="previousDose" valuePropName="checked">
+                  <Checkbox>
                     Đã tiêm mũi trước
                   </Checkbox>
                 </Form.Item>

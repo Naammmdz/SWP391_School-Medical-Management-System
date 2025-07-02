@@ -133,6 +133,35 @@ const VaccinationManagement = () => {
     }
   };
 
+  // Handle reject
+  const handleReject = async (record) => {
+    Modal.confirm({
+      title: 'Xác nhận từ chối',
+      icon: <ExclamationCircleOutlined />,
+      content: `Bạn có chắc muốn từ chối chiến dịch "${record.title}"?`,
+      okText: 'Từ chối',
+      okType: 'danger',
+      cancelText: 'Hủy',
+      onOk: async () => {
+        try {
+          setLoading(true);
+          const token = localStorage.getItem('token');
+          await VaccinationService.rejectVaccinationCampaign(
+            record.id,
+            {},
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          message.success('Đã từ chối chiến dịch thành công');
+          fetchVaccinationEvents();
+        } catch (error) {
+          message.error('Có lỗi khi từ chối chiến dịch');
+        } finally {
+          setLoading(false);
+        }
+      }
+    });
+  };
+
   // Handle delete
   const handleDelete = (record) => {
     Modal.confirm({
@@ -352,6 +381,7 @@ const VaccinationManagement = () => {
             label: 'Xem phản hồi',
             onClick: () => handleViewResponses(record)
           },
+          
           {
             key: 'delete',
             icon: <DeleteOutlined />,
@@ -367,6 +397,13 @@ const VaccinationManagement = () => {
             icon: <CheckCircleOutlined />,
             label: 'Duyệt chiến dịch',
             onClick: () => handleApprove(record)
+          });
+          menuItems.unshift({
+            key: 'reject',
+            icon: <CloseCircleOutlined />,
+            label: 'Từ chối',
+            danger: true,
+            onClick: () => handleReject(record)
           });
         }
 
