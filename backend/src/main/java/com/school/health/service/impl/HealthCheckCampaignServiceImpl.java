@@ -135,11 +135,11 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
     }
 
     @Override
-    public HealthCampaignResponseDTO approveCampaign(int campaignId, int approvedBy) {
+    public HealthCampaignResponseDTO approveCampaign(int campaignId, int approvedBy, Status status) {
         HealthCheckCampaign existingCampaign = healthCheckCampaignRepository.findById(campaignId).orElseThrow(() -> new RuntimeException("Campaign not found with ID: " + campaignId));
 
         existingCampaign.setApprovedBy(approvedBy);
-        existingCampaign.setStatus(APPROVED); // Set status thành approved
+        existingCampaign.setStatus(status); // Set status thành approved
 
         HealthCheckCampaign updatedCampaign = healthCheckCampaignRepository.save(existingCampaign);
         // Gửi đến yta/ admin đã tạo chiến dịch về tình trạng chiến dich
@@ -169,7 +169,7 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
                             "Phụ huynh vui lòng nhắc nhở học sinh ăn uống đầy đủ và mặc trang phục gọn gàng.\n" +
                             "Nếu học sinh có tiền sử bệnh lý đặc biệt, xin vui lòng thông báo với GVCN hoặc gửi kèm hồ sơ y tế (nếu có)." + "\n" +
                             "Sự phối hợp của Quý Phụ huynh sẽ góp phần quan trọng vào thành công của chương trình và sức khỏe của các em học sinh.\n" +
-                            "Kết quả kiểm tra sẽ được gửi về cho Quý Phụ huynh sau khi hoàn tất nhằm giúp gia đình nắm bắt tình hình sức khỏe của các em."+
+                            "Kết quả kiểm tra sẽ được gửi về cho Quý Phụ huynh sau khi hoàn tất nhằm giúp gia đình nắm bắt tình hình sức khỏe của các em." +
                             "\n" +
                             "Trân trọng cảm ơn!\n" +
                             "\n" +
@@ -195,7 +195,7 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
                             "Phụ huynh vui lòng nhắc nhở học sinh ăn uống đầy đủ và mặc trang phục gọn gàng.\n" +
                             "Nếu học sinh có tiền sử bệnh lý đặc biệt, xin vui lòng thông báo với GVCN hoặc gửi kèm hồ sơ y tế (nếu có)." + "\n" +
                             "Sự phối hợp của Quý Phụ huynh sẽ góp phần quan trọng vào thành công của chương trình và sức khỏe của các em học sinh.\n" +
-                            "Kết quả kiểm tra sẽ được gửi về cho Quý Phụ huynh sau khi hoàn tất nhằm giúp gia đình nắm bắt tình hình sức khỏe của các em."+
+                            "Kết quả kiểm tra sẽ được gửi về cho Quý Phụ huynh sau khi hoàn tất nhằm giúp gia đình nắm bắt tình hình sức khỏe của các em." +
                             "\n" +
                             "Trân trọng cảm ơn!\n" +
                             "\n" +
@@ -238,30 +238,28 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
     @Override
     public List<HealthV2CampaignResponseDTO> getApprovedCampaigns(int parentId) {
 
-        // B3: Lấy danh sách học sinh thuộc phụ huynh
+        // Lấy danh sách học sinh thuộc phụ huynh
         List<Student> students = studentRepository.findByParentId(parentId);
 
-        // B4: Lấy danh sách health check theo học sinh
+        // Lấy danh sách health check theo học sinh
         List<HealthCheck> healthChecks = healthCheckRepository.findByStudentIn(students);
 
         Map<Integer, List<HealthCheck>> checksByCampaign = healthChecks.stream()
                 .collect(Collectors.groupingBy(h -> h.getCampaign().getCampaignId()));
 
-        // B5: Lấy campaign đã được duyệt
+        // Lấy campaign đã được duyệt
         List<HealthCheckCampaign> approvedCampaigns = healthCheckCampaignRepository.findByStatus(Status.APPROVED);
 
         return approvedCampaigns.stream().map(campaign -> {
             List<HealthCheck> checks = checksByCampaign.getOrDefault(campaign.getCampaignId(), new ArrayList<>());
 
-            String confirmStatus;
-            if (checks.isEmpty()) {
-                confirmStatus = "Chưa phản hồi";
-            } else if (checks.stream().allMatch(HealthCheck::isParentConfirmation)) {
-                confirmStatus = "Đã đồng ý";
+            Boolean confirmStatus;
+            if (checks.stream().allMatch(HealthCheck::isParentConfirmation)) {
+                confirmStatus = true;
             } else if (checks.stream().noneMatch(HealthCheck::isParentConfirmation)) {
-                confirmStatus = "Đã từ chối";
+                confirmStatus = false;
             } else {
-                confirmStatus = "Một số đã đồng ý";
+                confirmStatus = null; // Trường hợp có cả xác nhận và không xác nhận từ phụ huynh
             }
 
             return HealthV2CampaignResponseDTO.builder()
@@ -282,7 +280,6 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
                     .build();
         }).collect(Collectors.toList());
     }
-
 
 
     @Override
@@ -350,8 +347,8 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
 
     @Override
     public List<HealthCheckCampaign> getMyChildHealthCampaigns(Integer parentId, Integer studentId) {
-        List<HealthCheckCampaign> health = healthCheckCampaignRepository.findCampaignsByStudentId(studentId,APPROVED);
-        if(health.isEmpty() ) {
+        List<HealthCheckCampaign> health = healthCheckCampaignRepository.findCampaignsByStudentId(studentId, APPROVED);
+        if (health.isEmpty()) {
             throw new RuntimeException("No health campaigns found for campaign is not APPROVED or not found student with ID: " + studentId);
         }
         return health;
@@ -368,11 +365,11 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
     }
 
     @Override
-    public HealthCheckResponseDTO updateStudentHealthCampaign(Integer healthcheckId,HealthCheckRequestDTO requestDTO) {
+    public HealthCheckResponseDTO updateStudentHealthCampaign(Integer healthcheckId, HealthCheckRequestDTO requestDTO) {
         HealthCheck healthCheck = healthCheckRepository.findById(healthcheckId).orElseThrow(() -> new RuntimeException("Health check not found with ID: " + healthcheckId));
         HealthCheckCampaign campaign = healthCheckCampaignRepository.findById(requestDTO.getCampaignId()).orElseThrow(() -> new RuntimeException("Campaign not found with ID: " + requestDTO.getCampaignId()));
         Student student = studentRepository.findById(requestDTO.getStudentId()).orElseThrow(() -> new RuntimeException("Student not found with ID: " + requestDTO.getStudentId()));
-        if(healthCheck.isParentConfirmation() == false) {
+        if (healthCheck.isParentConfirmation() == false) {
             throw new RuntimeException("Parent confirmation is required to update health check results.");
         }
         healthCheck.setDate(requestDTO.getDate());
@@ -420,13 +417,13 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
     }
 
     @Override
-    public List<HealthCheckResponseDTO> getResultWithFilterDate(LocalDate startDate, LocalDate endDate,boolean consultationAppointment) {
-        return healthCheckRepository.findResultWithDate( startDate, endDate , consultationAppointment).stream().map(this::mapToHealthCheckResponseDTO).collect(Collectors.toList());
+    public List<HealthCheckResponseDTO> getResultWithFilterDate(LocalDate startDate, LocalDate endDate, boolean consultationAppointment) {
+        return healthCheckRepository.findResultWithDate(startDate, endDate, consultationAppointment).stream().map(this::mapToHealthCheckResponseDTO).collect(Collectors.toList());
     }
 
     @Override
     public List<HealthCampaignResponseDTO> getCampaignStatus(int studentId, boolean parentConfirmation) {
-        List<HealthCheckCampaign> campaign = healthCheckCampaignRepository.findCampaignsByStudentIdAndParentConfirmation(studentId,parentConfirmation);
+        List<HealthCheckCampaign> campaign = healthCheckCampaignRepository.findCampaignsByStudentIdAndParentConfirmation(studentId, parentConfirmation);
         if (campaign.isEmpty()) {
             throw new RuntimeException("No health campaigns found for student with ID: " + studentId + " and parent confirmation: " + parentConfirmation);
         }
@@ -469,7 +466,7 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
 
         if (campaignName != null && !campaignName.isBlank()) {
             spec = spec.and((root, query, cb) ->
-                    cb.like(root.get("campaign").get("campaignName"),"%" + campaignName + "%"));
+                    cb.like(root.get("campaign").get("campaignName"), "%" + campaignName + "%"));
         }
 
         if (studentName != null && !studentName.isBlank()) {
@@ -522,9 +519,6 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
                         .build())
                 .collect(Collectors.toList());
     }
-
-
-
 
 
     @Override

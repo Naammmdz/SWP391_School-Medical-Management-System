@@ -122,11 +122,11 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
     }
 
     @Override
-    public VaccinationCampaignResponseDTO approveVaccinationCampaign(Integer campaignId, int approvedBy) {
+    public VaccinationCampaignResponseDTO approveVaccinationCampaign(Integer campaignId, int approvedBy, Status status) {
         VaccinationCampaign campaign = vaccinationCampaignRepository.findById(campaignId).orElseThrow(() -> new RuntimeException("Campaign not found id :" + campaignId));
 
         campaign.setApprovedBy(approvedBy);
-        campaign.setStatus(Status.APPROVED);
+        campaign.setStatus(status);
 
         VaccinationCampaign approvedCampaign = vaccinationCampaignRepository.save(campaign);
         // Gửi đến yta/ admin đã tạo chiến dịch về tình trạng chiến dich
@@ -229,30 +229,28 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
     @Override
     public List<VaccineV2CampaignResponseDTO> getApprovedCampaigns(int parentId) {
 
-        // B3: Lấy danh sách học sinh thuộc phụ huynh
+        // Lấy danh sách học sinh thuộc phụ huynh
         List<Student> students = studentRepository.findByParentId(parentId);
 
-        // B4: Lấy danh sách health check theo học sinh
+        // Lấy danh sách health check theo học sinh
         List<Vaccination> healthChecks = vaccinationRepository.findByStudentIn(students);
 
         Map<Integer, List<Vaccination>> checksByCampaign = healthChecks.stream()
                 .collect(Collectors.groupingBy(h -> h.getCampaign().getCampaignId()));
 
-        // B5: Lấy campaign đã được duyệt
+        // Lấy campaign đã được duyệt
         List<VaccinationCampaign> approvedCampaigns = vaccinationCampaignRepository.findByStatus(Status.APPROVED);
 
         return approvedCampaigns.stream().map(campaign -> {
             List<Vaccination> checks = checksByCampaign.getOrDefault(campaign.getCampaignId(), new ArrayList<>());
 
-            String confirmStatus;
-            if (checks.isEmpty()) {
-                confirmStatus = "Chưa phản hồi";
-            } else if (checks.stream().allMatch(Vaccination::isParentConfirmation)) {
-                confirmStatus = "Đã đồng ý";
+            Boolean confirmStatus;
+            if (checks.stream().allMatch(Vaccination::isParentConfirmation)) {
+                confirmStatus = true;
             } else if (checks.stream().noneMatch(Vaccination::isParentConfirmation)) {
-                confirmStatus = "Đã từ chối";
+                confirmStatus = false;
             } else {
-                confirmStatus = "Một số đã đồng ý";
+                confirmStatus = null;
             }
 
             return VaccineV2CampaignResponseDTO.builder()
@@ -273,9 +271,6 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
                     .build();
         }).collect(Collectors.toList());
     }
-
-
-
 
 
     @Override

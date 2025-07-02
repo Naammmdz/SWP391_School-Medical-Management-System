@@ -19,7 +19,7 @@ public interface HealthCheckCampaignService {
 
     HealthCampaignResponseDTO updateCampaign(int campaignId, HealthCampaignRequestDTO healthCampaignRequestDTO);
 
-    HealthCampaignResponseDTO approveCampaign(int campaignId, int approvedBy);
+    HealthCampaignResponseDTO approveCampaign(int campaignId, int approvedBy, Status status);
 
     HealthCampaignResponseDTO updateCampaignStatus(int campaignId, Status status);
 

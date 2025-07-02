@@ -67,7 +67,17 @@ public class HealthCheckCampaignController {
     public ResponseEntity<?> approveCampaign(@PathVariable @Valid int campaignId, Authentication authentication) {
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
         Integer approvedBy = userPrincipal.getId();
-        HealthCampaignResponseDTO healthCampaignResponseDTO = healthCheckCampaignServiceImpl.approveCampaign(campaignId, approvedBy);
+        HealthCampaignResponseDTO healthCampaignResponseDTO = healthCheckCampaignServiceImpl.approveCampaign(campaignId, approvedBy, Status.APPROVED);
+        return ResponseEntity.ok(healthCampaignResponseDTO);
+    }
+
+    // Cập nhật trạng thái thành REJECTED của chiến dịch sức khỏe
+    @PutMapping("/{campaignId}/reject")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE') or hasRole('PRINCIPAL') or hasRole('PARENT')")
+    public ResponseEntity<?> rejectCampaign(@PathVariable @Valid int campaignId, Authentication authentication) {
+        UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
+        Integer approvedBy = userPrincipal.getId();
+        HealthCampaignResponseDTO healthCampaignResponseDTO = healthCheckCampaignServiceImpl.approveCampaign(campaignId, approvedBy, Status.CANCELLED);
         return ResponseEntity.ok(healthCampaignResponseDTO);
     }
 

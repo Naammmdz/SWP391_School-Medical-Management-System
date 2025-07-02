@@ -61,8 +61,18 @@ public class VaccinationCampaignController {
     public ResponseEntity<?> approveVaccinationCampaign(@PathVariable @Valid int campaignId, Authentication authentication) {
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
         Integer approvedBy = userPrincipal.getId();
-        return ResponseEntity.ok(vaccinationCampaignService.approveVaccinationCampaign(campaignId, approvedBy));
+        return ResponseEntity.ok(vaccinationCampaignService.approveVaccinationCampaign(campaignId, approvedBy, Status.APPROVED));
     }
+
+    // Cập nhật trạng thái thành CANCELLED của chiến dịch tiêm chủng
+    @PutMapping("/{campaignId}/cancel")
+    @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN') or hasRole('NURSE')")
+    public ResponseEntity<?> cancelVaccinationCampaign(@PathVariable @Valid int campaignId, Authentication authentication) {
+        UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
+        Integer cancelledBy = userPrincipal.getId();
+        return ResponseEntity.ok(vaccinationCampaignService.approveVaccinationCampaign(campaignId, cancelledBy, Status.CANCELLED));
+    }
+
 
 
     // Cập nhật trạng thái của chiến dịch tiêm chủng

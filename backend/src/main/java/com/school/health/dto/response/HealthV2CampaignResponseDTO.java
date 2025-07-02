@@ -29,5 +29,5 @@ public class HealthV2CampaignResponseDTO {
     private Status status;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
-    private String parentConfirmStatus;
+    private Boolean parentConfirmStatus;
 }
