@@ -1,10 +1,9 @@
-package com.school.health.event.listener;
+package com.school.health.event.noti.listener;
 import com.school.health.entity.HealthCheckCampaign;
 import com.school.health.entity.Student;
 import com.school.health.entity.VaccinationCampaign;
-import com.school.health.event.HealthCheckCampaignApprovedEvent;
-import com.school.health.event.HealthCheckCampaignCreatedEvent;
-import com.school.health.event.VaccinationCampaignApprovedEvent;
+import com.school.health.event.noti.HealthCheckCampaignApprovedEvent;
+import com.school.health.event.noti.VaccinationCampaignApprovedEvent;
 import com.school.health.repository.StudentRepository;
 import com.school.health.repository.UserRepository;
 import com.school.health.service.impl.NotificationServiceImpl;

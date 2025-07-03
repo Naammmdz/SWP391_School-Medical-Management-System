@@ -4,15 +4,13 @@ import com.school.health.dto.request.VaccinationCampaignRequestDTO;
 import com.school.health.dto.request.VaccinationRequestDTO;
 
 import com.school.health.dto.response.*;
-import com.school.health.entity.HealthCheckCampaign;
 
 import com.school.health.entity.Student;
 import com.school.health.entity.Vaccination;
 import com.school.health.entity.VaccinationCampaign;
 import com.school.health.enums.Status;
-import com.school.health.event.HealthCheckCampaignCreatedEvent;
-import com.school.health.event.VaccinationCampaignApprovedEvent;
-import com.school.health.event.VaccinationCampaignCreatedEvent;
+import com.school.health.event.noti.VaccinationCampaignApprovedEvent;
+import com.school.health.event.noti.VaccinationCampaignCreatedEvent;
 import com.school.health.repository.*;
 import com.school.health.service.VaccinationCampaignService;
 import lombok.RequiredArgsConstructor;

@@ -9,6 +9,8 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "MedicalEvent")
@@ -26,9 +28,15 @@ public class MedicalEvent {
     private String title;
 
 
-    @ManyToOne
-    @JoinColumn(name = "StudentId", nullable = false)
-    private Student student;
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "medical_event_student", // tên bảng trung gian
+            joinColumns = @JoinColumn(name = "EventId"), // khóa ngoại tới bảng này
+            inverseJoinColumns = @JoinColumn(name = "StudentId") // khóa ngoại tới bảng đối diện
+
+    )
+
+    private List<Student> studentList = new ArrayList<>();
 
 
     // Loại sự kiện “Ngất xỉu”, “Chảy máu”, “Đau bụng”, “Gãy tay” v.v.
@@ -54,8 +62,6 @@ public class MedicalEvent {
     @JoinColumn(name = "CreatedBy", nullable = false)
     private User createdBy;
 
-    @Column(name = "RelatedMedicinesUsed", columnDefinition = "NVARCHAR(255)")
-    private String relatedMedicinesUsed;
 
     @Column(name = "Notes", columnDefinition = "NVARCHAR(255)")
     private String notes;
@@ -73,4 +79,12 @@ public class MedicalEvent {
     @Enumerated(EnumType.STRING)
     @Column(name = "Status", columnDefinition = "NVARCHAR(20)")
     private MedicalEventStatus status;
+
+    public void addStudent(Student student) {
+        studentList.add(student);
+    }
+    public void removeStudent(Student student) {
+        studentList.remove(student);
+    }
+
 }

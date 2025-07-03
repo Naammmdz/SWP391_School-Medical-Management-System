@@ -5,10 +5,8 @@ import com.school.health.dto.request.MedicalEventsRequestDTO;
 import com.school.health.dto.response.MedicalEventsResponseDTO;
 import com.school.health.entity.MedicalEvent;
 import com.school.health.entity.Student;
-import com.school.health.entity.User;
 import com.school.health.enums.MedicalEventStatus;
-import com.school.health.enums.Status;
-import com.school.health.event.MedicalEventPendingConfirmationEvent;
+import com.school.health.event.noti.MedicalEventNotificationEvent;
 import com.school.health.exception.ResourceNotFoundException;
 import com.school.health.repository.MedicalEventsRepository;
 import com.school.health.repository.StudentRepository;
@@ -36,24 +34,28 @@ public class MedicalEventsServiceImpl implements MedicalEvents {
     @Override
     public MedicalEventsResponseDTO createMedicalEvents(int createBy, MedicalEventsRequestDTO dto) {
         MedicalEvent entity = new MedicalEvent();
-
-        entity.setStudent(studentRepository.getReferenceById(dto.getStuId()));
         entity.setTitle(dto.getTitle());
+        if (dto.getStuId() != null) {
+            for (Integer stuId : dto.getStuId()) {
+                Student s = studentRepository.findById(stuId)
+                        .orElseThrow(() -> new RuntimeException("Không tìm thấy học sinh ID: " + stuId));
+                entity.getStudentList().add(s); // gọi addStudent
+            }
+        }
         entity.setEventType(dto.getEventType());
         entity.setEventDate(dto.getEventDate());
         entity.setLocation(dto.getLocation());
         entity.setDescription(dto.getDescription());
         entity.setCreatedBy(userRepository.getReferenceById(createBy));
-        entity.setRelatedMedicinesUsed(dto.getRelatedMedicinesUsed());
+
         entity.setNotes(dto.getNotes());
         entity.setHandlingMeasures(dto.getHandlingMeasures());
         entity.setSeverityLevel(dto.getSeverityLevel());
         entity.setStatus(dto.getStatus());
 
-        medicalEventsRepository.save(entity);
-        if (entity.getStatus().equals(MedicalEventStatus.PENDING_CONFIRMATION)){
-            publisher.publishEvent(new MedicalEventPendingConfirmationEvent(entity));
-        }
+
+      medicalEventsRepository.save(entity);
+//        }
         return mapToResponseDTO(entity);
     }
 
@@ -80,8 +82,9 @@ public class MedicalEventsServiceImpl implements MedicalEvents {
         MedicalEvent entity = medicalEventsRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Medical Event Not Found"));
 
-        if (dto.getStuId() != 0) {
-            entity.setStudent(studentRepository.getReferenceById(dto.getStuId()));
+        if (dto.getStuId() != null) {
+            entity.getStudentList().clear();
+            dto.getStuId().forEach(integer -> entity.addStudent(studentRepository.getReferenceById(integer)));
         }
 
         if (dto.getTitle() != null && !dto.getTitle().isBlank()) {
@@ -104,9 +107,6 @@ public class MedicalEventsServiceImpl implements MedicalEvents {
             entity.setDescription(dto.getDescription());
         }
 
-        if (dto.getRelatedMedicinesUsed() != null && !dto.getRelatedMedicinesUsed().isBlank()) {
-            entity.setRelatedMedicinesUsed(dto.getRelatedMedicinesUsed());
-        }
 
         if (dto.getNotes() != null && !dto.getNotes().isBlank()) {
             entity.setNotes(dto.getNotes());
@@ -133,7 +133,7 @@ public class MedicalEventsServiceImpl implements MedicalEvents {
         MedicalEventsResponseDTO dto = new MedicalEventsResponseDTO();
 
         dto.setId(event.getId());
-        dto.setStuId(event.getStudent().getStudentId());
+        event.getStudentList().forEach(student -> dto.addStuId(student.getStudentId()));
         dto.setTitle(event.getTitle());
         dto.setEventType(event.getEventType());
         dto.setEventDate(event.getEventDate());
@@ -141,7 +141,7 @@ public class MedicalEventsServiceImpl implements MedicalEvents {
         dto.setDescription(event.getDescription());
         dto.setCreatedAt(event.getCreatedAt());
         dto.setCreatedBy(event.getCreatedBy().getUserId());
-        dto.setRelatedMedicinesUsed(event.getRelatedMedicinesUsed());
+
         dto.setNotes(event.getNotes());
         dto.setHandlingMeasures(event.getHandlingMeasures());
         dto.setSeverityLevel(event.getSeverityLevel());

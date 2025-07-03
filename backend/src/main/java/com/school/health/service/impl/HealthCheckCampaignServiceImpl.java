@@ -1,6 +1,5 @@
 package com.school.health.service.impl;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.school.health.dto.request.HealthCampaignRequestDTO;
 import com.school.health.dto.request.HealthCheckRequestDTO;
 import com.school.health.dto.response.*;
@@ -8,15 +7,13 @@ import com.school.health.entity.HealthCheck;
 import com.school.health.entity.HealthCheckCampaign;
 import com.school.health.entity.Student;
 import com.school.health.enums.Status;
-import com.school.health.event.HealthCheckCampaignApprovedEvent;
-import com.school.health.event.HealthCheckCampaignCreatedEvent;
+import com.school.health.event.noti.HealthCheckCampaignApprovedEvent;
+import com.school.health.event.noti.HealthCheckCampaignCreatedEvent;
 import com.school.health.repository.HealthCheckCampaignRepository;
 import com.school.health.repository.HealthCheckRepository;
 import com.school.health.repository.StudentRepository;
-import com.school.health.repository.UserRepository;
 import com.school.health.service.HealthCheckCampaignService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;

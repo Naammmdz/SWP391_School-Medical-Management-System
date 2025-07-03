@@ -6,7 +6,7 @@ import com.school.health.dto.response.InventoryUsedResponseDTO;
 import com.school.health.entity.Inventory;
 import com.school.health.entity.InventoryUsedLog;
 
-import com.school.health.event.LowStockInventoryEvent;
+import com.school.health.event.noti.LowStockInventoryEvent;
 import com.school.health.exception.ResourceNotFoundException;
 import com.school.health.repository.InventoryRepo;
 import com.school.health.repository.InventoryUsedRepo;
