@@ -30,6 +30,7 @@ import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import InventoryService from '../../../services/InventoryService';
 import dayjs from 'dayjs';
+import { useNavigate } from 'react-router-dom';
 
 const typeOptions = [
   { value: '', label: 'Tất cả' },
@@ -47,6 +48,7 @@ const InventoryList = () => {
   const [editError, setEditError] = useState('');
   const [editSuccess, setEditSuccess] = useState('');
   const [editLoading, setEditLoading] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchData();
@@ -178,7 +180,7 @@ const InventoryList = () => {
           <Typography variant="h5" gutterBottom>
             Danh sách vật tư/thuốc trong kho
           </Typography>
-          <Grid container spacing={2} sx={{ mb: 1 }}>
+          <Grid container spacing={2} sx={{ mb: 1 }} alignItems="center">
             <Grid item xs={12} sm={6} md={4}>
               <TextField
                 label="Tìm theo tên"
@@ -203,6 +205,16 @@ const InventoryList = () => {
                   ))}
                 </Select>
               </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={12} md={4} textAlign={{ xs: 'left', md: 'right' }}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => navigate('/themvattu')}
+                sx={{ minWidth: 180 }}
+              >
+                Thêm thuốc/Vật tư
+              </Button>
             </Grid>
           </Grid>
         </CardContent>

@@ -157,7 +157,7 @@ const CreateVaccinationCampaign = () => {
                 label="Đơn vị tổ chức"
                 name="organizer"
               >
-                <Input placeholder="Đơn vị tổ chức" size="large" disabled />
+                <Input placeholder="Đơn vị tổ chức" size="large"  />
               </Form.Item>
             </Col>
           </Row>

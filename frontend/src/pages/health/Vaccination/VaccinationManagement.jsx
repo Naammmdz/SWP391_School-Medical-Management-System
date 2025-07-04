@@ -104,6 +104,7 @@ const VaccinationManagement = () => {
       }));
       setVaccinationEvents(mappedData);
       setLoading(false);
+      console.log('Vaccination events fetched successfully:', mappedData);
     } catch (error) {
       message.error('Không thể tải danh sách chiến dịch tiêm chủng');
       setLoading(false);
@@ -306,13 +307,13 @@ const VaccinationManagement = () => {
       ),
     },
     {
-      title: 'Người tổ chức',
+      title: 'Đơn vị tổ chức',
       dataIndex: 'organizer',
       key: 'organizer',
-      render: (organizerId) => (
+      render: (text) => (
         <div>
           <Avatar size="small" icon={<UserOutlined />} style={{ marginRight: 8 }} />
-          <Text>{getOrganizerName(organizerId)}</Text>
+          <Text>{(text)}</Text>
         </div>
       ),
     },
