@@ -8,14 +8,14 @@ const MedicalEventService = {
     createMedicalEvent: (data, config) => {
         return axios.post(API_URL , data, config);
     }, 
-    getAllMedicalEvents: (eventId, config) => {
-        return axios.get(`${API_URL}/${eventId}`, config);
+    getAllMedicalEvents: ( config) => {
+        return axios.get(`${API_URL}`, config);
     },
     updateMedicalEvent: (eventId, data, config) => {
         return axios.put(`${API_URL}/${eventId}`, data, config);
     }, 
     getMedicalEventByStudentId: (config) => {
-        return axios.get(`${API_S}/parent/medical-events`, config);
+        return axios.get(`${API_S}/parent/medical-events/`, config);
     },
   }
 

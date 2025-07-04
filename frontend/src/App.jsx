@@ -8,6 +8,7 @@ import MedicalEvents from './pages/medical/MedicalEvent/MedicalEvents';
 import MedicineDeclarations from './pages/health/MedicineDeclaration/MedicineDeclarations';
 import MedicineList from './pages/health/MedicineDeclaration/MedicineList';
 import MedicalEventList from './pages/medical/MedicalEvent/MedicalEventList';
+import MedicalEventStudent from './pages/medical/MedicalEvent/MedicalEventStudent';
 import MedicineLog from './pages/health/MedicineDeclaration/MedicineLog';
 import Pharmaceutical from './pages/medical/Pharmaceutical/Pharmaceutical'; 
 
@@ -81,6 +82,7 @@ function App() {
       <Route path="/hososuckhoe" element={<Layout showSidebar><HealthRecord /></Layout>} />
       <Route path="/sukienyte" element={<Layout showSidebar><MedicalEvents /></Layout>} />
       <Route path="/danhsachsukienyte" element={<Layout showSidebar><MedicalEventList /></Layout>} />
+      <Route path="/sukienytehocsinh" element={<Layout showSidebar><MedicalEventStudent /></Layout>} />
       <Route path="/khaibaothuoc" element={<Layout showSidebar><MedicineDeclarations /></Layout>} />
       <Route path="/donthuocdagui" element={<Layout showSidebar><MedicineList /></Layout>} />
       <Route path="/quanlythuoc" element={<Layout showSidebar><Pharmaceutical /></Layout>} />

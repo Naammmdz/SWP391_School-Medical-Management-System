@@ -207,6 +207,7 @@ const getNavGroupsForRole = (role) => {
         items: [
           { path: '/ketquakiemtradinhkyhocsinh', name: 'Kết quả kiểm tra sức khỏe', icon: 'report' },
           { path: '/ketquatiemchunghocsinh', name: 'Kết quả tiêm chủng', icon: 'report' },
+          { path: '/sukienytehocsinh', name: 'Sự kiện y tế của học sinh', icon: 'activity' },
         ]
       },
       {

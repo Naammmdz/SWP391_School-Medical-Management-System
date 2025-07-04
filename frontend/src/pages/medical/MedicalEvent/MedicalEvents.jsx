@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import MedicalEventService from '../../../services/MedicalEventService';
 import InventoryService from '../../../services/InventoryService';
+import { useNavigate } from 'react-router-dom';
 
 const severityLevels = [
   { value: 'MINOR', label: 'Nhẹ' },
@@ -42,6 +43,7 @@ const MedicalEvents = () => {
   const [loading, setLoading] = useState(false);
   const [classFilter, setClassFilter] = useState('');
   const [nameFilter, setNameFilter] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     const storedStudents = localStorage.getItem('students');
@@ -132,6 +134,13 @@ const MedicalEvents = () => {
 
   return (
     <div style={{ maxWidth: 700, margin: '0 auto', background: '#f6f8fa', padding: 32, borderRadius: 12 }}>
+      <button
+        type="button"
+        style={{ marginBottom: 24, padding: '8px 20px', background: '#1976d2', color: '#fff', border: 'none', borderRadius: 4, fontWeight: 600 }}
+        onClick={() => navigate('/danhsachsukienyte')}
+      >
+        Xem danh sách sự kiện y tế
+      </button>
       <h2 style={{ textAlign: 'center', marginBottom: 32 }}>Tạo sự kiện y tế</h2>
       <form onSubmit={handleSubmit}>
         <div style={boxStyle}>
