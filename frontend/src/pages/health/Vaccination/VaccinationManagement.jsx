@@ -134,6 +134,7 @@ const VaccinationManagement = () => {
     }
   };
 
+
   // Handle cancel
   const handleCancel = (record) => {
     modal.confirm({
@@ -164,24 +165,24 @@ const VaccinationManagement = () => {
   };
 
   // Handle delete
-  const handleDelete = (record) => {
-    Modal.confirm({
-      title: 'Xác nhận xóa',
-      content: `Bạn có chắc muốn xóa chiến dịch "${record.title}"?`,
-      okText: 'Xóa',
-      cancelText: 'Hủy',
-      okType: 'danger',
-      onOk: async () => {
-        try {
-          // API call to delete
-          message.success('Đã xóa chiến dịch thành công');
-          fetchVaccinationEvents();
-        } catch (error) {
-          message.error('Có lỗi khi xóa chiến dịch');
-        }
-      }
-    });
-  };
+  // const handleDelete = (record) => {
+  //   Modal.confirm({
+  //     title: 'Xác nhận xóa',
+  //     content: `Bạn có chắc muốn xóa chiến dịch "${record.title}"?`,
+  //     okText: 'Xóa',
+  //     cancelText: 'Hủy',
+  //     okType: 'danger',
+  //     onOk: async () => {
+  //       try {
+  //         // API call to delete
+  //         message.success('Đã xóa chiến dịch thành công');
+  //         fetchVaccinationEvents();
+  //       } catch (error) {
+  //         message.error('Có lỗi khi xóa chiến dịch');
+  //       }
+  //     }
+  //   });
+  // };
 
   // Handle send notification
   const handleSendNotification = (record) => {
@@ -382,6 +383,7 @@ const VaccinationManagement = () => {
             label: 'Xem phản hồi',
             onClick: () => handleViewResponses(record)
           },
+          
           {
             key: 'delete',
             icon: <DeleteOutlined />,
@@ -408,6 +410,13 @@ const VaccinationManagement = () => {
             icon: <CheckCircleOutlined />,
             label: 'Duyệt chiến dịch',
             onClick: () => handleApprove(record)
+          });
+          menuItems.unshift({
+            key: 'reject',
+            icon: <CloseCircleOutlined />,
+            label: 'Từ chối',
+            danger: true,
+            onClick: () => handleReject(record)
           });
         }
 

@@ -49,6 +49,15 @@ const HealthCheckService = {
       throw error;
     }
   },
+  rejectHealthCheckCampaign: async (id, config) => {
+    try {
+      const response = await axios.put(`${API_URL}/${id}/reject`, {}, config);
+      return response.data;
+    } catch (error) {
+      console.error('Lỗi khi từ chối chiến dịch:', error);
+      throw error;
+    }
+  },
   getHealthCheckApproved: async (config) => {
     try {
       const response = await axios.get(`${API_URL}/approved`, config);

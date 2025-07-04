@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { Modal, Button, Input, Select, Checkbox, DatePicker, message, Table, Card, Space, Form, Alert } from 'antd';
+import { Modal, Button, Input, Select, Checkbox, DatePicker, message, Table, Card, Space, Form, Alert, Tabs } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import HealthCheckService from '../../../services/HealthCheckService';
 import dayjs from 'dayjs';
@@ -79,6 +79,9 @@ const HealthCheckResult = () => {
       : { fullName: 'Không xác định', className: 'Không xác định' };
   };
 
+  // Lọc chiến dịch có xác nhận PH
+  const [parentConfirmationTab, setParentConfirmationTab] = useState('confirmed'); // 'confirmed' | 'not_confirmed'
+
   // Lấy danh sách chiến dịch đã duyệt và kết quả kiểm tra sức khỏe (lọc)
   useEffect(() => {
     const fetchCampaigns = async () => {
@@ -101,39 +104,37 @@ const HealthCheckResult = () => {
 
   // Lọc kết quả kiểm tra sức khỏe
   const fetchFilteredResults = async (filterValues = {}) => {
-  setAllResultsLoading(true);
-  try {
-    const token = localStorage.getItem('token');
-    const config = {
-      headers: { Authorization: `Bearer ${token}` },
-      params: filterValues
-    };
-    const res = await HealthCheckService.filterResult(config);
-    setAllResults(Array.isArray(res) ? res : []);
-    console.log('Filtered results loaded:', res);
-  } catch (err) {
-    console.error('Lỗi khi lọc kết quả:', err);
-    setAllResults([]);
-  }
-  setAllResultsLoading(false);
-};
-
+    setAllResultsLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const config = {
+        headers: { Authorization: `Bearer ${token}` },
+        params: filterValues
+      };
+      const res = await HealthCheckService.filterResult(config);
+      setAllResults(Array.isArray(res) ? res : []);
+      console.log('Filtered results loaded:', res);
+    } catch (err) {
+      console.error('Lỗi khi lọc kết quả:', err);
+      setAllResults([]);
+    }
+    setAllResultsLoading(false);
+  };
 
   // Xử lý filter
-const handleFilter = (values) => {
-  const filterValues = {};
+  const handleFilter = (values) => {
+    const filterValues = {};
 
-  if (values.className) filterValues.className = values.className.trim();
-  if (values.studentName) filterValues.studentName = values.studentName.trim();
-  if (values.campaignName) filterValues.campaignName = values.campaignName;
-  if (values.parentConfirmation !== undefined) filterValues.isParentConfirmation = values.parentConfirmation;
-  if (values.startDate) filterValues.startDate = values.startDate.format('YYYY-MM-DD');
-  if (values.endDate) filterValues.endDate = values.endDate.format('YYYY-MM-DD');
+    if (values.className) filterValues.className = values.className.trim();
+    if (values.studentName) filterValues.studentName = values.studentName.trim();
+    if (values.campaignName) filterValues.campaignName = values.campaignName;
+    if (values.parentConfirmation !== undefined) filterValues.isParentConfirmation = values.parentConfirmation;
+    if (values.startDate) filterValues.startDate = values.startDate.format('YYYY-MM-DD');
+    if (values.endDate) filterValues.endDate = values.endDate.format('YYYY-MM-DD');
 
-  console.log('Đang gửi query:', filterValues);
-  fetchFilteredResults(filterValues);
-};
-
+    console.log('Đang gửi query:', filterValues);
+    fetchFilteredResults(filterValues);
+  };
 
   // Khi nhấn nút "Ghi nhận kết quả" trên từng chiến dịch
   const handleOpenStudentsModal = async (campaign) => {
@@ -292,10 +293,20 @@ const handleFilter = (values) => {
     setDetailModalOpen(true);
   };
 
+  // Khi đổi tab xác nhận PH
+  const handleParentConfirmationTabChange = (key) => {
+    setParentConfirmationTab(key);
+    fetchFilteredResults({
+      ...filterForm.getFieldsValue(),
+      isParentConfirmation: key === 'confirmed'
+    });
+  };
+
   return (
     <div style={{ maxWidth: 1200, margin: '32px auto' }}>
       <h2>Danh sách chiến dịch kiểm tra sức khỏe đã duyệt</h2>
-      {/* Filter form */}
+     
+      {/* Filter form (ẩn filter xác nhận PH) */}
       <Card title="Lọc kết quả kiểm tra sức khỏe" bordered style={{ marginBottom: 24 }}>
         <Form layout="inline" form={filterForm} onFinish={handleFilter}>
           <Form.Item name="className" label="Lớp">
@@ -316,13 +327,7 @@ const handleFilter = (values) => {
               ))}
             </Select>
           </Form.Item>
-      <Form.Item name="parentConfirmation" label="Xác nhận PH">
-  <Select allowClear placeholder="Chọn trạng thái" style={{ minWidth: 150 }}>
-    <Option value={true}>Đã xác nhận</Option>
-    <Option value={false}>Chưa xác nhận</Option>
-  </Select>
-</Form.Item>
-
+          {/* Ẩn filter xác nhận PH ở đây */}
           <Form.Item name="studentName" label="Học sinh">
             <Input placeholder="Tên học sinh" />
           </Form.Item>
@@ -336,11 +341,24 @@ const handleFilter = (values) => {
             <Button type="primary" htmlType="submit">Tìm kiếm</Button>
           </Form.Item>
           <Form.Item>
-            <Button onClick={() => { filterForm.resetFields(); fetchFilteredResults(); }}>Xóa</Button>
+            <Button onClick={() => { filterForm.resetFields(); fetchFilteredResults({ isParentConfirmation: parentConfirmationTab === 'confirmed' }); }}>Xóa</Button>
           </Form.Item>
         </Form>
       </Card>
-
+       {/* Tabs filter xác nhận PH */}
+      <Card style={{ marginBottom: 16 }}>
+        <Tabs
+          activeKey={parentConfirmationTab}
+          onChange={handleParentConfirmationTabChange}
+          items={[{
+            key: 'confirmed',
+            label: <Button type={parentConfirmationTab === 'confirmed' ? 'primary' : 'default'}>Đã xác nhận</Button>,
+          }, {
+            key: 'not_confirmed',
+            label: <Button type={parentConfirmationTab === 'not_confirmed' ? 'primary' : 'default'}>Chưa xác nhận</Button>,
+          }]}
+        />
+      </Card>
       {/* Bảng tất cả kết quả kiểm tra sức khỏe cho y tá */}
       <h2 style={{ marginTop: 40 }}>Tất cả kết quả kiểm tra sức khỏe</h2>
       <Table

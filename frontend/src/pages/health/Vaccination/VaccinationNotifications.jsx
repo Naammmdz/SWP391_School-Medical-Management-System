@@ -90,7 +90,7 @@ const fetchNotifications = async () => {
 
   // Chuẩn hóa tiếng Việt không dấu
   function removeVietnameseTones(str) {
-    return str.normalize('NFD')
+return str.normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/đ/g, 'd').replace(/Đ/g, 'D');
   }
@@ -115,26 +115,27 @@ const fetchNotifications = async () => {
 });
 
     const mapped = filtered.map(item => {
-      let status = 'Chưa phản hồi';
+      let status = null;
       let responseNote = '';
       let responseDate = '';
       
       // Lấy parentConfirm trực tiếp từ item (API response)
       console.log('Campaign item data:', item); // Debug log
-      console.log('parentConfirm value:', item.parentConfirm); // Debug log for parentConfirm specifically
+      console.log('parentConfirm value:', item.isParentConfirm); // Debug log for parentConfirm specifically
       
-      if (item.parentConfirm !== undefined) {
+      if (item.isParentConfirm !== undefined) {
         // Sử dụng parentConfirm từ API response để xác định trạng thái
-        if (item.parentConfirm === null) {
+        if (item.isParentConfirm === null) {
           status = 'Chưa phản hồi';
           console.log('Status set to: Chưa phản hồi (parentConfirm is null)');
-        } else if (item.parentConfirm === true) {
+        } else if (item.isParentConfirm === true) {
           status = 'Xác nhận';
           console.log('Status set to: Xác nhận (parentConfirm is true)');
-        } else if (item.parentConfirm === false) {
+        } else if (item.isParentConfirm === false) {
           status = 'Từ chối';
           console.log('Status set to: Từ chối (parentConfirm is false)');
         }
+       
         
         // Lấy thông tin ghi chú và ngày phản hồi từ item nếu có
         responseNote = item.note || '';
@@ -171,7 +172,7 @@ const fetchNotifications = async () => {
 };
 // Gửi phản hồi xác nhận/từ chối (gọi API thực tế)
 const sendResponse = async (values) => {
-  if (!values.response) {
+if (!values.response) {
     message.error('Vui lòng chọn phản hồi của bạn');
     return;
   }
@@ -259,7 +260,7 @@ const sendResponse = async (values) => {
       default:
         return { color: 'default', icon: null, text: status };
     }
-  };
+};
 
   useEffect(() => {
     fetchNotifications();
@@ -348,7 +349,7 @@ const viewNotificationDetails = (notification) => {
                 style={{ padding: '50px 20px' }}
               />
             ) : (
-              <List
+<List
                 dataSource={notifications}
                 style={{ height: '540px', overflow: 'auto' }}
                 renderItem={(notification) => {
@@ -415,7 +416,7 @@ const viewNotificationDetails = (notification) => {
             {!activeNotification ? (
               <Empty 
                 image={Empty.PRESENTED_IMAGE_DEFAULT}
-                description={
+description={
                   <div>
                     <Title level={4}>Chọn thông báo để xem chi tiết</Title>
                     <Text type="secondary">
@@ -481,8 +482,8 @@ const viewNotificationDetails = (notification) => {
                   >
                     {getOrganizerName(activeNotification.organizerId)}
                   </Descriptions.Item>
-                  <Descriptions.Item 
-                    label={<span><FileTextOutlined /> Giấy tờ yêu cầu</span>}
+                  <Descriptions.Item
+label={<span><FileTextOutlined /> Giấy tờ yêu cầu</span>}
                   >
                     {activeNotification.requiredDocuments}
                   </Descriptions.Item>
@@ -548,7 +549,7 @@ const viewNotificationDetails = (notification) => {
                     style={{ backgroundColor: '#fafafa' }}
                   >
                     <Form
-                      form={form}
+form={form}
                       layout="vertical"
                       onFinish={sendResponse}
                     >
@@ -616,7 +617,7 @@ const viewNotificationDetails = (notification) => {
                             loading={submitting}
                             size="large"
                           >
-                            {submitting ? 'Đang gửi...' : 'Gửi phản hồi'}
+{submitting ? 'Đang gửi...' : 'Gửi phản hồi'}
                           </Button>
                         </Space>
                       </Form.Item>
