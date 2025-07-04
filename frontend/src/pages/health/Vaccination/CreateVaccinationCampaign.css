@@ -1,37 +1,16 @@
-/* Clean CreateVaccinationCampaign styles */
-.create-vaccination-page {
-  padding: 24px;
-  max-width: 1200px;
+/* Simple CreateVaccinationCampaign styles - learned from VaccinationManagement */
+
+/* Basic container styling similar to vaccination-management */
+.create-vaccination {
+  max-width: 1000px;
   margin: 0 auto;
-  margin-top: 80px;
-  background: #f5f5f5;
-  min-height: 100vh;
-}
-
-/* Header Card */
-.header-card {
-  margin-bottom: 24px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.header-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.header-content h2 {
-  margin: 0;
-  color: #52c41a;
-  font-weight: 600;
+  padding: 24px;
 }
 
 /* Form Card */
 .form-card {
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  margin-bottom: 24px;
 }
 
 /* Campaign Form Styling */

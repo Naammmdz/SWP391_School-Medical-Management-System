@@ -1,20 +1,57 @@
-/* Modern Vaccination Management styles */
-.vaccination-management-page {
-  padding: 24px;
+/* Simple Vaccination Management styles - learned from VaccinationResult */
+
+/* Basic container styling similar to vaccination-result */
+.vaccination-management {
   max-width: 1600px;
   margin: 0 auto;
-  margin-top: 80px;
-  background: #f0f2f5;
-  min-height: 100vh;
+  padding: 24px;
+}
+
+/* Form and input styling */
+.filter-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.filter-form .ant-input {
+  min-width: 120px;
+}
+
+.filter-form .ant-select {
+  min-width: 150px;
+}
+
+/* Table container */
+.table-container {
+  margin-top: 24px;
+}
+
+/* Modal styling */
+.notification-modal .ant-alert {
+  margin-bottom: 16px;
+}
+
+.notification-modal .form-control {
+  margin-bottom: 16px;
+}
+
+/* Button groups */
+.action-buttons {
+  display: flex;
+  gap: 16px;
+  margin-top: 24px;
 }
 
 /* Header Card */
 .header-card {
   margin-bottom: 24px;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
   border: none;
   overflow: hidden;
+  background: transparent;
 }
 
 .header-content {
@@ -66,9 +103,10 @@
 
 .stat-card {
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: none;
   border: none;
   transition: all 0.3s ease;
+  background: transparent;
 }
 
 .stat-card:hover {
@@ -90,8 +128,9 @@
 .filter-card {
   margin-bottom: 24px;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: none;
   border: none;
+  background: transparent;
 }
 
 .filter-card .ant-input,
@@ -114,9 +153,10 @@
 /* Table Card */
 .table-card {
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: none;
   border: none;
   overflow: hidden;
+  background: transparent;
 }
 
 .table-card .ant-table {

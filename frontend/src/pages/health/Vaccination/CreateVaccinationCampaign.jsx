@@ -30,7 +30,6 @@ const CreateVaccinationCampaign = () => {
         organizer: values.organizer,
         description: values.description || '',
         scheduledDate: values.scheduledDate.format('YYYY-MM-DD'),
-        scheduledTime: values.scheduledTime.format('HH:mm'),
         status: 'PENDING'
       };
 
@@ -56,32 +55,46 @@ const CreateVaccinationCampaign = () => {
   };
 
   return (
-    <div className="create-vaccination-page">
+    <div style={{ maxWidth: 1000, margin: '0 auto', padding: '24px' }}>
       {/* Header */}
-      <Card className="header-card">
-        <div className="header-content">
-          <Title level={2}>
-            <MedicineBoxOutlined /> Tạo chiến dịch tiêm chủng
+      <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
+        <Col>
+          <Title level={2} style={{ margin: 0, color: '#15803d' }}>
+            <MedicineBoxOutlined style={{ marginRight: 12 }} />
+            Tạo chiến dịch tiêm chủng
           </Title>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/quanlytiemchung')}>
+          <div style={{ color: '#8c8c8c', fontSize: 16, marginTop: 8 }}>
+            Tạo một chiến dịch tiêm chủng mới cho học sinh
+          </div>
+        </Col>
+        <Col>
+          <Button 
+            icon={<ArrowLeftOutlined />} 
+            onClick={() => navigate('/quanlytiemchung')}
+            style={{
+              borderRadius: 8,
+              height: 40,
+              border: '1px solid #d9d9d9',
+              color: '#595959'
+            }}
+          >
             Quay lại
           </Button>
-        </div>
-      </Card>
+        </Col>
+      </Row>
 
       {/* Form */}
-      <Card className="form-card">
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSubmit}
-          requiredMark={false}
-          className="campaign-form"
-          initialValues={{
-            organizer: form.getFieldValue('organizer'),
-            scheduledTime: dayjs('09:00', 'HH:mm')
-          }}
-        >
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={handleSubmit}
+        requiredMark={false}
+        className="campaign-form"
+        initialValues={{
+          organizer: form.getFieldValue('organizer'),
+          scheduledTime: dayjs('09:00', 'HH:mm')
+        }}
+      >
           <Row gutter={16}>
             <Col xs={24} md={12}>
               <Form.Item
@@ -125,7 +138,7 @@ const CreateVaccinationCampaign = () => {
           </Row>
 
           <Row gutter={16}>
-            <Col xs={24} md={8}>
+            <Col xs={24} md={12}>
               <Form.Item
                 label="Ngày tiêm"
                 name="scheduledDate"
@@ -139,20 +152,7 @@ const CreateVaccinationCampaign = () => {
                 />
               </Form.Item>
             </Col>
-            <Col xs={24} md={8}>
-              <Form.Item
-                label="Giờ tiêm"
-                name="scheduledTime"
-                rules={[{ required: true, message: 'Vui lòng chọn giờ!' }]}
-              >
-                <TimePicker
-                  placeholder="Chọn giờ"
-                  size="large"
-                  style={{ width: '100%' }}
-                />
-              </Form.Item>
-            </Col>
-            <Col xs={24} md={8}>
+            <Col xs={24} md={12}>
               <Form.Item
                 label="Đơn vị tổ chức"
                 name="organizer"
@@ -185,7 +185,6 @@ const CreateVaccinationCampaign = () => {
             </Space>
           </Form.Item>
         </Form>
-      </Card>
     </div>
   );
 };

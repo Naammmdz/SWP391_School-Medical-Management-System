@@ -39,16 +39,50 @@ const HealthCheck = () => {
       const config = { headers: { Authorization: `Bearer ${token}` } };
       const allCampaigns = await HealthCheckService.getHealthCheckApproved(config);
 
-      // Gọi thử API xác nhận, nếu lỗi thì coi như chưa xác nhận/từ chối chiến dịch nào
+      // Kiểm tra trạng thái xác nhận/từ chối cho từng chiến dịch
       let confirmed = [];
       let rejected = [];
       let hasStatus = false;
-      console.log('chien dich', allCampaigns);
       
-      setCampaigns(Array.isArray(allCampaigns) ? allCampaigns : []);
+      if (studentId && Array.isArray(allCampaigns)) {
+        try {
+          // Lấy danh sách chiến dịch đã xác nhận
+          const confirmedData = await HealthCheckService.parentGetStautusCampaigns(studentId, true, config);
+          confirmed = Array.isArray(confirmedData) ? confirmedData : [];
+          
+          // Lấy danh sách chiến dịch đã từ chối
+          const rejectedData = await HealthCheckService.parentGetStautusCampaigns(studentId, false, config);
+          rejected = Array.isArray(rejectedData) ? rejectedData : [];
+          
+          hasStatus = true;
+          console.log('Confirmed campaigns:', confirmed);
+          console.log('Rejected campaigns:', rejected);
+        } catch (statusErr) {
+          console.log('Error fetching status, treating as no status available:', statusErr);
+          hasStatus = false;
+        }
+        
+        // Cập nhật trạng thái cho từng chiến dịch
+        const updatedCampaigns = allCampaigns.map(campaign => {
+          const isConfirmed = confirmed.some(c => c.campaignId === campaign.campaignId);
+          const isRejected = rejected.some(c => c.campaignId === campaign.campaignId);
+          
+          return {
+            ...campaign,
+            parentConfirmStatus: isConfirmed ? true : (isRejected ? false : null)
+          };
+        });
+        
+        setCampaigns(updatedCampaigns);
+      } else {
+        setCampaigns(Array.isArray(allCampaigns) ? allCampaigns : []);
+      }
+      
+      console.log('All campaigns with status:', allCampaigns);
       setConfirmedCampaigns(hasStatus ? confirmed : []);
       setRejectedCampaigns(hasStatus ? rejected : []);
     } catch (err) {
+      console.error('Error fetching campaigns:', err);
       setError('Không thể tải danh sách chiến dịch!');
     }
     setLoading(false);
@@ -65,10 +99,20 @@ const HealthCheck = () => {
     try {
       const config = { headers: { Authorization: `Bearer ${token}` } };
       await HealthCheckService.parentConfirmHealthCheck(campaignId, studentId, config);
+      
+      // Cập nhật trạng thái ngay lập tức trong state
+      setCampaigns(prev => prev.map(c => 
+        c.campaignId === campaignId 
+          ? { ...c, parentConfirmStatus: true }
+          : c
+      ));
+      
       message.success('Xác nhận tham gia thành công!');
       setModalVisible(false);
+      // Fetch lại dữ liệu để đảm bảo đồng bộ
       fetchData();
     } catch (err) {
+      console.error('Error confirming campaign:', err);
       message.error('Xác nhận thất bại!');
     }
     setConfirming(false);
@@ -80,10 +124,20 @@ const HealthCheck = () => {
     try {
       const config = { headers: { Authorization: `Bearer ${token}` } };
       await HealthCheckService.parentRejectHealthCheck(campaignId, studentId, config);
+      
+      // Cập nhật trạng thái ngay lập tức trong state
+      setCampaigns(prev => prev.map(c => 
+        c.campaignId === campaignId 
+          ? { ...c, parentConfirmStatus: false }
+          : c
+      ));
+      
       message.success('Từ chối tham gia thành công!');
       setModalVisible(false);
+      // Fetch lại dữ liệu để đảm bảo đồng bộ
       fetchData();
     } catch (err) {
+      console.error('Error rejecting campaign:', err);
       message.error('Từ chối thất bại!');
     }
     setConfirming(false);

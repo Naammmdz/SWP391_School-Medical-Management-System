@@ -49,8 +49,8 @@ const VaccinationManagement = () => {
   const [vaccinationEvents, setVaccinationEvents] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState('');
-  const [selectedVaccineType, setSelectedVaccineType] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState(null);
+  const [selectedVaccineType, setSelectedVaccineType] = useState(null);
   const [dateRange, setDateRange] = useState([]);
   
   // Modal states
@@ -64,10 +64,29 @@ const VaccinationManagement = () => {
   const users = JSON.parse(localStorage.getItem('users') || '[]');
   const isAdmin = user.userRole === 'ROLE_ADMIN';
   
-  const getOrganizerName = (organizerId) => {
-    if (!organizerId) return 'Không xác định';
-    const user = users.find(u => u.id === organizerId || u.userId === organizerId);
-    return user ? user.fullName || user.name : 'Không xác định';
+  const getOrganizerName = (organizerId, record) => {
+    // Try different organizer field names from the record
+    const organizer = organizerId || record?.organizer || record?.organizerName || record?.createdBy || record?.approvedBy;
+    
+    if (!organizer) {
+      // If no organizer ID, try to get current user info as fallback
+      return user?.fullName || user?.name || 'Không xác định';
+    }
+    
+    // If organizer is already a string (name), return it
+    if (typeof organizer === 'string' && organizer !== '' && !Number.isInteger(Number(organizer))) {
+      return organizer;
+    }
+    
+    // Try to find user by ID
+    const foundUser = users.find(u => 
+      u.id === organizer || 
+      u.userId === organizer || 
+      u.id === Number(organizer) || 
+      u.userId === Number(organizer)
+    );
+    
+    return foundUser ? (foundUser.fullName || foundUser.name) : (organizer || 'Không xác định');
   };
 
   // Fetch vaccination events from backend API
@@ -311,10 +330,10 @@ const VaccinationManagement = () => {
       title: 'Người tổ chức',
       dataIndex: 'organizer',
       key: 'organizer',
-      render: (organizerId) => (
+      render: (organizerId, record) => (
         <div>
           <Avatar size="small" icon={<UserOutlined />} style={{ marginRight: 8 }} />
-          <Text>{getOrganizerName(organizerId)}</Text>
+          <Text>{getOrganizerName(organizerId, record)}</Text>
         </div>
       ),
     },
@@ -478,74 +497,92 @@ const VaccinationManagement = () => {
   ];
 
   return (
-    <div className="vaccination-management-page">
+    <div style={{ maxWidth: 1600, margin: '0 auto', padding: '24px' }}>
       {contextHolder}
       {/* Header */}
-      <Card className="header-card">
-        <div className="header-content">
-          <Avatar size={64} icon={<MedicineBoxOutlined />} className="header-avatar" />
-          <div className="header-text">
-            <Title level={2} className="header-title">
-              Quản lý tiêm chủng
-            </Title>
-            <Text className="header-description">
-              Quản lý các chiến dịch tiêm chủng và theo dõi phản hồi từ phụ huynh
-            </Text>
-          </div>
+      <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
+        <Col>
+          <Title level={2} style={{ margin: 0, color: '#15803d' }}>
+            <MedicineBoxOutlined style={{ marginRight: 12 }} />
+            Quản lý tiêm chủng
+          </Title>
+          <Text style={{ color: '#8c8c8c', fontSize: 16, display: 'block', marginTop: 8 }}>
+            Quản lý các chiến dịch tiêm chủng và theo dõi phản hồi từ phụ huynh
+          </Text>
+        </Col>
+        <Col>
           <Button
             type="primary"
             icon={<PlusOutlined />}
             size="large"
-            className="create-btn"
             onClick={() => navigate('/taosukientiemchung')}
+            style={{ 
+              borderRadius: 8,
+              background: 'linear-gradient(135deg, #52c41a 0%, #73d13d 100%)',
+              border: 'none',
+              fontWeight: 600,
+              boxShadow: '0 4px 12px rgba(82, 196, 26, 0.3)'
+            }}
           >
             Tạo chiến dịch mới
           </Button>
-        </div>
-      </Card>
+        </Col>
+      </Row>
 
       {/* Statistics */}
-      <Row gutter={[24, 24]} className="stats-row">
+      <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={6}>
-          <Card className="stat-card">
+          <Card style={{ textAlign: 'center', borderRadius: 12 }}>
             <Statistic
               title="Tổng chiến dịch"
               value={vaccinationEvents.length}
               prefix={<MedicineBoxOutlined style={{ color: '#52c41a' }} />}
+              valueStyle={{ color: '#52c41a' }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={6}>
-          <Card className="stat-card">
+          <Card style={{ textAlign: 'center', borderRadius: 12 }}>
             <Statistic
               title="Chờ phê duyệt"
               value={vaccinationEvents.filter(e => e.status === 'PENDING').length}
               prefix={<ExclamationCircleOutlined style={{ color: '#fa8c16' }} />}
+              valueStyle={{ color: '#fa8c16' }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={6}>
-          <Card className="stat-card">
+          <Card style={{ textAlign: 'center', borderRadius: 12 }}>
             <Statistic
               title="Đã duyệt"
               value={vaccinationEvents.filter(e => e.status === 'APPROVED').length}
               prefix={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
+              valueStyle={{ color: '#52c41a' }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={6}>
-          <Card className="stat-card">
+          <Card style={{ textAlign: 'center', borderRadius: 12 }}>
             <Statistic
               title="Đã hủy"
               value={vaccinationEvents.filter(e => e.status === 'CANCELLED').length}
               prefix={<CloseCircleOutlined style={{ color: '#ff4d4f' }} />}
+              valueStyle={{ color: '#ff4d4f' }}
             />
           </Card>
         </Col>
       </Row>
 
       {/* Filters */}
-      <Card className="filter-card">
+      <Card 
+        title={
+          <Space>
+            <FilterOutlined />
+            <span>Lọc chiến dịch tiêm chủng</span>
+          </Space>
+        }
+        style={{ marginBottom: 24, borderRadius: 8 }}
+      >
         <Row gutter={[16, 16]} align="middle">
           <Col xs={24} sm={8}>
             <Input
@@ -558,7 +595,7 @@ const VaccinationManagement = () => {
           </Col>
           <Col xs={24} sm={4}>
             <Select
-              placeholder="Trạng thái"
+              placeholder="Chọn trạng thái"
               value={selectedStatus}
               onChange={setSelectedStatus}
               allowClear
@@ -573,7 +610,7 @@ const VaccinationManagement = () => {
           </Col>
           <Col xs={24} sm={4}>
             <Select
-              placeholder="Loại vắc-xin"
+              placeholder="Chọn loại vắc-xin"
               value={selectedVaccineType}
               onChange={setSelectedVaccineType}
               allowClear
@@ -607,7 +644,16 @@ const VaccinationManagement = () => {
       </Card>
 
       {/* Table */}
-      <Card className="table-card">
+      <Card
+        title={
+          <Space>
+            <TeamOutlined />
+            <span>Danh sách chiến dịch tiêm chủng</span>
+            <Badge count={filteredEvents.length} style={{ backgroundColor: '#52c41a' }} />
+          </Space>
+        }
+        style={{ borderRadius: 8 }}
+      >
         <Table
           columns={columns}
           dataSource={filteredEvents}
