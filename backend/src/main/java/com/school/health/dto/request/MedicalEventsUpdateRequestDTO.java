@@ -1,5 +1,6 @@
 package com.school.health.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.school.health.enums.MedicalEventStatus;
 import com.school.health.enums.SeverityLevel;
 import lombok.Data;
@@ -12,7 +13,10 @@ import java.util.List;
 public class MedicalEventsUpdateRequestDTO {
     private String title;                     // Tiêu đề sự cố
     private List<Integer> stuId = new ArrayList<>();                        // ID học sinh
-    private String eventType;                 // Loại sự cố
+    private String eventType;
+
+//    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
+    // Loại sự cố
     private LocalDateTime eventDate;          // Thời điểm xảy ra
     private String location;                  // Địa điểm xảy ra
     private String description;               // Mô tả chi tiết

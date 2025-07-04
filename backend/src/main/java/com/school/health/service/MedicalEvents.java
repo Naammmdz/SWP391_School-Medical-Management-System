@@ -17,4 +17,5 @@ public interface MedicalEvents {
     public MedicalEventsResponseDTO mapToResponseDTO(MedicalEvent medicalEvent);
     public MedicalEventsResponseDTO updateMedicalEvents(int id, MedicalEventsUpdateRequestDTO MedicalEventsUpdateRequestDTO);
     public List<MedicalEventsResponseDTO> getMedicalEventByStudentID(int id);
+    public List<MedicalEventsResponseDTO> getAllMedicalEvents( );
 }

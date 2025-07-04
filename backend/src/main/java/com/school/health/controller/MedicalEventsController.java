@@ -36,6 +36,13 @@ public class MedicalEventsController {
     public ResponseEntity<List<MedicalEventsResponseDTO>> getAllMedicalEvents(@RequestBody MedicalEventsFiltersRequestDTO medicalEventsFiltersRequestDTO) {
         return ResponseEntity.ok(medicalEventsService.getAllMedicalEvents(medicalEventsFiltersRequestDTO));
     }
+
+    @PreAuthorize("hasRole('NURSE')")
+    @GetMapping("/api/nurse/medical-events")
+    public ResponseEntity<List<MedicalEventsResponseDTO>> getAllMedicalEvents() {
+        return ResponseEntity.ok(medicalEventsService.getAllMedicalEvents());
+    }
+
     @PreAuthorize("hasRole('NURSE')")
     @GetMapping("/api/nurse/medical-events/{eventId}")
     public ResponseEntity<MedicalEventsResponseDTO> getMedicalEvent(@PathVariable Integer eventId) {

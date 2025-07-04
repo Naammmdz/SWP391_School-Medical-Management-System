@@ -69,8 +69,10 @@ public class MedicalEventsServiceImpl implements MedicalEvents {
 
             }
         }
+        //            entity.getRelatedInventoryUsed().add(inventoryUsedLog);
+//        inventoryUsedRepo.findByEvent(entity.getId()).forEach(entity::addRelatedInventoryUsed);
 
-//      medicalEventsRepository.save(entity);
+      medicalEventsRepository.save(entity);
       publisher.publishEvent(new MedicalEventNotificationEvent(entity));
         return mapToResponseDTO(entity);
     }
@@ -82,6 +84,8 @@ public class MedicalEventsServiceImpl implements MedicalEvents {
                         .orElseThrow(() -> new ResourceNotFoundException("Medical Event Not Found")));
     }
 
+
+
     @Override
     public List<MedicalEventsResponseDTO> getAllMedicalEvents(MedicalEventsFiltersRequestDTO filters) {
         List<MedicalEvent> list = medicalEventsRepository.findByFilter(
@@ -92,6 +96,13 @@ public class MedicalEventsServiceImpl implements MedicalEvents {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<MedicalEventsResponseDTO> getAllMedicalEvents( ) {
+        List<MedicalEvent> list = medicalEventsRepository.findAll();
+        return list.stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
     @Override
     public MedicalEventsResponseDTO updateMedicalEvents(int id, MedicalEventsRequestDTO dto) {
         MedicalEvent entity = medicalEventsRepository.findById(id)
