@@ -7,13 +7,12 @@ import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class HealthCampaignResponseDTO {
+public class HealthV2CampaignResponseDTO {
     private int campaignId;
     private String campaignName;
     private String targetGroup;
@@ -21,6 +20,7 @@ public class HealthCampaignResponseDTO {
     private String address; // địa điểm tổ chức khám
     private String organizer; // người thực hiện chiến dịch
     private String description;
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate scheduledDate;
     private int createdBy;
     private int approvedBy;
@@ -29,5 +29,5 @@ public class HealthCampaignResponseDTO {
     private Status status;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
-
+    private boolean isParentConfirm;
 }

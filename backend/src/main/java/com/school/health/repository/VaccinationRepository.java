@@ -1,6 +1,7 @@
 package com.school.health.repository;
 
 import com.school.health.entity.Vaccination;
+import com.school.health.entity.VaccinationCampaign;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -27,4 +28,7 @@ public interface VaccinationRepository extends JpaRepository<Vaccination, Intege
 
     @Query("SELECT hc FROM Vaccination hc WHERE :startDate <= hc.date AND hc.date <= :endDate")
     List<Vaccination> findResultWithDate(LocalDate startDate, LocalDate endDate);
+
+    @Query("SELECT v FROM Vaccination v WHERE v.campaign IN :campaigns")
+    List<Vaccination> findByCampaign(List<VaccinationCampaign> campaigns);
 }
