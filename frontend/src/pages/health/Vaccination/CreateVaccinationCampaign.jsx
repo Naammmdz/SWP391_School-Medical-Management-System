@@ -27,7 +27,7 @@ const CreateVaccinationCampaign = () => {
         targetGroup: values.targetGroup,
         type: values.type,
         address: values.address,
-        organizer: values.organizer || currentUserName,
+        organizer: values.organizer,
         description: values.description || '',
         scheduledDate: values.scheduledDate.format('YYYY-MM-DD'),
         scheduledTime: values.scheduledTime.format('HH:mm'),
@@ -78,7 +78,7 @@ const CreateVaccinationCampaign = () => {
           requiredMark={false}
           className="campaign-form"
           initialValues={{
-            organizer: currentUserName,
+            organizer: form.getFieldValue('organizer'),
             scheduledTime: dayjs('09:00', 'HH:mm')
           }}
         >
@@ -156,8 +156,9 @@ const CreateVaccinationCampaign = () => {
               <Form.Item
                 label="Đơn vị tổ chức"
                 name="organizer"
+                rules={[{ required: true, message: 'Vui lòng nhập đơn vị tổ chức!' }]}
               >
-                <Input placeholder="Đơn vị tổ chức" size="large" disabled />
+                <Input placeholder="Đơn vị tổ chức" size="large"/>
               </Form.Item>
             </Col>
           </Row>
