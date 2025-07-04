@@ -43,6 +43,7 @@ const VaccinationManagement = () => {
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const [notificationForm] = Form.useForm();
+  const [modal, contextHolder] = Modal.useModal();
   
   // State management
   const [vaccinationEvents, setVaccinationEvents] = useState([]);
@@ -131,6 +132,35 @@ const VaccinationManagement = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Handle cancel
+  const handleCancel = (record) => {
+    modal.confirm({
+      title: 'Xác nhận hủy chiến dịch',
+      icon: <ExclamationCircleOutlined />,
+      content: `Bạn có chắc muốn hủy chiến dịch "${record.title}"? Hành động này không thể hoàn tác.`,
+      okText: 'Hủy chiến dịch',
+      cancelText: 'Không',
+      okType: 'danger',
+      onOk: async () => {
+        try {
+          setLoading(true);
+          const token = localStorage.getItem('token');
+          await VaccinationService.cancelVaccinationCampaign(
+            record.id,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          message.success('Đã hủy chiến dịch thành công');
+          fetchVaccinationEvents();
+        } catch (error) {
+          const errorMessage = error.response?.data?.message || 'Có lỗi khi hủy chiến dịch';
+          message.error(errorMessage);
+        } finally {
+          setLoading(false);
+        }
+      },
+    });
   };
 
   // Handle delete
@@ -361,6 +391,17 @@ const VaccinationManagement = () => {
           }
         ];
 
+        // Add cancel option for pending campaigns
+        if (record.status === 'PENDING') {
+          menuItems.splice(-1, 0, {
+            key: 'cancel',
+            icon: <CloseCircleOutlined />,
+            label: 'Hủy chiến dịch',
+            danger: true,
+            onClick: () => handleCancel(record)
+          });
+        }
+
         if (isAdmin && record.status === 'PENDING') {
           menuItems.unshift({
             key: 'approve',
@@ -429,6 +470,7 @@ const VaccinationManagement = () => {
 
   return (
     <div className="vaccination-management-page">
+      {contextHolder}
       {/* Header */}
       <Card className="header-card">
         <div className="header-content">

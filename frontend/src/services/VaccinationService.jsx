@@ -20,6 +20,9 @@ const VaccinationService = {
     approveVaccinationCampaign: (id, data, config) => {
         return axios.put(`${vaccinationApiUrl}/${id}/approve`, data, config);
     },
+    cancelVaccinationCampaign: (id, config) => {
+        return axios.put(`${vaccinationApiUrl}/${id}/cancel`, null, config);
+    },
     updateStatus: (id, status, config) => {
         return axios.put(`${vaccinationApiUrl}/${id}/status/${status}`, data, config);
     },

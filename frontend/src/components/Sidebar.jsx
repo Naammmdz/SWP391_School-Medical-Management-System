@@ -44,6 +44,13 @@ import {
 import studentService from '../services/StudentService';
 import NotificationService from '../services/NotificationService';
 import axios from "axios";
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import 'dayjs/locale/vi';
+
+// Configure dayjs
+dayjs.extend(relativeTime);
+dayjs.locale('vi');
 
 // Icons - sử dụng emoji hoặc text thay thế lucide-react
 const iconMap = {
@@ -762,7 +769,13 @@ const Sidebar = ({ userRole, onToggleCollapse, className = "" }) => {
                       <div className="notification-title">{n.title || 'Thông báo'}</div>
                       <div className="notification-content">{n.content}</div>
                       <div className="notification-time">
-                        {n.createdAt ? new Date(n.createdAt).toLocaleString() : ''}
+                        {n.createdAt ? (
+                          dayjs(n.createdAt).isValid() 
+                            ? dayjs(n.createdAt).fromNow()
+                            : dayjs(n.createdAt).format('DD/MM/YYYY HH:mm')
+                        ) : (
+                          'Chưa xác định'
+                        )}
                       </div>
                       {!n.read && <span className="notification-dot" />}
                     </div>
