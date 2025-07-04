@@ -9,18 +9,22 @@ import com.school.health.entity.Student;
 import com.school.health.entity.Vaccination;
 import com.school.health.entity.VaccinationCampaign;
 import com.school.health.enums.Status;
+
 import com.school.health.event.noti.VaccinationCampaignApprovedEvent;
 import com.school.health.event.noti.VaccinationCampaignCreatedEvent;
+
 import com.school.health.repository.*;
 import com.school.health.service.VaccinationCampaignService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.text.Normalizer;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,16 +33,34 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
     private final VaccinationCampaignRepository vaccinationCampaignRepository;
     private final VaccinationRepository vaccinationRepository;
     private final StudentRepository studentRepository;
-private final ApplicationEventPublisher eventPublisher;
+    private final NotificationServiceImpl notificationService;
+    private final UserRepository userRepository;
 
     @Override
     public VaccinationCampaignResponseDTO createVaccinationCampaign(VaccinationCampaignRequestDTO vaccinationCampaignRequestDTO, int createdBy) {
         VaccinationCampaign campaign = mapToEntity(vaccinationCampaignRequestDTO);
         campaign.setCreatedBy(createdBy);
         VaccinationCampaign savedCampaign = vaccinationCampaignRepository.save(campaign);
-
-        eventPublisher.publishEvent(new VaccinationCampaignCreatedEvent(savedCampaign));
-
+        notificationService.createNotification(userRepository.findPrincipal().getUserId(), "[Yêu cầu phê duyệt] Chiến dịch tiêm chủng Vaccine: " + campaign.getCampaignName(), "Kính gửi Thầy/Cô Hiệu trưởng,\n" +
+                "\n" +
+                "Hiện tại có một chiến dịch kiểm tra sức khỏe học đường đang chờ phê duyệt với các thông tin như sau:\n" +
+                "\n" +
+                "Tên chiến dịch: " + campaign.getCampaignName() +
+                "\n" +
+                "Đơn vị tổ chức: " + campaign.getOrganizer() +
+                "\n" +
+                "Đối tượng mục tiêu: " + campaign.getTargetGroup() +
+                "\n" +
+                "Thời gian dự kiến: " + campaign.getScheduledDate() +
+                "\n" +
+                "Địa điểm: " + campaign.getAddress() +
+                "\n" +
+                "Mô tả: " + campaign.getDescription() +
+                "\n" +
+                "Thầy/Cô vui lòng xem xét và thực hiện phê duyệt hoặc từ chối chiến dịch này trên hệ thống trước thời gian diễn ra.\n" +
+                "\n" +
+                "Trân trọng,\n" +
+                "Hệ thống Y tế học đường");
         return mapToResponseDTO(savedCampaign);
     }
 
@@ -106,13 +128,77 @@ private final ApplicationEventPublisher eventPublisher;
     @Override
     public VaccinationCampaignResponseDTO approveVaccinationCampaign(Integer campaignId, int approvedBy) {
         VaccinationCampaign campaign = vaccinationCampaignRepository.findById(campaignId).orElseThrow(() -> new RuntimeException("Campaign not found id :" + campaignId));
+
         campaign.setApprovedBy(approvedBy);
         campaign.setStatus(Status.APPROVED);
 
         VaccinationCampaign approvedCampaign = vaccinationCampaignRepository.save(campaign);
-
-        eventPublisher.publishEvent(new VaccinationCampaignApprovedEvent(approvedCampaign));
-
+        // Gửi đến yta/ admin đã tạo chiến dịch về tình trạng chiến dich
+        notificationService.createNotification(campaign.getCreatedBy(), "Chiến dịch: " + campaign.getCampaignName() + " đã được phê duyệt", "Chiến dịch: " + campaign.getCampaignName() + " đã được phê duyệt bởi " + userRepository.findByUserId(approvedBy).orElseThrow().getFullName() + " vui lòng kiểm tra!");
+        //Gửi noti đến người dùng có con trong target group
+        String[] targetGroup = campaign.getTargetGroup().split(",");
+        for (String group : targetGroup) {
+            group = group.trim();
+            if (group.length() == 1) {
+                List<Student> studentList = studentRepository.findByGrade(group);
+                for (Student student : studentList) {
+                    notificationService.createNotification(student.getParent().getUserId(), "[THÔNG BÁO] Triển khai chiến dịch tiêm chủng tại trường!", "Kính gửi Quý Phụ huynh,\n" +
+                            "\n" +
+                            "Nhằm tăng cường sức khỏe và phòng ngừa dịch bệnh cho học sinh, nhà trường phối hợp với Trung tâm Y tế địa phương tổ chức chiến dịch tiêm chủng định kỳ cho các em học sinh.\n" +
+                            "\n" +
+                            "Thông tin chi tiết như sau:\n" +
+                            "\n" +
+                            "Thời gian: " + campaign.getScheduledDate() + "\n" +
+                            "\n" +
+                            "Địa điểm: " + campaign.getAddress() + "\n" +
+                            "\n" +
+                            "Một số thông tin khác: " + campaign.getDescription() + "\n" +
+                            "\n" +
+                            "Lưu ý:\n" +
+                            "\n" +
+                            "Phụ huynh vui lòng kiểm tra và xác nhận đồng ý tiêm chủng trước " + campaign.getScheduledDate().minusDays(2) + "\n" +
+                            "\n" +
+                            "Đảm bảo học sinh ăn sáng đầy đủ trước khi tiêm.\n" +
+                            "\n" +
+                            "Học sinh cần mang theo sổ y bạ (nếu có).\n" +
+                            "\n" +
+                            "Sự phối hợp của Quý Phụ huynh sẽ góp phần quan trọng vào thành công của chương trình và sức khỏe của các em học sinh.\n" +
+                            "\n" +
+                            "Trân trọng cảm ơn!\n" +
+                            "\n" +
+                            "Ban Giám hiệu");
+                }
+            } else if (group.length() == 2) {
+                List<Student> studentList = studentRepository.findByClassName(group);
+                for (Student student : studentList) {
+                    notificationService.createNotification(student.getParent().getUserId(), "[THÔNG BÁO] Triển khai chiến dịch tiêm chủng tại trường!", "Kính gửi Quý Phụ huynh,\n" +
+                            "\n" +
+                            "Nhằm tăng cường sức khỏe và phòng ngừa dịch bệnh cho học sinh, nhà trường phối hợp với Trung tâm Y tế địa phương tổ chức chiến dịch tiêm chủng định kỳ cho các em học sinh.\n" +
+                            "\n" +
+                            "Thông tin chi tiết như sau:\n" +
+                            "\n" +
+                            "Thời gian: " + campaign.getScheduledDate() + "\n" +
+                            "\n" +
+                            "Địa điểm: " + campaign.getAddress() + "\n" +
+                            "\n" +
+                            "Một số thông tin khác: " + campaign.getDescription() + "\n" +
+                            "\n" +
+                            "Lưu ý:\n" +
+                            "\n" +
+                            "Phụ huynh vui lòng kiểm tra và xác nhận đồng ý tiêm chủng trước " + campaign.getScheduledDate().minusDays(2) + "\n" +
+                            "\n" +
+                            "Đảm bảo học sinh ăn sáng đầy đủ trước khi tiêm.\n" +
+                            "\n" +
+                            "Học sinh cần mang theo sổ y bạ (nếu có).\n" +
+                            "\n" +
+                            "Sự phối hợp của Quý Phụ huynh sẽ góp phần quan trọng vào thành công của chương trình và sức khỏe của các em học sinh.\n" +
+                            "\n" +
+                            "Trân trọng cảm ơn!\n" +
+                            "\n" +
+                            "Ban Giám hiệu");
+                }
+            }
+        }
         return mapToResponseDTO(approvedCampaign);
     }
 
@@ -145,9 +231,42 @@ private final ApplicationEventPublisher eventPublisher;
     }
 
     @Override
-    public List<VaccinationCampaignResponseDTO> getApprovedVaccination() {
-        return vaccinationCampaignRepository.findByStatus(Status.APPROVED).stream().map(this::mapToResponseDTO).collect(Collectors.toList());
+    public List<VaccineV2CampaignResponseDTO> getApprovedVaccination() {
+        List<VaccinationCampaign> campaigns = vaccinationCampaignRepository.findByStatus(Status.APPROVED);
+        List<Vaccination> vaccinations = vaccinationRepository.findByCampaign(campaigns);
+
+        // Group vaccination theo campaignId
+        Map<Integer, List<Vaccination>> vacMap = vaccinations.stream()
+                .collect(Collectors.groupingBy(v -> v.getCampaign().getCampaignId()));
+
+        // Trả về danh sách DTO
+        return campaigns.stream().map(campaign -> {
+            List<Vaccination> vacList = vacMap.getOrDefault(campaign.getCampaignId(), new ArrayList<>());
+
+            // Kiểm tra xem có ai đã xác nhận phụ huynh chưa
+            boolean isParentConfirm = vacList.stream().anyMatch(Vaccination::isParentConfirmation);
+
+            return VaccineV2CampaignResponseDTO.builder()
+                    .campaignId(campaign.getCampaignId())
+                    .campaignName(campaign.getCampaignName())
+                    .targetGroup(campaign.getTargetGroup())
+                    .type(campaign.getType())
+                    .address(campaign.getAddress())
+                    .organizer(campaign.getOrganizer())
+                    .description(campaign.getDescription())
+                    .scheduledDate(campaign.getScheduledDate())
+                    .createdBy(campaign.getCreatedBy())
+                    .approvedBy(campaign.getApprovedBy())
+                    .approvedAt(campaign.getApprovedAt())
+                    .status(campaign.getStatus())
+                    .createdAt(campaign.getCreatedAt())
+                    .isParentConfirm(isParentConfirm)
+                    .build();
+        }).collect(Collectors.toList());
     }
+
+
+
 
     @Override
     public VaccinationResponseDTO registerStudentVaccine(VaccinationRequestDTO vaccineRequest) {
@@ -290,12 +409,12 @@ private final ApplicationEventPublisher eventPublisher;
 
         if (className != null && !className.isBlank()) {
             spec = spec.and((root, query, cb) ->
-                    cb.like(root.get("student").get("className"),"%" + className + "%"));
+                    cb.like(root.get("student").get("className"), "%" + className + "%"));
         }
 
         if (campaignName != null && !campaignName.isBlank()) {
             spec = spec.and((root, query, cb) ->
-                    cb.like(root.get("campaign").get("campaignName"),"%" + campaignName + "%"));
+                    cb.like(root.get("campaign").get("campaignName"), "%" + campaignName + "%"));
         }
 
         if (studentName != null && !studentName.isBlank()) {
@@ -320,7 +439,6 @@ private final ApplicationEventPublisher eventPublisher;
             spec = spec.and((root, query, cb) ->
                     cb.lessThanOrEqualTo(root.get("date"), endDate));
         }
-
 
 
         return vaccinationRepository.findAll(spec).stream()

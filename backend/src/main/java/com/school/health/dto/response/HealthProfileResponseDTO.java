@@ -1,5 +1,6 @@
 package com.school.health.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.school.health.entity.HealthProfile;
 import lombok.Builder;
 import lombok.Data;
@@ -24,5 +25,6 @@ public class HealthProfileResponseDTO {
     private BigDecimal weight;
     private BigDecimal height;
     private String notes;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
 }
