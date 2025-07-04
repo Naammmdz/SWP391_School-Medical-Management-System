@@ -1,5 +1,6 @@
 package com.school.health.service.impl;
 
+import com.school.health.dto.request.InventoryUsedInMedicalEventRequestDTO;
 import com.school.health.dto.request.InventoryUsedRequestDTO;
 import com.school.health.dto.request.InventoryUsedUpdateRequestDTO;
 import com.school.health.dto.response.InventoryUsedResponseDTO;
@@ -43,6 +44,20 @@ public class InventoryUsedServiceImpl implements InventoryUsedLogService {
         return mapDTO(inventoryUsedLog);
 
     }
+    @Override
+    public InventoryUsedResponseDTO createInventoryUsedInMedicalEvent(Integer evenID,InventoryUsedInMedicalEventRequestDTO DTO) {
+        InventoryUsedLog inventoryUsedLog = new InventoryUsedLog();
+        inventoryUsedLog.setItem(inventoryRepo.findById(DTO.getItemId()).get());
+        inventoryUsedLog.setQuantityUsed(DTO.getQuantityUsed());
+        inventoryUsedLog.setRelatedEvent(medicalEventsRepo.findById(evenID).orElseThrow());
+        inventoryUsedLog.setNotes(DTO.getNotes());
+        updateInventoryItem(DTO.getItemId(),DTO.getQuantityUsed());
+        inventoryUsedRepo.save(inventoryUsedLog);
+        return mapDTO(inventoryUsedLog);
+
+
+    }
+
 
     @Override
     public InventoryUsedResponseDTO mapDTO(InventoryUsedLog inventoryUsedLog) {
@@ -93,6 +108,7 @@ public class InventoryUsedServiceImpl implements InventoryUsedLogService {
         // Trả về DTO phản hồi
         return mapDTO(log);
     }
+
 
 
     public Inventory updateInventoryItem(Integer id, Integer quantityUsed) {

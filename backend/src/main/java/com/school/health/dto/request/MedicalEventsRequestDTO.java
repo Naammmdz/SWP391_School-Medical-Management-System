@@ -16,7 +16,7 @@ public class MedicalEventsRequestDTO {
     private LocalDateTime eventDate;          // Thời điểm xảy ra
     private String location;                  // Địa điểm xảy ra
     private String description;               // Mô tả chi tiết
-   // Thuốc đã dùng (nếu có)
+    private List<InventoryUsedInMedicalEventRequestDTO> relatedItemUsed = new ArrayList<>();// Thuốc đã dùng (nếu có)
     private String notes;                     // Ghi chú thêm
     private String handlingMeasures;          // Biện pháp xử lý
     private SeverityLevel severityLevel;      // Mức độ nghiêm trọng (Enum)

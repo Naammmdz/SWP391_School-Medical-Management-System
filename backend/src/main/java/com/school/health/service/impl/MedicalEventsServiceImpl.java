@@ -1,5 +1,7 @@
 package com.school.health.service.impl;
 
+import com.school.health.dto.request.InventoryUsedInMedicalEventRequestDTO;
+import com.school.health.dto.request.InventoryUsedRequestDTO;
 import com.school.health.dto.request.MedicalEventsFiltersRequestDTO;
 import com.school.health.dto.request.MedicalEventsRequestDTO;
 import com.school.health.dto.response.MedicalEventsResponseDTO;
@@ -7,6 +9,7 @@ import com.school.health.entity.MedicalEvent;
 import com.school.health.entity.Student;
 import com.school.health.enums.MedicalEventStatus;
 import com.school.health.event.noti.MedicalEventNotificationEvent;
+import com.school.health.event.usageInventory.InventoryUsedEvent;
 import com.school.health.exception.ResourceNotFoundException;
 import com.school.health.repository.MedicalEventsRepository;
 import com.school.health.repository.StudentRepository;
@@ -42,20 +45,25 @@ public class MedicalEventsServiceImpl implements MedicalEvents {
                 entity.getStudentList().add(s); // gọi addStudent
             }
         }
+        if (dto.getRelatedItemUsed() != null) {
+            for(InventoryUsedInMedicalEventRequestDTO itemUsed : dto.getRelatedItemUsed()) {
+                    // Tạo cái Inventory Used
+                publisher.publishEvent(new InventoryUsedEvent(entity.getId(),itemUsed));
+
+            }
+        }
+
         entity.setEventType(dto.getEventType());
         entity.setEventDate(dto.getEventDate());
         entity.setLocation(dto.getLocation());
         entity.setDescription(dto.getDescription());
         entity.setCreatedBy(userRepository.getReferenceById(createBy));
-
         entity.setNotes(dto.getNotes());
         entity.setHandlingMeasures(dto.getHandlingMeasures());
         entity.setSeverityLevel(dto.getSeverityLevel());
         entity.setStatus(dto.getStatus());
-
-
       medicalEventsRepository.save(entity);
-//        }
+      publisher.publishEvent(new MedicalEventNotificationEvent(entity));
         return mapToResponseDTO(entity);
     }
 
@@ -71,7 +79,6 @@ public class MedicalEventsServiceImpl implements MedicalEvents {
         List<MedicalEvent> list = medicalEventsRepository.findByFilter(
                 filters.getFrom(), filters.getTo(), filters.getEventType(), filters.getStuId(), filters.getCreatedBy()
         );
-
         return list.stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
@@ -141,7 +148,6 @@ public class MedicalEventsServiceImpl implements MedicalEvents {
         dto.setDescription(event.getDescription());
         dto.setCreatedAt(event.getCreatedAt());
         dto.setCreatedBy(event.getCreatedBy().getUserId());
-
         dto.setNotes(event.getNotes());
         dto.setHandlingMeasures(event.getHandlingMeasures());
         dto.setSeverityLevel(event.getSeverityLevel());

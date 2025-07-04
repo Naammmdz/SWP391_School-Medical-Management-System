@@ -66,6 +66,9 @@ public class MedicalEvent {
     @Column(name = "Notes", columnDefinition = "NVARCHAR(255)")
     private String notes;
 
+  @OneToMany(mappedBy = "relatedEvent", cascade = CascadeType.ALL)
+    private List<InventoryUsedLog> relatedInventoryUsed = new ArrayList<>();
+
     //Phương án giải quyết (Sơ cứu tại trường, gọi phụ huynh, đưa đi bệnh viện,...)
     @Column(name = "HandlingMeasures", columnDefinition = "NVARCHAR(255)")
     private String handlingMeasures;
@@ -86,5 +89,7 @@ public class MedicalEvent {
     public void removeStudent(Student student) {
         studentList.remove(student);
     }
-
+    public void addRelatedInventoryUsed(InventoryUsedLog inventoryUsedLog) {
+        relatedInventoryUsed.add(inventoryUsedLog);
+    }
 }
