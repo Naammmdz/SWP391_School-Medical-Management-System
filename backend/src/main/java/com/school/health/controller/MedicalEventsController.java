@@ -7,6 +7,7 @@ import com.school.health.security.services.UserDetailsImpl;
 import com.school.health.service.impl.MedicalEventsServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.collections4.Get;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -16,36 +17,40 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/nurse/medical-events")
+
 @CrossOrigin(origins = "*")
 @Validated
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('NURSE')")
+
 public class MedicalEventsController {
     private final MedicalEventsServiceImpl medicalEventsService;
-
-    @PostMapping("")
+    @PreAuthorize("hasRole('NURSE')")
+    @PostMapping("/api/nurse/medical-events")
     public ResponseEntity<MedicalEventsResponseDTO> addMedicalEvent(@RequestBody @Valid MedicalEventsRequestDTO medicalEventsRequestDTO, Authentication authentication) {
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
         Integer userId = userPrincipal.getId();
         return ResponseEntity.ok(medicalEventsService.createMedicalEvents(userId, medicalEventsRequestDTO));
     }
-
-    @PostMapping("search")
+    @PreAuthorize("hasRole('NURSE')")
+    @PostMapping("/api/nurse/medical-events/search")
     public ResponseEntity<List<MedicalEventsResponseDTO>> getAllMedicalEvents(@RequestBody MedicalEventsFiltersRequestDTO medicalEventsFiltersRequestDTO) {
         return ResponseEntity.ok(medicalEventsService.getAllMedicalEvents(medicalEventsFiltersRequestDTO));
     }
-
-    @GetMapping("/{eventId}")
+    @PreAuthorize("hasRole('NURSE')")
+    @GetMapping("/api/nurse/medical-events/{eventId}")
     public ResponseEntity<MedicalEventsResponseDTO> getMedicalEvent(@PathVariable Integer eventId) {
         return ResponseEntity.ok(medicalEventsService.getMedicalEvents(eventId));
     }
 
     //update medical event
-    @PutMapping("/{eventId}")
+    @PreAuthorize("hasRole('NURSE')")
+    @PutMapping("/api/nurse/medical-events/{eventId}")
     public ResponseEntity<MedicalEventsResponseDTO> updateMedicalEvent(@RequestBody MedicalEventsRequestDTO medicalEventsRequestDTO, @PathVariable Integer eventId) {
         return ResponseEntity.ok(medicalEventsService.updateMedicalEvents(eventId, medicalEventsRequestDTO));
     }
-
-
+    @PreAuthorize("hasRole('PARENT')")
+    @GetMapping("/api/parent/medical-events/")
+    public ResponseEntity<List<MedicalEventsResponseDTO>> getAllMedicalEventByStudentId(@RequestParam Integer studentId) {
+        return ResponseEntity.ok(medicalEventsService.getMedicalEventByStudentID(studentId));
+    }
 }

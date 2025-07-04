@@ -66,7 +66,7 @@ public class MedicalEvent {
     @Column(name = "Notes", columnDefinition = "NVARCHAR(255)")
     private String notes;
 
-  @OneToMany(mappedBy = "relatedEvent", cascade = CascadeType.ALL)
+  @OneToMany(mappedBy = "relatedEvent", cascade = CascadeType.MERGE)
     private List<InventoryUsedLog> relatedInventoryUsed = new ArrayList<>();
 
     //Phương án giải quyết (Sơ cứu tại trường, gọi phụ huynh, đưa đi bệnh viện,...)

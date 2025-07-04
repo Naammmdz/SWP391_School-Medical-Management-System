@@ -1,5 +1,6 @@
 package com.school.health.dto.response;
 
+import com.school.health.entity.InventoryUsedLog;
 import com.school.health.enums.MedicalEventStatus;
 import com.school.health.enums.SeverityLevel;
 import lombok.Data;
@@ -19,7 +20,7 @@ public class MedicalEventsResponseDTO {
     private String description;                // Mô tả chi tiết
     private LocalDateTime createdAt;           // Thời gian ghi nhận
     private Integer createdBy;                 // ID người tạo
-    private String relatedMedicinesUsed;       // Thuốc đã dùng (nếu có)
+    private List<InventoryUsedLogDTO> relatedMedicinesUsed = new ArrayList<>();       // Thuốc đã dùng (nếu có)
     private String notes;                      // Ghi chú
     private String handlingMeasures;           // Phương án xử lý
     private SeverityLevel severityLevel;       // Mức độ nghiêm trọng
@@ -30,5 +31,8 @@ public class MedicalEventsResponseDTO {
     public void removeStuId(Integer id) {
         stuId.remove(id);
     }
+
+
+
 
 }

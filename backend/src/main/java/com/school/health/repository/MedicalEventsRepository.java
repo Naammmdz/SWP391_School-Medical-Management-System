@@ -27,4 +27,9 @@ public interface MedicalEventsRepository extends JpaRepository<MedicalEvent, Int
     List<MedicalEvent> findByFilter(LocalDateTime from, LocalDateTime to, String eventType, Integer stuId, Integer createBy);
 
     Optional<MedicalEvent> findById(Integer id);
+
+    @Query("SELECT DISTINCT m FROM MedicalEvent m\n" +
+            "    JOIN m.studentList s where (:stuId IS NULL OR s.studentId  = :stuId) ")
+    List<MedicalEvent> findByStudentId(Integer stuId);
+
 }

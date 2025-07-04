@@ -1,6 +1,7 @@
 package com.school.health.service.impl;
 
 import com.school.health.dto.request.InventoryUsedInMedicalEventRequestDTO;
+import com.school.health.dto.request.InventoryUsedInMedicalEventUpdateRequestDTO;
 import com.school.health.dto.request.InventoryUsedRequestDTO;
 import com.school.health.dto.request.InventoryUsedUpdateRequestDTO;
 import com.school.health.dto.response.InventoryUsedResponseDTO;
@@ -28,7 +29,6 @@ public class InventoryUsedServiceImpl implements InventoryUsedLogService {
     private MedicalEventsRepository medicalEventsRepo;
     @Autowired
     private InventoryUsedRepo inventoryUsedRepo;
-
     @Autowired
     private ApplicationEventPublisher publisher;
     @Override
@@ -47,14 +47,25 @@ public class InventoryUsedServiceImpl implements InventoryUsedLogService {
     @Override
     public InventoryUsedResponseDTO createInventoryUsedInMedicalEvent(Integer evenID,InventoryUsedInMedicalEventRequestDTO DTO) {
         InventoryUsedLog inventoryUsedLog = new InventoryUsedLog();
-        inventoryUsedLog.setItem(inventoryRepo.findById(DTO.getItemId()).get());
+        inventoryUsedLog.setItem(inventoryRepo.getReferenceById(DTO.getItemId()));
         inventoryUsedLog.setQuantityUsed(DTO.getQuantityUsed());
-        inventoryUsedLog.setRelatedEvent(medicalEventsRepo.findById(evenID).orElseThrow());
+        inventoryUsedLog.setRelatedEvent(medicalEventsRepo.getReferenceById(evenID));
         inventoryUsedLog.setNotes(DTO.getNotes());
         updateInventoryItem(DTO.getItemId(),DTO.getQuantityUsed());
         inventoryUsedRepo.save(inventoryUsedLog);
         return mapDTO(inventoryUsedLog);
 
+    }
+    public InventoryUsedResponseDTO InventoryUsedInMedicalEvent(Integer evenID, InventoryUsedInMedicalEventUpdateRequestDTO DTO) {
+        InventoryUsedLog inventoryUsedLog = new InventoryUsedLog();
+        inventoryUsedLog.setItem(inventoryRepo.findById(DTO.getItemId()).get());
+        inventoryUsedLog.setQuantityUsed(DTO.getQuantityUsed());
+        inventoryUsedLog.setRelatedEvent(medicalEventsRepo.findById(evenID).orElseThrow());
+        inventoryUsedLog.setNotes(DTO.getNotes());
+        inventoryUsedLog.setId(DTO.getId());
+        updateInventoryItem(DTO.getItemId(),DTO.getQuantityUsed());
+        inventoryUsedRepo.save(inventoryUsedLog);
+        return mapDTO(inventoryUsedLog);
 
     }
 
