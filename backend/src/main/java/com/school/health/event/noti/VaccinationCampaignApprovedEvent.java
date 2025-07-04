@@ -1,18 +1,15 @@
-package com.school.health.event;
-
+package com.school.health.event.noti;
 
 import com.school.health.entity.VaccinationCampaign;
 
-public class VaccinationCampaignCreatedEvent {
-
+public class VaccinationCampaignApprovedEvent {
     private final VaccinationCampaign campaign;
 
-    public VaccinationCampaignCreatedEvent(VaccinationCampaign campaign) {
+    public VaccinationCampaignApprovedEvent(VaccinationCampaign campaign) {
         this.campaign = campaign;
     }
 
     public VaccinationCampaign getCampaign() {
         return campaign;
     }
-
 }

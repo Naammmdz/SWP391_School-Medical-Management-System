@@ -1,6 +1,7 @@
 package com.school.health.controller;
 
 import com.school.health.dto.request.InventoryUsedRequestDTO;
+import com.school.health.dto.request.InventoryUsedUpdateRequestDTO;
 import com.school.health.dto.response.InventoryUsedResponseDTO;
 import com.school.health.service.impl.InventoryUsedServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -20,5 +21,9 @@ public class InventoryUsedController {
     @PostMapping("/items/{itemId}/usage")
     public ResponseEntity<InventoryUsedResponseDTO> addInventoryUsedLog(@PathVariable int itemId, @RequestBody InventoryUsedRequestDTO requestDTO) {
         return ResponseEntity.ok(inventoryUsedService.createInventoryUsed(itemId, requestDTO));
+    }
+    @PutMapping("/inventory-used-logs/{id}")
+    public ResponseEntity<InventoryUsedResponseDTO> updateInventoryUsedLog(@PathVariable int id, @RequestBody InventoryUsedUpdateRequestDTO requestDTO){
+        return ResponseEntity.ok(inventoryUsedService.updateInventoryUsed(id, requestDTO));
     }
 }

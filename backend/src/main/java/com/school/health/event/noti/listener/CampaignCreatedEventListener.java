@@ -1,9 +1,9 @@
-package com.school.health.event.listener;
+package com.school.health.event.noti.listener;
 
 import com.school.health.entity.HealthCheckCampaign;
 import com.school.health.entity.VaccinationCampaign;
-import com.school.health.event.HealthCheckCampaignCreatedEvent;
-import com.school.health.event.VaccinationCampaignCreatedEvent;
+import com.school.health.event.noti.HealthCheckCampaignCreatedEvent;
+import com.school.health.event.noti.VaccinationCampaignCreatedEvent;
 import com.school.health.repository.UserRepository;
 import com.school.health.service.impl.NotificationServiceImpl;
 import lombok.RequiredArgsConstructor;

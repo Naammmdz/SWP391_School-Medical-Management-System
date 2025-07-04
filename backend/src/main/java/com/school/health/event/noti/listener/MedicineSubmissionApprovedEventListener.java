@@ -1,7 +1,7 @@
-package com.school.health.event.listener;
+package com.school.health.event.noti.listener;
 
 import com.school.health.entity.MedicineSubmission;
-import com.school.health.event.MedicineSubmissionApprovedEvent;
+import com.school.health.event.noti.MedicineSubmissionApprovedEvent;
 import com.school.health.repository.UserRepository;
 import com.school.health.service.impl.NotificationServiceImpl;
 import lombok.RequiredArgsConstructor;
