@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Card, Table, Button, Input, Select, DatePicker, Space, Tag, Modal, Form, 
   Statistic, Row, Col, Avatar, Typography, Tooltip, message, Spin, Badge,
-  Switch, Radio, Alert, Dropdown, Menu
+  Switch, Radio, Alert, Dropdown, Menu, Tabs
 } from 'antd';
 import {
   PlusOutlined, EditOutlined, DeleteOutlined, SendOutlined, FileTextOutlined,
@@ -51,6 +51,7 @@ const VaccinationManagement = () => {
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedVaccineType, setSelectedVaccineType] = useState('');
   const [dateRange, setDateRange] = useState([]);
+  const [activeTab, setActiveTab] = useState('ALL');
   
   // Modal states
   const [notificationModalOpen, setNotificationModalOpen] = useState(false);
@@ -62,6 +63,8 @@ const VaccinationManagement = () => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const users = JSON.parse(localStorage.getItem('users') || '[]');
   const isAdmin = user.userRole === 'ROLE_ADMIN';
+  const isNurse = user.userRole === 'ROLE_NURSE';
+  const canManageVaccination = isAdmin || isNurse;
   
   const getOrganizerName = (organizerId) => {
     if (!organizerId) return 'Không xác định';
@@ -239,20 +242,33 @@ const VaccinationManagement = () => {
 
   // Filter events
   const filteredEvents = vaccinationEvents.filter(event => {
+    let matchesTab = true;
+    
+    // Filter by tab status for admin and nurses
+    if (canManageVaccination && activeTab !== 'ALL') {
+      if (activeTab === 'APPROVED') {
+        matchesTab = event.status === 'APPROVED';
+      } else if (activeTab === 'PENDING') {
+        matchesTab = event.status === 'PENDING';
+      } else if (activeTab === 'CANCELLED') {
+        matchesTab = event.status === 'CANCELLED';
+      }
+    } else if (!canManageVaccination) {
+      // For other roles, show all events
+      matchesTab = true;
+    }
+    
     const matchesSearch = !searchText || 
       event.title.toLowerCase().includes(searchText.toLowerCase()) ||
       event.vaccineType.toLowerCase().includes(searchText.toLowerCase());
-    
     const matchesStatus = !selectedStatus || event.status === selectedStatus;
     const matchesVaccineType = !selectedVaccineType || event.vaccineType === selectedVaccineType;
-    
     let matchesDateRange = true;
     if (dateRange && dateRange.length === 2) {
       const eventDate = dayjs(event.scheduledDate);
       matchesDateRange = eventDate.isAfter(dateRange[0]) && eventDate.isBefore(dateRange[1]);
     }
-    
-    return matchesSearch && matchesStatus && matchesVaccineType && matchesDateRange;
+    return matchesTab && matchesSearch && matchesStatus && matchesVaccineType && matchesDateRange;
   });
 
   // Table columns
@@ -592,6 +608,22 @@ const VaccinationManagement = () => {
           </Col>
         </Row>
       </Card>
+
+      {/* Tabs */}
+      {canManageVaccination && (
+        <Card style={{ marginBottom: 24 }}>
+          <Tabs
+            activeKey={activeTab}
+            onChange={setActiveTab}
+            type="card"
+            items={[
+              { key: 'APPROVED', label: 'Đã duyệt' },
+              { key: 'PENDING', label: 'Chờ phê duyệt' },
+              { key: 'CANCELLED', label: 'Đã hủy' }
+            ]}
+          />
+        </Card>
+      )}
 
       {/* Table */}
       <Card className="table-card">

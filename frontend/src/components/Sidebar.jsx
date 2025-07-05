@@ -73,7 +73,9 @@ const getNavGroupsForRole = (role) => {
     overview: {
       title: 'Tổng quan & Hệ thống',
       items: [
-        { path: '/thongke', name: 'Bảng điều khiển', icon: 'home' },
+        { path: '/thongke', name: 'Bảng điều khiển', icon: 'home', roles: ['ROLE_ADMIN'] },
+        { path: '/parent', name: 'Bảng điều khiển', icon: 'home', roles: ['ROLE_PARENT'] },
+        { path: '/nurse', name: 'Bảng điều khiển', icon: 'home', roles: ['ROLE_NURSE'] },
         { path: '/thongbaotiemchung', name: 'Thông báo', icon: 'bell', badge: '3' },
       ]
     }
@@ -228,10 +230,11 @@ const navGroups = [
   {
     title: 'Tổng quan & Hệ thống',
     items: [
-      { path: '/thongke', name: 'Bảng điều khiển', icon: 'home', roles: ['ROLE_ADMIN', 'ROLE_NURSE', 'ROLE_PARENT'] },
+      { path: '/thongke', name: 'Bảng điều khiển', icon: 'home', roles: ['ROLE_ADMIN', 'ROLE_NURSE'] },
       { path: '/thongbaotiemchung', name: 'Thông báo', icon: 'bell', badge: '3', roles: ['ROLE_ADMIN', 'ROLE_NURSE', 'ROLE_PARENT'] },
       { path: '/admin', name: 'Quản trị hệ thống', icon: 'settings', roles: ['ROLE_ADMIN'] },
       { path: '/nurse', name: 'Trang Y tá', icon: 'stethoscope', roles: ['ROLE_NURSE'] },
+      { path: '/parent', name: 'Trang Phụ huynh', icon: 'users', roles: ['ROLE_PARENT'] },
     ]
   },
   {

@@ -50,6 +50,8 @@ import UpdateHealthCheckResult from './pages/health/HealthCheck/UpdateHealthChec
 import ImportInventory from './pages/medical/Inventory/ImportInventory';
 import InventoryList from './pages/medical/Inventory/InventoryList';
 
+import ParentPages from './pages/parent/ParentPages';
+
 // Component ProtectedRoute
 const ProtectedRoute = ({ element, requiredRole }) => {
   const user = JSON.parse(localStorage.getItem('user'));
@@ -125,6 +127,9 @@ function App() {
       
       <Route path="/nurse" element={<ProtectedRoute element={<Layout showSidebar><NursePages /></Layout>} requiredRole="ROLE_NURSE" />} />
       <Route path='/admin' element={<ProtectedRoute element={<Layout showSidebar><Admin /></Layout>} requiredRole="ROLE_ADMIN" />} />
+      <Route path="/parent" element={<ProtectedRoute element={<Layout showSidebar><ParentPages /></Layout>} requiredRole="ROLE_PARENT" />} />
+      
+      {/* Default route */}
     </Routes>
   );
 }

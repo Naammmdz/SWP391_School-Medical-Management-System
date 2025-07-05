@@ -111,6 +111,9 @@ return str.normalize('NFD')
   if (targetNoSign.includes(studentClassNoSign)) return true;
   if (studentClassNoSign.includes(targetNoSign)) return true;
 
+  const targetGroups = targetNoSign.split(','); // ['1', '2']
+  if (targetGroups.some(group => studentClassNoSign.startsWith(group))) return true;
+
   return false;
 });
 
