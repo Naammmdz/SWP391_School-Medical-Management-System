@@ -245,7 +245,9 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
             List<Vaccination> checks = checksByCampaign.getOrDefault(campaign.getCampaignId(), new ArrayList<>());
 
             Boolean confirmStatus;
-            if (checks.stream().allMatch(Vaccination::isParentConfirmation)) {
+            if (checks.isEmpty()) {
+                confirmStatus = null; // No checks found for this campaign
+            } else if (checks.stream().allMatch(Vaccination::isParentConfirmation)) {
                 confirmStatus = true;
             } else if (checks.stream().noneMatch(Vaccination::isParentConfirmation)) {
                 confirmStatus = false;
@@ -498,6 +500,114 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
         return normalized.replaceAll("\\p{M}", "");
     }
 
+    @Override
+    public List<StudentResponseDTO> getAllStudentsInCampaign(Integer campaignId) {
+        VaccinationCampaign campaign = vaccinationCampaignRepository.findById(campaignId)
+                .orElseThrow(() -> new RuntimeException("Campaign not found id: " + campaignId));
+
+        List<Student> allStudents = new ArrayList<>();
+        String[] targetGroups = campaign.getTargetGroup().split(",");
+
+        for (String group : targetGroups) {
+            group = group.trim();
+            if (group.length() == 1) {
+                // Single grade (e.g., "6" for grade 6)
+                List<Student> gradeStudents = studentRepository.findByGrade(group);
+                allStudents.addAll(gradeStudents);
+            } else if (group.length() == 2) {
+                // Specific class (e.g., "6A")
+                List<Student> classStudents = studentRepository.findByClassName(group);
+                allStudents.addAll(classStudents);
+            }
+        }
+
+        // Remove duplicates and convert to DTO
+        return allStudents.stream()
+                .distinct()
+                .filter(student -> student.isActive())
+                .map(student -> {
+                    StudentResponseDTO dto = new StudentResponseDTO();
+                    dto.setStudentId(student.getStudentId());
+                    dto.setFullName(student.getFullName());
+                    dto.setDob(student.getDob());
+                    dto.setGender(student.getGender());
+                    dto.setClassName(student.getClassName());
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<VaccinationResponseResultDTO> getStudentsWithVaccinationStatus(Integer campaignId) {
+        VaccinationCampaign campaign = vaccinationCampaignRepository.findById(campaignId)
+                .orElseThrow(() -> new RuntimeException("Campaign not found id: " + campaignId));
+
+        // Get all eligible students
+        List<Student> eligibleStudents = new ArrayList<>();
+        String[] targetGroups = campaign.getTargetGroup().split(",");
+
+        for (String group : targetGroups) {
+            group = group.trim();
+            if (group.length() == 1) {
+                List<Student> gradeStudents = studentRepository.findByGrade(group);
+                eligibleStudents.addAll(gradeStudents);
+            } else if (group.length() == 2) {
+                List<Student> classStudents = studentRepository.findByClassName(group);
+                eligibleStudents.addAll(classStudents);
+            }
+        }
+
+        // Remove duplicates
+        eligibleStudents = eligibleStudents.stream()
+                .distinct()
+                .filter(Student::isActive)
+                .collect(Collectors.toList());
+
+        // Get existing vaccination records for this campaign
+        List<Vaccination> existingVaccinations = vaccinationRepository.findByCampaignId(campaignId);
+
+        // Create result list
+        List<VaccinationResponseResultDTO> results = new ArrayList<>();
+
+        for (Student student : eligibleStudents) {
+            // Find existing vaccination record for this student
+            Vaccination vaccination = existingVaccinations.stream()
+                    .filter(v -> v.getStudent().getStudentId().equals(student.getStudentId()))
+                    .findFirst()
+                    .orElse(null);
+
+            VaccinationResponseResultDTO dto = VaccinationResponseResultDTO.builder()
+                    .studentId(student.getStudentId())
+                    .studentName(student.getFullName())
+                    .className(student.getClassName())
+                    .campaignId(campaign.getCampaignId())
+                    .campaignName(campaign.getCampaignName())
+                    .scheduledDate(campaign.getScheduledDate())
+                    .build();
+
+            if (vaccination != null) {
+                // Student has vaccination record
+                dto.setVaccinationId(vaccination.getVaccinationId());
+                dto.setDate(vaccination.getDate());
+                dto.setDoseNumber(vaccination.getDoseNumber());
+                dto.setAdverseReaction(vaccination.getAdverseReaction());
+                dto.setNotes(vaccination.getNotes());
+                dto.setParentConfirmation(vaccination.isParentConfirmation());
+                dto.setResult(vaccination.getResult());
+                dto.setVaccineName(vaccination.getVaccineName());
+                dto.setPreviousDose(vaccination.isPreviousDose());
+            } else {
+                // Student has no vaccination record yet
+                dto.setVaccinationId(0);
+                dto.setParentConfirmation(false);
+                dto.setResult("PENDING");
+            }
+
+            results.add(dto);
+        }
+
+        return results;
+    }
 }
 
 

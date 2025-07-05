@@ -42,4 +42,10 @@ public interface StudentRepository extends JpaRepository<Student, Integer> {
     // findByParentId
     @Query("SELECT s FROM Student s WHERE s.parent.userId = :parentId")
     List<Student> findByParentId(Integer parentId);
+
+    // Tìm học sinh theo danh sách lớp
+    List<Student> findByClassNameIn(List<String> classNames);
+
+    // Tìm tất cả học sinh đang hoạt động
+    List<Student> findByIsActive(boolean isActive);
 }

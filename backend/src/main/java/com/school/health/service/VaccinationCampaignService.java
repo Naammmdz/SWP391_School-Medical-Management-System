@@ -62,4 +62,9 @@ public interface VaccinationCampaignService {
 
     List<VaccinationResponseResultDTO> getAllVaccinationResultsWithParentConfirmationTrue();
 
+    // Get all students eligible for a campaign based on target group
+    List<StudentResponseDTO> getAllStudentsInCampaign(Integer campaignId);
+
+    // Get all students with their vaccination status for a campaign
+    List<VaccinationResponseResultDTO> getStudentsWithVaccinationStatus(Integer campaignId);
 }

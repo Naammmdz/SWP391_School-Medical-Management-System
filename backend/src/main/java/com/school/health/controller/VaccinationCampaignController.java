@@ -202,5 +202,18 @@ public class VaccinationCampaignController {
 //        return ResponseEntity.ok(vaccinationCampaignService.getAllVaccinationResultsWithParentConfirmationTrue());
 //    }
 
+    // danh sách tất cả học sinh có thể tham gia chiến dịch (theo target group)
+    @GetMapping("/{campaignId}/all-students")
+    @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN') or hasRole('NURSE')")
+    public ResponseEntity<?> getAllStudentsInCampaign(@PathVariable @Valid int campaignId) {
+        return ResponseEntity.ok(vaccinationCampaignService.getAllStudentsInCampaign(campaignId));
+    }
+
+    // danh sách tất cả học sinh với trạng thái tiêm chủng
+    @GetMapping("/{campaignId}/students-with-status")
+    @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN') or hasRole('NURSE')")
+    public ResponseEntity<?> getStudentsWithVaccinationStatus(@PathVariable @Valid int campaignId) {
+        return ResponseEntity.ok(vaccinationCampaignService.getStudentsWithVaccinationStatus(campaignId));
+    }
 
 }
