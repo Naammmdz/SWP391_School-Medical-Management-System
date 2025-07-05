@@ -41,7 +41,50 @@ const { TextArea } = Input;
 const VaccinationNotifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [activeNotification, setActiveNotification] = useState(null);
-  const [showResponseForm, setShowResponseForm] = useState(false);
+  
+  // Helper function to determine parent confirmation status (same as StudentsWithVaccinationStatus)
+  const getParentConfirmationStatus = (parentConfirmation, record) => {
+    // First check if there are explicit confirmation indicators
+    if (record?.isParentConfirm === true || record?.parentApproval === true || record?.confirmed === true) {
+      return 'confirmed';
+    }
+    
+    // Check if status field indicates confirmation
+    if (record?.status === 'CONFIRMED' || record?.status === 'APPROVED' || record?.parentResponseStatus === 'CONFIRMED') {
+      return 'confirmed';
+    }
+    
+    // Handle strict boolean true - parent has confirmed
+    if (parentConfirmation === true) {
+      return 'confirmed';
+    }
+    
+    // Check for explicit decline indicators first
+    if (record?.isParentConfirm === false || record?.parentApproval === false || record?.status === 'DECLINED' || record?.parentResponseStatus === 'DECLINED') {
+      return 'declined';
+    }
+    
+    // Handle strict boolean false - could be declined or no record
+    if (parentConfirmation === false) {
+      // More specific check for "no record" vs "actually declined"
+      // If there's no vaccination record at all (vaccinationId is 0 or null) AND no explicit response date/note,
+      // then it's likely a "no record" case
+      const hasNoVaccinationRecord = !record || record.vaccinationId === 0 || record.vaccinationId === null;
+      const hasNoResponseData = !record?.responseDate && !record?.notes && !record?.parentResponseDate;
+      const isResultPending = record?.result === 'PENDING' || !record?.result;
+      
+      // If it's clearly a "no vaccination record" case, treat as pending
+      if (hasNoVaccinationRecord && hasNoResponseData && isResultPending) {
+        return 'pending';
+      } else {
+        // Otherwise, false means explicitly declined
+        return 'declined';
+      }
+    } 
+    
+    // null, undefined, or any other value means pending
+    return 'pending';
+  };
   const [responseData, setResponseData] = useState({
     campaignId: null,
     response: '',
@@ -61,8 +104,6 @@ const VaccinationNotifications = () => {
   const getOrganizerName = (organizer) => {
     if (!organizer) return 'Chưa xác định';
     
-    console.log('Organizer value:', organizer, typeof organizer);
-    
     // If organizer is already a text name (not a number), return it directly
     if (typeof organizer === 'string' && isNaN(Number(organizer))) {
       // Clean up empty strings
@@ -78,10 +119,6 @@ const VaccinationNotifications = () => {
       u.userId === userId ||
       String(u.userId) === String(userId)
     );
-    
-    console.log('Looking for organizer ID:', userId);
-    console.log('Available user IDs:', users.map(u => u.id));
-    console.log('Found user:', user);
     
     if (user) {
       return user.fullName || user.name || 'Tên không có';
@@ -112,11 +149,13 @@ const fetchNotifications = async () => {
     // Lấy thông tin học sinh từ localStorage (giả sử đã lưu object student)
     const studentInfo = JSON.parse(localStorage.getItem('selectedStudentInfo') || '{}');
     const studentClass = studentInfo.className || ""; // ví dụ: "3A"
-    console.log('Lớp học sinh:', studentClass);
 
     const response = await vaccinationService.getVaccinationCampaignApproved(config);
     const data = Array.isArray(response.data) ? response.data : [];
-   console.log('Dữ liệu chiến dịch tiêm chủng:', data);
+    
+    console.log('Student Class:', studentClass);
+    console.log('Total campaigns from API:', data.length);
+    
     // Lọc chiến dịch phù hợp với lớp học sinh
     function removeVietnameseTones(str) {
       return str.normalize('NFD')
@@ -126,98 +165,141 @@ const fetchNotifications = async () => {
     
     const filtered = data.filter(item => {
       if (!studentClass || !item.targetGroup) return false;
+      
       const target = item.targetGroup.toLowerCase().trim();
       const studentClassLower = studentClass.toLowerCase().trim();
-  const targetNoSign = removeVietnameseTones(target).replace(/\s/g, '');
-  const studentClassNoSign = removeVietnameseTones(studentClassLower).replace(/\s/g, '');
+      const targetNoSign = removeVietnameseTones(target).replace(/\s/g, '');
+      const studentClassNoSign = removeVietnameseTones(studentClassLower).replace(/\s/g, '');
 
-  // Toàn trường
-  if (targetNoSign === 'toantruong') return true;
+      // Toàn trường - matches all students
+      if (targetNoSign === 'toantruong') {
+        return true;
+      }
 
-  // Khớp chính xác
-  if (targetNoSign === studentClassNoSign) return true;
+      // Exact class match (e.g., "1a" matches "1A")
+      if (targetNoSign === studentClassNoSign) {
+        return true;
+      }
 
-  // Nếu target là "khoi 4" hoặc "khối 4" thì khớp các lớp bắt đầu bằng "4"
-  const khoiMatch = targetNoSign.match(/khoi(\d+)/);
-  if (khoiMatch && studentClassNoSign.startsWith(khoiMatch[1])) return true;
+      // Extract grade number from student class (e.g., "3A" -> "3", "1B" -> "1")
+      const studentGradeMatch = studentClassNoSign.match(/^(\d+)/);
+      const studentGrade = studentGradeMatch ? studentGradeMatch[1] : null;
 
-  // Nếu target chứa tên lớp
-  if (targetNoSign.includes(studentClassNoSign)) return true;
-  if (studentClassNoSign.includes(targetNoSign)) return true;
+      // Handle "khối X" format in target (e.g., "khối 4", "khoi 4")
+      const khoiMatch = targetNoSign.match(/khoi(\d+)/);
+      if (khoiMatch && studentGrade === khoiMatch[1]) {
+        return true;
+      }
 
-  return false;
-});
+      // Handle simple grade numbers (e.g., "1", "2", "3")
+      if (targetNoSign.match(/^\d+$/) && studentGrade === targetNoSign) {
+        return true;
+      }
 
-    const mapped = filtered.map(item => {
-      let status = null;
+      // Handle comma-separated targets (e.g., "1,2,3", "khối 1,2", "1a,1b")
+      if (targetNoSign.includes(',')) {
+        const targetParts = targetNoSign.split(',').map(part => part.trim());
+        
+        for (const part of targetParts) {
+          // Check exact class match
+          if (part === studentClassNoSign) {
+            return true;
+          }
+          
+          // Check simple grade number
+          if (part.match(/^\d+$/) && studentGrade === part) {
+            return true;
+          }
+          
+          // Check "khoi X" format
+          const partKhoiMatch = part.match(/khoi(\d+)/);
+          if (partKhoiMatch && studentGrade === partKhoiMatch[1]) {
+            return true;
+          }
+        }
+      }
+
+      // Partial matching - target contains class or vice versa
+      if (targetNoSign.includes(studentClassNoSign) || studentClassNoSign.includes(targetNoSign)) {
+        return true;
+      }
+
+      return false;
+    });
+
+    const mapped = await Promise.all(filtered.map(async item => {
+      let status = 'Chưa phản hồi';
       let responseNote = '';
       let responseDate = '';
       
-      // Lấy parentConfirm trực tiếp từ item (API response)
-      console.log('Campaign item data:', item); // Debug log
-      console.log('parentConfirm value:', item.isParentConfirm); // Debug log for parentConfirm specifically
-      
-      if (item.isParentConfirm !== undefined) {
-        // Sử dụng parentConfirm từ API response để xác định trạng thái
-        if (item.isParentConfirm === null) {
-          status = 'Chưa phản hồi';
-          console.log('Status set to: Chưa phản hồi (parentConfirm is null)');
-        } else if (item.isParentConfirm === true) {
-          status = 'Xác nhận';
-          console.log('Status set to: Xác nhận (parentConfirm is true)');
-        } else if (item.isParentConfirm === false) {
-          status = 'Từ chối';
-          console.log('Status set to: Từ chối (parentConfirm is false)');
+      try {
+        // Get specific student's vaccination status for this campaign
+        const studentId = localStorage.getItem('selectedStudentId');
+        if (studentId) {
+          const statusResponse = await vaccinationService.getStudentsWithVaccinationStatus(item.campaignId, config);
+          const studentData = Array.isArray(statusResponse.data) 
+            ? statusResponse.data.find(student => String(student.studentId) === String(studentId))
+            : null;
+          
+          if (studentData) {
+            // Use the helper function to determine status
+            const statusResult = getParentConfirmationStatus(studentData.parentConfirmation, studentData);
+            
+            switch (statusResult) {
+              case 'confirmed':
+                status = 'Xác nhận';
+                break;
+              case 'declined':
+                status = 'Từ chối';
+                break;
+              case 'pending':
+              default:
+                status = 'Chưa phản hồi';
+                break;
+            }
+            
+            responseNote = studentData.notes || '';
+            responseDate = studentData.vaccinationDate || '';
+          }
         }
-       
-        
-        // Lấy thông tin ghi chú và ngày phản hồi từ item nếu có
-        responseNote = item.note || '';
-        responseDate = item.responseDate || '';
-      } else {
-        console.log('parentConfirm is undefined, keeping default status: Chưa phản hồi');
+      } catch (error) {
+        console.error('Error fetching student vaccination status:', error);
+        // Keep default status as 'Chưa phản hồi'
       }
-      // Debug: log toàn bộ item để xem có field nào chứa organizer
-      console.log('Full campaign item:', item);
-      console.log('Checking organizer fields:', {
-        approvedBy: item.approvedBy,
-        createdBy: item.createdBy,
-        organizerId: item.organizerId,
-        organizer: item.organizer,
-        userId: item.userId
-      });
       
       return {
-    id: item.campaignId,
-    title: `Thông báo tiêm chủng: ${item.campaignName}`,
-    campaignName: item.campaignName,
-    targetGroup: item.targetGroup,
-    type: item.type,
-    address: item.address,
-    // Use organizer field as the primary organizer name
-    organizerId: item.organizer || item.approvedBy || item.createdBy || item.organizerId || item.userId,
-    description: item.description,
-    date: item.scheduledDate, // giữ nguyên, format khi hiển thị
-    status,
-    isNew: status === 'Chưa phản hồi',
-    sentDate: item.createdAt, // giữ nguyên, format khi hiển thị
-    responseNote,
-    responseDate,
-    requiredDocuments: 'Phiếu đồng ý của phụ huynh, giấy tờ tùy thân',
-    time: '',
-    location: item.address,
-  };
-});
+        id: item.campaignId,
+        title: `Thông báo tiêm chủng: ${item.campaignName}`,
+        campaignName: item.campaignName,
+        targetGroup: item.targetGroup,
+        type: item.type,
+        address: item.address,
+        // Use organizer field as the primary organizer name
+        organizerId: item.organizer || item.approvedBy || item.createdBy || item.organizerId || item.userId,
+        description: item.description,
+        date: item.scheduledDate, // giữ nguyên, format khi hiển thị
+        status,
+        isNew: status === 'Chưa phản hồi',
+        sentDate: item.createdAt, // giữ nguyên, format khi hiển thị
+        responseNote,
+        responseDate,
+        requiredDocuments: 'Phiếu đồng ý của phụ huynh, giấy tờ tùy thân',
+        time: '',
+        location: item.address,
+      };
+    }));
+    
     setNotifications(mapped);
     setLoading(false);
   } catch (error) {
+    console.error('Error fetching notifications:', error);
     setNotifications([]);
     setLoading(false);
   }
 };
 // Gửi phản hồi xác nhận/từ chối (gọi API thực tế)
 const sendResponse = async (values) => {
-if (!values.response) {
+  if (!values.response) {
     message.error('Vui lòng chọn phản hồi của bạn');
     return;
   }
@@ -234,12 +316,6 @@ if (!values.response) {
     const config = { headers: { Authorization: `Bearer ${token}` } };
     // Nếu xác nhận thì gọi API đăng ký tiêm chủng
     if (values.response === 'confirm')  {
-      // Xem dữ liệu trước khi gửi
-      console.log('Gửi đăng ký tiêm chủng:', {
-        campaignId: activeNotification.id,
-        studentId: Number(studentId),
-        config
-      });
       // Đúng thứ tự: campaignId, studentId, config
       await vaccinationService.parentApproveCampaign(
         activeNotification.id,
@@ -248,11 +324,6 @@ if (!values.response) {
       );
     }
     if( values.response === 'decline') {
-       console.log('Gửi từ chối tiêm chủng:', {
-        campaignId: activeNotification.id,
-        studentId: Number(studentId),
-        config
-      });
       // Gọi API từ chối tiêm chủng
       await vaccinationService.parentRejectCampaign(
         activeNotification.id,
@@ -283,7 +354,6 @@ if (!values.response) {
         isNew: false
       });
     }
-    setShowResponseForm(false);
     message.success('Phản hồi của bạn đã được gửi thành công!');
     form.resetFields();
     setSubmitting(false);
@@ -328,7 +398,6 @@ if (!values.response) {
 };
 const viewNotificationDetails = (notification) => {
   setActiveNotification(notification);
-  setShowResponseForm(false);
   form.resetFields();
   // Reset response data when viewing notification
   setResponseData({
@@ -606,8 +675,8 @@ label={<span><FileTextOutlined /> Giấy tờ yêu cầu</span>}
                   />
                 )}
 
-                {/* Response Form */}
-                {(activeNotification.status === 'Chưa phản hồi' || showResponseForm) && (
+                {/* Response Form - Only show if no response yet */}
+                {activeNotification.status === 'Chưa phản hồi' && (
                   <Card 
                     title={
                       <Space>
@@ -703,9 +772,6 @@ label={<span><FileTextOutlined /> Giấy tờ yêu cầu</span>}
                             <Button 
                               onClick={() => {
                                 setResponseData({ campaignId: activeNotification.id, response: '', note: '' });
-                                if (showResponseForm) {
-                                  setShowResponseForm(false);
-                                }
                               }}
                               style={{ borderRadius: '8px', minWidth: '100px' }}
                             >

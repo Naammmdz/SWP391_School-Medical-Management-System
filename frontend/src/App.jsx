@@ -16,6 +16,7 @@ import VaccinationNotifications from './pages/health/Vaccination/VaccinationNoti
 import UpdateVaccination from './pages/health/Vaccination/UpdateVaccination';
 import VaccinationResult from './pages/health/Vaccination/VaccinationResult';
 import VaccinationStudentResult from './pages/health/Vaccination/VaccinationStudentResult';
+import VaccinationStudentDemo from './pages/health/Vaccination/VaccinationStudentDemo';
 
 import Admin from './pages/admin/Admin';
 import MedicalSupplies from './pages/medical/MedicalSupplies/MedicalSupplies';
@@ -90,6 +91,7 @@ function App() {
       <Route path="/capnhattiemchung" element={<Layout showSidebar><UpdateVaccination /></Layout>} />
       <Route path="/ketquatiemchung" element={<Layout showSidebar><VaccinationResult /></Layout>} />
       <Route path="/ketquatiemchunghocsinh" element={<Layout showSidebar><VaccinationStudentResult /></Layout>} />
+      <Route path="/demo-vaccination-students" element={<Layout showSidebar><VaccinationStudentDemo /></Layout>} />
       
       <Route path="/donthuoc" element={<Layout showSidebar><NursePrescription /></Layout>} />
       <Route path="/chouongthuoc" element={<Layout showSidebar><MedicineLog /></Layout>} />

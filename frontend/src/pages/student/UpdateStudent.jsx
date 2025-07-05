@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Form, Input, Select, Button, Spin, Avatar, Typography, Row, Col, message, Tag } from 'antd';
+import { Card, Form, Input, Select, Button, Spin, Avatar, Typography, Row, Col, message, Tag, DatePicker } from 'antd';
 import { SaveOutlined, UserOutlined, CalendarOutlined, TeamOutlined, BookOutlined, EditOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import studentService from '../../services/StudentService';
 import userService from '../../services/UserService';
+import dayjs from 'dayjs';
 import './UpdateStudent.css';
 
 const { Title, Text } = Typography;
@@ -32,12 +33,10 @@ const UpdateStudent = () => {
       const studentData = response.data.find(s => s.studentId === parseInt(studentId));
       
       if (studentData) {
-        // Format date to get year for yob
-        const dateObj = new Date(studentData.dob || studentData.yob);
-        const year = dateObj.getFullYear();
+        // Convert date for DatePicker - backend sends yob field
         const formattedStudent = {
           ...studentData,
-          yob: year ? year.toString() : '',
+          dob: studentData.yob ? dayjs(studentData.yob) : (studentData.dob ? dayjs(studentData.dob) : null),
         };
         setStudent(formattedStudent);
         form.setFieldsValue(formattedStudent);
@@ -76,7 +75,7 @@ const UpdateStudent = () => {
       // Chuẩn hóa dữ liệu gửi lên backend
       const updateData = {
         fullName: values.fullName,
-        yob: values.yob ? parseInt(values.yob) : null,
+        yob: values.dob ? values.dob.format('YYYY-MM-DD') : null,
         gender: values.gender,
         className: values.className,
         parentId: student.parentId
@@ -151,16 +150,19 @@ const UpdateStudent = () => {
                 </Col>
                 <Col xs={24} md={12}>
                   <Form.Item
-                    label={<span><CalendarOutlined /> Năm sinh</span>}
-                    name="yob"
-                    rules={[{ required: true, message: 'Vui lòng nhập năm sinh!' }]}
+                    label={<span><CalendarOutlined /> Ngày sinh</span>}
+                    name="dob"
+                    rules={[{ required: true, message: 'Vui lòng chọn ngày sinh!' }]}
                   >
-                    <Input
-                      type="number"
-                      placeholder="Nhập năm sinh"
+                    <DatePicker
+                      placeholder="Chọn ngày sinh"
                       size="large"
-                      min={1900}
-                      max={new Date().getFullYear()}
+                      style={{ width: '100%' }}
+                      format="DD/MM/YYYY"
+                      disabledDate={(current) => {
+                        // Disable future dates and dates before 1900
+                        return current && (current > dayjs().endOf('day') || current < dayjs('1900-01-01'));
+                      }}
                     />
                   </Form.Item>
                 </Col>

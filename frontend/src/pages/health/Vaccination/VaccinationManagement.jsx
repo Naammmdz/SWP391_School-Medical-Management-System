@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Card, Table, Button, Input, Select, DatePicker, Space, Tag, Modal, Form, 
   Statistic, Row, Col, Avatar, Typography, Tooltip, message, Spin, Badge,
-  Switch, Radio, Alert, Dropdown, Menu
+  Switch, Radio, Alert, Dropdown, Menu, Tabs, Divider
 } from 'antd';
 import {
   PlusOutlined, EditOutlined, DeleteOutlined, SendOutlined, FileTextOutlined,
@@ -14,6 +14,8 @@ import {
 import "./VaccinationManagement.css";
 import { useNavigate } from 'react-router-dom';
 import VaccinationService from '../../../services/VaccinationService';
+import AllStudentsInCampaign from '../../../components/vaccination/AllStudentsInCampaign';
+import StudentsWithVaccinationStatus from '../../../components/vaccination/StudentsWithVaccinationStatus';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
@@ -55,9 +57,7 @@ const VaccinationManagement = () => {
   
   // Modal states
   const [notificationModalOpen, setNotificationModalOpen] = useState(false);
-  const [responseModalOpen, setResponseModalOpen] = useState(false);
   const [currentCampaign, setCurrentCampaign] = useState(null);
-  const [currentStudentResponses, setCurrentStudentResponses] = useState([]);
   
   // User info
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -183,6 +183,7 @@ const VaccinationManagement = () => {
     });
   };
 
+
   // Handle delete
   // const handleDelete = (record) => {
   //   Modal.confirm({
@@ -215,47 +216,15 @@ const VaccinationManagement = () => {
     setNotificationModalOpen(true);
   };
 
-  // Handle view responses
-  const handleViewResponses = (record) => {
-    // Mock data for responses
-    const mockResponses = [
-      { 
-        key: 1, 
-        studentName: 'Nguyễn Văn A', 
-        className: '10A1', 
-        status: 'confirmed', 
-        parentNote: 'Con đã tiêm đầy đủ', 
-        responseDate: '2023-09-10' 
-      },
-      { 
-        key: 2, 
-        studentName: 'Trần Thị B', 
-        className: '10A1', 
-        status: 'declined', 
-        parentNote: 'Con bị dị ứng với thành phần vắc-xin', 
-        responseDate: '2023-09-11' 
-      },
-      { 
-        key: 3, 
-        studentName: 'Lê Văn C', 
-        className: '10A2', 
-        status: 'confirmed', 
-        parentNote: '', 
-        responseDate: '2023-09-12' 
-      },
-      { 
-        key: 4, 
-        studentName: 'Phạm Thị D', 
-        className: '10A2', 
-        status: 'pending', 
-        parentNote: '', 
-        responseDate: '' 
-      }
-    ];
-    setCurrentStudentResponses(mockResponses);
-    setCurrentCampaign(record);
-    setResponseModalOpen(true);
+  // Get student information from localStorage (applied from /ketquatiemchung)
+  const getStudentInfo = (studentId) => {
+    const students = JSON.parse(localStorage.getItem('students') || '[]');
+    const student = students.find(s => String(s.studentId) === String(studentId));
+    return student
+      ? { fullName: student.fullName || student.name || '', className: student.className || '' }
+      : { fullName: 'Không xác định', className: 'Không xác định' };
   };
+
 
   // Filter events
   const filteredEvents = vaccinationEvents.filter(event => {
@@ -275,72 +244,21 @@ const VaccinationManagement = () => {
     return matchesSearch && matchesStatus && matchesVaccineType && matchesDateRange;
   });
 
-  // Table columns
-  const columns = [
+  // Brief table columns (for initial view)
+  const briefColumns = [
     {
-      title: 'Tiêu đề',
+      title: 'Tên chiến dịch',
       dataIndex: 'title',
       key: 'title',
-      render: (text, record) => (
-        <div>
-          <Text strong>{text}</Text>
-          <br />
-          <Text type="secondary" style={{ fontSize: '12px' }}>
-            {record.description}
-          </Text>
-        </div>
-      ),
-    },
-    {
-      title: 'Loại vắc-xin',
-      dataIndex: 'vaccineType',
-      key: 'vaccineType',
       render: (text) => (
-        <Tag icon={<MedicineBoxOutlined />} color="blue">
-          {text}
-        </Tag>
-      ),
-    },
-    {
-      title: 'Ngày tiêm',
-      dataIndex: 'scheduledDate',
-      key: 'scheduledDate',
-      render: (text, record) => (
-        <div>
-          <CalendarOutlined style={{ color: '#52c41a', marginRight: 4 }} />
-          {dayjs(text).format('DD/MM/YYYY')}
-          <br />
-          <Text type="secondary" style={{ fontSize: '12px' }}>
-            {record.scheduledTime}
-          </Text>
-        </div>
-      ),
-    },
-    {
-      title: 'Đối tượng',
-      dataIndex: 'targetClass',
-      key: 'targetClass',
-      render: (text) => (
-        <Tag icon={<TeamOutlined />} color="purple">
-          {text || 'Tất cả'}
-        </Tag>
-      ),
-    },
-    {
-      title: 'Người tổ chức',
-      dataIndex: 'organizer',
-      key: 'organizer',
-      render: (organizerId, record) => (
-        <div>
-          <Avatar size="small" icon={<UserOutlined />} style={{ marginRight: 8 }} />
-          <Text>{getOrganizerName(organizerId, record)}</Text>
-        </div>
+        <Text strong style={{ fontSize: '14px' }}>{text}</Text>
       ),
     },
     {
       title: 'Trạng thái',
       dataIndex: 'status',
       key: 'status',
+      width: 120,
       render: (status) => {
         const statusConfig = statusOptions.find(s => s.value === status);
         const config = statusConfig || { label: status, color: 'default' };
@@ -352,69 +270,32 @@ const VaccinationManagement = () => {
       },
     },
     {
-      title: 'Phản hồi',
-      key: 'responses',
-      render: (_, record) => (
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 4, marginBottom: 4 }}>
-            <Text style={{ color: '#52c41a', fontWeight: 'bold' }}>
-              {record.responses?.confirmed || 0}
-            </Text>
-            <Text>/</Text>
-            <Text style={{ color: '#ff4d4f', fontWeight: 'bold' }}>
-              {record.responses?.declined || 0}
-            </Text>
-            <Text>/</Text>
-            <Text style={{ color: '#fa8c16', fontWeight: 'bold' }}>
-              {record.responses?.pending || 0}
-            </Text>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 4, fontSize: '10px' }}>
-            <Text type="secondary">Đồng ý</Text>
-            <Text type="secondary">/</Text>
-            <Text type="secondary">Từ chối</Text>
-            <Text type="secondary">/</Text>
-            <Text type="secondary">Chờ</Text>
-          </div>
-        </div>
-      ),
-    },
-    {
       title: 'Thao tác',
       key: 'actions',
+      width: 80,
       render: (_, record) => {
         const menuItems = [
-          {
-            key: 'edit',
-            icon: <EditOutlined />,
-            label: 'Chỉnh sửa',
-            onClick: () => navigate('/capnhatthongtintiemchung', { state: { event: record } })
-          },
           {
             key: 'send',
             icon: <BellOutlined />,
             label: 'Gửi thông báo',
             onClick: () => handleSendNotification(record)
-          },
-          {
-            key: 'view',
-            icon: <EyeOutlined />,
-            label: 'Xem phản hồi',
-            onClick: () => handleViewResponses(record)
-          },
-          
-          {
-            key: 'delete',
-            icon: <DeleteOutlined />,
-            label: 'Xóa',
-            danger: true,
-            onClick: () => handleDelete(record)
           }
         ];
 
+        // Add edit option only for pending campaigns
+        if (record.status === 'PENDING') {
+          menuItems.unshift({
+            key: 'edit',
+            icon: <EditOutlined />,
+            label: 'Chỉnh sửa',
+            onClick: () => navigate('/capnhatthongtintiemchung', { state: { event: record } })
+          });
+        }
+
         // Add cancel option for pending campaigns
         if (record.status === 'PENDING') {
-          menuItems.splice(-1, 0, {
+          menuItems.push({
             key: 'cancel',
             icon: <CloseCircleOutlined />,
             label: 'Hủy chiến dịch',
@@ -430,13 +311,6 @@ const VaccinationManagement = () => {
             label: 'Duyệt chiến dịch',
             onClick: () => handleApprove(record)
           });
-          menuItems.unshift({
-            key: 'reject',
-            icon: <CloseCircleOutlined />,
-            label: 'Từ chối',
-            danger: true,
-            onClick: () => handleReject(record)
-          });
         }
 
         return (
@@ -445,56 +319,135 @@ const VaccinationManagement = () => {
             trigger={['click']}
             placement="bottomRight"
           >
-            <Button icon={<MoreOutlined />} />
+            <Button icon={<MoreOutlined />} size="small" />
           </Dropdown>
         );
       },
     },
   ];
 
-  // Response table columns
-  const responseColumns = [
-    {
-      title: 'Học sinh',
-      dataIndex: 'studentName',
-      key: 'studentName',
-    },
-    {
-      title: 'Lớp',
-      dataIndex: 'className',
-      key: 'className',
-    },
-    {
-      title: 'Trạng thái',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status) => {
-        const config = {
-          confirmed: { icon: <CheckCircleOutlined />, color: 'success', text: 'Xác nhận' },
-          declined: { icon: <CloseCircleOutlined />, color: 'error', text: 'Từ chối' },
-          pending: { icon: <ExclamationCircleOutlined />, color: 'warning', text: 'Chưa phản hồi' }
-        };
-        const { icon, color, text } = config[status] || config.pending;
-        return (
-          <Tag icon={icon} color={color}>
-            {text}
-          </Tag>
-        );
-      },
-    },
-    {
-      title: 'Ghi chú phụ huynh',
-      dataIndex: 'parentNote',
-      key: 'parentNote',
-      render: (note) => note || <Text type="secondary">Không có</Text>,
-    },
-    {
-      title: 'Ngày phản hồi',
-      dataIndex: 'responseDate',
-      key: 'responseDate',
-      render: (date) => date ? dayjs(date).format('DD/MM/YYYY') : <Text type="secondary">—</Text>,
-    },
-  ];
+  // Expanded row content (detailed view with new API components)
+  const expandedRowRender = (record) => {
+    const getOrganizerName = (organizer, record) => {
+      return organizer || record.createdBy || 'Y tế trường';
+    };
+
+    // Prepare campaign info for components
+    const campaignInfo = {
+      campaignName: record.title,
+      targetGroup: record.targetClass,
+      description: record.description,
+      scheduledDate: record.scheduledDate,
+      status: record.status
+    };
+
+    return (
+      <Card style={{ margin: '16px 0', border: '1px solid #f0f0f0', borderRadius: '8px' }}>
+        {/* Campaign Information Section */}
+        <div style={{ marginBottom: 24 }}>
+          <Title level={4} style={{ marginBottom: 16, color: '#52c41a' }}>
+            <MedicineBoxOutlined style={{ marginRight: 8 }} />
+            Chi tiết chiến dịch: {record.title}
+          </Title>
+          
+          {/* Detailed Information */}
+          <Row gutter={[24, 16]}>
+            <Col span={12}>
+              <div style={{ marginBottom: 12 }}>
+                <Text strong style={{ color: '#595959' }}>Mô tả:</Text>
+                <br />
+                <Text>{record.description || 'Không có mô tả'}</Text>
+              </div>
+              <div style={{ marginBottom: 12 }}>
+                <Text strong style={{ color: '#595959' }}>Thời gian:</Text>
+                <br />
+                <Text>{record.scheduledTime || '09:00'}</Text>
+              </div>
+              <div style={{ marginBottom: 12 }}>
+                <Text strong style={{ color: '#595959' }}>Địa điểm:</Text>
+                <br />
+                <Text>{record.location || 'Phòng y tế trường'}</Text>
+              </div>
+              <div>
+                <Text strong style={{ color: '#595959' }}>Đối tượng:</Text>
+                <br />
+                <Tag icon={<TeamOutlined />} color="purple">
+                  {record.targetClass || 'Tất cả'}
+                </Tag>
+              </div>
+            </Col>
+            <Col span={12}>
+              <div>
+                <Text strong style={{ color: '#595959' }}>Người tổ chức:</Text>
+                <br />
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <Avatar size="small" icon={<UserOutlined />} style={{ marginRight: 8 }} />
+                  <Text>{getOrganizerName(record.organizer, record)}</Text>
+                </div>
+              </div>
+            </Col>
+          </Row>
+          
+          {/* Notes and Required Documents */}
+          {record.notes && (
+            <div style={{ marginTop: 16, padding: '8px 12px', backgroundColor: '#fff', borderRadius: '6px', border: '1px solid #d9d9d9' }}>
+              <Text strong style={{ color: '#595959' }}>Ghi chú:</Text>
+              <br />
+              <Text>{record.notes}</Text>
+            </div>
+          )}
+          {record.requiredDocuments && (
+            <div style={{ marginTop: 8, padding: '8px 12px', backgroundColor: '#fff', borderRadius: '6px', border: '1px solid #d9d9d9' }}>
+              <Text strong style={{ color: '#595959' }}>Tài liệu yêu cầu:</Text>
+              <br />
+              <Text>{record.requiredDocuments}</Text>
+            </div>
+          )}
+        </div>
+
+        <Divider />
+
+        {/* Student Management Section with New APIs */}
+        <Tabs
+          defaultActiveKey="eligible"
+          style={{ marginTop: 16 }}
+          items={[
+            {
+              key: 'eligible',
+              label: (
+                <span>
+                  <TeamOutlined />
+                  Học sinh đủ điều kiện
+                </span>
+              ),
+              children: (
+                <AllStudentsInCampaign 
+                  campaignId={record.id} 
+                  campaignInfo={campaignInfo}
+                />
+              ),
+            },
+            {
+              key: 'status',
+              label: (
+                <span>
+                  <MedicineBoxOutlined />
+                  Trạng thái tiêm chủng
+                </span>
+              ),
+              children: (
+                <StudentsWithVaccinationStatus 
+                  campaignId={record.id} 
+                  campaignInfo={campaignInfo}
+                />
+              ),
+            },
+          ]}
+        />
+      </Card>
+    );
+  };
+
 
   return (
     <div style={{ maxWidth: 1600, margin: '0 auto', padding: '24px' }}>
@@ -655,9 +608,39 @@ const VaccinationManagement = () => {
         style={{ borderRadius: 8 }}
       >
         <Table
-          columns={columns}
+          columns={briefColumns}
           dataSource={filteredEvents}
           loading={loading}
+          expandable={{
+            expandedRowRender,
+            expandIcon: ({ expanded, onExpand, record }) =>
+              expanded ? (
+                <Button 
+                  size="small" 
+                  type="text" 
+                  icon={<EyeOutlined />} 
+                  onClick={e => onExpand(record, e)}
+                  style={{ color: '#52c41a' }}
+                >
+                  Ẩn chi tiết
+                </Button>
+              ) : (
+                <Button 
+                  size="small" 
+                  type="primary" 
+                  icon={<EyeOutlined />} 
+                  onClick={e => onExpand(record, e)}
+                  style={{ 
+                    backgroundColor: '#52c41a',
+                    borderColor: '#52c41a'
+                  }}
+                >
+                  Xem chi tiết
+                </Button>
+              ),
+            expandIconColumnIndex: 5,
+            rowExpandable: () => true,
+          }}
           pagination={{
             total: filteredEvents.length,
             pageSize: 10,
@@ -666,7 +649,7 @@ const VaccinationManagement = () => {
             showTotal: (total, range) => 
               `${range[0]}-${range[1]} của ${total} chiến dịch`,
           }}
-          scroll={{ x: 1200 }}
+          scroll={{ x: 1000 }}
         />
       </Card>
 
@@ -757,68 +740,6 @@ const VaccinationManagement = () => {
         </Form>
       </Modal>
 
-      {/* Response Modal */}
-      <Modal
-        title={
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <FileTextOutlined style={{ color: '#52c41a' }} />
-            Phản hồi từ phụ huynh
-          </div>
-        }
-        open={responseModalOpen}
-        onCancel={() => setResponseModalOpen(false)}
-        footer={[
-          <Button key="export" icon={<ExportOutlined />}>
-            Xuất danh sách
-          </Button>,
-          <Button key="close" onClick={() => setResponseModalOpen(false)}>
-            Đóng
-          </Button>
-        ]}
-        width={900}
-        className="response-modal"
-      >
-        <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-          <Col span={6}>
-            <Statistic
-              title="Tổng số"
-              value={currentStudentResponses.length}
-              prefix={<TeamOutlined />}
-            />
-          </Col>
-          <Col span={6}>
-            <Statistic
-              title="Xác nhận"
-              value={currentStudentResponses.filter(r => r.status === 'confirmed').length}
-              prefix={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Col>
-          <Col span={6}>
-            <Statistic
-              title="Từ chối"
-              value={currentStudentResponses.filter(r => r.status === 'declined').length}
-              prefix={<CloseCircleOutlined style={{ color: '#ff4d4f' }} />}
-              valueStyle={{ color: '#ff4d4f' }}
-            />
-          </Col>
-          <Col span={6}>
-            <Statistic
-              title="Chưa phản hồi"
-              value={currentStudentResponses.filter(r => r.status === 'pending').length}
-              prefix={<ExclamationCircleOutlined style={{ color: '#fa8c16' }} />}
-              valueStyle={{ color: '#fa8c16' }}
-            />
-          </Col>
-        </Row>
-
-        <Table
-          columns={responseColumns}
-          dataSource={currentStudentResponses}
-          pagination={false}
-          size="small"
-        />
-      </Modal>
     </div>
   );
 };

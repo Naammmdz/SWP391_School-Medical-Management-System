@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Form, Input, Select, Button, Alert, Spin, Avatar, Typography, Row, Col, message } from 'antd';
+import { Card, Form, Input, Select, Button, Alert, Spin, Avatar, Typography, Row, Col, message, DatePicker } from 'antd';
 import { UserAddOutlined, SaveOutlined, UserOutlined, CalendarOutlined, TeamOutlined, BookOutlined } from '@ant-design/icons';
 import userService from '../../services/UserService';
 import studentService from '../../services/StudentService';
 import { useLocation } from 'react-router-dom';
+import dayjs from 'dayjs';
 import './CreateStudent.css';
 
 const { Title, Text } = Typography;
@@ -46,8 +47,12 @@ const CreateStudent = () => {
       const token = localStorage.getItem('token');
       const createRequest = {
         ...values,
+        // Convert date to proper format - backend expects yob field
+        yob: values.dob ? values.dob.format('YYYY-MM-DD') : null,
         parentId
       };
+      // Remove dob field to avoid confusion
+      delete createRequest.dob;
       await studentService.createStudent(createRequest, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -112,16 +117,19 @@ const CreateStudent = () => {
                 </Col>
                 <Col xs={24} md={12}>
                   <Form.Item
-                    label={<span><CalendarOutlined /> Năm sinh</span>}
-                    name="yob"
-                    rules={[{ required: true, message: 'Vui lòng nhập năm sinh!' }]}
+                    label={<span><CalendarOutlined /> Ngày sinh</span>}
+                    name="dob"
+                    rules={[{ required: true, message: 'Vui lòng chọn ngày sinh!' }]}
                   >
-                    <Input
-                      type="number"
-                      placeholder="Nhập năm sinh"
+                    <DatePicker
+                      placeholder="Chọn ngày sinh"
                       size="large"
-                      min={1900}
-                      max={new Date().getFullYear()}
+                      style={{ width: '100%' }}
+                      format="DD/MM/YYYY"
+                      disabledDate={(current) => {
+                        // Disable future dates and dates before 1900
+                        return current && (current > dayjs().endOf('day') || current < dayjs('1900-01-01'));
+                      }}
                     />
                   </Form.Item>
                 </Col>
