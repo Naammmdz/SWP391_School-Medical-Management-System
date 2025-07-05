@@ -14,7 +14,7 @@ import java.time.LocalDate;
         private String unit;
         private int quantity;
 
-        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
         private LocalDate expiryDate;
         private String createdAt;
     }
