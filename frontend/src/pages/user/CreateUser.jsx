@@ -90,9 +90,9 @@ const CreateUser = () => {
   };
 
   // Handle form submission
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
+  const handleSubmit = (values) => {
+    // When using Ant Design Form, onFinish receives form values, not DOM event
+    // We'll use currentUser state since it's already being maintained
     if (isEditing) {
       if (!currentUser.fullName || !currentUser.phone || !currentUser.email) {
         alert('Vui lòng điền đầy đủ thông tin');
