@@ -20,7 +20,7 @@ public interface VaccinationCampaignService {
 
     VaccinationCampaignResponseDTO updateVaccinationCampaign(Integer campaignId, VaccinationCampaignRequestDTO vaccinationCampaignRequestDTO);
 
-    VaccinationCampaignResponseDTO approveVaccinationCampaign(Integer campaignId, int approvedBy, Status status);
+    VaccinationCampaignResponseDTO approveVaccinationCampaign(Integer campaignId, int approvedBy, Status status, String rejectionReason);
 
     VaccinationCampaignResponseDTO updateVaccinationCampaignStatus(Integer campaignId, Status status);
 

@@ -135,11 +135,18 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
     }
 
     @Override
-    public HealthCampaignResponseDTO approveCampaign(int campaignId, int approvedBy, Status status) {
+    public HealthCampaignResponseDTO approveCampaign(int campaignId, int approvedBy, Status status, String rejectionReason) {
         HealthCheckCampaign existingCampaign = healthCheckCampaignRepository.findById(campaignId).orElseThrow(() -> new RuntimeException("Campaign not found with ID: " + campaignId));
 
         existingCampaign.setApprovedBy(approvedBy);
         existingCampaign.setStatus(status); // Set status thành approved
+        // Khi phê duyệt, không cần thiết phải set rejectionReason
+        // Khi từ chối chiến dịch, sẽ set rejectionReason
+        if( status == Status.CANCELLED) {
+            existingCampaign.setRejectionReason(rejectionReason);
+        } else {
+            existingCampaign.setRejectionReason(null); // Xóa lý do từ chối nếu không phải là trạng thái REJECTED
+        }
 
         HealthCheckCampaign updatedCampaign = healthCheckCampaignRepository.save(existingCampaign);
         // Gửi đến yta/ admin đã tạo chiến dịch về tình trạng chiến dich
@@ -254,6 +261,9 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
             List<HealthCheck> checks = checksByCampaign.getOrDefault(campaign.getCampaignId(), new ArrayList<>());
 
             Boolean confirmStatus;
+            if(checks.isEmpty()) {
+                confirmStatus = null; // Trường hợp không có kết quả kiểm tra nào
+            } else
             if (checks.stream().allMatch(HealthCheck::isParentConfirmation)) {
                 confirmStatus = true;
             } else if (checks.stream().noneMatch(HealthCheck::isParentConfirmation)) {

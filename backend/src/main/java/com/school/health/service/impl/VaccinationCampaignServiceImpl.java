@@ -122,11 +122,16 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
     }
 
     @Override
-    public VaccinationCampaignResponseDTO approveVaccinationCampaign(Integer campaignId, int approvedBy, Status status) {
+    public VaccinationCampaignResponseDTO approveVaccinationCampaign(Integer campaignId, int approvedBy, Status status, String rejectionReason) {
         VaccinationCampaign campaign = vaccinationCampaignRepository.findById(campaignId).orElseThrow(() -> new RuntimeException("Campaign not found id :" + campaignId));
 
         campaign.setApprovedBy(approvedBy);
         campaign.setStatus(status);
+        if( status == Status.CANCELLED) {
+            campaign.setRejectionReason(rejectionReason);
+        } else {
+            campaign.setRejectionReason(null); // Clear rejection reason if approved
+        }
 
         VaccinationCampaign approvedCampaign = vaccinationCampaignRepository.save(campaign);
         // Gửi đến yta/ admin đã tạo chiến dịch về tình trạng chiến dich
