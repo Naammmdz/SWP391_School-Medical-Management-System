@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Form, Input, Select, Button, Alert, Spin, Avatar, Typography, Row, Col, message } from 'antd';
+import { Card, Form, Input, Select, Button, Alert, Spin, Avatar, Typography, Row, Col, message, DatePicker } from 'antd';
 import { UserAddOutlined, SaveOutlined, UserOutlined, CalendarOutlined, TeamOutlined, BookOutlined } from '@ant-design/icons';
 import userService from '../../services/UserService';
 import studentService from '../../services/StudentService';
@@ -46,6 +46,7 @@ const CreateStudent = () => {
       const token = localStorage.getItem('token');
       const createRequest = {
         ...values,
+        yob: values.yob.format('YYYY-MM-DD'),
         parentId
       };
       await studentService.createStudent(createRequest, {
@@ -112,16 +113,15 @@ const CreateStudent = () => {
                 </Col>
                 <Col xs={24} md={12}>
                   <Form.Item
-                    label={<span><CalendarOutlined /> Năm sinh</span>}
+                    label={<span><CalendarOutlined /> Ngày sinh</span>}
                     name="yob"
-                    rules={[{ required: true, message: 'Vui lòng nhập năm sinh!' }]}
+                    rules={[{ required: true, message: 'Vui lòng chọn ngày sinh!' }]}
                   >
-                    <Input
-                      type="number"
-                      placeholder="Nhập năm sinh"
+                    <DatePicker
+                      format="YYYY-MM-DD"
+                      placeholder="Chọn ngày sinh"
                       size="large"
-                      min={1900}
-                      max={new Date().getFullYear()}
+                      style={{ width: '100%' }}
                     />
                   </Form.Item>
                 </Col>

@@ -13,6 +13,7 @@ const CreateUser = () => {
   const [successMessage, setSuccessMessage] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const navigate = useNavigate();
+  const [form] = Form.useForm();
   const [currentUser, setCurrentUser] = useState({
     id: null,
     fullName: '',
@@ -90,21 +91,19 @@ const CreateUser = () => {
   };
 
   // Handle form submission
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
+  const handleSubmit = (values) => {
     if (isEditing) {
-      if (!currentUser.fullName || !currentUser.phone || !currentUser.email) {
+      if (!values.fullName || !values.phone || !values.email) {
         alert('Vui lòng điền đầy đủ thông tin');
         return;
       }
-      updateUser(currentUser.id, currentUser);
+      updateUser(currentUser.id, values);
     } else {
-      if (!currentUser.fullName || !currentUser.phone || !currentUser.role || !currentUser.email || !currentUser.password) {
+      if (!values.fullName || !values.phone || !values.role || !values.email || !values.password) {
         alert('Vui lòng điền đầy đủ thông tin');
         return;
       }
-      createUser(currentUser);
+      createUser(values);
     }
   };
 
@@ -120,6 +119,7 @@ const CreateUser = () => {
       isActive: '',
       password: ''
     });
+    form.resetFields();
   };
 
   return (
@@ -169,14 +169,11 @@ const CreateUser = () => {
           </Space>
         }
       >
-        <Form layout="vertical" onFinish={handleSubmit}>
+        <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Row gutter={[24, 16]}>
             <Col xs={24} sm={12}>
-              <Form.Item label="Họ và tên" required>
+              <Form.Item label="Họ và tên" name="fullName" required>
                 <Input
-                  name="fullName"
-                  value={currentUser.fullName}
-                  onChange={handleInputChange}
                   size="large"
                   placeholder="Nhập họ và tên"
                   prefix={<UserOutlined style={{ color: '#8c8c8c' }} />}
@@ -186,11 +183,8 @@ const CreateUser = () => {
               </Form.Item>
             </Col>
             <Col xs={24} sm={12}>
-              <Form.Item label="Số điện thoại" required>
+              <Form.Item label="Số điện thoại" name="phone" required>
                 <Input
-                  name="phone"
-                  value={currentUser.phone}
-                  onChange={handleInputChange}
                   size="large"
                   placeholder="Nhập số điện thoại"
                   prefix={<PhoneOutlined style={{ color: '#8c8c8c' }} />}
@@ -200,11 +194,8 @@ const CreateUser = () => {
               </Form.Item>
             </Col>
             <Col xs={24} sm={12}>
-              <Form.Item label="Email" required>
+              <Form.Item label="Email" name="email" required>
                 <Input
-                  name="email"
-                  value={currentUser.email}
-                  onChange={handleInputChange}
                   size="large"
                   placeholder="Nhập email"
                   prefix={<MailOutlined style={{ color: '#8c8c8c' }} />}
@@ -215,11 +206,8 @@ const CreateUser = () => {
             </Col>
             {!isEditing && (
               <Col xs={24} sm={12}>
-                <Form.Item label="Vai trò" required>
+                <Form.Item label="Vai trò" name="role" required>
                   <Select
-                    name="role"
-                    value={currentUser.role || undefined}
-                    onChange={(value) => setCurrentUser(prev => ({ ...prev, role: value }))}
                     size="large"
                     placeholder="Chọn vai trò"
                     style={{ borderRadius: 8 }}
@@ -236,11 +224,8 @@ const CreateUser = () => {
             )}
             {!isEditing && (
               <Col xs={24} sm={12}>
-                <Form.Item label="Mật khẩu" required>
+                <Form.Item label="Mật khẩu" name="password" required>
                   <Input.Password
-                    name="password"
-                    value={currentUser.password}
-                    onChange={handleInputChange}
                     size="large"
                     placeholder="Nhập mật khẩu"
                     prefix={<LockOutlined style={{ color: '#8c8c8c' }} />}

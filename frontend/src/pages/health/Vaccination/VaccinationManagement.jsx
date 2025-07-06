@@ -58,6 +58,9 @@ const VaccinationManagement = () => {
   const [responseModalOpen, setResponseModalOpen] = useState(false);
   const [currentCampaign, setCurrentCampaign] = useState(null);
   const [currentStudentResponses, setCurrentStudentResponses] = useState([]);
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+  const [rejectingRecord, setRejectingRecord] = useState(null);
   
   // User info
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -138,32 +141,10 @@ const VaccinationManagement = () => {
   };
 
   // Handle reject
-  const handleReject = async (record) => {
-    Modal.confirm({
-      title: 'Xác nhận từ chối',
-      icon: <ExclamationCircleOutlined />,
-      content: `Bạn có chắc muốn từ chối chiến dịch "${record.title}"?`,
-      okText: 'Từ chối',
-      okType: 'danger',
-      cancelText: 'Hủy',
-      onOk: async () => {
-        try {
-          setLoading(true);
-          const token = localStorage.getItem('token');
-          await VaccinationService.rejectVaccinationCampaign(
-            record.id,
-            {},
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-          message.success('Đã từ chối chiến dịch thành công');
-          fetchVaccinationEvents();
-        } catch (error) {
-          message.error('Có lỗi khi từ chối chiến dịch');
-        } finally {
-          setLoading(false);
-        }
-      }
-    });
+  const handleReject = (record) => {
+    setRejectingRecord(record);
+    setRejectReason('');
+    setRejectModalOpen(true);
   };
 
   // Handle delete
@@ -790,6 +771,50 @@ const VaccinationManagement = () => {
           dataSource={currentStudentResponses}
           pagination={false}
           size="small"
+        />
+      </Modal>
+
+      {/* Modal nhập lý do từ chối */}
+      <Modal
+        title="Nhập lý do từ chối"
+        open={rejectModalOpen}
+        onCancel={() => setRejectModalOpen(false)}
+        onOk={async () => {
+          if (!rejectReason.trim()) {
+            message.warning('Vui lòng nhập lý do từ chối');
+            return;
+          }
+          try {
+            setLoading(true);
+            const token = localStorage.getItem('token');
+            await VaccinationService.rejectVaccinationCampaign(
+              rejectingRecord.id,
+              { rejectionReason: rejectReason },
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            message.success('Đã từ chối chiến dịch thành công');
+            setRejectModalOpen(false);
+            // Hiển thị lý do từ chối vừa nhập
+            Modal.info({
+              title: 'Lý do từ chối',
+              content: <div style={{ whiteSpace: 'pre-line' }}>{rejectReason}</div>,
+              okText: 'Đóng'
+            });
+            fetchVaccinationEvents();
+          } catch (error) {
+            message.error('Có lỗi khi từ chối chiến dịch');
+          } finally {
+            setLoading(false);
+          }
+        }}
+        okText="Từ chối"
+        okType="danger"
+      >
+        <Input.TextArea
+          rows={4}
+          value={rejectReason}
+          onChange={e => setRejectReason(e.target.value)}
+          placeholder="Nhập lý do từ chối..."
         />
       </Modal>
     </div>
