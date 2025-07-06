@@ -24,12 +24,41 @@ const UpdateUserByAdmin = () => {
   const fetchUserData = async () => {
     try {
       const token = localStorage.getItem('token');
+      
+      // First try to get specific user by ID
+      try {
+        const userResponse = await userService.getUserByIdForAdmin(userId, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        
+        if (userResponse.data) {
+          setCurrentUser({
+            id: userResponse.data.id,
+            fullName: userResponse.data.fullName || '',
+            phone: userResponse.data.phone || '',
+            email: userResponse.data.email || '',
+            isActive: userResponse.data.isActive
+          });
+          return; // Success, exit function
+        }
+      } catch (userError) {
+        console.log('Direct user fetch failed, trying getAllUsers...', userError);
+      }
+      
+      // Fallback: get all users and find the specific one
       const response = await userService.getAllUsers({
         headers: {
           Authorization: `Bearer ${token}`
         }
       });
-      const user = response.data.find(u => u.id === parseInt(userId));
+      
+      // Look for user by ID (handle both string and number IDs)
+      const user = response.data.find(u => 
+        u.id === parseInt(userId) || u.id === userId || u.id.toString() === userId
+      );
+      
       if (user) {
         setCurrentUser({
           id: user.id,
@@ -39,10 +68,19 @@ const UpdateUserByAdmin = () => {
           isActive: user.isActive
         });
       } else {
-        setError('Không tìm thấy người dùng');
+        setError(`Không tìm thấy người dùng với ID: ${userId}. Người dùng có thể vừa được tạo - vui lòng thử lại trong giây lát hoặc quay về danh sách người dùng.`);
+        // Automatically redirect back to user list after 5 seconds
+        setTimeout(() => {
+          navigate('/danhsachnguoidung');
+        }, 5000);
       }
     } catch (error) {
-      setError('Failed to fetch user data');
+      console.error('Error fetching user data:', error);
+      setError('Không thể tải thông tin người dùng. Vui lòng thử lại.');
+      // Automatically redirect back to user list after 3 seconds
+      setTimeout(() => {
+        navigate('/danhsachnguoidung');
+      }, 3000);
     }
   };
 

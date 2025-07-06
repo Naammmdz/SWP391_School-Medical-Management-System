@@ -48,12 +48,16 @@ const CreateUser = () => {
         role: userData.role
       };
 
-      await userService.createUser(registerRequest, {
+      const response = await userService.createUser(registerRequest, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
+      
+      // Clear any cached user data
+      localStorage.removeItem('users');
+      
       resetForm();
       setSuccessMessage('Tạo người dùng thành công!');
       setTimeout(() => {
