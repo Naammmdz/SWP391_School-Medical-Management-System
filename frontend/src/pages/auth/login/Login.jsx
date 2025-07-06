@@ -37,7 +37,7 @@ const Login = () => {
           navigate('/admin');
           break;
         case 'ROLE_PARENT':
-          navigate('/thongke');
+          navigate('/parent');
           break;
         case 'ROLE_NURSE':
           navigate('/nurse');

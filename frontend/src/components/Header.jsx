@@ -86,7 +86,7 @@ const Header = () => {
         { path: "/sukienyte", label: "Sự kiện y tế" }
       ],
       ROLE_PARENT: [
-        { path: "/thongke", label: "Bảng điều khiển" },
+        { path: "/parent", label: "Trang chính phụ huynh" },
         { path: "/hososuckhoe", label: "Hồ sơ sức khỏe" },
         { path: "/khaibaothuoc", label: "Khai báo thuốc" },
         { path: "/donthuocdagui", label: "Đơn thuốc đã gửi" },
