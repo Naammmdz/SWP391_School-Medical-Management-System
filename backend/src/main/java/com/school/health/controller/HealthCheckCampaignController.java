@@ -67,7 +67,17 @@ public class HealthCheckCampaignController {
     public ResponseEntity<?> approveCampaign(@PathVariable @Valid int campaignId, Authentication authentication) {
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
         Integer approvedBy = userPrincipal.getId();
-        HealthCampaignResponseDTO healthCampaignResponseDTO = healthCheckCampaignServiceImpl.approveCampaign(campaignId, approvedBy);
+        HealthCampaignResponseDTO healthCampaignResponseDTO = healthCheckCampaignServiceImpl.approveCampaign(campaignId, approvedBy, Status.APPROVED, null);
+        return ResponseEntity.ok(healthCampaignResponseDTO);
+    }
+
+    // Cập nhật trạng thái thành REJECTED của chiến dịch sức khỏe
+    @PutMapping("/{campaignId}/reject")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE') or hasRole('PRINCIPAL') or hasRole('PARENT')")
+    public ResponseEntity<?> rejectCampaign(@PathVariable @Valid int campaignId, Authentication authentication, @RequestParam(required = false) String rejectionReason) {
+        UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
+        Integer approvedBy = userPrincipal.getId();
+        HealthCampaignResponseDTO healthCampaignResponseDTO = healthCheckCampaignServiceImpl.approveCampaign(campaignId, approvedBy, Status.CANCELLED, rejectionReason);
         return ResponseEntity.ok(healthCampaignResponseDTO);
     }
 
@@ -90,8 +100,10 @@ public class HealthCheckCampaignController {
     // Xem danh sách các chiến dịch đã được phê duyệt APRROVED dành cho phụ huynh
     @GetMapping("/approved")
     @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE') or hasRole('PRINCIPAL') or hasRole('PARENT')")
-    public ResponseEntity<?> getApprovedCampaign() {
-        return ResponseEntity.ok(healthCheckCampaignServiceImpl.getApprovedCampaigns());
+    public ResponseEntity<?> getApprovedCampaign(Authentication authentication) {
+        UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
+        Integer userId = userPrincipal.getId();
+        return ResponseEntity.ok(healthCheckCampaignServiceImpl.getApprovedCampaigns(userId));
     }
 
     // Phụ huynh đăng ký cho học sinh tham gia chiến dịch sức khỏe

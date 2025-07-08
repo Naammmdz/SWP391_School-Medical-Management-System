@@ -2,6 +2,7 @@ package com.school.health.dto.response;
 
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.Column;
 import lombok.*;
 
@@ -11,6 +12,7 @@ import lombok.*;
 @AllArgsConstructor
 public class VaccinationResponseDTO {
     private int vaccinationId;
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate date;
     private Integer doseNumber;
     private String adverseReaction;

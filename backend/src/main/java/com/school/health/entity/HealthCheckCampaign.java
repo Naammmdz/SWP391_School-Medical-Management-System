@@ -45,6 +45,8 @@ public class HealthCheckCampaign {
     @Column(name = "CreatedAt")
 //    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
+    @Column(name = "RejectionReason", columnDefinition = "NVARCHAR(255)")
+    private String rejectionReason;
 
 
 }

@@ -6,6 +6,9 @@ import com.school.health.dto.request.StatusUpdateRequest;
 import com.school.health.dto.response.*;
 import com.school.health.entity.*;
 import com.school.health.enums.MedicineSubmissionStatus;
+import com.school.health.event.noti.MarkMedicineTakenEvent;
+import com.school.health.event.noti.MedicineSubmissionApprovedEvent;
+import com.school.health.event.noti.MedicineSubmissionCreatedEvent;
 import com.school.health.exception.AccessDeniedException;
 import com.school.health.exception.BadRequestException;
 import com.school.health.exception.ResourceNotFoundException;
@@ -14,8 +17,8 @@ import com.school.health.repository.MedicineSubmissionRepository;
 import com.school.health.repository.StudentRepository;
 import com.school.health.repository.UserRepository;
 import com.school.health.service.MedicineSubmissionService;
-import com.school.health.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -40,8 +43,8 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
 
     @Autowired
     private UserRepository userRepository;
-    @Autowired
-    private NotificationService notificationService;
+   @Autowired
+   private ApplicationEventPublisher publisher;
 
 
     // ===== PARENT OPERATIONS =====
@@ -128,10 +131,8 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
 
         //Save the MedicineSubmission entity
         medicineSubmissionRepository.save(medicineSubmission);
-        userRepository.findAllNurse().forEach(user -> {
-            notificationService.createNotification(user.getUserId(),
-                    "Có đơn thuốc chờ bạn xử lí", "Có đơn gửi thuốc từ phụ huynh " + medicineSubmission.getParent().getFullName() + " xin vui lòng kiểm tra");
-        });
+
+        publisher.publishEvent(new MedicineSubmissionCreatedEvent(medicineSubmission));
         //Return the saved submission
         return toResponse(medicineSubmission);
     }
@@ -333,8 +334,7 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
         submission.setApprovedAt(request.getApprovedAt());
 
         medicineSubmissionRepository.save(submission);
-        String status = request.getSubmissionStatus().equals("APPROVED") ? "chấp nhận" : "từ chối";
-        notificationService.createNotification(submission.getParent().getUserId(),"Yêu cầu gửi thuốc của bạn đã có kết quả", "Yêu cầu gửi thuốc của bạn đã được "+ status + " bởi "+submission.getApprovedBy().getFullName()+" vào "+ submission.getApprovedAt());
+        publisher.publishEvent(new MedicineSubmissionApprovedEvent(submission));
         return toResponse(submission);
     }
 
@@ -472,6 +472,8 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
         if (log.getImageData() != null) {
             response.setImageData(log.getImageData());
         }
+        // Tạo event thông báo cho phụ huynh
+        publisher.publishEvent(new MarkMedicineTakenEvent( response));
         return response;
     }
 
