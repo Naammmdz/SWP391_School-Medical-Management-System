@@ -1,5 +1,6 @@
 package com.school.health.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,6 +15,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class HealthCheckResponseDTO {
     private int healthCheckId;
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate date;
     private double height;
     private double weight;

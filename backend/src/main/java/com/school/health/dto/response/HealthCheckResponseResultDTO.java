@@ -13,6 +13,7 @@ import java.time.LocalDate;
 @Builder
 public class HealthCheckResponseResultDTO {
     private int healthCheckId;
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate date;
     private double height;
     private double weight;

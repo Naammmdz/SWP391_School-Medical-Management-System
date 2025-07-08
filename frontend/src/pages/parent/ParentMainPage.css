@@ -155,6 +155,121 @@
   background: white;
 }
 
+/* ========================================
+   MENU CARDS
+======================================== */
+
+.menu-card-modern {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 20px;
+  padding: 24px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  color: white;
+  border: none;
+}
+
+.menu-card-modern:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+}
+
+.menu-card-modern.priority-urgent {
+  animation: urgentPulse 2s infinite;
+}
+
+.menu-card-modern.priority-high:hover {
+  animation: priorityGlow 1s ease-in-out;
+}
+
+.notification-pulse {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: #ff4757;
+  color: white;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  animation: pulse 2s infinite;
+  z-index: 2;
+}
+
+.badge-count {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.card-icon {
+  margin-bottom: 16px;
+}
+
+.icon-emoji {
+  font-size: 48px;
+  display: block;
+  animation: iconFloat 3s ease-in-out infinite;
+}
+
+.card-content {
+  flex: 1;
+}
+
+.card-title {
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  margin: 0 0 8px 0 !important;
+  color: white !important;
+  line-height: 1.2;
+}
+
+.card-subtitle {
+  font-size: 14px;
+  opacity: 0.9;
+  margin: 0;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.card-arrow {
+  margin-top: 16px;
+  text-align: right;
+  font-size: 18px;
+  opacity: 0.8;
+  transition: all 0.3s ease;
+}
+
+.menu-card-modern:hover .card-arrow {
+  opacity: 1;
+  transform: translateX(4px);
+}
+
+.card-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.1);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: 20px;
+}
+
+.menu-card-modern:hover .card-glow {
+  opacity: 1;
+}
+
 .section-header {
   text-align: center;
   margin-bottom: 30px;
@@ -469,134 +584,152 @@
 }
 
 /* ========================================
-   MODAL STYLES
+   SIMPLE GUIDE MODAL STYLES
 ======================================== */
 
-.modern-guide-modal .ant-modal-content {
-  border-radius: 24px !important;
-  overflow: hidden;
-  padding: 0 !important;
+.simple-guide-modal .ant-modal-header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.modern-guide-modal .ant-modal-close {
-  color: white !important;
-  top: 16px !important;
-  right: 16px !important;
-}
-
-.modal-content {
-  padding: 40px 32px 32px;
   color: white;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  padding: 20px 24px;
 }
 
-.modal-header {
-  text-align: center;
-  margin-bottom: 32px;
-}
-
-.modal-emoji {
-  font-size: 64px;
-  margin-bottom: 16px;
-  animation: bounce 2s infinite;
-}
-
-.modal-title {
+.simple-guide-modal .ant-modal-title {
   color: white !important;
-  font-size: 28px !important;
-  font-weight: 700 !important;
-  margin: 0 0 8px 0 !important;
+  font-size: 20px !important;
+  font-weight: 600 !important;
 }
 
-.modal-subtitle {
-  color: rgba(255,255,255,0.9) !important;
-  font-size: 16px !important;
+.simple-guide-modal .ant-modal-close {
+  color: white;
+  top: 16px;
+  right: 16px;
 }
 
-.guide-steps {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-bottom: 32px;
+.simple-guide-modal .ant-modal-close:hover {
+  color: rgba(255, 255, 255, 0.8);
 }
 
-.step-card {
-  background: rgba(255,255,255,0.1);
-  border-radius: 16px;
-  padding: 20px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.2);
+.simple-guide-modal .ant-modal-body {
+  padding: 24px;
+  background: #f8f9fa;
+}
+
+.simple-guide-modal .ant-modal-footer {
+  background: #f8f9fa;
+  border-top: 1px solid #e9ecef;
+  padding: 16px 24px;
+  text-align: center;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .simple-guide-modal .ant-modal {
+    width: 90% !important;
+    max-width: 400px !important;
+    margin: 0 auto;
+  }
+  
+  .simple-guide-modal .ant-modal-header {
+    padding: 16px 20px;
+  }
+  
+  .simple-guide-modal .ant-modal-title {
+    font-size: 18px !important;
+  }
+  
+  .simple-guide-modal .ant-modal-body {
+    padding: 20px;
+  }
+  
+  .simple-guide-modal .ant-modal-footer {
+    padding: 12px 20px;
+  }
+}
+
+/* ========================================
+   HELP SECTION
+======================================== */
+
+.help-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border-radius: 20px;
+  padding: 24px;
+  cursor: pointer;
   transition: all 0.3s ease;
-}
-
-.step-card:hover {
-  background: rgba(255,255,255,0.15);
-  transform: translateX(4px);
-}
-
-.step-number {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.2);
+  border: 2px solid #e0e0e0;
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  font-weight: bold;
-  flex-shrink: 0;
+  gap: 16px;
+  min-height: 100px;
 }
 
-.step-content h4 {
-  font-size: 16px !important;
-  font-weight: 600 !important;
-  margin: 0 0 4px 0 !important;
-  color: white !important;
+.help-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.1);
+  border-color: #10d569;
 }
 
-.step-content p {
-  font-size: 14px !important;
-  margin: 0 !important;
-  color: rgba(255,255,255,0.8) !important;
+.help-card.emergency {
+  border-color: #ff4757;
 }
 
-.modal-footer {
+.help-card.emergency:hover {
+  border-color: #ff3742;
+  box-shadow: 0 12px 35px rgba(255, 71, 87, 0.3);
+}
+
+.help-card.guide {
+  border-color: #2196f3;
+}
+
+.help-card.guide:hover {
+  border-color: #1976d2;
+  box-shadow: 0 12px 35px rgba(33, 150, 243, 0.3);
+}
+
+.help-icon {
+  font-size: 32px;
+  min-width: 48px;
   text-align: center;
 }
 
-.tip-box {
-  background: rgba(255,255,255,0.1);
+.help-content {
+  flex: 1;
+}
+
+.help-content h3 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.help-content p {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.help-status {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
   border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+  white-space: nowrap;
 }
 
-.tip-icon {
-  font-size: 20px;
+.emergency-status {
+  background: #ffebee;
+  color: #d32f2f;
 }
 
-.got-it-button {
-  background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%) !important;
-  border: none !important;
-  border-radius: 12px !important;
-  font-size: 16px !important;
-  font-weight: 600 !important;
-  padding: 12px 32px !important;
-  height: auto !important;
+.guide-status {
+  background: #e3f2fd;
+  color: #1976d2;
 }
 
-.got-it-button:hover {
-  background: linear-gradient(135deg, #73d13d 0%, #52c41a 100%) !important;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(82, 196, 26, 0.3) !important;
-}
 
 /* ========================================
    ANIMATIONS
@@ -611,6 +744,34 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes floatRandom {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  25% { transform: translateY(-5px) rotate(1deg); }
+  50% { transform: translateY(-10px) rotate(-1deg); }
+  75% { transform: translateY(-5px) rotate(0.5deg); }
+}
+
+@keyframes floatCircle {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50% { transform: translateY(-15px) scale(1.05); }
+}
+
+@keyframes rotateGlow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 @keyframes wave {
@@ -706,18 +867,85 @@
     font-size: 28px;
   }
   
+  /* Modal responsive styles */
+  .modern-guide-modal .ant-modal {
+    margin: 10px !important;
+    max-width: calc(100vw - 20px) !important;
+  }
+  
+  .modern-guide-modal .ant-modal-content {
+    max-height: 90vh !important;
+  }
+  
+  .modern-guide-modal .ant-modal-body {
+    max-height: calc(90vh - 60px) !important;
+    overflow-y: auto !important;
+  }
+  
   .modal-content {
-    padding: 32px 24px 24px;
+    padding: 20px 16px 16px !important;
+  }
+  
+  .modal-header {
+    margin-bottom: 16px !important;
+  }
+  
+  .modal-emoji {
+    font-size: 32px !important;
+    margin-bottom: 8px !important;
+  }
+  
+  .modal-title {
+    font-size: 20px !important;
+  }
+  
+  .modal-subtitle {
+    font-size: 13px !important;
   }
   
   .guide-steps {
-    gap: 12px;
+    gap: 10px !important;
+    margin-bottom: 16px !important;
   }
   
   .step-card {
-    padding: 16px;
-    flex-direction: column;
-    text-align: center;
+    padding: 12px !important;
+    gap: 10px !important;
+  }
+  
+  .step-number {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 14px !important;
+    min-width: 32px !important;
+  }
+  
+  .step-content h4 {
+    font-size: 14px !important;
+  }
+  
+  .step-content p {
+    font-size: 12px !important;
+  }
+  
+  .modal-footer {
+    padding-top: 16px !important;
+    margin-top: 4px !important;
+  }
+  
+  .tip-box {
+    padding: 10px !important;
+    margin-bottom: 12px !important;
+    font-size: 12px !important;
+  }
+  
+  .tip-icon {
+    font-size: 14px !important;
+  }
+  
+  .got-it-button {
+    font-size: 13px !important;
+    padding: 8px 20px !important;
   }
 }
 

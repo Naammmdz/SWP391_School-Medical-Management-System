@@ -43,4 +43,6 @@ public class VaccinationCampaign {
     @CreationTimestamp
     @Column(name = "CreatedAt")
     private LocalDateTime createdAt;
+    @Column(name = "RejectionReason", columnDefinition = "NVARCHAR(255)")
+    private String rejectionReason;
 }

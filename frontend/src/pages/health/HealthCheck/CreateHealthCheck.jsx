@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Input, Button, DatePicker, Card, Typography, Alert, Spin, Select, Checkbox, Tag, Tooltip, Space } from 'antd';
+
+import { Form, Input, Button, DatePicker, Card, Typography, Alert, Spin, Tooltip, Select, Checkbox, Space, Tag } from 'antd';
+import { InfoCircleOutlined } from '@ant-design/icons';
 import {
   NotificationOutlined,
   TeamOutlined,
@@ -21,6 +23,10 @@ const CreateHealthCheck = () => {
   const [nurse, setNurse] = useState({});
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [targetType, setTargetType] = useState('specific'); // 'all', 'grade', 'specific', 'custom'
+  const [selectedGrades, setSelectedGrades] = useState([]);
+  const [selectedClasses, setSelectedClasses] = useState([]);
+  const [customTarget, setCustomTarget] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [targetType, setTargetType] = useState('specific'); // 'all', 'grade', 'specific', 'custom'
@@ -52,11 +58,13 @@ const CreateHealthCheck = () => {
     setToken(storedToken);
   }, []);
 
+
   // Generate target group string based on selection
   const generateTargetGroup = () => {
     switch (targetType) {
       case 'all':
-        return 'toàn trường';
+
+        return '1,2,3,4,5';
       case 'grade':
         return selectedGrades.length === 1 ? selectedGrades[0] : selectedGrades.join(',');
       case 'specific':
@@ -68,6 +76,7 @@ const CreateHealthCheck = () => {
     }
   };
 
+
   const handleSubmit = async (values) => {
     setLoading(true);
     setSuccessMsg('');
@@ -75,11 +84,11 @@ const CreateHealthCheck = () => {
     try {
       const targetGroup = generateTargetGroup();
       if (!targetGroup) {
-        setErrorMsg('Vui lòng chọn đối tượng áp dụng!');
+
+        message.error('Vui lòng chọn đối tượng áp dụng!');
         setLoading(false);
         return;
       }
-
       const submitData = {
         campaignName: values.campaignName,
         targetGroup: targetGroup,
@@ -147,7 +156,7 @@ const CreateHealthCheck = () => {
               label={
                 <span>
                   Đối tượng áp dụng
-                  <Tooltip title="Chọn học sinh sẽ nhận thông báo kiểm tra sức khỏe">
+                  <Tooltip title="Chọn học sinh sẽ nhận thông báo tiêm chủng">
                     <InfoCircleOutlined style={{ marginLeft: 4, color: '#1890ff' }} />
                   </Tooltip>
                 </span>
@@ -155,109 +164,109 @@ const CreateHealthCheck = () => {
             >
               {/* Target Type Selector */}
               <div style={{ marginBottom: 12 }}>
-                <Select
-                  value={targetType}
-                  onChange={setTargetType}
-                  style={{ width: '100%' }}
-                  size="large"
-                  placeholder="Chọn loại đối tượng"
-                >
-                  <Select.Option value="all">Toàn trường</Select.Option>
-                  <Select.Option value="grade">Theo khối lớp</Select.Option>
-                  <Select.Option value="specific">Lớp cụ thể</Select.Option>
-                  <Select.Option value="custom">Tùy chỉnh</Select.Option>
-                </Select>
-              </div>
-
-              {/* Target Selection based on type */}
-              {targetType === 'all' && (
-                <div style={{ padding: 16, background: '#f0f9ff', borderRadius: 8, border: '1px solid #91d5ff' }}>
-                  <Tag color="blue" style={{ fontSize: 14 }}>Áp dụng cho toàn trường</Tag>
-                  <div style={{ color: '#595959', marginTop: 8, fontSize: 13 }}>
-                    Tất cả học sinh trong trường sẽ nhận được thông báo kiểm tra sức khỏe này
-                  </div>
-                </div>
-              )}
-
-              {targetType === 'grade' && (
-                <div>
-                  <div style={{ marginBottom: 8, color: '#595959' }}>Chọn khối lớp:</div>
-                  <Checkbox.Group
-                    options={gradeOptions}
-                    value={selectedGrades}
-                    onChange={setSelectedGrades}
-                    style={{ width: '100%' }}
-                  />
-                  {selectedGrades.length > 0 && (
-                    <div style={{ marginTop: 12, padding: 12, background: '#f6ffed', borderRadius: 6, border: '1px solid #b7eb8f' }}>
-                      <div style={{ marginBottom: 8, color: '#52c41a', fontWeight: 500 }}>Đã chọn:</div>
-                      <Space wrap>
-                        {selectedGrades.map(grade => (
-                          <Tag key={grade} color="green">Khối {grade}</Tag>
-                        ))}
-                      </Space>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {targetType === 'specific' && (
-                <div>
-                  <div style={{ marginBottom: 8, color: '#595959' }}>Chọn lớp cụ thể:</div>
                   <Select
-                    mode="multiple"
-                    size="large"
-                    placeholder="Chọn các lớp"
-                    value={selectedClasses}
-                    onChange={setSelectedClasses}
+                    value={targetType}
+                    onChange={setTargetType}
                     style={{ width: '100%' }}
-                    optionFilterProp="children"
-                    filterOption={(input, option) =>
-                      option?.children?.toLowerCase().indexOf(input.toLowerCase()) >= 0
-                    }
-                  >
-                    {classOptions.map(className => (
-                      <Select.Option key={className} value={className}>
-                        Lớp {className}
-                      </Select.Option>
-                    ))}
-                  </Select>
-                  {selectedClasses.length > 0 && (
-                    <div style={{ marginTop: 12, padding: 12, background: '#f6ffed', borderRadius: 6, border: '1px solid #b7eb8f' }}>
-                      <div style={{ marginBottom: 8, color: '#52c41a', fontWeight: 500 }}>Đã chọn {selectedClasses.length} lớp:</div>
-                      <Space wrap>
-                        {selectedClasses.map(className => (
-                          <Tag key={className} color="green">Lớp {className}</Tag>
-                        ))}
-                      </Space>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {targetType === 'custom' && (
-                <div>
-                  <div style={{ marginBottom: 8, color: '#595959' }}>Nhập đối tượng tùy chỉnh:</div>
-                  <Input.TextArea
-                    value={customTarget}
-                    onChange={(e) => setCustomTarget(e.target.value)}
-                    placeholder="Ví dụ: 1A,2B,3C hoặc khối 1,2 hoặc toàn trường"
-                    rows={3}
                     size="large"
-                  />
-                  <div style={{ marginTop: 8, fontSize: 12, color: '#8c8c8c' }}>
-                    Hướng dẫn: Nhập tên lớp (1A,2B), số khối (1,2,3), hoặc "toàn trường"
-                  </div>
+                    placeholder="Chọn loại đối tượng"
+                  >
+                    <Select.Option value="all">Toàn trường</Select.Option>
+                    <Select.Option value="grade">Theo khối lớp</Select.Option>
+                    <Select.Option value="specific">Lớp cụ thể</Select.Option>
+                    <Select.Option value="custom">Tùy chỉnh</Select.Option>
+                  </Select>
                 </div>
-              )}
 
-              {/* Preview */}
-              {generateTargetGroup() && (
-                <div style={{ marginTop: 16, padding: 12, background: '#fff7e6', borderRadius: 6, border: '1px solid #ffd666' }}>
-                  <div style={{ color: '#fa8c16', fontWeight: 500, marginBottom: 4 }}>Kết quả:</div>
-                  <Tag color="orange" style={{ fontSize: 13 }}>{generateTargetGroup()}</Tag>
-                </div>
-              )}
+                {/* Target Selection based on type */}
+                {targetType === 'all' && (
+                  <div style={{ padding: 16, background: '#f0f9ff', borderRadius: 8, border: '1px solid #91d5ff' }}>
+                    <Tag color="blue" style={{ fontSize: 14 }}>Áp dụng cho toàn trường</Tag>
+                    <div style={{ color: '#595959', marginTop: 8, fontSize: 13 }}>
+                      Tất cả học sinh trong trường sẽ nhận được thông báo tiêm chủng này
+                    </div>
+                  </div>
+                )}
+
+                {targetType === 'grade' && (
+                  <div>
+                    <div style={{ marginBottom: 8, color: '#595959' }}>Chọn khối lớp:</div>
+                    <Checkbox.Group
+                      options={gradeOptions}
+                      value={selectedGrades}
+                      onChange={setSelectedGrades}
+                      style={{ width: '100%' }}
+                    />
+                    {selectedGrades.length > 0 && (
+                      <div style={{ marginTop: 12, padding: 12, background: '#f6ffed', borderRadius: 6, border: '1px solid #b7eb8f' }}>
+                        <div style={{ marginBottom: 8, color: '#52c41a', fontWeight: 500 }}>Đã chọn:</div>
+                        <Space wrap>
+                          {selectedGrades.map(grade => (
+                            <Tag key={grade} color="green">Khối {grade}</Tag>
+                          ))}
+                        </Space>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {targetType === 'specific' && (
+                  <div>
+                    <div style={{ marginBottom: 8, color: '#595959' }}>Chọn lớp cụ thể:</div>
+                    <Select
+                      mode="multiple"
+                      size="large"
+                      placeholder="Chọn các lớp"
+                      value={selectedClasses}
+                      onChange={setSelectedClasses}
+                      style={{ width: '100%' }}
+                      optionFilterProp="children"
+                      filterOption={(input, option) =>
+                        option?.children?.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                      }
+                    >
+                      {classOptions.map(className => (
+                        <Select.Option key={className} value={className}>
+                          Lớp {className}
+                        </Select.Option>
+                      ))}
+                    </Select>
+                    {selectedClasses.length > 0 && (
+                      <div style={{ marginTop: 12, padding: 12, background: '#f6ffed', borderRadius: 6, border: '1px solid #b7eb8f' }}>
+                        <div style={{ marginBottom: 8, color: '#52c41a', fontWeight: 500 }}>Đã chọn {selectedClasses.length} lớp:</div>
+                        <Space wrap>
+                          {selectedClasses.map(className => (
+                            <Tag key={className} color="green">Lớp {className}</Tag>
+                          ))}
+                        </Space>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {targetType === 'custom' && (
+                  <div>
+                    <div style={{ marginBottom: 8, color: '#595959' }}>Nhập đối tượng tùy chỉnh:</div>
+                    <Input.TextArea
+                      value={customTarget}
+                      onChange={(e) => setCustomTarget(e.target.value)}
+                      placeholder="Ví dụ: 1A,2B,3C hoặc khối 1,2 hoặc toàn trường"
+                      rows={3}
+                      size="large"
+                    />
+                    <div style={{ marginTop: 8, fontSize: 12, color: '#8c8c8c' }}>
+                      Hướng dẫn: Nhập tên lớp (1A,2B), số khối (1,2,3), hoặc "toàn trường"
+                    </div>
+                  </div>
+                )}
+
+                {/* Preview */}
+                {generateTargetGroup() && (
+                  <div style={{ marginTop: 16, padding: 12, background: '#fff7e6', borderRadius: 6, border: '1px solid #ffd666' }}>
+                    <div style={{ color: '#fa8c16', fontWeight: 500, marginBottom: 4 }}>Kết quả:</div>
+                    <Tag color="orange" style={{ fontSize: 13 }}>{generateTargetGroup()}</Tag>
+                  </div>
+                )}
             </Form.Item>
 
             <Form.Item

@@ -87,6 +87,90 @@ const StudentList = () => {
         const parent = users.find(user => user.id === parentId);
         return parent ? parent.phone : 'Không xác định';
     }
+    
+    const matchesGender = !filter.gender || normalizeGender(student.gender) === filter.gender;
+    const parentName = getParentName(student.parentId);
+    const matchesParent = !filter.parentName || parentName.toLowerCase().includes(filter.parentName.toLowerCase());
+    
+    return matchesName && matchesClass && matchesGender && matchesParent;
+  });
+
+  // Navigate to update student
+  const navigateToUpdateStudent = (studentId) => {
+    navigate(`/capnhathocsinh/${studentId}`);
+  };
+
+  // Navigate to create student
+  const navigateToCreateStudent = () => {
+    navigate('/taomoihocsinh');
+  };
+
+  // Show delete confirmation
+  const showDeleteConfirm = (studentId, studentName) => {
+    console.log('showDeleteConfirm called:', studentId, studentName);
+    
+    // Try using state-based modal first
+    setStudentToDelete({ id: studentId, name: studentName });
+    // Need delete local storage student
+    localStorage.removeItem('selectedStudentId');
+    localStorage.removeItem('selectedStudentInfo');
+    setDeleteModalVisible(true);
+  };
+  
+  // Handle actual deletion
+  const handleDelete = async () => {
+    if (!studentToDelete) return;
+    
+    const token = localStorage.getItem('token');
+    if (!token) {
+      message.error('Không tìm thấy token xác thực.');
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const response = await studentService.deleteStudent(studentToDelete.id, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      
+      console.log('Delete response:', response);
+      message.success('Xóa học sinh thành công!');
+      setDeleteModalVisible(false);
+      setStudentToDelete(null);
+      
+      // Refresh the list
+      await fetchData();
+    } catch (error) {
+      console.error('Lỗi khi xóa:', error);
+      message.error('Không thể xóa học sinh. Vui lòng thử lại!');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Delete student with fallback
+  const deleteStudent = (studentId, studentName) => {
+    console.log('Delete button clicked - ID:', studentId, 'Name:', studentName);
+    
+    if (!studentId) {
+      message.error('Không tìm thấy học sinh để xóa.');
+      return;
+    }
+    
+    // Try modal first
+    try {
+      showDeleteConfirm(studentId, studentName);
+    } catch (error) {
+      console.error('Modal error:', error);
+      // Fallback to window.confirm
+      const confirmed = window.confirm(`Bạn có chắc chắn muốn xóa học sinh "${studentName}"?\n\nHành động này không thể hoàn tác!`);
+      if (confirmed) {
+        setStudentToDelete({ id: studentId, name: studentName });
+        handleDelete();
+      }
+    }
 
     // Format date from YYYY-MM-DD to DD/MM/YYYY
     const formatDate = (dateString) => {

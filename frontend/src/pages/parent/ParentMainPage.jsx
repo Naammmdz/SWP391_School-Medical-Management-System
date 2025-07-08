@@ -50,12 +50,18 @@ const ParentMainPage = () => {
         });
         const students = Array.isArray(response.data) ? response.data : [];
         setStudentList(students);
-        
+        // Handle if student is deleted
+        if (students.length === 0) {
+          localStorage.removeItem('selectedStudentId');
+          localStorage.removeItem('selectedStudentInfo');
+        }
         if (students.length > 0) {
+
           const savedStudentId = localStorage.getItem('selectedStudentId');
           const savedStudent = students.find(s => s.studentId.toString() === savedStudentId) || students[0];
           setSelectedStudent(savedStudent);
           localStorage.setItem('selectedStudentId', savedStudent.studentId.toString());
+          localStorage.setItem('selectedStudentInfo', JSON.stringify(savedStudent));
           localStorage.setItem('students', JSON.stringify(students));
         }
       } catch (error) {
@@ -68,6 +74,7 @@ const ParentMainPage = () => {
   const handleStudentSelect = (student) => {
     setSelectedStudent(student);
     localStorage.setItem('selectedStudentId', student.studentId.toString());
+    localStorage.setItem('selectedStudentInfo', JSON.stringify(student));
     message.success(`Đã chọn học sinh ${student.fullName}`);
   };
 
@@ -385,62 +392,132 @@ const ParentMainPage = () => {
         </Row>
       </div>
 
-      {/* Modern Guide Modal */}
+      {/* Simple Guide Modal */}
       <Modal
-        title={null}
+        title="🎆 Hướng dẫn sử dụng"
         open={showQuickGuide}
         onCancel={() => setShowQuickGuide(false)}
-        footer={null}
-        width={650}
+        footer={[
+          <Button 
+            key="ok"
+            type="primary" 
+            onClick={() => setShowQuickGuide(false)}
+            style={{
+              background: '#52c41a',
+              borderColor: '#52c41a',
+              fontSize: '16px',
+              height: '40px',
+              borderRadius: '8px'
+            }}
+          >
+            🚀 Đã hiểu rồi!
+          </Button>
+        ]}
+        width={600}
         centered
-        className="modern-guide-modal"
+        className="simple-guide-modal"
       >
-        <div className="modal-content">
-          <div className="modal-header">
-            <div className="modal-emoji">🎆</div>
-            <Title level={2} className="modal-title">Sử dụng siêu dễ!</Title>
-            <Text className="modal-subtitle">Chỉ 3 bước đơn giản</Text>
+        <div style={{ padding: '20px 0' }}>
+          <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+            <Text style={{ fontSize: '18px', color: '#666' }}>
+              ✨ Chỉ 3 bước đơn giản để sử dụng ứng dụng ✨
+            </Text>
           </div>
           
-          <div className="guide-steps">
-            <div className="step-card step-1">
-              <div className="step-number">1</div>
-              <div className="step-content">
-                <h4>👨‍👩‍👧‍👦 Chọn con em</h4>
-                <p>Nhấn vào thẻ của con để chọn học sinh</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '15px',
+              padding: '20px',
+              border: '2px solid #e0e0e0',
+              borderRadius: '12px',
+              background: 'white'
+            }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                background: '#52c41a',
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 'bold',
+                fontSize: '18px'
+              }}>1</div>
+              <div>
+                <h4 style={{ margin: '0 0 5px 0', fontSize: '16px' }}>👨‍👩‍👧‍👦 Chọn con em</h4>
+                <p style={{ margin: 0, color: '#666', fontSize: '14px' }}>Nhấn vào thẻ của con để chọn học sinh</p>
               </div>
             </div>
             
-            <div className="step-card step-2">
-              <div className="step-number">2</div>
-              <div className="step-content">
-                <h4>🌈 Chọn chức năng</h4>
-                <p>Nhấn vào các thẻ màu sắc để sử dụng</p>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '15px',
+              padding: '20px',
+              border: '2px solid #e0e0e0',
+              borderRadius: '12px',
+              background: 'white'
+            }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                background: '#1890ff',
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 'bold',
+                fontSize: '18px'
+              }}>2</div>
+              <div>
+                <h4 style={{ margin: '0 0 5px 0', fontSize: '16px' }}>🌈 Chọn chức năng</h4>
+                <p style={{ margin: 0, color: '#666', fontSize: '14px' }}>Nhấn vào các thẻ màu sắc để sử dụng</p>
               </div>
             </div>
             
-            <div className="step-card step-3">
-              <div className="step-number">3</div>
-              <div className="step-content">
-                <h4>🆘 Cần giúp?</h4>
-                <p>Gọi điện hotline khi cần hỗ trợ</p>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '15px',
+              padding: '20px',
+              border: '2px solid #e0e0e0',
+              borderRadius: '12px',
+              background: 'white'
+            }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                background: '#ff4d4f',
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 'bold',
+                fontSize: '18px'
+              }}>3</div>
+              <div>
+                <h4 style={{ margin: '0 0 5px 0', fontSize: '16px' }}>🆘 Cần giúp?</h4>
+                <p style={{ margin: 0, color: '#666', fontSize: '14px' }}>Gọi điện hotline: 0123-456-789</p>
               </div>
             </div>
           </div>
           
-          <div className="modal-footer">
-            <div className="tip-box">
-              <span className="tip-icon">💡</span>
-              <Text>Mẹo: Các thẻ màu tươi sáng là chức năng quan trọng!</Text>
-            </div>
-            <Button 
-              type="primary" 
-              size="large"
-              className="got-it-button"
-              onClick={() => setShowQuickGuide(false)}
-            >
-              🚀 Đã hiểu rồi!
-            </Button>
+          <div style={{
+            marginTop: '25px',
+            padding: '15px',
+            background: '#fff8e1',
+            border: '1px solid #ffcc02',
+            borderRadius: '8px',
+            textAlign: 'center'
+          }}>
+            <Text style={{ fontSize: '14px', color: '#333' }}>
+              💡 <strong>Mẹo:</strong> Các thẻ màu tươi sáng là chức năng quan trọng!
+            </Text>
           </div>
         </div>
       </Modal>
