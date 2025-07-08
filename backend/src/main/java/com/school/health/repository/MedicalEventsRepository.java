@@ -3,6 +3,7 @@ package com.school.health.repository;
 import com.school.health.dto.request.MedicalEventsFiltersRequestDTO;
 import com.school.health.entity.MedicalEvent;
 import com.school.health.entity.Student;
+import com.school.health.enums.MedicalEventStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -23,8 +24,9 @@ public interface MedicalEventsRepository extends JpaRepository<MedicalEvent, Int
         AND (:eventType IS NULL OR m.eventType LIKE CONCAT('%', :eventType, '%'))
         AND (:stuId IS NULL OR s.studentId  = :stuId)
         AND (:createBy IS NULL OR m.createdBy.userId = :createBy)
+         AND (:status IS NULL OR m.status = :status)  
     """)
-    List<MedicalEvent> findByFilter(LocalDateTime from, LocalDateTime to, String eventType, Integer stuId, Integer createBy);
+    List<MedicalEvent> findByFilter(LocalDateTime from, LocalDateTime to, String eventType, Integer stuId, Integer createBy, MedicalEventStatus status);
 
     Optional<MedicalEvent> findById(Integer id);
 

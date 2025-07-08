@@ -2,8 +2,7 @@ package com.school.health.enums;
 
 public enum MedicalEventStatus {
     PROCESSING("Đang xử lý"),
-    RESOLVED("Đã xử lý"),
-    PENDING_CONFIRMATION("Chờ xác nhận");
+    RESOLVED("Đã xử lý");
 
     private final String displayName;
 

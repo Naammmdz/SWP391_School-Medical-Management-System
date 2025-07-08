@@ -4,6 +4,7 @@ import com.school.health.dto.request.InventoryUsedInMedicalEventRequestDTO;
 import com.school.health.dto.request.InventoryUsedRequestDTO;
 import com.school.health.dto.request.InventoryUsedUpdateRequestDTO;
 import com.school.health.dto.response.InventoryUsedResponseDTO;
+import com.school.health.entity.Inventory;
 import com.school.health.entity.InventoryUsedLog;
 
 public interface InventoryUsedLogService {
@@ -11,4 +12,7 @@ public interface InventoryUsedLogService {
     public InventoryUsedResponseDTO mapDTO(InventoryUsedLog inventoryUsedLog);
     public InventoryUsedResponseDTO updateInventoryUsed(Integer id, InventoryUsedUpdateRequestDTO inventoryUsedRequestDTO);
     public InventoryUsedResponseDTO createInventoryUsedInMedicalEvent( Integer evenId, InventoryUsedInMedicalEventRequestDTO dto);
+    public Inventory updateInventoryItem(Integer id, Integer quantityUsed);
+    public Inventory backUpdateInventoryItem(Integer id, Integer quantityUsed);
+    public void deleteInventoryUsed(Integer id);
 }

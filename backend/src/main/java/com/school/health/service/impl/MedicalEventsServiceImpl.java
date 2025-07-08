@@ -9,7 +9,6 @@ import com.school.health.entity.Student;
 import com.school.health.enums.MedicalEventStatus;
 import com.school.health.event.noti.MedicalEventNotificationEvent;
 import com.school.health.event.usageInventory.InventoryUsedEvent;
-import com.school.health.event.usageInventory.InventoryUsedUpdateEvent;
 import com.school.health.exception.ResourceNotFoundException;
 import com.school.health.repository.InventoryUsedRepo;
 import com.school.health.repository.MedicalEventsRepository;
@@ -64,15 +63,14 @@ public class MedicalEventsServiceImpl implements MedicalEvents {
         if (dto.getRelatedItemUsed() != null) {
             for(InventoryUsedInMedicalEventRequestDTO itemUsed : dto.getRelatedItemUsed()) {
                     // Tạo cái Inventory Used
-
                publisher.publishEvent(new InventoryUsedEvent(entity.getId(),itemUsed));
 
             }
         }
-        //            entity.getRelatedInventoryUsed().add(inventoryUsedLog);
+//                    entity.getRelatedInventoryUsed().add(inventoryUsedLog);
 //        inventoryUsedRepo.findByEvent(entity.getId()).forEach(entity::addRelatedInventoryUsed);
-
-      medicalEventsRepository.save(entity);
+//
+//      medicalEventsRepository.save(entity);
       publisher.publishEvent(new MedicalEventNotificationEvent(entity));
         return mapToResponseDTO(entity);
     }
@@ -89,7 +87,7 @@ public class MedicalEventsServiceImpl implements MedicalEvents {
     @Override
     public List<MedicalEventsResponseDTO> getAllMedicalEvents(MedicalEventsFiltersRequestDTO filters) {
         List<MedicalEvent> list = medicalEventsRepository.findByFilter(
-                filters.getFrom(), filters.getTo(), filters.getEventType(), filters.getStuId(), filters.getCreatedBy()
+                filters.getFrom(), filters.getTo(), filters.getEventType(), filters.getStuId(), filters.getCreatedBy(), filters.getStatus()
         );
         return list.stream()
                 .map(this::mapToResponseDTO)
@@ -103,6 +101,23 @@ public class MedicalEventsServiceImpl implements MedicalEvents {
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public MedicalEventsResponseDTO updateStatusMedicalEvent(int id) {
+        MedicalEvent entity = medicalEventsRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Medical Event Not Found"));
+        if (entity.getStatus().equals(MedicalEventStatus.PROCESSING)) {
+            entity.setStatus(MedicalEventStatus.RESOLVED);
+        } else {
+            entity.setStatus(MedicalEventStatus.PROCESSING);
+        }
+        medicalEventsRepository.save(entity);
+        return mapToResponseDTO(entity);
+
+    }
+
+
+
     @Override
     public MedicalEventsResponseDTO updateMedicalEvents(int id, MedicalEventsRequestDTO dto) {
         MedicalEvent entity = medicalEventsRepository.findById(id)
@@ -113,105 +128,116 @@ public class MedicalEventsServiceImpl implements MedicalEvents {
             dto.getStuId().forEach(integer -> entity.addStudent(studentRepository.getReferenceById(integer)));
         }
 
-        if (dto.getTitle() != null && !dto.getTitle().isBlank()) {
-            entity.setTitle(dto.getTitle());
-        }
-
-        if (dto.getEventType() != null && !dto.getEventType().isBlank()) {
-            entity.setEventType(dto.getEventType());
-        }
-
-        if (dto.getEventDate() != null) {
-            entity.setEventDate(dto.getEventDate());
-        }
-
-        if (dto.getLocation() != null && !dto.getLocation().isBlank()) {
-            entity.setLocation(dto.getLocation());
-        }
-
-        if (dto.getDescription() != null && !dto.getDescription().isBlank()) {
-            entity.setDescription(dto.getDescription());
-        }
-
-
-        if (dto.getNotes() != null && !dto.getNotes().isBlank()) {
-            entity.setNotes(dto.getNotes());
-        }
-
-        if (dto.getHandlingMeasures() != null && !dto.getHandlingMeasures().isBlank()) {
-            entity.setHandlingMeasures(dto.getHandlingMeasures());
-        }
-
-        if (dto.getSeverityLevel() != null) {
-            entity.setSeverityLevel(dto.getSeverityLevel());
-        }
-
-        if (dto.getStatus() != null) {
-            entity.setStatus(dto.getStatus());
-        }
-
-        medicalEventsRepository.save(entity);
-        return mapToResponseDTO(entity);
-    }
-
-    @Override
-    public MedicalEventsResponseDTO updateMedicalEvents(int id, MedicalEventsUpdateRequestDTO dto) {
-        MedicalEvent entity = medicalEventsRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Medical Event Not Found"));
-
-        if (dto.getStuId() != null) {
-            entity.getStudentList().clear();
-            dto.getStuId().forEach(integer -> entity.addStudent(studentRepository.getReferenceById(integer)));
-        }
-
-
-        if (dto.getTitle() != null && !dto.getTitle().isBlank()) {
-            entity.setTitle(dto.getTitle());
-        }
-
-        if (dto.getEventType() != null && !dto.getEventType().isBlank()) {
-            entity.setEventType(dto.getEventType());
-        }
-
-        if (dto.getEventDate() != null) {
-            entity.setEventDate(dto.getEventDate());
-        }
-
-        if (dto.getLocation() != null && !dto.getLocation().isBlank()) {
-            entity.setLocation(dto.getLocation());
-        }
-
-        if (dto.getDescription() != null && !dto.getDescription().isBlank()) {
-            entity.setDescription(dto.getDescription());
-        }
-
-
-        if (dto.getNotes() != null && !dto.getNotes().isBlank()) {
-            entity.setNotes(dto.getNotes());
-        }
-
-        if (dto.getHandlingMeasures() != null && !dto.getHandlingMeasures().isBlank()) {
-            entity.setHandlingMeasures(dto.getHandlingMeasures());
-        }
-
-        if (dto.getSeverityLevel() != null) {
-            entity.setSeverityLevel(dto.getSeverityLevel());
-        }
-
-        if (dto.getStatus() != null) {
-            entity.setStatus(dto.getStatus());
-        }
         if (dto.getRelatedItemUsed() != null) {
-            for(InventoryUsedInMedicalEventUpdateRequestDTO itemUsed : dto.getRelatedItemUsed()) {
-                // Tạo cái Inventory Used
-                publisher.publishEvent(new InventoryUsedUpdateEvent(entity.getId(),itemUsed));
+            entity.getRelatedInventoryUsed().clear();
+            for(InventoryUsedInMedicalEventRequestDTO itemUsed : dto.getRelatedItemUsed()) {
+                // Update cái Inventory Used
+                publisher.publishEvent(new InventoryUsedEvent(entity.getId(),itemUsed));
+
 
             }
         }
 
+        if (dto.getTitle() != null && !dto.getTitle().isBlank()) {
+            entity.setTitle(dto.getTitle());
+        }
+
+        if (dto.getEventType() != null && !dto.getEventType().isBlank()) {
+            entity.setEventType(dto.getEventType());
+        }
+
+        if (dto.getEventDate() != null) {
+            entity.setEventDate(dto.getEventDate());
+        }
+
+        if (dto.getLocation() != null && !dto.getLocation().isBlank()) {
+            entity.setLocation(dto.getLocation());
+        }
+
+        if (dto.getDescription() != null && !dto.getDescription().isBlank()) {
+            entity.setDescription(dto.getDescription());
+        }
+
+
+        if (dto.getNotes() != null && !dto.getNotes().isBlank()) {
+            entity.setNotes(dto.getNotes());
+        }
+
+        if (dto.getHandlingMeasures() != null && !dto.getHandlingMeasures().isBlank()) {
+            entity.setHandlingMeasures(dto.getHandlingMeasures());
+        }
+
+        if (dto.getSeverityLevel() != null) {
+            entity.setSeverityLevel(dto.getSeverityLevel());
+        }
+
+        if (dto.getStatus() != null) {
+            entity.setStatus(dto.getStatus());
+        }
+
         medicalEventsRepository.save(entity);
         return mapToResponseDTO(entity);
     }
+
+//    @Override
+//    public MedicalEventsResponseDTO updateMedicalEvents(int id, MedicalEventsUpdateRequestDTO dto) {
+//        MedicalEvent entity = medicalEventsRepository.findById(id)
+//                .orElseThrow(() -> new ResourceNotFoundException("Medical Event Not Found"));
+//
+//        if (dto.getStuId() != null) {
+//            entity.getStudentList().clear();
+//            dto.getStuId().forEach(integer -> entity.addStudent(studentRepository.getReferenceById(integer)));
+//        }
+//
+//
+//        if (dto.getTitle() != null && !dto.getTitle().isBlank()) {
+//            entity.setTitle(dto.getTitle());
+//        }
+//
+//        if (dto.getEventType() != null && !dto.getEventType().isBlank()) {
+//            entity.setEventType(dto.getEventType());
+//        }
+//
+//        if (dto.getEventDate() != null) {
+//            entity.setEventDate(dto.getEventDate());
+//        }
+//
+//        if (dto.getLocation() != null && !dto.getLocation().isBlank()) {
+//            entity.setLocation(dto.getLocation());
+//        }
+//
+//        if (dto.getDescription() != null && !dto.getDescription().isBlank()) {
+//            entity.setDescription(dto.getDescription());
+//        }
+//
+//
+//        if (dto.getNotes() != null && !dto.getNotes().isBlank()) {
+//            entity.setNotes(dto.getNotes());
+//        }
+//
+//        if (dto.getHandlingMeasures() != null && !dto.getHandlingMeasures().isBlank()) {
+//            entity.setHandlingMeasures(dto.getHandlingMeasures());
+//        }
+//
+//        if (dto.getSeverityLevel() != null) {
+//            entity.setSeverityLevel(dto.getSeverityLevel());
+//        }
+//
+//        if (dto.getStatus() != null) {
+//            entity.setStatus(dto.getStatus());
+//        }
+//        if (dto.getRelatedItemUsed() != null) {
+//            entity.getRelatedInventoryUsed().clear();
+//            for(InventoryUsedInMedicalEventUpdateRequestDTO itemUsed : dto.getRelatedItemUsed()) {
+//                // Tạo cái Inventory Used
+////                publisher.publishEvent(new InventoryUsedUpdateEvent(entity.getId(),itemUsed));
+//
+//            }
+//        }
+//
+//        medicalEventsRepository.save(entity);
+//        return mapToResponseDTO(entity);
+//    }
 
     @Override
     public List<MedicalEventsResponseDTO> getMedicalEventByStudentID(int id) {

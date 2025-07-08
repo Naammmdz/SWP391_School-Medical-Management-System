@@ -4,12 +4,17 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.school.health.enums.MedicalEventStatus;
 import com.school.health.enums.SeverityLevel;
 import lombok.Data;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Data
+//TODO Update Note
+//     Update full (Xóa used - cập nhật used - tự động chỉnh sửa số lượng trong kho)
+//
+
 public class MedicalEventsUpdateRequestDTO {
     private String title;                     // Tiêu đề sự cố
     private List<Integer> stuId = new ArrayList<>();                        // ID học sinh

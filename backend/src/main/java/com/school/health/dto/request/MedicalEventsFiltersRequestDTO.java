@@ -1,6 +1,7 @@
 package com.school.health.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.school.health.enums.MedicalEventStatus;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -18,6 +19,7 @@ public class MedicalEventsFiltersRequestDTO {
 //    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
     private LocalDateTime  to;
     private Integer createdBy;
+    private MedicalEventStatus status;
 
 
 }

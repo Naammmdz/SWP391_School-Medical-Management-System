@@ -15,7 +15,6 @@ public class MedicalEventsRequestDTO {
     private List<Integer> stuId = new ArrayList<>();                        // ID học sinh
     private String eventType;
     // Loại sự cố
-
 //    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
     private LocalDateTime eventDate;          // Thời điểm xảy ra
     private String location;                  // Địa điểm xảy ra

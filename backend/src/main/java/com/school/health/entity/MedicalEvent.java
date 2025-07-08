@@ -78,7 +78,7 @@ public class MedicalEvent {
     @Column(name = "SeverityLevel", columnDefinition = "NVARCHAR(20)")
     private SeverityLevel severityLevel;
 
-    // Trạng thái “Đang xử lý / Đã xử lý / Chờ xác nhận”
+    // Trạng thái “Đang xử lý / Đã xử lý
     @Enumerated(EnumType.STRING)
     @Column(name = "Status", columnDefinition = "NVARCHAR(20)")
     private MedicalEventStatus status;
