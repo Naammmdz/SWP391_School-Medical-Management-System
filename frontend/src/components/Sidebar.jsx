@@ -135,8 +135,7 @@ const getNavGroupsForRole = (role) => {
         items: [
           { path: '/sukienyte', name: 'Sự kiện y tế', icon: 'activity' },
           { path: '/quanlyvattuyte', name: 'Quản lý thuốc/Vật tư', icon: 'pill' },
-          { path: '/khaibaothuoc', name: 'Khai báo thuốc', icon: 'briefcase' },
-          { path: '/donthuocdagui', name: 'Đơn thuốc đã gửi', icon: 'clipboard' },
+         
         ]
       }
     ],
@@ -179,13 +178,7 @@ const getNavGroupsForRole = (role) => {
          
         ]
       },
-      {
-        title: 'Khai báo thuốc',
-        items: [
-          { path: '/khaibaothuoc', name: 'Khai báo thuốc', icon: 'briefcase' },
-          { path: '/donthuocdagui', name: 'Đơn thuốc đã gửi', icon: 'clipboard' },
-        ]
-      }
+     
     ],
     ROLE_PARENT: [
       commonGroups.overview,

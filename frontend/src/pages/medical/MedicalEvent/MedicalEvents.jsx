@@ -24,6 +24,31 @@ const labelStyle = { fontWeight: 600, marginBottom: 4, display: 'block' };
 const inputStyle = { marginBottom: 16, width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ccc' };
 const rowStyle = { display: 'flex', gap: 16, alignItems: 'center', marginBottom: 8 };
 
+// Popup component
+const Popup = ({ message, onClose }) => (
+  <div style={{
+    position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+    background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
+  }}>
+    <div style={{
+      background: '#fff', padding: 32, borderRadius: 10, minWidth: 320, boxShadow: '0 2px 16px rgba(0,0,0,0.2)', textAlign: 'center'
+    }}>
+      <div style={{ marginBottom: 20, fontSize: 18 }}>{message}</div>
+      <button
+        onClick={onClose}
+        style={{
+          padding: '8px 24px', background: '#43a047', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 600,
+          cursor: 'pointer', transition: 'filter 0.2s',
+        }}
+        onMouseOver={e => e.currentTarget.style.filter = 'brightness(1.1)'}
+        onMouseOut={e => e.currentTarget.style.filter = 'none'}
+      >
+        Đóng
+      </button>
+    </div>
+  </div>
+);
+
 const MedicalEvents = () => {
   const [students, setStudents] = useState([]);
   const [inventoryItems, setInventoryItems] = useState([]);
@@ -43,6 +68,8 @@ const MedicalEvents = () => {
   const [loading, setLoading] = useState(false);
   const [classFilter, setClassFilter] = useState('');
   const [nameFilter, setNameFilter] = useState('');
+  const [quantityErrors, setQuantityErrors] = useState({});
+  const [popup, setPopup] = useState({ open: false, message: '' });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -79,6 +106,20 @@ const MedicalEvents = () => {
   const updateItemRow = (idx, field, value) => {
     const updated = [...relatedItemUsed];
     updated[idx][field] = value;
+
+    // Kiểm tra số lượng tồn kho
+    let itemId = field === 'itemId' ? value : updated[idx].itemId;
+    let quantityUsed = field === 'quantityUsed' ? value : updated[idx].quantityUsed;
+    const inventory = inventoryItems.find(inv => String(inv.itemId || inv.id) === String(itemId));
+    if (inventory && Number(quantityUsed) > inventory.quantity) {
+      setQuantityErrors(prev => ({ ...prev, [idx]: `Đã sử dụng hết!` }));
+    } else {
+      setQuantityErrors(prev => {
+        const newErr = { ...prev };
+        delete newErr[idx];
+        return newErr;
+      });
+    }
     setRelatedItemUsed(updated);
   };
 
@@ -97,12 +138,16 @@ const MedicalEvents = () => {
   const handleSubmit = async e => {
     e.preventDefault();
     if (!form.title || !form.eventType || !form.eventDate || selectedStudents.length === 0) {
-      alert('Vui lòng nhập đủ thông tin bắt buộc và chọn học sinh!');
+      setPopup({ open: true, message: 'Vui lòng nhập đủ thông tin bắt buộc và chọn học sinh!' });
       return;
     }
     const validItems = relatedItemUsed.filter(item => item.itemId !== '' && item.itemId !== undefined && item.itemId !== null);
     if (validItems.length === 0) {
-      alert('Vui lòng chọn ít nhất 1 thuốc/vật tư đã dùng!');
+      setPopup({ open: true, message: 'Vui lòng chọn ít nhất 1 thuốc/vật tư đã dùng!' });
+      return;
+    }
+    if (Object.keys(quantityErrors).length > 0) {
+      setPopup({ open: true, message: 'Có thuốc/vật tư vượt quá số lượng tồn kho!' });
       return;
     }
     setLoading(true);
@@ -119,7 +164,7 @@ const MedicalEvents = () => {
         eventDate: new Date(form.eventDate).toISOString()
       };
       await MedicalEventService.createMedicalEvent(payload, config);
-      alert('Tạo sự kiện y tế thành công!');
+      setPopup({ open: true, message: 'Tạo sự kiện y tế thành công!' });
       setForm({
         title: '', eventType: '', eventDate: new Date().toISOString().split('T')[0],
         location: '', description: '', notes: '', handlingMeasures: '', severityLevel: 'MINOR', status: 'PROCESSING'
@@ -127,7 +172,7 @@ const MedicalEvents = () => {
       setSelectedStudents([]);
       setRelatedItemUsed([]);
     } catch (err) {
-      alert('Có lỗi khi tạo sự kiện y tế!');
+      setPopup({ open: true, message: 'Có lỗi khi tạo sự kiện y tế!' });
     }
     setLoading(false);
   };
@@ -136,8 +181,10 @@ const MedicalEvents = () => {
     <div style={{ maxWidth: 700, margin: '0 auto', background: '#f6f8fa', padding: 32, borderRadius: 12 }}>
       <button
         type="button"
-        style={{ marginBottom: 24, padding: '8px 20px', background: '#1976d2', color: '#fff', border: 'none', borderRadius: 4, fontWeight: 600 }}
+        style={{ marginBottom: 24, padding: '8px 20px', background: '#1976d2', color: '#fff', border: 'none', borderRadius: 4, fontWeight: 600, cursor: 'pointer', transition: 'filter 0.2s' }}
         onClick={() => navigate('/danhsachsukienyte')}
+        onMouseOver={e => e.currentTarget.style.filter = 'brightness(1.1)'}
+        onMouseOut={e => e.currentTarget.style.filter = 'none'}
       >
         Xem danh sách sự kiện y tế
       </button>
@@ -221,6 +268,14 @@ const MedicalEvents = () => {
                   <option key={inv.itemId || inv.id} value={String(inv.itemId || inv.id)}>{inv.name}</option>
                 ))}
               </select>
+              {inventoryItems.length > 0 && item.itemId && (
+                <span style={{ color: '#888', marginLeft: 8 }}>
+                  {(() => {
+                    const inv = inventoryItems.find(inv => String(inv.itemId || inv.id) === String(item.itemId));
+                    return inv ? `Còn lại: ${inv.quantity}` : '';
+                  })()}
+                </span>
+              )}
               <input
                 style={{ ...inputStyle, width: 60, marginBottom: 0 }}
                 type="number"
@@ -236,10 +291,21 @@ const MedicalEvents = () => {
                 onChange={e => updateItemRow(idx, 'notes', e.target.value)}
                 placeholder="Ghi chú"
               />
-              <button type="button" onClick={() => removeItemRow(idx)} style={{ padding: '4px 10px', background: '#f44336', color: '#fff', border: 'none', borderRadius: 4 }}>Xóa</button>
+              <button type="button" onClick={() => removeItemRow(idx)} style={{ padding: '4px 10px', background: '#f44336', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', transition: 'filter 0.2s' }}
+                onMouseOver={e => e.currentTarget.style.filter = 'brightness(1.1)'}
+                onMouseOut={e => e.currentTarget.style.filter = 'none'}>
+                Xóa
+              </button>
+              {quantityErrors[idx] && (
+                <span style={{ color: 'red', marginLeft: 8 }}>{quantityErrors[idx]}</span>
+              )}
             </div>
           ))}
-          <button type="button" onClick={addItemRow} style={{ marginTop: 8, padding: '6px 16px', background: '#1976d2', color: '#fff', border: 'none', borderRadius: 4 }}>Thêm thuốc/vật tư</button>
+          <button type="button" onClick={addItemRow} style={{ marginTop: 8, padding: '6px 16px', background: '#1976d2', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', transition: 'filter 0.2s' }}
+            onMouseOver={e => e.currentTarget.style.filter = 'brightness(1.1)'}
+            onMouseOut={e => e.currentTarget.style.filter = 'none'}>
+            Thêm thuốc/vật tư
+          </button>
         </div>
         <div style={boxStyle}>
           <label style={labelStyle}>Ghi chú:</label>
@@ -253,10 +319,13 @@ const MedicalEvents = () => {
             </select>
           </div>
         </div>
-        <button type="submit" disabled={loading} style={{ width: '100%', padding: 12, background: '#43a047', color: '#fff', fontWeight: 600, fontSize: 18, border: 'none', borderRadius: 6 }}>
+        <button type="submit" disabled={loading || Object.keys(quantityErrors).length > 0} style={{ width: '100%', padding: 12, background: '#43a047', color: '#fff', fontWeight: 600, fontSize: 18, border: 'none', borderRadius: 6, cursor: 'pointer', transition: 'filter 0.2s' }}
+          onMouseOver={e => e.currentTarget.style.filter = 'brightness(1.1)'}
+          onMouseOut={e => e.currentTarget.style.filter = 'none'}>
           {loading ? 'Đang gửi...' : 'Tạo sự kiện'}
         </button>
       </form>
+      {popup.open && <Popup message={popup.message} onClose={() => setPopup({ open: false, message: '' })} />}
     </div>
   );
 };
