@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import HealthCheckService from '../../../services/HealthCheckService';
-import { Card, Spin, Alert, Typography, Button, Modal, Space, Tag, message, Divider } from 'antd';
+import { Card, Spin, Alert, Typography, Button, Modal, Space, Tag, message, Divider, Tabs } from 'antd';
 import { CalendarOutlined, UserOutlined, EnvironmentOutlined, TeamOutlined, FileTextOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import './HealthCheck.css';
 
@@ -16,6 +16,7 @@ const HealthCheck = () => {
   const [selectedCampaign, setSelectedCampaign] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const [activeTab, setActiveTab] = useState('notHandled'); // 'notHandled' | 'handled'
 
   const studentId = localStorage.getItem('selectedStudentId');
   const token = localStorage.getItem('token');
@@ -32,35 +33,60 @@ const HealthCheck = () => {
 
   // Lấy danh sách chiến dịch đã duyệt, đã xác nhận và đã từ chối
   const fetchData = async () => {
-  setLoading(true);
-  setError('');
-  try {
-    const config = { headers: { Authorization: `Bearer ${token}` } };
-    const allCampaigns = await HealthCheckService.getHealthCheckApproved(config);
-
-    // Gọi thử API xác nhận, nếu lỗi thì coi như chưa xác nhận/từ chối chiến dịch nào
-    let confirmed = [];
-    let rejected = [];
-    let hasStatus = false;
+    setLoading(true);
+    setError('');
     try {
-      confirmed = await HealthCheckService.parentGetStautusCampaigns(studentId, true, config);
-      rejected = await HealthCheckService.parentGetStautusCampaigns(studentId, false, config);
-      hasStatus = (Array.isArray(confirmed) && confirmed.length > 0) || (Array.isArray(rejected) && rejected.length > 0);
-    } catch (e) {
-      // Nếu lỗi, coi như chưa xác nhận/từ chối chiến dịch nào
-      confirmed = [];
-      rejected = [];
-      hasStatus = false;
-    }
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      const allCampaigns = await HealthCheckService.getHealthCheckApproved(config);
 
-    setCampaigns(Array.isArray(allCampaigns) ? allCampaigns : []);
-    setConfirmedCampaigns(hasStatus ? confirmed : []);
-    setRejectedCampaigns(hasStatus ? rejected : []);
-  } catch (err) {
-    setError('Không thể tải danh sách chiến dịch!');
-  }
-  setLoading(false);
-};
+      // Kiểm tra trạng thái xác nhận/từ chối cho từng chiến dịch
+      let confirmed = [];
+      let rejected = [];
+      let hasStatus = false;
+      
+      if (studentId && Array.isArray(allCampaigns)) {
+        try {
+          // Lấy danh sách chiến dịch đã xác nhận
+          const confirmedData = await HealthCheckService.parentGetStautusCampaigns(studentId, true, config);
+          confirmed = Array.isArray(confirmedData) ? confirmedData : [];
+          
+          // Lấy danh sách chiến dịch đã từ chối
+          const rejectedData = await HealthCheckService.parentGetStautusCampaigns(studentId, false, config);
+          rejected = Array.isArray(rejectedData) ? rejectedData : [];
+          
+          hasStatus = true;
+          console.log('Confirmed campaigns:', confirmed);
+          console.log('Rejected campaigns:', rejected);
+        } catch (statusErr) {
+          console.log('Error fetching status, treating as no status available:', statusErr);
+          hasStatus = false;
+        }
+        
+        // Cập nhật trạng thái cho từng chiến dịch
+        const updatedCampaigns = allCampaigns.map(campaign => {
+          const isConfirmed = confirmed.some(c => c.campaignId === campaign.campaignId);
+          const isRejected = rejected.some(c => c.campaignId === campaign.campaignId);
+          
+          return {
+            ...campaign,
+            parentConfirmStatus: isConfirmed ? true : (isRejected ? false : null)
+          };
+        });
+        
+        setCampaigns(updatedCampaigns);
+      } else {
+        setCampaigns(Array.isArray(allCampaigns) ? allCampaigns : []);
+      }
+      
+      console.log('All campaigns with status:', allCampaigns);
+      setConfirmedCampaigns(hasStatus ? confirmed : []);
+      setRejectedCampaigns(hasStatus ? rejected : []);
+    } catch (err) {
+      console.error('Error fetching campaigns:', err);
+      setError('Không thể tải danh sách chiến dịch!');
+    }
+    setLoading(false);
+  };
 
   useEffect(() => {
     fetchData();
@@ -73,10 +99,20 @@ const HealthCheck = () => {
     try {
       const config = { headers: { Authorization: `Bearer ${token}` } };
       await HealthCheckService.parentConfirmHealthCheck(campaignId, studentId, config);
+      
+      // Cập nhật trạng thái ngay lập tức trong state
+      setCampaigns(prev => prev.map(c => 
+        c.campaignId === campaignId 
+          ? { ...c, parentConfirmStatus: true }
+          : c
+      ));
+      
       message.success('Xác nhận tham gia thành công!');
       setModalVisible(false);
+      // Fetch lại dữ liệu để đảm bảo đồng bộ
       fetchData();
     } catch (err) {
+      console.error('Error confirming campaign:', err);
       message.error('Xác nhận thất bại!');
     }
     setConfirming(false);
@@ -88,32 +124,33 @@ const HealthCheck = () => {
     try {
       const config = { headers: { Authorization: `Bearer ${token}` } };
       await HealthCheckService.parentRejectHealthCheck(campaignId, studentId, config);
+      
+      // Cập nhật trạng thái ngay lập tức trong state
+      setCampaigns(prev => prev.map(c => 
+        c.campaignId === campaignId 
+          ? { ...c, parentConfirmStatus: false }
+          : c
+      ));
+      
       message.success('Từ chối tham gia thành công!');
       setModalVisible(false);
+      // Fetch lại dữ liệu để đảm bảo đồng bộ
       fetchData();
     } catch (err) {
+      console.error('Error rejecting campaign:', err);
       message.error('Từ chối thất bại!');
     }
     setConfirming(false);
   };
 
-  // Phân loại các chiến dịch
-  const confirmedIds = confirmedCampaigns.map(c => c.campaignId);
-  const rejectedIds = rejectedCampaigns.map(c => c.campaignId);
-
-  // Đã xác nhận/tham gia hoặc từ chối
-  const handledList = campaigns.filter(
-    c => confirmedIds.includes(c.campaignId) || rejectedIds.includes(c.campaignId)
-  );
-  // Chưa xác nhận
-  const notHandledList = campaigns.filter(
-    c => !confirmedIds.includes(c.campaignId) && !rejectedIds.includes(c.campaignId)
-  );
+  // Phân loại các chiến dịch dựa trên parentConfirmStatus từ backend
+  const handledList = campaigns.filter(c => c.parentConfirmStatus === true || c.parentConfirmStatus === false);
+  const notHandledList = campaigns.filter(c => c.parentConfirmStatus === null || c.parentConfirmStatus === undefined);
 
   // Lấy trạng thái xác nhận/từ chối cho từng campaign
-  const getStatus = (campaignId) => {
-    if (confirmedIds.includes(campaignId)) return 'CONFIRMED';
-    if (rejectedIds.includes(campaignId)) return 'REJECTED';
+  const getStatus = (campaign) => {
+    if (campaign.parentConfirmStatus === true) return 'CONFIRMED';
+    if (campaign.parentConfirmStatus === false) return 'REJECTED';
     return null;
   };
 
@@ -146,7 +183,7 @@ const HealthCheck = () => {
   // Modal hiển thị chi tiết chiến dịch và 2 nút xác nhận/từ chối
   const renderDetailModal = () => {
     if (!selectedCampaign) return null;
-    const status = getStatus(selectedCampaign.campaignId);
+    const status = getStatus(selectedCampaign);
     return (
       <Modal
         open={modalVisible}
@@ -200,35 +237,46 @@ const HealthCheck = () => {
         <Title level={2} style={{ textAlign: 'center', marginBottom: 32, color: '#2563eb' }}>
           Danh sách chiến dịch kiểm tra sức khỏe
         </Title>
-        {loading && (
-          <div style={{ textAlign: 'center', margin: '40px 0' }}>
-            <Spin size="large" />
-          </div>
-        )}
-        {error && (
-          <Alert
-            message={error}
-            type="error"
-            showIcon
-            style={{ marginBottom: 24 }}
-          />
-        )}
-        {!loading && !error && (
-          <>
-            <Divider orientation="left" style={{ color: '#2563eb' }}>Đã xác nhận tham gia / Từ chối</Divider>
-            {handledList.length === 0 ? (
-              <div style={{ color: '#bfbfbf', padding: '16px 0' }}>Chưa xác nhận hoặc từ chối chiến dịch nào.</div>
-            ) : (
-              handledList.map(c => renderCampaignCard(c, getStatus(c.campaignId)))
-            )}
-            <Divider orientation="left" style={{ color: '#2563eb' }}>Chưa xác nhận</Divider>
-            {notHandledList.length === 0 ? (
-              <div style={{ color: '#bfbfbf', padding: '16px 0' }}>Không còn chiến dịch nào cần xác nhận.</div>
-            ) : (
-              notHandledList.map(c => renderCampaignCard(c, null))
-            )}
-          </>
-        )}
+        <Tabs
+          activeKey={activeTab}
+          onChange={setActiveTab}
+          items={[
+            {
+              key: 'notHandled',
+              label: <b>Chưa phản hồi</b>,
+              children: (
+                loading ? (
+                  <div style={{ textAlign: 'center', margin: '40px 0' }}>
+                    <Spin size="large" />
+                  </div>
+                ) : error ? (
+                  <Alert message={error} type="error" showIcon style={{ marginBottom: 24 }} />
+                ) : notHandledList.length === 0 ? (
+                  <div style={{ color: '#bfbfbf', padding: '16px 0' }}>Không còn chiến dịch nào cần xác nhận.</div>
+                ) : (
+                  notHandledList.map(c => renderCampaignCard(c, getStatus(c)))
+                )
+              )
+            },
+            {
+              key: 'handled',
+              label: <b>Đã phản hồi</b>,
+              children: (
+                loading ? (
+                  <div style={{ textAlign: 'center', margin: '40px 0' }}>
+                    <Spin size="large" />
+                  </div>
+                ) : error ? (
+                  <Alert message={error} type="error" showIcon style={{ marginBottom: 24 }} />
+                ) : handledList.length === 0 ? (
+                  <div style={{ color: '#bfbfbf', padding: '16px 0' }}>Chưa xác nhận hoặc từ chối chiến dịch nào.</div>
+                ) : (
+                  handledList.map(c => renderCampaignCard(c, getStatus(c)))
+                )
+              )
+            }
+          ]}
+        />
         {renderDetailModal()}
       </Card>
     </div>

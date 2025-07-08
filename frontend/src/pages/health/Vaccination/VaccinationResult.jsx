@@ -1,343 +1,622 @@
-import React, { useState } from 'react';
-import { Card, Button, Modal, List, Form, Input, DatePicker, Select, Checkbox, message, Alert, Tag, Table, Spin } from 'antd';
+import React, { useCallback, useState, useEffect } from 'react';
 import VaccinationService from '../../../services/VaccinationService';
 import dayjs from 'dayjs';
+import {
+  Card,
+  Button,
+  Modal,
+  Form,
+  Input,
+  Select,
+  Checkbox,
+  Alert,
+  Tag,
+  Row,
+  Col,
+  Table,
+  Spin,
+  Typography,
+  Space,
+  DatePicker,
+  message,
+  Tooltip,
+  Badge,
+  Descriptions,
+  Empty,
+  Divider,
+  Tabs
+} from 'antd';
+import {
+  SearchOutlined,
+  ClearOutlined,
+  EditOutlined,
+  EyeOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  ExclamationCircleOutlined,
+  MedicineBoxOutlined,
+  UserOutlined,
+  CalendarOutlined,
+  TeamOutlined,
+  FilterOutlined,
+  ReloadOutlined
+} from '@ant-design/icons';
+import './VaccinationResult.css';
 
+const { Title, Text } = Typography;
 const { Option } = Select;
+const { RangePicker } = DatePicker;
 
 const resultOptions = [
-  { value: 'SUCCESS', label: 'Thành công' },
-  { value: 'FAILED', label: 'Thất bại' },
-  { value: 'DELAYED', label: 'Hoãn' },
+  { value: 'SUCCESS', label: 'Thành công', color: 'success' },
+  { value: 'FAILED', label: 'Thất bại', color: 'error' },
+  { value: 'DELAYED', label: 'Hoãn', color: 'warning' },
 ];
 
-const resultLabel = {
-  SUCCESS: <Tag color="green">Thành công</Tag>,
-  FAILED: <Tag color="red">Thất bại</Tag>,
-  DELAYED: <Tag color="orange">Hoãn</Tag>,
+const getResultTag = (result) => {
+  switch (result) {
+    case 'SUCCESS':
+      return <Tag color="green" icon={<CheckCircleOutlined />}>Thành công</Tag>;
+    case 'FAILED':
+      return <Tag color="red" icon={<CloseCircleOutlined />}>Thất bại</Tag>;
+    case 'DELAYED':
+      return <Tag color="orange" icon={<ExclamationCircleOutlined />}>Hoãn</Tag>;
+    default:
+      return <Tag>{result}</Tag>;
+  }
 };
 
 const VaccinationResult = () => {
-  // Lấy danh sách chiến dịch đã duyệt từ localStorage
-  const campaignsRaw = JSON.parse(localStorage.getItem('approvedCampaigns') || '[]');
-  const approvedCampaigns = campaignsRaw.map(c => ({
-    ...c,
-    campaignId: c.campaignId ?? c.id,
-    campaignName: c.campaignName ?? c.title,
-  }));
-
-  // Modal state
-  const [openModal, setOpenModal] = useState(false);
-  const [selectedCampaign, setSelectedCampaign] = useState(null);
-  const [studentsInCampaign, setStudentsInCampaign] = useState([]);
-  const [loadingStudents, setLoadingStudents] = useState(false);
-
-  // Ghi nhận kết quả
-  const [activeStudent, setActiveStudent] = useState(null);
-  const [form] = Form.useForm();
+  const [approvedCampaigns, setApprovedCampaigns] = useState([]);
+  const [filterValues, setFilterValues] = useState([]);
+  const [selectedResult, setSelectedResult] = useState(null);
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [submitStatus, setSubmitStatus] = useState(null);
+  const [confirmedResults, setConfirmedResults] = useState([]);
+  const [confirmedLoading, setConfirmedLoading] = useState(false);
+  const [filterForm, setFilterForm] = useState({});
+  const [studentInfoMap, setStudentInfoMap] = useState({});
+  const [openDetail, setOpenDetail] = useState(false);
+  const [updateForm, setUpdateForm] = useState({});
+  const [form] = Form.useForm();
+  const [updateFormRef] = Form.useForm();
+  const [parentConfirmationTab, setParentConfirmationTab] = useState('confirmed'); // 'confirmed' | 'not_confirmed'
 
-  // Lấy tất cả kết quả tiêm chủng (giữ nguyên)
-  const [allResults, setAllResults] = useState([]);
-  const [allResultsLoading, setAllResultsLoading] = useState(false);
-
-  React.useEffect(() => {
-    const fetchAllResults = async () => {
-      setAllResultsLoading(true);
-      try {
-        const token = localStorage.getItem('token');
-        const config = { headers: { Authorization: `Bearer ${token}` } };
-        const res = await VaccinationService.getAllVaccinationResults(config);
-        setAllResults(Array.isArray(res.data) ? res.data : []);
-      } catch (err) {
-        setAllResults([]);
-      }
-      setAllResultsLoading(false);
-    };
-    fetchAllResults();
-  }, []);
-
-  // Helper
-  const getCampaignName = (campaignId) => {
-    const c = approvedCampaigns.find(ca => String(ca.campaignId) === String(campaignId));
-    return c ? c.campaignName : campaignId;
-  };
-
-  // Hiển thị modal và load học sinh đã đăng ký chiến dịch
-  const handleOpenModal = async (campaign) => {
-    setSelectedCampaign(campaign);
-    setOpenModal(true);
-    setLoadingStudents(true);
-    setActiveStudent(null);
-    setSubmitStatus(null);
+  // Lấy danh sách chiến dịch đã duyệt từ API
+  const fetchApprovedCampaigns = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const config = { headers: { Authorization: `Bearer ${token}` } };
-      // Gọi API lấy danh sách học sinh đã đăng ký chiến dịch
-      const res = await VaccinationService.getVaccinationParentConfirmation(campaign.campaignId, config);
-       
-      setStudentsInCampaign(Array.isArray(res.data) ? res.data : []);
-      console.log("studentInCampaign:" ,res.data);
+      const res = await VaccinationService.getVaccinationCampaignApproved(config);
+      setApprovedCampaigns(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
-      setStudentsInCampaign([]);
-      message.error("Không thể tải danh sách học sinh.");
+      setApprovedCampaigns([]);
     }
-    setLoadingStudents(false);
+  }, []);
+
+  useEffect(() => {
+    fetchApprovedCampaigns();
+    // Lấy danh sách học sinh từ localStorage
+    const students = JSON.parse(localStorage.getItem('students') || '[]');
+    const map = {};
+    students.forEach(s => {
+      map[s.studentId] = {
+        name: s.fullName || s.name || '',
+        className: s.className || '',
+      };
+    });
+    setStudentInfoMap(map);
+  }, [fetchApprovedCampaigns]);
+
+  // Hàm lấy kết quả PH đã xác nhận hoặc filter theo điều kiện
+  const fetchConfirmedResults = async (filterValues = {}) => {
+    setConfirmedLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      // Ensure parentConfirmation is properly set based on the current tab or passed value
+      const parentConfirmation = filterValues.hasOwnProperty('parentConfirmation') 
+        ? filterValues.parentConfirmation 
+        : parentConfirmationTab === 'confirmed';
+      
+      const params = {
+        ...filterValues,
+        parentConfirmation: parentConfirmation,
+      };
+      
+      console.log('Fetching with params:', params); // Debug log
+      
+      const config = { headers: { Authorization: `Bearer ${token}` }, params };
+      let res = await VaccinationService.filterResult(config);
+      setConfirmedResults(Array.isArray(res.data) ? res.data : []);
+      console.log('Response data:', res.data);
+    } catch (err) {
+      console.error('Error fetching results:', err);
+      setConfirmedResults([]);
+    }
+    setConfirmedLoading(false);
   };
 
-  // Ghi nhận kết quả tiêm chủng cho học sinh
-  const handleSubmit = async (values) => {
+  useEffect(() => {
+    // Load confirmed results by default
+    fetchConfirmedResults({ parentConfirmation: true });
+  }, []);
+
+  const getCampaignInfo = (campaignId) => {
+    const c = approvedCampaigns.find(ca => String(ca.campaignId) === String(campaignId));
+    return c || {};
+  };
+
+  const getStudentName = (studentId, record) => {
+    return studentInfoMap[studentId]?.name || record.studentName || record.fullName || record.name || studentId;
+  };
+
+  const getStudentClass = (studentId) => {
+    return studentInfoMap[studentId]?.className || '';
+  };
+
+  // Real-time filter handling
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    const newFilterForm = { ...filterForm, [name]: value };
+    setFilterForm(newFilterForm);
+    
+    // Apply filter immediately
+    fetchConfirmedResults({
+      ...newFilterForm,
+      parentConfirmation: parentConfirmationTab === 'confirmed',
+    });
+  };
+
+  const handleSelectChange = (name, value) => {
+    const newFilterForm = { ...filterForm, [name]: value };
+    setFilterForm(newFilterForm);
+    
+    // Apply filter immediately
+    fetchConfirmedResults({
+      ...newFilterForm,
+      parentConfirmation: parentConfirmationTab === 'confirmed',
+    });
+  };
+
+  const handleDateChange = (name, value) => {
+    const newFilterForm = { ...filterForm, [name]: value ? value.format('YYYY-MM-DD') : null };
+    setFilterForm(newFilterForm);
+    
+    // Apply filter immediately
+    fetchConfirmedResults({
+      ...newFilterForm,
+      parentConfirmation: parentConfirmationTab === 'confirmed',
+    });
+  };
+
+  const handleClearFilters = () => {
+    setFilterForm({});
+    fetchConfirmedResults({ 
+      parentConfirmation: parentConfirmationTab === 'confirmed' 
+    });
+  };
+
+  // Xem chi tiết
+  const handleOpenDetail = (record) => {
+    setSelectedResult(record);
+    setUpdateForm({
+      date: record.date ? dayjs(record.date) : dayjs(),
+      doseNumber: record.doseNumber,
+      parentConfirmation: record.parentConfirmation,
+      previousDose: record.isPreviousDose,
+      vaccineName: record.vaccineName,
+      adverseReaction: record.adverseReaction,
+      notes: record.notes,
+      result: record.result,
+    });
+    setSubmitStatus(null);
+    setOpenDetail(true);
+  };
+
+  const handleCloseDetail = () => {
+    setOpenDetail(false);
+    setSelectedResult(null);
+    setSubmitStatus(null);
+  };
+
+  // Cập nhật kết quả
+  const handleUpdateSubmit = async (values) => {
     setLoadingSubmit(true);
     setSubmitStatus(null);
     try {
+      let dateArr = [];
+      if (values.date && dayjs.isDayjs(values.date)) {
+        dateArr = [values.date.year(), values.date.month() + 1, values.date.date()];
+      } else if (Array.isArray(selectedResult.date)) {
+        dateArr = selectedResult.date;
+      } else if (selectedResult.date && typeof selectedResult.date === 'string') {
+        const parts = selectedResult.date.split('-');
+        if (parts.length === 3) {
+          dateArr = [parseInt(parts[0]), parseInt(parts[1]), parseInt(parts[2])];
+        }
+      }
       const payload = {
-        date: values.date ? values.date.format('YYYY-MM-DD') : '',
+        vaccinationId: selectedResult.vaccinationId,
+        date: dateArr,
         doseNumber: values.doseNumber,
         adverseReaction: values.adverseReaction,
-        isPreviousDose: values.previousDose,
         notes: values.notes,
         parentConfirmation: values.parentConfirmation,
         result: values.result,
-        vaccineName: values.vaccineName,
-        studentId: activeStudent.studentId,
-        campaignId: selectedCampaign.campaignId,
+        vaccineName: selectedResult.vaccineName || getCampaignInfo(selectedResult.campaignId).type || '',
+        studentId: selectedResult.studentId,
+        campaignId: selectedResult.campaignId,
+        previousDose: values.previousDose,
       };
       const token = localStorage.getItem('token');
-      await VaccinationService.vaccinationResult(payload.campaignId, payload, {
+      await VaccinationService.updateVaccinationResult(selectedResult.vaccinationId, payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
-
       setSubmitStatus('success');
-      form.resetFields();
-      setActiveStudent(null);
+      fetchConfirmedResults(filterForm);
+      setOpenDetail(false);
     } catch (err) {
       setSubmitStatus('error');
     }
     setLoadingSubmit(false);
   };
 
-  // Cột cho bảng kết quả tiêm chủng
+  const handleParentConfirmationTabChange = (key) => {
+    setParentConfirmationTab(key);
+    fetchConfirmedResults({
+      ...filterForm,
+      parentConfirmation: key === 'confirmed' ? true : false,
+    });
+  };
+
+  // Table columns configuration
   const columns = [
     {
       title: 'Học sinh',
       dataIndex: 'studentId',
       key: 'studentId',
-      render: (studentId) => {
-        const s = studentsInCampaign.find(st => String(st.studentId) === String(studentId));
-        return s ? s.fullName || s.name : studentId;
-      },
+      render: (studentId, record) => getStudentName(studentId, record)
+    },
+    {
+      title: 'Lớp',
+      dataIndex: 'studentId',
+      key: 'className',
+      render: (studentId) => getStudentClass(studentId)
     },
     {
       title: 'Chiến dịch',
       dataIndex: 'campaignId',
       key: 'campaignId',
-      render: (campaignId) => getCampaignName(campaignId),
+      render: (campaignId) => getCampaignInfo(campaignId).campaignName || campaignId
     },
-    { title: 'Ngày tiêm', dataIndex: 'date', key: 'date' },
-    { title: 'Tên vắc-xin', dataIndex: 'vaccineName', key: 'vaccineName' },
-    { title: 'Số mũi', dataIndex: 'doseNumber', key: 'doseNumber' },
-    { title: 'Phản ứng', dataIndex: 'adverseReaction', key: 'adverseReaction' },
-    { title: 'Ghi chú', dataIndex: 'notes', key: 'notes' },
+    {
+      title: 'Ngày tiêm',
+      dataIndex: 'date',
+      key: 'date',
+      render: (date, record) => {
+        if (date) return date;
+        const campaign = getCampaignInfo(record.campaignId);
+        return Array.isArray(campaign.scheduledDate) ? campaign.scheduledDate.join('-') : '';
+      }
+    },
     {
       title: 'Kết quả',
       dataIndex: 'result',
       key: 'result',
-      render: (result) => resultLabel[result] || result,
+      render: (result) => getResultTag(result)
     },
     {
       title: 'Xác nhận PH',
       dataIndex: 'parentConfirmation',
       key: 'parentConfirmation',
-      render: (val) => val ? <Tag color="green">Đã xác nhận</Tag> : <Tag color="default">Chưa</Tag>,
+      render: (parentConfirmation) => (
+        parentConfirmation ? 
+          <Tag color="green" icon={<CheckCircleOutlined />}>Đã xác nhận</Tag> : 
+          <Tag color="orange">Đã từ chối</Tag>
+      )
     },
     {
-      title: 'Đã tiêm mũi trước',
-      dataIndex: 'isPreviousDose',
-      key: 'isPreviousDose',
-      render: (val) => val ? 'Có' : 'Không',
-    },
+      title: 'Thao tác',
+      key: 'actions',
+      render: (_, record) => {
+        const isConfirmed = record.result === 'SUCCESS';
+        return record.parentConfirmation ? (
+          <Button 
+            type={isConfirmed ? "default" : "primary"}
+            size="small" 
+            icon={isConfirmed ? <EyeOutlined /> : <EditOutlined />}
+            onClick={() => handleOpenDetail(record)}
+            disabled={isConfirmed}
+          >
+            {isConfirmed ? 'Đã xác nhận' : 'Xem chi tiết'}
+          </Button>
+        ) : null;
+      }
+    }
   ];
 
   return (
-    <div style={{ maxWidth: 900, margin: '32px auto' }}>
-      <Card title="Danh sách chiến dịch đã duyệt" bordered style={{ marginBottom: 32 }}>
-        <List
-          dataSource={approvedCampaigns}
-          renderItem={campaign => (
-            <List.Item
-              actions={[
-                <Button
-                  type="primary"
-                  onClick={() => handleOpenModal(campaign)}
-                  key="record"
+    <div className="vaccination-result" style={{ maxWidth: 1200, margin: '0 auto', padding: '24px' }}>
+      {/* Header */}
+      <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
+        <Col>
+          <Title level={2} style={{ margin: 0, color: '#15803d' }}>
+            <MedicineBoxOutlined style={{ marginRight: 12 }} />
+            Kết quả tiêm chủng
+          </Title>
+        </Col>
+        <Col>
+          <Button 
+            type="primary" 
+            icon={<ReloadOutlined />}
+            onClick={() => fetchConfirmedResults(filterForm)}
+          >
+            Làm mới
+          </Button>
+        </Col>
+      </Row>
+
+      {/* Filter Card */}
+      <Card 
+        title={
+          <Space>
+            <FilterOutlined />
+            <span>Lọc kết quả tiêm chủng</span>
+          </Space>
+        }
+        style={{ marginBottom: 24, borderRadius: 8 }}
+      >
+        <Form layout="vertical">
+          <Row gutter={[16, 16]}>
+            <Col xs={24} sm={12} md={6}>
+              <Form.Item label="Tên lớp">
+                <Input
+                  name="className"
+                  placeholder="Nhập tên lớp"
+                  value={filterForm.className || ''}
+                  onChange={handleFilterChange}
+                  allowClear
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <Form.Item label="Chiến dịch">
+                <Select
+                  name="campaignName"
+                  placeholder="Chọn chiến dịch"
+                  value={filterForm.campaignName || undefined}
+                  onChange={(value) => handleSelectChange('campaignName', value)}
+                  allowClear
                 >
-                  Ghi nhận kết quả
-                </Button>
-              ]}
-            >
-              <span>{campaign.campaignName}</span>
-            </List.Item>
-          )}
+                  {approvedCampaigns.map(campaign => (
+                    <Option key={campaign.campaignId} value={campaign.campaignName}>
+                      {campaign.campaignName}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <Form.Item label="Tên học sinh">
+                <Input
+                  name="studentName"
+                  placeholder="Nhập tên học sinh"
+                  value={filterForm.studentName || ''}
+                  onChange={handleFilterChange}
+                  allowClear
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <Form.Item label="Từ ngày">
+                <DatePicker
+                  style={{ width: '100%' }}
+                  placeholder="Chọn ngày bắt đầu"
+                  onChange={(value) => handleDateChange('startDate', value)}
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <Form.Item label="Đến ngày">
+                <DatePicker
+                  style={{ width: '100%' }}
+                  placeholder="Chọn ngày kết thúc"
+                  onChange={(value) => handleDateChange('endDate', value)}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row justify="end">
+            <Col>
+              <Button 
+                icon={<ClearOutlined />} 
+                onClick={handleClearFilters}
+                style={{ borderRadius: 8 }}
+              >
+                Xóa bộ lọc
+              </Button>
+            </Col>
+          </Row>
+        </Form>
+      </Card>
+
+      {/* Tabs filter xác nhận PH */}
+      <Card style={{ marginBottom: 16 }}>
+        <Tabs
+          activeKey={parentConfirmationTab}
+          onChange={handleParentConfirmationTabChange}
+          items={[{
+            key: 'confirmed',
+            label: <Button type={parentConfirmationTab === 'confirmed' ? 'primary' : 'default'}>Đã xác nhận</Button>,
+          }, {
+            key: 'not_confirmed',
+            label: <Button type={parentConfirmationTab === 'not_confirmed' ? 'primary' : 'default'}>Đã từ chối</Button>,
+          }]}
         />
       </Card>
 
-      {/* Modal ghi nhận kết quả cho từng học sinh trong chiến dịch */}
-      <Modal
-        open={openModal}
-        title={selectedCampaign ? `Ghi nhận kết quả cho chiến dịch: ${selectedCampaign.campaignName}` : ""}
-        onCancel={() => { setOpenModal(false); setActiveStudent(null); }}
-        footer={null}
-        width={700}
+      {/* Results Table */}
+      <Card
+        title={
+          <Space>
+            <TeamOutlined />
+            <span>Kết quả tiêm chủng đã xác nhận</span>
+            <Badge count={confirmedResults.length} style={{ backgroundColor: '#15803d' }} />
+          </Space>
+        }
+        style={{ borderRadius: 8 }}
       >
-        {loadingStudents ? (
-          <Spin />
-        ) : (
-          <>
-           {!activeStudent ? (
-  <>
-    {console.log("studentsInCampaign render:", studentsInCampaign)}
-    <List
-      dataSource={studentsInCampaign}
-      renderItem={student => (
-        <List.Item
-          actions={[
-            <Button
-              type="primary"
-              onClick={() => { setActiveStudent(student); setSubmitStatus(null); }}
-              key="record"
-            >
-              Ghi nhận kết quả
-            </Button>
-          ]}
-        >
-          <span>{student.fullName || student.name}</span>
-        </List.Item>
-      )}
-    />
-  </>
-) : (
-              <Card
-                title={`Ghi nhận kết quả cho: ${activeStudent.fullName || activeStudent.name}`}
-                bordered
-              >
-                {submitStatus === 'success' && (
-                  <Alert
-                    message="Ghi nhận kết quả tiêm chủng thành công!"
-                    type="success"
-                    showIcon
-                    style={{ marginBottom: 16 }}
+        <Table
+          columns={columns}
+          dataSource={confirmedResults}
+          loading={confirmedLoading}
+          rowKey={record => record.vaccinationId ? String(record.vaccinationId) : `${record.studentId}-${record.campaignId}-${record.date || 'no-date'}`}
+          pagination={{
+            pageSize: 10,
+            showSizeChanger: true,
+            showQuickJumper: true,
+            showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} kết quả`
+          }}
+          locale={{
+            emptyText: (
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description="Không có dữ liệu"
+              />
+            )
+          }}
+          scroll={{ x: 800 }}
+        />
+      </Card>
+
+      {/* Detail Modal */}
+      <Modal
+        title={
+          <Space>
+            <EditOutlined />
+            <span>Cập nhật kết quả tiêm chủng</span>
+          </Space>
+        }
+        open={openDetail}
+        onCancel={handleCloseDetail}
+        width={800}
+        footer={null}
+      >
+        {submitStatus === 'success' && (
+          <Alert
+            message="Cập nhật kết quả tiêm chủng thành công!"
+            type="success"
+            showIcon
+            style={{ marginBottom: 16 }}
+          />
+        )}
+        {submitStatus === 'error' && (
+          <Alert
+            message="Cập nhật thất bại! Vui lòng kiểm tra lại thông tin."
+            type="error"
+            showIcon
+            style={{ marginBottom: 16 }}
+          />
+        )}
+        
+        {selectedResult && (
+          <Form layout="vertical" onFinish={handleUpdateSubmit} initialValues={updateForm}>
+            <Row gutter={[16, 16]}>
+              <Col xs={24} sm={12}>
+                <Form.Item label="Tên học sinh">
+                  <Input
+                    value={getStudentName(selectedResult.studentId, selectedResult)}
+                    disabled
                   />
-                )}
-                {submitStatus === 'error' && (
-                  <Alert
-                    message="Ghi nhận thất bại! Vui lòng kiểm tra lại thông tin."
-                    type="error"
-                    showIcon
-                    style={{ marginBottom: 16 }}
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Form.Item label="Tên chiến dịch">
+                  <Input
+                    value={getCampaignInfo(selectedResult.campaignId).campaignName || selectedResult.campaignId}
+                    disabled
                   />
-                )}
-                <Form
-                  form={form}
-                  layout="vertical"
-                  onFinish={handleSubmit}
-                  initialValues={{
-                    date: dayjs(),
-                    doseNumber: 1,
-                    parentConfirmation: true,
-                    previousDose: false,
-                  }}
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Form.Item label="Ngày tiêm" name="date">
+                  <DatePicker
+                    style={{ width: '100%' }}
+                    format="YYYY-MM-DD"
+                    disabled
+                  />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Form.Item label="Tên vắc-xin">
+                  <Input
+                    value={selectedResult.vaccineName || getCampaignInfo(selectedResult.campaignId).type || ''}
+                    disabled
+                  />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Form.Item label="Số mũi tiêm" name="doseNumber" rules={[{ required: true, message: 'Vui lòng nhập số mũi tiêm' }]}> 
+                  <Input type="number" />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Form.Item label="Phản ứng sau tiêm" name="adverseReaction" rules={[{ required: true, message: 'Vui lòng nhập phản ứng sau tiêm' }]}> 
+                  <Input />
+                </Form.Item>
+              </Col>
+              <Col xs={24}>
+                <Form.Item label="Ghi chú" name="notes">
+                  <Input.TextArea rows={3} />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Form.Item name="parentConfirmation" valuePropName="checked">
+                  <Checkbox>
+                    Xác nhận của phụ huynh
+                  </Checkbox>
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Form.Item label="Kết quả" name="result" rules={[{ required: true, message: 'Vui lòng chọn kết quả' }]}> 
+                  <Select placeholder="Chọn kết quả">
+                    {resultOptions.map(opt => (
+                      <Option key={opt.value} value={opt.value}>{opt.label}</Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              </Col>
+              <Col xs={24}>
+                <Form.Item name="previousDose" valuePropName="checked">
+                  <Checkbox>
+                    Đã tiêm mũi trước
+                  </Checkbox>
+                </Form.Item>
+              </Col>
+            </Row>
+            
+            <Divider />
+            
+            <Row justify="end" gutter={[8, 8]}>
+              <Col>
+                <Button onClick={handleCloseDetail}>
+                  Hủy
+                </Button>
+              </Col>
+              <Col>
+                <Button 
+                  type="primary" 
+                  htmlType="submit" 
+                  loading={loadingSubmit}
+                  icon={<CheckCircleOutlined />}
                 >
-                  <Form.Item label="Tên học sinh">
-                    <Input value={activeStudent.fullName || activeStudent.name} disabled />
-                  </Form.Item>
-                  <Form.Item label="Tên chiến dịch">
-                    <Input value={selectedCampaign.campaignName} disabled />
-                  </Form.Item>
-                  <Form.Item
-                    label="Ngày tiêm"
-                    name="date"
-                    rules={[{ required: true, message: 'Vui lòng chọn ngày tiêm' }]}
-                  >
-                    <DatePicker format="YYYY-MM-DD" style={{ width: '100%' }} />
-                  </Form.Item>
-                  <Form.Item
-                    label="Tên vắc-xin"
-                    name="vaccineName"
-                    rules={[{ required: true, message: 'Vui lòng nhập tên vắc-xin' }]}
-                  >
-                    <Input />
-                  </Form.Item>
-                  <Form.Item
-                    label="Số mũi tiêm"
-                    name="doseNumber"
-                    rules={[{ required: true, message: 'Vui lòng nhập số mũi tiêm' }]}
-                  >
-                    <Input type="number" min={1} />
-                  </Form.Item>
-                  <Form.Item
-                    label="Phản ứng sau tiêm"
-                    name="adverseReaction"
-                    rules={[{ required: true, message: 'không được để trống' }]}
-                  >
-                    <Input.TextArea rows={2} placeholder="Ghi chú phản ứng nếu có" />
-                  </Form.Item>
-                  <Form.Item label="Ghi chú" name="notes">
-                    <Input.TextArea rows={2} />
-                  </Form.Item>
-                  <Form.Item name="parentConfirmation" valuePropName="checked">
-                    <Checkbox>Xác nhận của phụ huynh</Checkbox>
-                  </Form.Item>
-                  <Form.Item
-                    label="Kết quả"
-                    name="result"
-                    rules={[{ required: true, message: 'Kết quả không được để trống' }]}
-                  >
-                    <Select placeholder="Chọn kết quả">
-                      {resultOptions.map(opt => (
-                        <Option key={opt.value} value={opt.value}>{opt.label}</Option>
-                      ))}
-                    </Select>
-                  </Form.Item>
-                  <Form.Item name="previousDose" valuePropName="checked">
-                    <Checkbox>Đã tiêm mũi trước</Checkbox>
-                  </Form.Item>
-                  <Form.Item>
-                    <Button
-                      type="primary"
-                      htmlType="submit"
-                      loading={loadingSubmit}
-                    >
-                      Ghi nhận kết quả
-                    </Button>
-                    <Button
-                      style={{ marginLeft: 12 }}
-                      onClick={() => {
-                        setActiveStudent(null);
-                        form.resetFields();
-                        setSubmitStatus(null);
-                      }}
-                    >
-                      Hủy
-                    </Button>
-                  </Form.Item>
-                </Form>
-              </Card>
-            )}
-          </>
+                  Cập nhật kết quả
+                </Button>
+              </Col>
+            </Row>
+          </Form>
         )}
       </Modal>
-
-      <Card title="Tất cả kết quả tiêm chủng" bordered style={{ marginTop: 40 }}>
-        <Table
-          dataSource={allResults}
-          columns={columns}
-          rowKey={record => `${record.studentId}-${record.campaignId}-${record.date}`}
-          loading={allResultsLoading}
-          pagination={{ pageSize: 10 }}
-          scroll={{ x: true }}
-        />
-      </Card>
     </div>
   );
 };

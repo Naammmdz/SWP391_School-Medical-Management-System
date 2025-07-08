@@ -1,7 +1,7 @@
 .header {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.7);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  position: fixed;
+  position: sticky;
   top: 0;
   left: 0;
   right: 0;
@@ -11,6 +11,8 @@
   align-items: center;
   padding: 0 2rem;
   height: 72px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .nav-menu {
@@ -44,8 +46,8 @@
 }
 
 .nav-links a:hover {
-  color: #15803d;
-  background-color: #f0fdf4;
+  color: #10d569;
+  background-color: #e6ffe6;
 }
 
 .nav-links li {
@@ -76,8 +78,8 @@
 
 .nav-dropdown-btn:hover,
 .nav-dropdown-btn[aria-expanded="true"] {
-  color: #15803d;
-  background: #f0fdf4;
+  color: #10d569;
+  background: #e6ffe6;
 }
 
 .dropdown-arrow {
@@ -152,8 +154,8 @@
 }
 
 .notifications-btn:hover {
-  background-color: #f0fdf4;
-  color: #15803d;
+  background-color: #e6ffe6;
+  color: #10d569;
 }
 
 .notification-badge {
@@ -187,7 +189,7 @@
 .avatar-container {
   width: 2.5rem;
   height: 2.5rem;
-  background: #dcfce7;
+  background: #e6ffe6;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -471,4 +473,290 @@
     padding-left: 10px;
     padding-right: 10px;
   }
+}
+
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 32px;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.header-logo {
+  background: #10d569;
+  padding: 8px;
+  border-radius: 12px;
+  margin-right: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.header-logo-icon {
+  width: 24px;
+  height: 24px;
+  color: #fff;
+}
+
+.header-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #111;
+}
+
+.header-slogan {
+  font-size: 0.95rem;
+  color: #222;
+}
+
+.header-nav {
+  display: flex;
+  gap: 32px;
+}
+
+.header-link {
+  color: #111;
+  font-weight: 500;
+  text-decoration: none;
+  font-size: 1rem;
+  transition: color 0.2s;
+}
+
+.header-link:hover {
+  color: #10d569;
+}
+
+/* Hamburger Dropdown Menu */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.menu-btn {
+  background: #10d569;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 8px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  height: 44px;
+}
+
+.menu-btn:hover,
+.menu-btn.active {
+  background: #0ea54a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 213, 105, 0.3);
+}
+
+.menu-btn.active {
+  background: #0d8f47;
+  box-shadow: 0 6px 16px rgba(16, 213, 105, 0.4);
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background: white;
+  min-width: 200px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  z-index: 1000;
+  border: 1px solid #e5e7eb;
+  margin-top: 8px;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.dropdown-content.show {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  animation: dropdownFadeIn 0.3s ease-out;
+}
+
+/* Keep hover functionality as backup */
+.dropdown:hover .dropdown-content {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-content a,
+.dropdown-content button {
+  color: #374151;
+  padding: 14px 18px;
+  text-decoration: none;
+  display: block;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1.4;
+}
+
+.dropdown-content a:hover,
+.dropdown-content button:hover {
+  background: #f8fafc;
+  color: #10d569;
+  transform: translateX(4px);
+}
+
+.dropdown-content a:first-child,
+.dropdown-content button:first-child {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+.dropdown-content a:last-child,
+.dropdown-content button:last-child {
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+/* Add separator between items */
+.dropdown-content a:not(:last-child),
+.dropdown-content button:not(:last-child) {
+  border-bottom: 1px solid #f1f5f9;
+}
+
+/* Dropdown divider */
+.dropdown-divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 8px 0;
+  border: none;
+}
+
+/* Improve menu button styling */
+.menu-btn {
+  font-family: Arial, sans-serif;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.menu-btn:focus {
+  outline: 2px solid #10d569;
+  outline-offset: 2px;
+}
+
+/* Role-based styling for navigation items */
+.dropdown-content a {
+  position: relative;
+}
+
+.dropdown-content a::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: #10d569;
+  transform: scaleY(0);
+  transition: transform 0.2s ease;
+}
+
+.dropdown-content a:hover::before {
+  transform: scaleY(1);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-btn {
+  font-size: 1rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 24px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.header-btn-outline {
+  background: transparent;
+  color: #10d569;
+  border: 1.5px solid #10d569;
+}
+
+.header-btn-outline:hover {
+  background: #e6ffe6;
+  color: #10d569;
+}
+
+.header-btn-primary {
+  background: #10d569;
+  color: #fff;
+}
+
+.header-btn-primary:hover {
+  background: #0ea95d;
+  color: #fff;
+}
+
+@media (max-width: 900px) {
+  .header-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    padding: 16px;
+  }
+  .header-nav {
+    gap: 16px;
+  }
+  .header-actions {
+    gap: 8px;
+  }
+}
+
+body, #root, .app, .layout {
+  overflow: visible !important;
+  height: auto !important;
 }

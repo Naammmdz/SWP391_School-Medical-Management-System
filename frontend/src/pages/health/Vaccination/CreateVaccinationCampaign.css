@@ -1,0 +1,323 @@
+/* Simple CreateVaccinationCampaign styles - learned from VaccinationManagement */
+
+/* Basic container styling similar to vaccination-management */
+.create-vaccination {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+/* Form Card */
+.form-card {
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+/* Campaign Form Styling */
+.campaign-form {
+  padding: 0;
+}
+
+.campaign-form .ant-form-item-label > label {
+  color: #262626;
+  font-weight: 500;
+}
+
+.campaign-form .ant-input,
+.campaign-form .ant-select-selector,
+.campaign-form .ant-picker {
+  border-radius: 8px;
+  border: 1px solid #d9d9d9;
+  transition: all 0.3s;
+}
+
+.campaign-form .ant-input:focus,
+.campaign-form .ant-input:hover,
+.campaign-form .ant-select-focused .ant-select-selector,
+.campaign-form .ant-select-selector:hover,
+.campaign-form .ant-picker:hover,
+.campaign-form .ant-picker.ant-picker-focused {
+  border-color: #52c41a;
+  box-shadow: 0 0 0 2px rgba(82, 196, 26, 0.2);
+}
+
+/* Alert Styling */
+.campaign-form .ant-alert {
+  border-radius: 8px;
+  border: 1px solid #91d5ff;
+  background: #f0f9ff;
+}
+
+/* TextArea Styling */
+.campaign-form .ant-input {
+  resize: vertical;
+}
+
+/* Form Actions */
+.form-actions {
+  text-align: center;
+  margin-top: 24px;
+}
+
+.reset-btn {
+  height: 40px;
+  border-radius: 8px;
+  background: #f5f5f5;
+  border: 1px solid #d9d9d9;
+  color: #595959;
+}
+
+.reset-btn:hover {
+  background: #fff2f0;
+  border-color: #ff4d4f;
+  color: #ff4d4f;
+}
+
+.submit-btn {
+  height: 40px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+  border: none;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(82, 196, 26, 0.3);
+}
+
+.submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(82, 196, 26, 0.4);
+}
+
+.submit-btn:focus {
+  background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+}
+
+/* Info Card */
+.info-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: none;
+  height: fit-content;
+  position: sticky;
+  top: 100px;
+}
+
+.info-card .ant-card-head {
+  background: linear-gradient(135deg, #fff7e6 0%, #ffd666 100%);
+  border-bottom: 2px solid #faad14;
+}
+
+.info-card .ant-card-head-title {
+  color: #fa8c16;
+  font-weight: 600;
+}
+
+/* Info Section Styling */
+.info-section {
+  margin-bottom: 16px;
+}
+
+.info-section .ant-typography h5 {
+  margin-bottom: 12px !important;
+  color: #262626;
+  font-weight: 600;
+}
+
+.info-list {
+  padding-left: 20px;
+  margin-bottom: 0;
+}
+
+.info-list li {
+  margin-bottom: 8px;
+  color: #595959;
+  line-height: 1.6;
+}
+
+.info-list li:last-child {
+  margin-bottom: 0;
+}
+
+/* Select Dropdown Styling */
+.campaign-form .ant-select-dropdown {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.campaign-form .ant-select-item {
+  border-radius: 6px;
+  margin: 4px;
+}
+
+.campaign-form .ant-select-item-option-selected {
+  background: #f6ffed;
+  color: #52c41a;
+  font-weight: 600;
+}
+
+.campaign-form .ant-select-item-option-active {
+  background: #f6ffed;
+}
+
+/* Date and Time Picker Styling */
+.campaign-form .ant-picker-dropdown {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.campaign-form .ant-picker-cell-selected .ant-picker-cell-inner,
+.campaign-form .ant-picker-cell-selected:hover .ant-picker-cell-inner {
+  background: #52c41a;
+  border-color: #52c41a;
+}
+
+.campaign-form .ant-picker-today .ant-picker-cell-inner {
+  border-color: #52c41a;
+  color: #52c41a;
+}
+
+/* Form Validation */
+.campaign-form .ant-form-item-has-error .ant-input,
+.campaign-form .ant-form-item-has-error .ant-select-selector,
+.campaign-form .ant-form-item-has-error .ant-picker {
+  border-color: #ff4d4f;
+  box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.2);
+}
+
+.campaign-form .ant-form-item-explain-error {
+  color: #ff4d4f;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+/* Loading Button */
+.submit-btn.ant-btn-loading {
+  opacity: 0.8;
+}
+
+.submit-btn .ant-btn-loading-icon {
+  color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .create-vaccination-page {
+    max-width: 100%;
+    padding: 16px;
+  }
+
+  .info-card {
+    position: static;
+  }
+}
+
+@media (max-width: 768px) {
+  .create-vaccination-page {
+    margin-top: 60px;
+    padding: 12px;
+  }
+
+  .header-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 16px;
+  }
+
+  .back-btn {
+    width: 100%;
+  }
+
+  .form-card,
+  .info-card {
+    margin-bottom: 16px;
+  }
+
+  .form-actions .ant-space {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .reset-btn,
+  .submit-btn {
+    width: 45%;
+    min-width: 120px;
+  }
+
+  .campaign-form .ant-col {
+    margin-bottom: 0;
+  }
+
+  .info-section .ant-typography h5 {
+    font-size: 16px;
+  }
+
+  .info-list {
+    padding-left: 16px;
+  }
+
+  .info-list li {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .create-vaccination-page {
+    padding: 8px;
+  }
+
+  .header-card .ant-card-body {
+    padding: 16px;
+  }
+
+  .form-card .ant-card-body,
+  .info-card .ant-card-body {
+    padding: 16px;
+  }
+
+  .reset-btn,
+  .submit-btn {
+    width: 100%;
+    margin-bottom: 8px;
+  }
+
+  .form-actions .ant-space {
+    flex-direction: column;
+    width: 100%;
+  }
+}
+
+/* Animation for smooth transitions */
+.create-vaccination-page * {
+  transition: all 0.3s ease;
+}
+
+/* Hover effects for cards */
+.form-card:hover,
+.info-card:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+/* Focus states for accessibility */
+.campaign-form .ant-input:focus,
+.campaign-form .ant-select:focus,
+.campaign-form .ant-picker:focus {
+  outline: none;
+}
+
+/* Custom scrollbar for info card */
+.info-card .ant-card-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.info-card .ant-card-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.info-card .ant-card-body::-webkit-scrollbar-thumb {
+  background: #52c41a;
+  border-radius: 3px;
+}
+
+.info-card .ant-card-body::-webkit-scrollbar-thumb:hover {
+  background: #389e0d;
+}

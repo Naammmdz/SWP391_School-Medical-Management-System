@@ -1,148 +1,269 @@
 .update-student-page {
-  padding: 20px;
-  padding-top: 120px;
-}
-
-.update-student-header {
-  margin-bottom: 24px;
-}
-
-.update-student-header h1 {
-  font-size: 24px;
-  font-weight: 600;
-  color: #333;
-  margin: 0;
-}
-
-.student-form {
-  background: white;
-  border-radius: 8px;
   padding: 24px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  max-width: 600px;
+  max-width: 1400px;
   margin: 0 auto;
+  margin-top: 80px;
+  background: #f0f2f5;
+  min-height: 100vh;
 }
 
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-group label {
-  display: block;
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 8px;
-}
-
-.form-group input,
-.form-group select {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-  transition: border-color 0.2s;
-}
-
-.form-group input:focus,
-.form-group select:focus {
-  border-color: #4caf50;
-  outline: none;
-}
-
-.disabled-input {
-  background-color: #f5f5f5;
-  cursor: not-allowed;
-}
-
-.form-actions {
+.update-student-loading {
   display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 24px;
-}
-
-.cancel-btn,
-.submit-btn {
-  display: flex;
+  justify-content: center;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
+  height: 60vh;
 }
 
-.cancel-btn {
-  background-color: #f5f5f5;
-  color: #666;
-  border: 1px solid #ddd;
-}
-
-.cancel-btn:hover {
-  background-color: #eee;
-}
-
-.submit-btn {
-  background-color: #4caf50;
-  color: white;
+.update-student-header-card {
+  margin-bottom: 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   border: none;
 }
 
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.header-avatar {
+  background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+  flex-shrink: 0;
+}
+
+.header-text {
+  flex: 1;
+}
+
+.header-title {
+  margin-bottom: 8px !important;
+  color: #262626;
+  font-weight: 600;
+}
+
+.header-description {
+  color: #8c8c8c;
+  font-size: 16px;
+}
+
+.back-btn {
+  border-radius: 8px;
+  height: 40px;
+  background: #f6f6f6;
+  border: 1px solid #d9d9d9;
+  color: #595959;
+}
+
+.back-btn:hover {
+  background: #f6ffed;
+  border-color: #52c41a;
+  color: #52c41a;
+}
+
+.form-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: none;
+  overflow: hidden;
+}
+
+.form-card .ant-card-head {
+  background: linear-gradient(135deg, #f6ffed 0%, #d9f7be 100%);
+  border-bottom: 2px solid #52c41a;
+}
+
+.form-card .ant-card-head-title {
+  color: #52c41a;
+  font-weight: 600;
+}
+
+.student-form .ant-form-item-label > label {
+  color: #262626;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.student-form .ant-form-item-label > label .anticon {
+  color: #52c41a;
+}
+
+.student-form .ant-input,
+.student-form .ant-select-selector {
+  border-radius: 8px;
+  border: 1px solid #d9d9d9;
+  transition: all 0.3s;
+}
+
+.student-form .ant-input:focus,
+.student-form .ant-input:hover,
+.student-form .ant-select-focused .ant-select-selector,
+.student-form .ant-select-selector:hover {
+  border-color: #52c41a;
+  box-shadow: 0 0 0 2px rgba(82, 196, 26, 0.2);
+}
+
+.form-actions {
+  text-align: right;
+  margin-top: 24px;
+}
+
+.cancel-btn {
+  height: 40px;
+  border-radius: 8px;
+  background: #f5f5f5;
+  border: 1px solid #d9d9d9;
+  color: #595959;
+  margin-right: 12px;
+}
+
+.cancel-btn:hover {
+  background: #f6ffed;
+  border-color: #52c41a;
+  color: #52c41a;
+}
+
+.submit-btn {
+  height: 40px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+  border: none;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(82, 196, 26, 0.3);
+}
+
 .submit-btn:hover {
-  background-color: #43a047;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(82, 196, 26, 0.4);
 }
 
-.submit-btn:disabled {
-  background-color: #a5d6a7;
-  cursor: not-allowed;
+.student-info-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: none;
+  height: fit-content;
 }
 
-.error-message {
-  background-color: #ffebee;
-  color: #f44336;
-  padding: 12px 16px;
-  border-radius: 4px;
-  margin-bottom: 16px;
-  font-size: 14px;
+.student-info-card .ant-card-head {
+  background: linear-gradient(135deg, #f6ffed 0%, #d9f7be 100%);
+  border-bottom: 2px solid #52c41a;
 }
 
-.success-message {
-  background-color: #e8f5e9;
-  color: #2e7d32;
-  padding: 12px 16px;
-  border-radius: 4px;
-  margin-bottom: 16px;
-  font-size: 14px;
+.student-info-card .ant-card-head-title {
+  color: #52c41a;
+  font-weight: 600;
 }
 
-.loading {
+.student-current-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
-  padding: 24px;
-  color: #666;
+  gap: 16px;
+}
+
+.student-avatar {
+  background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+}
+
+.student-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.student-name {
+  margin-bottom: 0 !important;
+  color: #262626;
+  font-weight: 600;
+}
+
+.student-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.info-tag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 8px;
+  padding: 4px 8px;
+  margin: 0;
+}
+
+.info-tag .anticon {
+  font-size: 12px;
+}
+
+.parent-info-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  width: 100%;
+  padding: 12px;
+  background: #fafafa;
+  border-radius: 8px;
+  border: 1px solid #f0f0f0;
+}
+
+.parent-name {
+  color: #595959;
   font-size: 14px;
 }
 
-/* Responsive styles */
+.no-student {
+  text-align: center;
+  padding: 32px 16px;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .update-student-page {
+    max-width: 100%;
+    padding: 16px;
+  }
+}
+
 @media (max-width: 768px) {
   .update-student-page {
-    padding: 16px;
-    padding-top: 100px;
+    margin-top: 60px;
+    padding: 12px;
   }
 
-  .student-form {
-    padding: 16px;
-  }
-
-  .form-actions {
+  .header-content {
     flex-direction: column;
+    text-align: center;
+    gap: 12px;
   }
 
-  .submit-btn,
-  .cancel-btn {
+  .back-btn {
     width: 100%;
-    justify-content: center;
   }
-} 
+
+  .form-card,
+  .student-info-card {
+    margin-bottom: 16px;
+  }
+
+  .form-actions .ant-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .cancel-btn,
+  .submit-btn {
+    width: 100%;
+    margin-right: 0;
+  }
+
+  .student-meta {
+    gap: 6px;
+  }
+}

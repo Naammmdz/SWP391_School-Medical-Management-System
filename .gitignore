@@ -1,4 +1,4 @@
-echo "### Backend (Spring Boot) ###
+### Backend (Spring Boot) ###
 HELP.md
 target/
 !.mvn/wrapper/maven-wrapper.jar
@@ -26,6 +26,7 @@ node_modules/
 # production
 /build
 /dist
+dist-ssr
 
 # misc
 .DS_Store
@@ -34,9 +35,12 @@ node_modules/
 .env.development.local
 .env.test.local
 .env.production.local
+*.local
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
 ### IDE - Editor ###
 # Eclipse
@@ -65,7 +69,8 @@ build/
 !**/src/test/**/build/
 
 # VS Code
-.vscode/
+.vscode/*
+!.vscode/extensions.json
 *.code-workspace
 
 ### Operating System ###
@@ -78,8 +83,14 @@ build/
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
 ### Others ###
 *.log
 *.tmp
-*.temp" > .gitignore
+*.temp
+logs

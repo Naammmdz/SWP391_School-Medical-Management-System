@@ -1,9 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { Edit, Trash2, X, Plus } from 'lucide-react';
+import { Card, Form, Input, Button, Alert, Spin, Typography, Space, Row, Col, message, Table, Tag, Select, Modal, Tooltip } from 'antd';
+import { 
+  UserOutlined,
+  SearchOutlined,
+  ClearOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  PlusOutlined,
+  ExclamationCircleOutlined,
+  PhoneOutlined,
+  MailOutlined,
+  TeamOutlined,
+  UserAddOutlined,
+  CloseOutlined
+} from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import userService from '../../services/UserService';
 import './UserList.css';
 import studentService from '../../services/StudentService';
+
+const { Title, Text } = Typography;
+const { Option } = Select;
+const { confirm } = Modal;
 
 const roles = [
   { value: '', label: 'Vai trò' },
@@ -121,15 +139,15 @@ const UserList = () => {
 
   // Navigate to update user
   const navigateToUpdateUser = (userId) => {
-    navigate(`/admin/capnhatnguoidung/${userId}`);
+    navigate(`/capnhatnguoidung/${userId}`);
   };
 
   // Navigate to block user
   const navigateToBlockUser = (userId) => {
-    navigate(`/admin/khoanguoidung/${userId}`);
+    navigate(`/khoanguoidung/${userId}`);
   };
   const navigateToCreateUser = () => {
-    navigate('/admin/taomoinguoidung');
+    navigate('/taomoinguoidung');
   };
 
   // Handle filter change
@@ -172,183 +190,281 @@ const UserList = () => {
     // eslint-disable-next-line
   }, [page]);
 
+  // Listen for navigation back to this page to refresh data
+  useEffect(() => {
+    const handleFocus = () => {
+      // Refresh data when user navigates back to this page
+      fetchUsers();
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, []);
+
    return (
-    <div className="user-list-page">
-      <div className="user-list-header">
-        <h1>Danh sách người dùng</h1>
-      </div>
-      <button className="add-btn" onClick={navigateToCreateUser}>
-        <Plus size={16} />
-        Thêm mới
-      </button>
-      
-      {user.userRole === 'ROLE_PARENT' && (
-        <button
-          className="add-btn"
-          style={{ marginLeft: 12, background: '#4caf50' }}
-          onClick={() => navigate('/taomoihocsinh')}
-        >
-          <Plus size={16} />
-          Thêm mới học sinh
-        </button>
-      )}
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: 24 }}>
+      {/* Header */}
+      <Row justify="space-between" align="middle" style={{ marginBottom: 32, marginTop: 50 }}>
+        <Col>
+          <Title level={2} style={{ margin: 0, color: '#15803d' }}>
+            <TeamOutlined style={{ marginRight: 12 }} />
+            Danh sách người dùng
+          </Title>
+        </Col>
+        <Col>
+          <Space>
+            <Button
+              type="primary"
+              icon={<UserAddOutlined />}
+              size="large"
+              onClick={navigateToCreateUser}
+              style={{ borderRadius: 8 }}
+            >
+              Thêm người dùng
+            </Button>
+            {user.userRole === 'ROLE_PARENT' && (
+              <Button
+                type="default"
+                icon={<PlusOutlined />}
+                size="large"
+                onClick={() => navigate('/taomoihocsinh')}
+                style={{ borderRadius: 8 }}
+              >
+                Thêm học sinh
+              </Button>
+            )}
+          </Space>
+        </Col>
+      </Row>
       {/* Filter Form */}
-      <form className="user-filter-form" onSubmit={handleFilterSubmit}>
-        <input
-          type="text"
-          name="fullName"
-          placeholder="Họ và tên"
-          value={filter.fullName}
-          onChange={handleFilterChange}
-        />
-        <input
-          type="text"
-          name="email"
-          placeholder="Email"
-          value={filter.email}
-          onChange={handleFilterChange}
-        />
-        <input
-          type="text"
-          name="phone"
-          placeholder="Số điện thoại"
-          value={filter.phone}
-          onChange={handleFilterChange}
-        />
-        <select name="role" value={filter.role} onChange={handleFilterChange}>
-          {roles.map(role => (
-            <option key={role.value} value={role.value}>{role.label}</option>
-          ))}
-        </select>
-        <select name="isActive" value={filter.isActive} onChange={handleFilterChange}>
-          {statusOptions.map(opt => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
-          ))}
-        </select>
-        {/* Bỏ select sort */}
-        <button type="submit" className="filter-btn">Tìm kiếm</button>
-        <button type="button" className="clear-btn" onClick={handleClearFilter}>Xóa lọc</button>
-      </form>
+      <Card
+        style={{ 
+          marginBottom: 24, 
+          borderRadius: 16, 
+          boxShadow: '0 4px 16px rgba(0,0,0,0.07)'
+        }}
+        bodyStyle={{ padding: 24 }}
+      >
+        <Space direction="vertical" size={16} style={{ width: '100%' }}>
+          <Title level={4} style={{ margin: 0, color: '#15803d' }}>
+            <SearchOutlined style={{ marginRight: 8 }} />
+            Tìm kiếm và lọc người dùng
+          </Title>
+          
+          <Row gutter={[16, 16]}>
+            <Col xs={24} sm={12} md={6}>
+              <Input
+                placeholder="Họ và tên"
+                value={filter.fullName}
+                onChange={(e) => setFilter(prev => ({ ...prev, fullName: e.target.value }))}
+                prefix={<UserOutlined style={{ color: '#8c8c8c' }} />}
+                style={{ borderRadius: 8 }}
+                size="large"
+              />
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <Input
+                placeholder="Email"
+                value={filter.email}
+                onChange={(e) => setFilter(prev => ({ ...prev, email: e.target.value }))}
+                prefix={<MailOutlined style={{ color: '#8c8c8c' }} />}
+                style={{ borderRadius: 8 }}
+                size="large"
+              />
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <Input
+                placeholder="Số điện thoại"
+                value={filter.phone}
+                onChange={(e) => setFilter(prev => ({ ...prev, phone: e.target.value }))}
+                prefix={<PhoneOutlined style={{ color: '#8c8c8c' }} />}
+                style={{ borderRadius: 8 }}
+                size="large"
+              />
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <Select
+                placeholder="Chọn vai trò"
+                value={filter.role || undefined}
+                onChange={(value) => setFilter(prev => ({ ...prev, role: value || '' }))}
+                style={{ width: '100%', borderRadius: 8 }}
+                size="large"
+                allowClear
+              >
+                {roles.slice(1).map(role => (
+                  <Option key={role.value} value={role.value}>{role.label}</Option>
+                ))}
+              </Select>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <Select
+                placeholder="Chọn trạng thái"
+                value={filter.isActive || undefined}
+                onChange={(value) => setFilter(prev => ({ ...prev, isActive: value || '' }))}
+                style={{ width: '100%', borderRadius: 8 }}
+                size="large"
+                allowClear
+              >
+                {statusOptions.slice(1).map(opt => (
+                  <Option key={opt.value} value={opt.value}>{opt.label}</Option>
+                ))}
+              </Select>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <Space>
+                <Button
+                  type="primary"
+                  icon={<SearchOutlined />}
+                  onClick={handleFilterSubmit}
+                  style={{ borderRadius: 8 }}
+                  size="large"
+                >
+                  Tìm kiếm
+                </Button>
+                <Button
+                  icon={<ClearOutlined />}
+                  onClick={handleClearFilter}
+                  style={{ borderRadius: 8 }}
+                  size="large"
+                >
+                  Xóa lọc
+                </Button>
+              </Space>
+            </Col>
+          </Row>
+        </Space>
+      </Card>
 
       {successMessage && (
-        <div className="success-message">
-          <h2>{successMessage}</h2>
-        </div>
+        <Alert
+          message={successMessage}
+          type="success"
+          showIcon
+          style={{ marginBottom: 24, borderRadius: 12 }}
+        />
       )}
 
       {error && (
-        <div className="error-message">
-          {error}
-        </div>
+        <Alert
+          message="Lỗi"
+          description={error}
+          type="error"
+          showIcon
+          style={{ marginBottom: 24, borderRadius: 12 }}
+        />
       )}
 
       {/* Users table */}
-      {loading ? (
-        <div className="loading">Đang tải dữ liệu...</div>
-      ) : (
-        <table className="users-table">
-          <thead>
-            <tr>
-              <th>Họ và tên</th>
-              <th>Số điện thoại</th>
-              <th>Email</th>
-              <th>Trạng thái</th>
-              <th>Vai trò</th>
-              <th>Thao tác học sinh</th>
-              <th>Hành động</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.length === 0 ? (
-              <tr>
-                <td colSpan={7}>Không có người dùng nào.</td>
-              </tr>
-            ) : (
-              users.map(userItem => (
-                <tr key={userItem.id}>
-                  <td>{userItem.fullName}</td>
-                  <td>{userItem.phone}</td>
-                  <td>{userItem.email}</td>
-                  <td>
-                    {userItem.isActive === true || userItem.isActive === "true"
-                      ? "Đang hoạt động"
-                      : "Ngừng hoạt động"}
-                  </td>
-                  <td>
-                    {roles.find(role => role.value === userItem.role)?.label}
-                  </td>
-                  <td>
-                    {(userItem.role === 'PARENT' || userItem.role === 'ROLE_PARENT') && (
-                      <button
-                        className="add-student-btn"
-                        onClick={() => navigate('/taomoihocsinh', { state: { parentId: userItem.id } })}
-                      >
-                        <Plus size={14} /> Thêm học sinh
-                      </button>
-                    )}
-                  </td>
-                  <td className="actions">
-                    <button
-                      className="edit-btn"
-                      onClick={() => navigateToUpdateUser(userItem.id)}
-                    >
-                      <Edit size={16} />
-                    </button>
-                    <button
-                      className="delete-btn"
-                      onClick={() => navigateToBlockUser(userItem.id)}
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      )}
-
-      {/* Pagination */}
-      <div className="pagination">
-        <button
-          onClick={() => handlePageChange(Math.max(0, page - 1))}
-          disabled={page === 0}
-        >
-          Trang trước
-        </button>
-        <span>Trang {page + 1} / {totalPages}</span>
-        <button
-          onClick={() => handlePageChange(Math.min(totalPages - 1, page + 1))}
-          disabled={page >= totalPages - 1}
-        >
-          Trang sau
-        </button>
-      </div>
+      <Card style={{ borderRadius: 16, boxShadow: '0 4px 16px rgba(0,0,0,0.07)' }}>
+        <Table 
+          dataSource={users}
+          loading={loading}
+          rowKey={(record) => record.id}
+          locale={{
+            emptyText: 'Không có người dùng nào trong hệ thống.'
+          }}
+          columns={[
+            {
+              title: 'Họ và tên',
+              dataIndex: 'fullName',
+              key: 'fullName',
+              render: (text) => <strong style={{ color: '#2563eb' }}>{text}</strong>
+            },
+            {
+              title: 'Số điện thoại',
+              dataIndex: 'phone',
+              key: 'phone',
+              render: (text) => text || '-',
+            },
+            {
+              title: 'Email',
+              dataIndex: 'email',
+              key: 'email',
+              render: (text) => text || '-',
+            },
+            {
+              title: 'Trạng thái',
+              dataIndex: 'isActive',
+              key: 'isActive',
+              render: (isActive) => (
+                <Tag color={isActive ? 'green' : 'volcano'}>
+                  {isActive ? 'Đang hoạt động' : 'Ngừng hoạt động'}
+                </Tag>
+              ),
+            },
+            {
+              title: 'Vai trò',
+              dataIndex: 'role',
+              key: 'role',
+              render: (role) => {
+                const roleData = roles.find(r => r.value === role);
+                return roleData ? <Tag color="blue">{roleData.label}</Tag> : '-';
+              }
+            },
+            {
+              title: 'Thao tác học sinh',
+              key: 'action_student',
+              render: (text, record) => (
+                (record.role === 'PARENT' || record.role === 'ROLE_PARENT') && (
+                  <Button 
+                    type="link" 
+                    icon={<UserAddOutlined />} 
+                    onClick={() => navigate('/taomoihocsinh', { state: { parentId: record.id } })}
+                  >
+                    Thêm học sinh
+                  </Button>
+                )
+              ),
+            },
+            {
+              title: 'Hành động',
+              key: 'action',
+              render: (text, record) => (
+                <Space size="middle">
+                  <Tooltip title="Chỉnh sửa">
+                    <Button
+                      type="primary"
+                      shape="circle"
+                      icon={<EditOutlined />}
+                      onClick={() => navigateToUpdateUser(record.id)}
+                    />
+                  </Tooltip>
+                  <Tooltip title="Vô hiệu hóa">
+                    <Button
+                      type="danger"
+                      shape="circle"
+                      icon={<DeleteOutlined />}
+                      onClick={() => navigateToBlockUser(record.id)}
+                    />
+                  </Tooltip>
+                </Space>
+              ),
+            },
+          ]}
+          pagination={{
+            current: page + 1,
+            pageSize: PAGE_SIZE,
+            total: totalPages * PAGE_SIZE,
+            onChange: (page) => setPage(page - 1),
+            showSizeChanger: false,
+            showQuickJumper: true,
+            showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} người dùng`
+          }}
+        />
+      </Card>
 
       {/* Custom Confirmation Modal */}
-      {showConfirmModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h3>Xác nhận vô hiệu hóa</h3>
-              <button className="close-modal" onClick={() => setShowConfirmModal(false)}>
-                <X size={20} />
-              </button>
-            </div>
-            <div className="modal-body">
-              <p>Bạn có chắc chắn muốn vô hiệu hóa người dùng này?</p>
-            </div>
-            <div className="modal-footer">
-              <button className="cancel-btn" onClick={() => setShowConfirmModal(false)}>
-                Hủy
-              </button>
-              <button className="confirm-btn" onClick={handleConfirmDelete}>
-                Xác nhận
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal 
+        title="Xác nhận vô hiệu hóa" 
+        open={showConfirmModal} 
+        onOk={handleConfirmDelete} 
+        onCancel={() => setShowConfirmModal(false)} 
+        okText="Xác nhận" 
+        cancelText="Hủy" 
+        okType="danger"
+      >
+        <p>Bạn có chắc chắn muốn vô hiệu hóa người dùng này?</p>
+      </Modal>
     </div>
   );
 };

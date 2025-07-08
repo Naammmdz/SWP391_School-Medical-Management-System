@@ -153,6 +153,51 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.1);
 }
 
+/* Override Ant Design primary color to green */
+.ant-btn-primary {
+  background-color: #15803d !important;
+  border-color: #15803d !important;
+}
+
+.ant-btn-primary:hover {
+  background-color: #166534 !important;
+  border-color: #166534 !important;
+}
+
+.ant-btn-primary:focus {
+  background-color: #15803d !important;
+  border-color: #15803d !important;
+  box-shadow: 0 0 0 2px rgba(21, 128, 61, 0.2) !important;
+}
+
+.ant-input:focus,
+.ant-input-focused {
+  border-color: #15803d !important;
+  box-shadow: 0 0 0 2px rgba(21, 128, 61, 0.2) !important;
+}
+
+.ant-picker:focus,
+.ant-picker-focused {
+  border-color: #15803d !important;
+  box-shadow: 0 0 0 2px rgba(21, 128, 61, 0.2) !important;
+}
+
+.ant-upload.ant-upload-select-picture-card:hover {
+  border-color: #15803d !important;
+}
+
+.ant-tag-blue {
+  background-color: #dcfce7 !important;
+  border-color: #86efac !important;
+  color: #15803d !important;
+}
+
+.ant-tag-green {
+  background-color: #dcfce7 !important;
+  border-color: #86efac !important;
+  color: #15803d !important;
+}
+
 textarea {
   resize: vertical;
   min-height: 80px;

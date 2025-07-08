@@ -1,5 +1,5 @@
 import axios from "axios";
-const API_URL = import.meta.env.VITE_API_AUTH;
+const API_URL = import.meta.env.VITE_API_AUTH; ;
 const USER_URL =import.meta.env.VITE_API_USER;
 const userService = {
      getAllUsers: (config) => {
@@ -34,6 +34,9 @@ const userService = {
         return axios.post(USER_URL+`/admin/students/filter`)
     },
     getParentId: (id, config) => {
+        return axios.get(USER_URL + `/user/${id}`, config);
+    },
+    getUserByIdForAdmin: (id, config) => {
         return axios.get(USER_URL + `/user/${id}`, config);
     }
     

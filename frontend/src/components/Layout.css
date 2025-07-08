@@ -3,40 +3,41 @@
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-}
-
-.main-content {
+  }
+  
+  .main-content {
     flex: 1;
     transition: margin-left 0.3s ease-in-out;
     position: relative;
     background: #f8fafc;
-}
-
-/* Điều chỉnh để sidebar bắt đầu từ dưới header */
-.app-layout .sidebar {
+  }
+  
+  /* Điều chỉnh để sidebar bắt đầu từ dưới header */
+  .app-layout .sidebar {
     top: 72px; /* Bắt đầu từ dưới header */
     height: calc(100vh - 72px); /* Trừ chiều cao header */
     z-index: 999; /* Thấp hơn header nhưng cao hơn main content */
-}
-
-/* Header cần có z-index cao hơn sidebar */
-.app-layout .header {
+  }
+  
+  /* Header cần có z-index cao hơn sidebar */
+  .app-layout .header {
     z-index: 1001;
     position: relative;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
     .main-content {
-        margin-left: 0 !important;
+      margin-left: 0 !important;
     }
-
+    
     .app-layout .sidebar {
-        transform: translateX(-100%);
-        transition: transform 0.3s ease-in-out;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease-in-out;
     }
-
+    
     .app-layout .sidebar.open {
-        transform: translateX(0);
+      transform: translateX(0);
     }
-}
+  }
+  

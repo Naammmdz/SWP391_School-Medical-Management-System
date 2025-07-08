@@ -1,8 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Search, Plus, Edit, Trash2, FileText, Send, AlertTriangle, CheckCircle, X } from 'lucide-react';
+import { 
+  Card, Table, Button, Input, Select, DatePicker, Space, Tag, Modal, Form, 
+  Statistic, Row, Col, Avatar, Typography, Tooltip, message, Spin, Badge,
+  Switch, Radio, Alert, Dropdown, Menu, Tabs, Divider
+} from 'antd';
+import {
+  PlusOutlined, EditOutlined, DeleteOutlined, SendOutlined, FileTextOutlined,
+  CheckCircleOutlined, ExclamationCircleOutlined, CloseCircleOutlined,
+  CalendarOutlined, MedicineBoxOutlined, UserOutlined, ExportOutlined,
+  SearchOutlined, FilterOutlined, BellOutlined, TeamOutlined, MoreOutlined,
+  EyeOutlined, SyncOutlined
+} from '@ant-design/icons';
 import "./VaccinationManagement.css";
 import { useNavigate } from 'react-router-dom';
 import VaccinationService from '../../../services/VaccinationService';
+import AllStudentsInCampaign from '../../../components/vaccination/AllStudentsInCampaign';
+import StudentsWithVaccinationStatus from '../../../components/vaccination/StudentsWithVaccinationStatus';
+import dayjs from 'dayjs';
+
+const { Title, Text } = Typography;
+const { Option } = Select;
+const { RangePicker } = DatePicker;
+const { TextArea } = Input;
 
 // Vaccine types options
 const vaccineTypes = [
@@ -17,65 +36,58 @@ const vaccineTypes = [
 ];
 
 const statusOptions = [
-  { value: 'PENDING', label: 'Chờ phê duyệt' },
-  { value: 'APPROVED', label: 'Chấp nhận' },
-  { value: 'CANCELLED', label: 'Hủy' }
+  { value: 'PENDING', label: 'Chờ phê duyệt', color: 'orange' },
+  { value: 'APPROVED', label: 'Đã duyệt', color: 'green' },
+  { value: 'CANCELLED', label: 'Đã hủy', color: 'red' }
 ];
 
 const VaccinationManagement = () => {
   const navigate = useNavigate();
-  const users = JSON.parse(localStorage.getItem('users') || '[]');
-  // State for vaccination events list
+  const [form] = Form.useForm();
+  const [notificationForm] = Form.useForm();
+  const [modal, contextHolder] = Modal.useModal();
+  
+  // State management
   const [vaccinationEvents, setVaccinationEvents] = useState([]);
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const isAdmin = user.userRole === 'ROLE_ADMIN';
-  const getOrganizerName = (organizerId) => {
-    if (!organizerId) return '';
-    const user = users.find(u => u.id === organizerId || u.userId === organizerId);
-    return user ? user.fullName || user.name : organizerId;
-  };
-  // State for current event form
-  const [currentEvent, setCurrentEvent] = useState({
-    id: null,
-    title: '',
-    vaccineType: '',
-    description: '',
-    scheduledDate: new Date().toISOString().split('T')[0],
-    scheduledTime: '09:00',
-    location: 'Phòng y tế trường',
-    targetClass: '',
-    status: 'Sắp tới',
-    notes: '',
-    vaccineBatch: '',
-    manufacturer: '',
-    doseAmount: '',
-    requiredDocuments: '',
-    organizer: '',
-  });
-  const [selectedStudents, setSelectedStudents] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [editing, setEditing] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [formSubmitted, setFormSubmitted] = useState(false);
-  const [responseModalOpen, setResponseModalOpen] = useState(false);
-  const [currentStudentResponses, setCurrentStudentResponses] = useState([]);
-  const [filters, setFilters] = useState({
-    searchTerm: '',
-    status: '',
-    fromDate: '',
-    toDate: '',
-    vaccineType: ''
-  });
+  const [searchText, setSearchText] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState(null);
+  const [selectedVaccineType, setSelectedVaccineType] = useState(null);
+  const [dateRange, setDateRange] = useState([]);
+  
+  // Modal states
   const [notificationModalOpen, setNotificationModalOpen] = useState(false);
-  const [notification, setNotification] = useState({
-    eventId: null,
-    subject: '',
-    message: '',
-    deadlineDate: '',
-    requiredDocuments: '',
-    sendToAll: true,
-    specificClass: ''
-  });
+  const [currentCampaign, setCurrentCampaign] = useState(null);
+  
+  // User info
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const users = JSON.parse(localStorage.getItem('users') || '[]');
+  const isAdmin = user.userRole === 'ROLE_ADMIN';
+  
+  const getOrganizerName = (organizerId, record) => {
+    // Try different organizer field names from the record
+    const organizer = organizerId || record?.organizer || record?.organizerName || record?.createdBy || record?.approvedBy;
+    
+    if (!organizer) {
+      // If no organizer ID, try to get current user info as fallback
+      return user?.fullName || user?.name || 'Không xác định';
+    }
+    
+    // If organizer is already a string (name), return it
+    if (typeof organizer === 'string' && organizer !== '' && !Number.isInteger(Number(organizer))) {
+      return organizer;
+    }
+    
+    // Try to find user by ID
+    const foundUser = users.find(u => 
+      u.id === organizer || 
+      u.userId === organizer || 
+      u.id === Number(organizer) || 
+      u.userId === Number(organizer)
+    );
+    
+    return foundUser ? (foundUser.fullName || foundUser.name) : (organizer || 'Không xác định');
+  };
 
   // Fetch vaccination events from backend API
   const fetchVaccinationEvents = async () => {
@@ -87,6 +99,7 @@ const VaccinationManagement = () => {
       });
       const data = Array.isArray(response.data) ? response.data : response.data.content || [];
       const mappedData = data.map((item, idx) => ({
+        key: item.id || idx,
         id: item.id || item.campaignId || idx + 1,
         title: item.campaignName || '',
         vaccineType: item.type || '',
@@ -95,12 +108,12 @@ const VaccinationManagement = () => {
         scheduledTime: item.scheduledTime || '09:00',
         location: item.location || 'Phòng y tế trường',
         targetClass: item.targetGroup || '',
-        status: item.status || 'Sắp tới',
+        status: item.status || 'PENDING',
         notes: item.notes || '',
         vaccineBatch: item.vaccineBatch || '',
         manufacturer: item.manufacturer || '',
         doseAmount: item.doseAmount || '',
-        organizer: item.organizer || item.approvedBy || '', // id người tổ chức
+        organizer: item.organizer || item.approvedBy || '',
         requiredDocuments: item.requiredDocuments || '',
         responses: item.responses || {
           total: 0,
@@ -109,12 +122,10 @@ const VaccinationManagement = () => {
           pending: 0
         }
       }));
-      console.log('Fetched vaccination events:', mappedData);
       setVaccinationEvents(mappedData);
-      const approvedCampaigns = mappedData.filter(ev => ev.status === 'APPROVED');
-      localStorage.setItem('approvedCampaigns', JSON.stringify(approvedCampaigns));
       setLoading(false);
     } catch (error) {
+      message.error('Không thể tải danh sách chiến dịch tiêm chủng');
       setLoading(false);
     }
   };
@@ -123,668 +134,614 @@ const VaccinationManagement = () => {
     fetchVaccinationEvents();
   }, []);
 
-  const approveVaccinationCampaign = async (event) => {
-    if (!window.confirm('Bạn có chắc muốn duyệt chiến dịch này?')) return;
-    setLoading(true);
+  // Handle approval
+  const handleApprove = async (record) => {
     try {
+      setLoading(true);
       const token = localStorage.getItem('token');
       await VaccinationService.approveVaccinationCampaign(
-        event.id,
+        record.id,
         { status: 'APPROVED' },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setVaccinationEvents((prev) =>
-        prev.map((e) =>
-          e.id === event.id ? { ...e, status: 'APPROVED' } : e
-        )
-      );
+      message.success('Đã duyệt chiến dịch thành công');
+      fetchVaccinationEvents();
     } catch (error) {
-      alert('Có lỗi khi duyệt chiến dịch!');
-    }
-    setLoading(false);
-  };
-
-  // Update vaccination event
-  const updateVaccinationEvent = async (id, updatedEvent) => {
-    setLoading(true);
-    try {
-      setVaccinationEvents(
-        vaccinationEvents.map(event => 
-          event.id === id ? {...updatedEvent, id, responses: event.responses} : event
-        )
-      );
-      setModalOpen(false);
-      setEditing(false);
-      resetForm();
-      setFormSubmitted(true);
-      setTimeout(() => {
-        setFormSubmitted(false);
-      }, 3000);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error updating vaccination event:', error);
+      message.error('Có lỗi khi duyệt chiến dịch');
+    } finally {
       setLoading(false);
     }
   };
 
-  // Delete vaccination event
-  const deleteVaccinationEvent = async (id) => {
-    if (window.confirm('Bạn có chắc muốn xóa sự kiện tiêm chủng này?')) {
-      setLoading(true);
-      try {
-        setVaccinationEvents(vaccinationEvents.filter(event => event.id !== id));
-        setLoading(false);
-      } catch (error) {
-        console.error('Error deleting vaccination event:', error);
-        setLoading(false);
-      }
-    }
-  };
 
-  // Open form to edit event
-  const editVaccinationEvent = (event) => {
-    navigate('/capnhatthongtintiemchung', { state: { event } });
-  };
-
-  // Reset form fields
-  const resetForm = () => {
-    setCurrentEvent({
-      id: null,
-      title: '',
-      vaccineType: '',
-      description: '',
-      scheduledDate: new Date().toISOString().split('T')[0],
-      scheduledTime: '09:00',
-      location: 'Phòng y tế trường',
-      targetGroup: '',
-      status: 'Sắp tới',
-      notes: '',
-      vaccineBatch: '',
-      manufacturer: '',
-      doseAmount: '',
-      requiredDocuments: ''
+  // Handle cancel
+  const handleCancel = (record) => {
+    modal.confirm({
+      title: 'Xác nhận hủy chiến dịch',
+      icon: <ExclamationCircleOutlined />,
+      content: `Bạn có chắc muốn hủy chiến dịch "${record.title}"? Hành động này không thể hoàn tác.`,
+      okText: 'Hủy chiến dịch',
+      cancelText: 'Không',
+      okType: 'danger',
+      onOk: async () => {
+        try {
+          setLoading(true);
+          const token = localStorage.getItem('token');
+          await VaccinationService.cancelVaccinationCampaign(
+            record.id,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          message.success('Đã hủy chiến dịch thành công');
+          fetchVaccinationEvents();
+        } catch (error) {
+          const errorMessage = error.response?.data?.message || 'Có lỗi khi hủy chiến dịch';
+          message.error(errorMessage);
+        } finally {
+          setLoading(false);
+        }
+      },
     });
-    setSelectedStudents([]);
   };
 
-  // Handle form input changes
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setCurrentEvent({...currentEvent, [name]: value});
-  };
 
-  // Handle filter changes
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters({...filters, [name]: value});
-  };
+  // Handle delete
+  // const handleDelete = (record) => {
+  //   Modal.confirm({
+  //     title: 'Xác nhận xóa',
+  //     content: `Bạn có chắc muốn xóa chiến dịch "${record.title}"?`,
+  //     okText: 'Xóa',
+  //     cancelText: 'Hủy',
+  //     okType: 'danger',
+  //     onOk: async () => {
+  //       try {
+  //         // API call to delete
+  //         message.success('Đã xóa chiến dịch thành công');
+  //         fetchVaccinationEvents();
+  //       } catch (error) {
+  //         message.error('Có lỗi khi xóa chiến dịch');
+  //       }
+  //     }
+  //   });
+  // };
 
-  // Handle form submission
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!currentEvent.title || !currentEvent.vaccineType || !currentEvent.scheduledDate) {
-      alert('Vui lòng điền đầy đủ các trường bắt buộc');
-      return;
-    }
-    if (editing) {
-      updateVaccinationEvent(currentEvent.id, currentEvent);
-    } else {
-      createVaccinationEvent(currentEvent);
-    }
-  };
-
-  // Open notification form modal
-  const openNotificationModal = (event) => {
-    setNotification({
-      eventId: event.id,
-      subject: `Thông báo tiêm chủng: ${event.title}`,
-      message: `Kính gửi Quý phụ huynh,\n\nNhà trường tổ chức chương trình tiêm chủng ${event.vaccineType} cho học sinh vào ngày ${new Date(event.scheduledDate).toLocaleDateString('vi-VN')}.\n\nKính mong Quý phụ huynh xác nhận cho con tham gia chương trình này.\n\nTrân trọng,\nPhòng Y tế`,
-      deadlineDate: new Date(new Date().setDate(new Date().getDate() + 7)).toISOString().split('T')[0],
-      requiredDocuments: event.requiredDocuments || '',
-      sendToAll: true,
-      specificClass: ''
+  // Handle send notification
+  const handleSendNotification = (record) => {
+    setCurrentCampaign(record);
+    notificationForm.setFieldsValue({
+      subject: `Thông báo tiêm chủng: ${record.title}`,
+      message: `Kính gửi Quý phụ huynh,\n\nNhà trường tổ chức chương trình tiêm chủng ${record.vaccineType} cho học sinh vào ngày ${dayjs(record.scheduledDate).format('DD/MM/YYYY')}.\n\nKính mong Quý phụ huynh xác nhận cho con tham gia chương trình này.\n\nTrân trọng,\nPhòng Y tế`,
+      deadlineDate: dayjs().add(7, 'day'),
+      sendToAll: true
     });
     setNotificationModalOpen(true);
   };
 
-  // Send notifications to parents
-  const sendNotifications = async (e) => {
-    e.preventDefault();
-    if (!notification.subject || !notification.message || !notification.deadlineDate) {
-      alert('Vui lòng điền đầy đủ thông tin thông báo');
-      return;
-    }
-    setLoading(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      const updatedEvents = vaccinationEvents.map(event => {
-        if (event.id === notification.eventId) {
-          return {
-            ...event,
-            notificationSent: true,
-            notificationDate: new Date().toISOString()
-          };
-        }
-        return event;
-      });
-      setVaccinationEvents(updatedEvents);
-      setNotificationModalOpen(false);
-      alert('Thông báo đã được gửi thành công đến phụ huynh!');
-      setLoading(false);
-    } catch (error) {
-      console.error('Error sending notifications:', error);
-      alert('Có lỗi xảy ra khi gửi thông báo. Vui lòng thử lại sau.');
-      setLoading(false);
-    }
+  // Get student information from localStorage (applied from /ketquatiemchung)
+  const getStudentInfo = (studentId) => {
+    const students = JSON.parse(localStorage.getItem('students') || '[]');
+    const student = students.find(s => String(s.studentId) === String(studentId));
+    return student
+      ? { fullName: student.fullName || student.name || '', className: student.className || '' }
+      : { fullName: 'Không xác định', className: 'Không xác định' };
   };
 
-  // Open responses modal to see parent responses
-  const viewResponses = (event) => {
-    const mockResponses = [
-      { id: 1, studentName: 'Nguyễn Văn A', className: '10A1', status: 'Xác nhận', parentNote: 'Con đã tiêm đầy đủ', responseDate: '2023-09-10' },
-      { id: 2, studentName: 'Trần Thị B', className: '10A1', status: 'Từ chối', parentNote: 'Con bị dị ứng với thành phần vắc-xin', responseDate: '2023-09-11' },
-      { id: 3, studentName: 'Lê Văn C', className: '10A2', status: 'Xác nhận', parentNote: '', responseDate: '2023-09-12' },
-      { id: 4, studentName: 'Phạm Thị D', className: '10A2', status: 'Chưa phản hồi', parentNote: '', responseDate: '' },
-      { id: 5, studentName: 'Hoàng Văn E', className: '10A3', status: 'Xác nhận', parentNote: 'Cần theo dõi sau tiêm do có tiền sử dị ứng', responseDate: '2023-09-10' },
-    ];
-    setCurrentStudentResponses(mockResponses);
-    setResponseModalOpen(true);
-  };
 
-  // Apply filters to the vaccination events list
+  // Filter events
   const filteredEvents = vaccinationEvents.filter(event => {
-    return (
-      (filters.searchTerm === '' || 
-        event.title.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-        event.vaccineType.toLowerCase().includes(filters.searchTerm.toLowerCase())) &&
-      (filters.status === '' || event.status === filters.status) &&
-      (filters.vaccineType === '' || event.vaccineType === filters.vaccineType) &&
-      (filters.fromDate === '' || new Date(event.scheduledDate) >= new Date(filters.fromDate)) &&
-      (filters.toDate === '' || new Date(event.scheduledDate) <= new Date(filters.toDate))
-    );
+    const matchesSearch = !searchText || 
+      event.title.toLowerCase().includes(searchText.toLowerCase()) ||
+      event.vaccineType.toLowerCase().includes(searchText.toLowerCase());
+    
+    const matchesStatus = !selectedStatus || event.status === selectedStatus;
+    const matchesVaccineType = !selectedVaccineType || event.vaccineType === selectedVaccineType;
+    
+    let matchesDateRange = true;
+    if (dateRange && dateRange.length === 2) {
+      const eventDate = dayjs(event.scheduledDate);
+      matchesDateRange = eventDate.isAfter(dateRange[0]) && eventDate.isBefore(dateRange[1]);
+    }
+    
+    return matchesSearch && matchesStatus && matchesVaccineType && matchesDateRange;
   });
 
-  // Handle notification input changes
-  const handleNotificationChange = (e) => {
-    const { name, value } = e.target;
-    setNotification({...notification, [name]: value});
-  };
-  return (
-    <div className="nurse-page vaccination-management-page">
-      <h1 className="page-title">Quản lý tiêm chủng</h1>
-      
-       <div style={{ marginBottom: 20, textAlign: 'right' }}>
-        <button
-          className="create-event-btn"
-          style={{
-            background: '#22c55e',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 4,
-            padding: '8px 16px',
-            fontWeight: 600,
-            cursor: 'pointer',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 6
-          }}
-          onClick={() => navigate('/taosukientiemchung')}
-        >
-          <Plus size={18} /> Tạo sự kiện tiêm chủng
-        </button>
-      </div>
+  // Brief table columns (for initial view)
+  const briefColumns = [
+    {
+      title: 'Tên chiến dịch',
+      dataIndex: 'title',
+      key: 'title',
+      render: (text) => (
+        <Text strong style={{ fontSize: '14px' }}>{text}</Text>
+      ),
+    },
+    {
+      title: 'Trạng thái',
+      dataIndex: 'status',
+      key: 'status',
+      width: 120,
+      render: (status) => {
+        const statusConfig = statusOptions.find(s => s.value === status);
+        const config = statusConfig || { label: status, color: 'default' };
+        return (
+          <Tag color={config.color} style={{ borderRadius: '12px' }}>
+            {config.label}
+          </Tag>
+        );
+      },
+    },
+    {
+      title: 'Thao tác',
+      key: 'actions',
+      width: 80,
+      render: (_, record) => {
+        const menuItems = [
+          {
+            key: 'send',
+            icon: <BellOutlined />,
+            label: 'Gửi thông báo',
+            onClick: () => handleSendNotification(record)
+          }
+        ];
 
-      {/* Success message */}
-      <table className="events-table">
-        <thead>
-          <tr>
-            <th>Tiêu đề</th>
-            <th>Loại vắc-xin</th>
-            <th>Ngày tiêm</th>
-            <th>Đối tượng</th>
-            <th>Người tổ chức</th>
-            <th>Trạng thái</th>
-            <th>Phản hồi</th>
-            <th>Thao tác</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredEvents.length > 0 ? (
-            filteredEvents.map(event => (
-              <tr key={event.id}>
-                <td>{event.title}</td>
-                <td>{event.vaccineType}</td>
-                <td>{new Date(event.scheduledDate).toLocaleDateString('vi-VN')} {event.scheduledTime}</td>
-                <td>{event.targetClass}</td>
-                <td>{getOrganizerName(event.organizer)}</td>
-                <td>
-                  <span className={`status ${
-                    event.status === 'Hoàn thành' ? 'complete' : 
-                    event.status === 'Đã hủy' ? 'cancelled' : 
-                    event.status === 'APPROVED' ? 'approved' : 'upcoming'
-                  }`}>
-                    {event.status === 'APPROVED' ? 'Đã duyệt' : event.status}
-                  </span>
-                </td>
-                <td className="response-summary">
-                  <div className="response-counts">
-                    <span className="confirmed">{event.responses.confirmed}</span> / 
-                    <span className="declined">{event.responses.declined}</span> / 
-                    <span className="pending">{event.responses.pending}</span>
-                  </div>
-                  <div className="response-labels">
-                    <span className="confirmed-label">Xác nhận</span> /
-                    <span className="declined-label">Từ chối</span> / 
-                    <span className="pending-label">Chưa phản hồi</span>
-                  </div>
-                </td>
-                <td className="actions">
-                  <button className="edit-btn" onClick={() => editVaccinationEvent(event)}>
-                    <Edit size={16} />
-                  </button>
-                  <button className="delete-btn" onClick={() => deleteVaccinationEvent(event.id)}>
-                    <Trash2 size={16} />
-                  </button>
-                  <button className="send-btn" onClick={() => openNotificationModal(event)}>
-                    <Send size={16} />
-                  </button>
-                  <button className="view-btn" onClick={() => viewResponses(event)}>
-                    <FileText size={16} />
-                  </button>
-                  {isAdmin && event.status !== 'APPROVED' && (
-                    <button
-                      className="approve-btn"
-                      title="Chấp nhận"
-                      onClick={() => approveVaccinationCampaign(event)}
-                      style={{ marginLeft: 4, background: '#22c55e', color: '#fff', border: 'none', borderRadius: 4, padding: '4px 8px', cursor: 'pointer' }}
-                    >
-                      <CheckCircle size={16} style={{ verticalAlign: 'middle' }} /> Chấp nhận
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="8" className="no-data">Không có dữ liệu sự kiện tiêm chủng</td>
-            </tr>
+        // Add edit option only for pending campaigns
+        if (record.status === 'PENDING') {
+          menuItems.unshift({
+            key: 'edit',
+            icon: <EditOutlined />,
+            label: 'Chỉnh sửa',
+            onClick: () => navigate('/capnhatthongtintiemchung', { state: { event: record } })
+          });
+        }
+
+        // Add cancel option for pending campaigns
+        if (record.status === 'PENDING') {
+          menuItems.push({
+            key: 'cancel',
+            icon: <CloseCircleOutlined />,
+            label: 'Hủy chiến dịch',
+            danger: true,
+            onClick: () => handleCancel(record)
+          });
+        }
+
+        if (isAdmin && record.status === 'PENDING') {
+          menuItems.unshift({
+            key: 'approve',
+            icon: <CheckCircleOutlined />,
+            label: 'Duyệt chiến dịch',
+            onClick: () => handleApprove(record)
+          });
+        }
+
+        return (
+          <Dropdown
+            menu={{ items: menuItems }}
+            trigger={['click']}
+            placement="bottomRight"
+          >
+            <Button icon={<MoreOutlined />} size="small" />
+          </Dropdown>
+        );
+      },
+    },
+  ];
+
+  // Expanded row content (detailed view with new API components)
+  const expandedRowRender = (record) => {
+    const getOrganizerName = (organizer, record) => {
+      return organizer || record.createdBy || 'Y tế trường';
+    };
+
+    // Prepare campaign info for components
+    const campaignInfo = {
+      campaignName: record.title,
+      targetGroup: record.targetClass,
+      description: record.description,
+      scheduledDate: record.scheduledDate,
+      status: record.status
+    };
+
+    return (
+      <Card style={{ margin: '16px 0', border: '1px solid #f0f0f0', borderRadius: '8px' }}>
+        {/* Campaign Information Section */}
+        <div style={{ marginBottom: 24 }}>
+          <Title level={4} style={{ marginBottom: 16, color: '#52c41a' }}>
+            <MedicineBoxOutlined style={{ marginRight: 8 }} />
+            Chi tiết chiến dịch: {record.title}
+          </Title>
+          
+          {/* Detailed Information */}
+          <Row gutter={[24, 16]}>
+            <Col span={12}>
+              <div style={{ marginBottom: 12 }}>
+                <Text strong style={{ color: '#595959' }}>Mô tả:</Text>
+                <br />
+                <Text>{record.description || 'Không có mô tả'}</Text>
+              </div>
+              <div style={{ marginBottom: 12 }}>
+                <Text strong style={{ color: '#595959' }}>Thời gian:</Text>
+                <br />
+                <Text>{record.scheduledTime || '09:00'}</Text>
+              </div>
+              <div style={{ marginBottom: 12 }}>
+                <Text strong style={{ color: '#595959' }}>Địa điểm:</Text>
+                <br />
+                <Text>{record.location || 'Phòng y tế trường'}</Text>
+              </div>
+              <div>
+                <Text strong style={{ color: '#595959' }}>Đối tượng:</Text>
+                <br />
+                <Tag icon={<TeamOutlined />} color="purple">
+                  {record.targetClass || 'Tất cả'}
+                </Tag>
+              </div>
+            </Col>
+            <Col span={12}>
+              <div>
+                <Text strong style={{ color: '#595959' }}>Người tổ chức:</Text>
+                <br />
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <Avatar size="small" icon={<UserOutlined />} style={{ marginRight: 8 }} />
+                  <Text>{getOrganizerName(record.organizer, record)}</Text>
+                </div>
+              </div>
+            </Col>
+          </Row>
+          
+          {/* Notes and Required Documents */}
+          {record.notes && (
+            <div style={{ marginTop: 16, padding: '8px 12px', backgroundColor: '#fff', borderRadius: '6px', border: '1px solid #d9d9d9' }}>
+              <Text strong style={{ color: '#595959' }}>Ghi chú:</Text>
+              <br />
+              <Text>{record.notes}</Text>
+            </div>
           )}
-        </tbody>
-      </table>
-      
-      
-      {/* Vaccination Event Modal */}
-      {modalOpen && (
-        <div className="modal">
-          <div className="modal-content">
-            <span className="close" onClick={() => setModalOpen(false)}>&times;</span>
-            <h2>{editing ? 'Sửa sự kiện tiêm chủng' : 'Tạo sự kiện tiêm chủng mới'}</h2>
-            
-            <form onSubmit={handleSubmit}>
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="title">Tiêu đề <span className="required">*</span></label>
-                  <input
-                    type="text"
-                    name="title"
-                    id="title"
-                    value={currentEvent.title}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="vaccineType">Loại vắc-xin <span className="required">*</span></label>
-                  <select
-                    name="vaccineType"
-                    id="vaccineType"
-                    value={currentEvent.vaccineType}
-                    onChange={handleInputChange}
-                    required
-                  >
-                    <option value="">-- Chọn loại vắc-xin --</option>
-                    {vaccineTypes.map(type => (
-                      <option key={type.value} value={type.value}>{type.label}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="scheduledDate">Ngày tiêm <span className="required">*</span></label>
-                  <input
-                    type="date"
-                    name="scheduledDate"
-                    id="scheduledDate"
-                    value={currentEvent.scheduledDate}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="scheduledTime">Giờ tiêm</label>
-                  <input
-                    type="time"
-                    name="scheduledTime"
-                    id="scheduledTime"
-                    value={currentEvent.scheduledTime}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="location">Địa điểm</label>
-                  <input
-                    type="text"
-                    name="location"
-                    id="location"
-                    value={currentEvent.location}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="targetClass">Đối tượng tiêm</label>
-                  <input
-                    type="text"
-                    name="targetClass"
-                    id="targetClass"
-                    value={currentEvent.targetClass}
-                    onChange={handleInputChange}
-                    placeholder="Ví dụ: Khối 10, Lớp 11A1"
-                  />
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="description">Mô tả</label>
-                <textarea
-                  name="description"
-                  id="description"
-                  value={currentEvent.description}
-                  onChange={handleInputChange}
-                  rows="3"
-                ></textarea>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="vaccineBatch">Lô vắc-xin</label>
-                  <input
-                    type="text"
-                    name="vaccineBatch"
-                    id="vaccineBatch"
-                    value={currentEvent.vaccineBatch}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="manufacturer">Nhà sản xuất</label>
-                  <input
-                    type="text"
-                    name="manufacturer"
-                    id="manufacturer"
-                    value={currentEvent.manufacturer}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="doseAmount">Liều lượng</label>
-                  <input
-                    type="text"
-                    name="doseAmount"
-                    id="doseAmount"
-                    value={currentEvent.doseAmount}
-                    onChange={handleInputChange}
-                    placeholder="Ví dụ: 0.5ml"
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="status">Trạng thái</label>
-                  <select
-                    name="status"
-                    id="status"
-                    value={currentEvent.status}
-                    onChange={handleInputChange}
-                  >
-                    <option value="Sắp tới">Sắp tới</option>
-                    <option value="Hoàn thành">Hoàn thành</option>
-                    <option value="Đã hủy">Đã hủy</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="requiredDocuments">Giấy tờ yêu cầu</label>
-                <textarea
-                  name="requiredDocuments"
-                  id="requiredDocuments"
-                  value={currentEvent.requiredDocuments}
-                  onChange={handleInputChange}
-                  rows="2"
-                  placeholder="Ví dụ: Phiếu đồng ý của phụ huynh, sổ tiêm chủng"
-                ></textarea>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="notes">Ghi chú</label>
-                <textarea
-                  name="notes"
-                  id="notes"
-                  value={currentEvent.notes}
-                  onChange={handleInputChange}
-                  rows="2"
-                ></textarea>
-              </div>
-
-              <div className="form-actions">
-                <button type="button" className="cancel-btn" onClick={() => setModalOpen(false)}>
-                  Hủy
-                </button>
-                <button type="submit" className="submit-btn">
-                  {editing ? 'Cập nhật' : 'Tạo mới'}
-                </button>
-              </div>
-            </form>
-          </div>
+          {record.requiredDocuments && (
+            <div style={{ marginTop: 8, padding: '8px 12px', backgroundColor: '#fff', borderRadius: '6px', border: '1px solid #d9d9d9' }}>
+              <Text strong style={{ color: '#595959' }}>Tài liệu yêu cầu:</Text>
+              <br />
+              <Text>{record.requiredDocuments}</Text>
+            </div>
+          )}
         </div>
-      )}
-      
-      {/* Notification Modal */}
-      {notificationModalOpen && (
-        <div className="modal">
-          <div className="modal-content notification-modal">
-            <span className="close" onClick={() => setNotificationModalOpen(false)}>&times;</span>
-            <h2>Gửi thông báo tiêm chủng</h2>
-            
-            <form onSubmit={sendNotifications}>
-              <div className="form-group">
-                <label htmlFor="subject">Tiêu đề <span className="required">*</span></label>
-                <input
-                  type="text"
-                  name="subject"
-                  id="subject"
-                  value={notification.subject}
-                  onChange={handleNotificationChange}
-                  required
+
+        <Divider />
+
+        {/* Student Management Section with New APIs */}
+        <Tabs
+          defaultActiveKey="eligible"
+          style={{ marginTop: 16 }}
+          items={[
+            {
+              key: 'eligible',
+              label: (
+                <span>
+                  <TeamOutlined />
+                  Học sinh đủ điều kiện
+                </span>
+              ),
+              children: (
+                <AllStudentsInCampaign 
+                  campaignId={record.id} 
+                  campaignInfo={campaignInfo}
                 />
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="message">Nội dung thông báo <span className="required">*</span></label>
-                <textarea
-                  name="message"
-                  id="message"
-                  value={notification.message}
-                  onChange={handleNotificationChange}
-                  rows="6"
-                  required
-                ></textarea>
-              </div>
-              
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="deadlineDate">Hạn phản hồi <span className="required">*</span></label>
-                  <input
-                    type="date"
-                    name="deadlineDate"
-                    id="deadlineDate"
-                    value={notification.deadlineDate}
-                    onChange={handleNotificationChange}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="requiredDocuments">Giấy tờ yêu cầu</label>
-                  <input
-                    type="text"
-                    name="requiredDocuments"
-                    id="requiredDocuments"
-                    value={notification.requiredDocuments}
-                    onChange={handleNotificationChange}
-                    placeholder="Ví dụ: Phiếu đồng ý, sổ tiêm chủng"
-                  />
-                </div>
-              </div>
-              
-              <div className="form-group notification-target">
-                <label>Đối tượng nhận thông báo</label>
-                <div className="checkbox-group">
-                  <input
-                    type="radio"
-                    id="sendToAll"
-                    name="sendToAll"
-                    checked={notification.sendToAll}
-                    onChange={() => setNotification({...notification, sendToAll: true, specificClass: ''})}
-                  />
-                  <label htmlFor="sendToAll">Tất cả học sinh thuộc đối tượng tiêm</label>
-                </div>
-                
-                <div className="checkbox-group">
-                  <input
-                    type="radio"
-                    id="sendToSpecific"
-                    name="sendToAll"
-                    checked={!notification.sendToAll}
-                    onChange={() => setNotification({...notification, sendToAll: false})}
-                  />
-                  <label htmlFor="sendToSpecific">Lớp cụ thể</label>
-                  {!notification.sendToAll && (
-                    <input
-                      type="text"
-                      name="specificClass"
-                      value={notification.specificClass}
-                      onChange={handleNotificationChange}
-                      placeholder="Ví dụ: 10A1, 11B2"
-                      className="specific-class-input"
-                    />
-                  )}
-                </div>
-              </div>
-              
-              <div className="notification-warning">
-                <AlertTriangle size={16} />
-                <p>Thông báo sẽ được gửi đến phụ huynh của học sinh thuộc đối tượng tiêm. Phụ huynh sẽ nhận được thông báo và phiếu xác nhận tiêm chủng.</p>
-              </div>
-              
-              <div className="form-actions">
-                <button type="button" className="cancel-btn" onClick={() => setNotificationModalOpen(false)}>
-                  Hủy
-                </button>
-                <button type="submit" className="submit-btn" disabled={loading}>
-                  {loading ? 'Đang gửi...' : 'Gửi thông báo'}
-                </button>
-              </div>
-            </form>
+              ),
+            },
+            {
+              key: 'status',
+              label: (
+                <span>
+                  <MedicineBoxOutlined />
+                  Trạng thái tiêm chủng
+                </span>
+              ),
+              children: (
+                <StudentsWithVaccinationStatus 
+                  campaignId={record.id} 
+                  campaignInfo={campaignInfo}
+                />
+              ),
+            },
+          ]}
+        />
+      </Card>
+    );
+  };
+
+
+  return (
+    <div style={{ maxWidth: 1600, margin: '0 auto', padding: '24px' }}>
+      {contextHolder}
+      {/* Header */}
+      <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
+        <Col>
+          <Title level={2} style={{ margin: 0, color: '#15803d' }}>
+            <MedicineBoxOutlined style={{ marginRight: 12 }} />
+            Quản lý tiêm chủng
+          </Title>
+          <Text style={{ color: '#8c8c8c', fontSize: 16, display: 'block', marginTop: 8 }}>
+            Quản lý các chiến dịch tiêm chủng và theo dõi phản hồi từ phụ huynh
+          </Text>
+        </Col>
+        <Col>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            size="large"
+            onClick={() => navigate('/taosukientiemchung')}
+            style={{ 
+              borderRadius: 8,
+              background: 'linear-gradient(135deg, #52c41a 0%, #73d13d 100%)',
+              border: 'none',
+              fontWeight: 600,
+              boxShadow: '0 4px 12px rgba(82, 196, 26, 0.3)'
+            }}
+          >
+            Tạo chiến dịch mới
+          </Button>
+        </Col>
+      </Row>
+
+      {/* Statistics */}
+      <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
+        <Col xs={24} sm={6}>
+          <Card style={{ textAlign: 'center', borderRadius: 12 }}>
+            <Statistic
+              title="Tổng chiến dịch"
+              value={vaccinationEvents.length}
+              prefix={<MedicineBoxOutlined style={{ color: '#52c41a' }} />}
+              valueStyle={{ color: '#52c41a' }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={6}>
+          <Card style={{ textAlign: 'center', borderRadius: 12 }}>
+            <Statistic
+              title="Chờ phê duyệt"
+              value={vaccinationEvents.filter(e => e.status === 'PENDING').length}
+              prefix={<ExclamationCircleOutlined style={{ color: '#fa8c16' }} />}
+              valueStyle={{ color: '#fa8c16' }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={6}>
+          <Card style={{ textAlign: 'center', borderRadius: 12 }}>
+            <Statistic
+              title="Đã duyệt"
+              value={vaccinationEvents.filter(e => e.status === 'APPROVED').length}
+              prefix={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
+              valueStyle={{ color: '#52c41a' }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={6}>
+          <Card style={{ textAlign: 'center', borderRadius: 12 }}>
+            <Statistic
+              title="Đã hủy"
+              value={vaccinationEvents.filter(e => e.status === 'CANCELLED').length}
+              prefix={<CloseCircleOutlined style={{ color: '#ff4d4f' }} />}
+              valueStyle={{ color: '#ff4d4f' }}
+            />
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Filters */}
+      <Card 
+        title={
+          <Space>
+            <FilterOutlined />
+            <span>Lọc chiến dịch tiêm chủng</span>
+          </Space>
+        }
+        style={{ marginBottom: 24, borderRadius: 8 }}
+      >
+        <Row gutter={[16, 16]} align="middle">
+          <Col xs={24} sm={8}>
+            <Input
+              placeholder="Tìm kiếm theo tên hoặc loại vắc-xin..."
+              prefix={<SearchOutlined />}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              allowClear
+            />
+          </Col>
+          <Col xs={24} sm={4}>
+            <Select
+              placeholder="Chọn trạng thái"
+              value={selectedStatus}
+              onChange={setSelectedStatus}
+              allowClear
+              style={{ width: '100%' }}
+            >
+              {statusOptions.map(option => (
+                <Option key={option.value} value={option.value}>
+                  {option.label}
+                </Option>
+              ))}
+            </Select>
+          </Col>
+          <Col xs={24} sm={4}>
+            <Select
+              placeholder="Chọn loại vắc-xin"
+              value={selectedVaccineType}
+              onChange={setSelectedVaccineType}
+              allowClear
+              style={{ width: '100%' }}
+            >
+              {vaccineTypes.map(type => (
+                <Option key={type.value} value={type.value}>
+                  {type.label}
+                </Option>
+              ))}
+            </Select>
+          </Col>
+          <Col xs={24} sm={6}>
+            <RangePicker
+              placeholder={['Từ ngày', 'Đến ngày']}
+              value={dateRange}
+              onChange={setDateRange}
+              style={{ width: '100%' }}
+            />
+          </Col>
+          <Col xs={24} sm={2}>
+            <Button
+              icon={<SyncOutlined />}
+              onClick={fetchVaccinationEvents}
+              loading={loading}
+            >
+              Làm mới
+            </Button>
+          </Col>
+        </Row>
+      </Card>
+
+      {/* Table */}
+      <Card
+        title={
+          <Space>
+            <TeamOutlined />
+            <span>Danh sách chiến dịch tiêm chủng</span>
+            <Badge count={filteredEvents.length} style={{ backgroundColor: '#52c41a' }} />
+          </Space>
+        }
+        style={{ borderRadius: 8 }}
+      >
+        <Table
+          columns={briefColumns}
+          dataSource={filteredEvents}
+          loading={loading}
+          expandable={{
+            expandedRowRender,
+            expandIcon: ({ expanded, onExpand, record }) =>
+              expanded ? (
+                <Button 
+                  size="small" 
+                  type="text" 
+                  icon={<EyeOutlined />} 
+                  onClick={e => onExpand(record, e)}
+                  style={{ color: '#52c41a' }}
+                >
+                  Ẩn chi tiết
+                </Button>
+              ) : (
+                <Button 
+                  size="small" 
+                  type="primary" 
+                  icon={<EyeOutlined />} 
+                  onClick={e => onExpand(record, e)}
+                  style={{ 
+                    backgroundColor: '#52c41a',
+                    borderColor: '#52c41a'
+                  }}
+                >
+                  Xem chi tiết
+                </Button>
+              ),
+            expandIconColumnIndex: 5,
+            rowExpandable: () => true,
+          }}
+          pagination={{
+            total: filteredEvents.length,
+            pageSize: 10,
+            showSizeChanger: true,
+            showQuickJumper: true,
+            showTotal: (total, range) => 
+              `${range[0]}-${range[1]} của ${total} chiến dịch`,
+          }}
+          scroll={{ x: 1000 }}
+        />
+      </Card>
+
+      {/* Notification Modal */}
+      <Modal
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <BellOutlined style={{ color: '#52c41a' }} />
+            Gửi thông báo tiêm chủng
           </div>
-        </div>
-      )}
-      
-      {/* Parent Responses Modal */}
-      {responseModalOpen && (
-        <div className="modal">
-          <div className="modal-content responses-modal">
-            <span className="close" onClick={() => setResponseModalOpen(false)}>&times;</span>
-            <h2>Phản hồi từ phụ huynh</h2>
-            
-            <div className="response-summary-header">
-              <div className="response-stats">
-                <div className="stat-item">
-                  <span className="stat-label">Tổng số:</span>
-                  <span className="stat-value">{currentStudentResponses.length}</span>
-                </div>
-                <div className="stat-item confirmed">
-                  <CheckCircle size={16} />
-                  <span className="stat-label">Xác nhận:</span>
-                  <span className="stat-value">
-                    {currentStudentResponses.filter(r => r.status === 'Xác nhận').length}
-                  </span>
-                </div>
-                <div className="stat-item declined">
-                  <X size={16} />
-                  <span className="stat-label">Từ chối:</span>
-                  <span className="stat-value">
-                    {currentStudentResponses.filter(r => r.status === 'Từ chối').length}
-                  </span>
-                </div>
-                <div className="stat-item pending">
-                  <AlertTriangle size={16} />
-                  <span className="stat-label">Chưa phản hồi:</span>
-                  <span className="stat-value">
-                    {currentStudentResponses.filter(r => r.status === 'Chưa phản hồi').length}
-                  </span>
-                </div>
-              </div>
-            </div>
-            
-            <table className="responses-table">
-              <thead>
-                <tr>
-                  <th>Học sinh</th>
-                  <th>Lớp</th>
-                  <th>Trạng thái</th>
-                  <th>Ghi chú của phụ huynh</th>
-                  <th>Ngày phản hồi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentStudentResponses.map(response => (
-                  <tr key={response.id}>
-                    <td>{response.studentName}</td>
-                    <td>{response.className}</td>
-                    <td>
-                      <span className={`response-status ${response.status.toLowerCase().replace(' ', '-')}`}>
-                        {response.status === 'Xác nhận' && <CheckCircle size={14} />}
-                        {response.status === 'Từ chối' && <X size={14} />}
-                        {response.status === 'Chưa phản hồi' && <AlertTriangle size={14} />}
-                        {response.status}
-                      </span>
-                    </td>
-                    <td>{response.parentNote || '(Không có)'}</td>
-                    <td>{response.responseDate || '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            
-            <div className="form-actions">
-              <button type="button" className="close-btn" onClick={() => setResponseModalOpen(false)}>
-                Đóng
-              </button>
-              <button type="button" className="export-btn">
-                Xuất danh sách
-              </button>
-            </div>
+        }
+        open={notificationModalOpen}
+        onCancel={() => setNotificationModalOpen(false)}
+        footer={null}
+        width={700}
+        className="notification-modal"
+      >
+        <Form
+          form={notificationForm}
+          layout="vertical"
+          onFinish={async (values) => {
+            try {
+              setLoading(true);
+              // API call to send notification
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              message.success('Đã gửi thông báo thành công');
+              setNotificationModalOpen(false);
+            } catch (error) {
+              message.error('Có lỗi khi gửi thông báo');
+            } finally {
+              setLoading(false);
+            }
+          }}
+        >
+          <Alert
+            message="Thông báo sẽ được gửi đến phụ huynh của học sinh thuộc đối tượng tiêm"
+            type="info"
+            showIcon
+            style={{ marginBottom: 16 }}
+          />
+          
+          <Form.Item
+            name="subject"
+            label="Tiêu đề"
+            rules={[{ required: true, message: 'Vui lòng nhập tiêu đề' }]}
+          >
+            <Input placeholder="Nhập tiêu đề thông báo" />
+          </Form.Item>
+
+          <Form.Item
+            name="message"
+            label="Nội dung"
+            rules={[{ required: true, message: 'Vui lòng nhập nội dung' }]}
+          >
+            <TextArea rows={6} placeholder="Nhập nội dung thông báo" />
+          </Form.Item>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="deadlineDate"
+                label="Hạn phản hồi"
+                rules={[{ required: true, message: 'Vui lòng chọn hạn phản hồi' }]}
+              >
+                <DatePicker style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="sendToAll" label="Đối tượng gửi">
+                <Radio.Group>
+                  <Radio value={true}>Tất cả học sinh</Radio>
+                  <Radio value={false}>Lớp cụ thể</Radio>
+                </Radio.Group>
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <div style={{ textAlign: 'right', marginTop: 24 }}>
+            <Space>
+              <Button onClick={() => setNotificationModalOpen(false)}>
+                Hủy
+              </Button>
+              <Button type="primary" htmlType="submit" loading={loading} icon={<SendOutlined />}>
+                Gửi thông báo
+              </Button>
+            </Space>
           </div>
-        </div>
-      )}
+        </Form>
+      </Modal>
+
     </div>
   );
 };
 
-export default VaccinationManagement; 
+export default VaccinationManagement;
