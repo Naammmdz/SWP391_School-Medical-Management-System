@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.text.Normalizer;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -454,6 +455,7 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
         String normalized = Normalizer.normalize(input, Normalizer.Form.NFD);
         return normalized.replaceAll("\\p{M}", "");
     }
+
 
 }
 
