@@ -19,12 +19,12 @@ const BlockUser = () => {
   const fetchUserData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await userService.getAllUsers({
+      const userResponse = await userService.getUserByIdForAdmin(userId, {
         headers: {
           Authorization: `Bearer ${token}`
         }
       });
-      const foundUser = response.data.find(u => u.id === parseInt(userId));
+      const foundUser = userResponse.data
       if (foundUser) {
         setUser(foundUser);
       } else {
