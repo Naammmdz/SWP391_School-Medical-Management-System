@@ -1,8 +1,8 @@
-package com.school.health.event.listener;
+package com.school.health.event.noti.listener;
 
 import com.school.health.entity.Inventory;
 import com.school.health.entity.User;
-import com.school.health.event.LowStockInventoryEvent;
+import com.school.health.event.noti.LowStockInventoryEvent;
 import com.school.health.repository.UserRepository;
 import com.school.health.service.impl.NotificationServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;

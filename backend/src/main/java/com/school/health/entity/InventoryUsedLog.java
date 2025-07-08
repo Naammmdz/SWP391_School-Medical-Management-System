@@ -17,6 +17,7 @@ public class InventoryUsedLog {
     @Column(name = "UsageId", nullable = false)
     private int id;
 
+    //Một cái này có thể dùng nhiều iTem
     @ManyToOne
     @JoinColumn(name = "ItemId", nullable = false)
     private Inventory item;

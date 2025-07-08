@@ -1,10 +1,8 @@
-package com.school.health.event.listener;
+package com.school.health.event.noti.listener;
 
 import com.school.health.dto.response.MedicineLogResponse;
-import com.school.health.entity.MedicineLog;
 import com.school.health.entity.MedicineSubmission;
-import com.school.health.event.MarkMedicineTakenEvent;
-import com.school.health.repository.MedicalEventsRepository;
+import com.school.health.event.noti.MarkMedicineTakenEvent;
 import com.school.health.repository.MedicineSubmissionRepository;
 import com.school.health.service.NotificationService;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package com.school.health.event.listener;
+package com.school.health.event.noti.listener;
 
 import com.school.health.entity.Inventory;
 import com.school.health.entity.User;
