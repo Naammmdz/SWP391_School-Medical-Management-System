@@ -60,4 +60,9 @@ public class MedicalEventsController {
     public ResponseEntity<List<MedicalEventsResponseDTO>> getAllMedicalEventByStudentId(@RequestParam Integer studentId) {
         return ResponseEntity.ok(medicalEventsService.getMedicalEventByStudentID(studentId));
     }
+    @PreAuthorize("hasRole('NURSE')")
+    @PutMapping("/api/nurse/medical-events-status/{eventId}")
+    public ResponseEntity<MedicalEventsResponseDTO> updateStatusMedicalEvent( @PathVariable Integer eventId) {
+        return ResponseEntity.ok(medicalEventsService.updateStatusMedicalEvent(eventId));
+    }
 }

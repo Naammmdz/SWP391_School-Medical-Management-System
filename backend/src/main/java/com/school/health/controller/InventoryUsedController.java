@@ -26,4 +26,9 @@ public class InventoryUsedController {
     public ResponseEntity<InventoryUsedResponseDTO> updateInventoryUsedLog(@PathVariable int id, @RequestBody InventoryUsedUpdateRequestDTO requestDTO){
         return ResponseEntity.ok(inventoryUsedService.updateInventoryUsed(id, requestDTO));
     }
+    @DeleteMapping("/inventory-used-logs/{id}")
+    public ResponseEntity<String> deleteInventoryUsedLog(@PathVariable int id){
+        inventoryUsedService.deleteInventoryUsed(id);
+        return ResponseEntity.ok("Deleted successfully!");
+    }
 }

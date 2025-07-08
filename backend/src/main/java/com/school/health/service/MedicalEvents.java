@@ -11,11 +11,21 @@ import java.util.List;
 
 public interface MedicalEvents {
     public MedicalEventsResponseDTO createMedicalEvents(int createBy, MedicalEventsRequestDTO medicalEventsRequestDTO);
+
     public MedicalEventsResponseDTO getMedicalEvents(int id);
+
     public List<MedicalEventsResponseDTO> getAllMedicalEvents(MedicalEventsFiltersRequestDTO medicalEventsRequestDTO);
+
     public MedicalEventsResponseDTO updateMedicalEvents(int id, MedicalEventsRequestDTO medicalEventsRequestDTO);
+
     public MedicalEventsResponseDTO mapToResponseDTO(MedicalEvent medicalEvent);
-    public MedicalEventsResponseDTO updateMedicalEvents(int id, MedicalEventsUpdateRequestDTO MedicalEventsUpdateRequestDTO);
+
+//    public MedicalEventsResponseDTO updateMedicalEvents(int id, MedicalEventsUpdateRequestDTO MedicalEventsUpdateRequestDTO);
+
     public List<MedicalEventsResponseDTO> getMedicalEventByStudentID(int id);
-    public List<MedicalEventsResponseDTO> getAllMedicalEvents( );
+
+    public List<MedicalEventsResponseDTO> getAllMedicalEvents();
+
+    public MedicalEventsResponseDTO updateStatusMedicalEvent(int id);
+
 }

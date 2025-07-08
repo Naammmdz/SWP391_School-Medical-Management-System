@@ -33,13 +33,13 @@ public class InventoryUsedServiceImpl implements InventoryUsedLogService {
     private ApplicationEventPublisher publisher;
     @Override
 
-    public InventoryUsedResponseDTO createInventoryUsed(Integer id, InventoryUsedRequestDTO DTO) {
+    public InventoryUsedResponseDTO createInventoryUsed(Integer itemId, InventoryUsedRequestDTO DTO) {
         InventoryUsedLog inventoryUsedLog = new InventoryUsedLog();
-        inventoryUsedLog.setItem(inventoryRepo.findById(id).get());
+        inventoryUsedLog.setItem(inventoryRepo.findById(itemId).get());
         inventoryUsedLog.setQuantityUsed(DTO.getQuantityUsed());
         inventoryUsedLog.setRelatedEvent(medicalEventsRepo.getReferenceById(DTO.getRelatedEventId()));
         inventoryUsedLog.setNotes(DTO.getNotes());
-        updateInventoryItem(id,DTO.getQuantityUsed());
+        updateInventoryItem(itemId,DTO.getQuantityUsed());
         inventoryUsedRepo.save(inventoryUsedLog);
         return mapDTO(inventoryUsedLog);
 
@@ -82,12 +82,14 @@ public class InventoryUsedServiceImpl implements InventoryUsedLogService {
         return DTO;
     }
 
+    //Cập nhật lại cái vật  tư đã dùng
     @Override
-    public InventoryUsedResponseDTO updateInventoryUsed(Integer id, InventoryUsedUpdateRequestDTO dto) {
-        // Tìm bản ghi cần cập nhật theo ID (bạn cần truyền ID từ DTO hoặc thêm tham số)
-        InventoryUsedLog log = inventoryUsedRepo.findById(id)
+    public InventoryUsedResponseDTO updateInventoryUsed(Integer inventoryUsedId, InventoryUsedUpdateRequestDTO dto) {
+
+        InventoryUsedLog log = inventoryUsedRepo.findById(inventoryUsedId)
                 .orElseThrow(() -> new ResourceNotFoundException("InventoryUsedLog not found"));
         // trước khi cập nhật trả lại kho rồi trừ lại sau
+        //
         backUpdateInventoryItem(log.getItem().getId(),log.getQuantityUsed());
         // Cập nhật vật tư nếu có
         if (dto.getItemId() != null) {
@@ -122,8 +124,9 @@ public class InventoryUsedServiceImpl implements InventoryUsedLogService {
 
 
 
-    public Inventory updateInventoryItem(Integer id, Integer quantityUsed) {
-        Inventory item = inventoryRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException("Item Not Found"));
+//Update số lượng trong kho sau khi dùng
+    public Inventory updateInventoryItem(Integer itemId, Integer quantityUsed) {
+        Inventory item = inventoryRepo.findById(itemId).orElseThrow(() -> new ResourceNotFoundException("Item Not Found"));
 
         if (quantityUsed > item.getQuantity()) {
             throw new IllegalArgumentException("Số lượng sử dụng vượt quá tồn kho");
@@ -135,13 +138,17 @@ public class InventoryUsedServiceImpl implements InventoryUsedLogService {
         }
         return inventoryRepo.save(item);
     }
-    public Inventory backUpdateInventoryItem(Integer id, Integer quantityUsed) {
-        Inventory item = inventoryRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException("Item Not Found"));
 
-
+    // cập nhật lại số lượng trong kho trước khi trừ để trừ cái mới
+    public Inventory backUpdateInventoryItem(Integer itemId, Integer quantityUsed) {
+        Inventory item = inventoryRepo.findById(itemId).orElseThrow(() -> new ResourceNotFoundException("Item Not Found"));
        item.setQuantity(item.getQuantity() + quantityUsed);
         return inventoryRepo.save(item);
     }
 
-
+    public void deleteInventoryUsed(Integer inventoryUsedId) {
+       InventoryUsedLog iUsed =  inventoryUsedRepo.findById(inventoryUsedId).orElseThrow(() -> new ResourceNotFoundException("InventoryUsedLog not found"));
+        backUpdateInventoryItem(iUsed.getItem().getId(),iUsed.getQuantityUsed());
+        inventoryUsedRepo.deleteById(inventoryUsedId);
+    }
 }
