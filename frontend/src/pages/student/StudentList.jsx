@@ -13,7 +13,8 @@ import {
   CalendarOutlined,
   HomeOutlined,
   ManOutlined,
-  WomanOutlined
+  WomanOutlined,
+  PhoneOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import studentService from '../../services/StudentService';
@@ -86,6 +87,28 @@ const StudentList = () => {
     const parent = users.find(user => user.id === parentId);
     return parent ? parent.fullName : 'Không xác định';
   };
+
+  //Get parent phone number from users list
+const getParentPhone = (parentId) => {
+  if (!parentId) {
+    console.log('No parentId provided');
+    return 'Không có thông tin';
+  }
+  
+  const parent = users.find(user => user.id === parentId);
+  console.log('Found parent:', parent); // Debug log
+  
+  if (!parent) {
+    console.log(`Parent with ID ${parentId} not found in users:`, users);
+    return 'Không tìm thấy';
+  }
+  
+  // Try different possible field names for phone number
+  const phoneNumber = parent.phoneNumber || parent.phone || parent.phoneNo || parent.tel;
+  console.log('Phone number:', phoneNumber); // Debug log
+  
+  return phoneNumber || 'Không có số điện thoại';
+};
 
   // Format date from YYYY-MM-DD to DD/MM/YYYY
   const formatDate = (dateString) => {
@@ -482,6 +505,7 @@ const StudentList = () => {
                 </Tag>
               )
             },
+            // Parent information
             {
               title: 'Phụ huynh',
               dataIndex: 'parentId',
@@ -492,7 +516,22 @@ const StudentList = () => {
                   {getParentName(parentId)}
                 </span>
               )
+              
             },
+            {
+  title: 'Số điện thoại phụ huynh',
+  dataIndex: 'parentId',
+  key: 'parentPhone',
+  render: (parentId) => {
+    const phoneNumber = getParentPhone(parentId);
+    return (
+      <span style={{ color: '#595959' }}>
+        <PhoneOutlined style={{ marginRight: 4, color: '#8c8c8c' }} />
+        {phoneNumber}
+      </span>
+    );
+  }
+},
             {
               title: 'Hành động',
               key: 'action',
