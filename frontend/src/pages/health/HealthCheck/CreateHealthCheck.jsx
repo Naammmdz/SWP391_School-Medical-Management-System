@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+
 import { Form, Input, Button, DatePicker, Card, Typography, Alert, Spin, Tooltip, Select, Checkbox, Space, Tag } from 'antd';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import {
@@ -9,6 +10,7 @@ import {
   FileTextOutlined,
   CalendarOutlined,
   UserOutlined,
+  InfoCircleOutlined,
 } from '@ant-design/icons';
 import HealthCheckService from '../../../services/HealthCheckService';
 import moment from 'moment';
@@ -27,15 +29,11 @@ const CreateHealthCheck = () => {
   const [customTarget, setCustomTarget] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [targetType, setTargetType] = useState('specific'); // 'all', 'grade', 'specific', 'custom'
+  const [selectedGrades, setSelectedGrades] = useState([]);
+  const [selectedClasses, setSelectedClasses] = useState([]);
+  const [customTarget, setCustomTarget] = useState('');
 
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const storedToken = localStorage.getItem('token');
-    setNurse(user);
-    setToken(storedToken);
-  }, []);
-
-// Handle target group like create vaccination campaign
   // Data for target group options
   const gradeOptions = [
     { label: 'Khối 1', value: '1' },
@@ -53,10 +51,19 @@ const CreateHealthCheck = () => {
     '5A', '5B', '5C', '5D'
   ];
 
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const storedToken = localStorage.getItem('token');
+    setNurse(user);
+    setToken(storedToken);
+  }, []);
+
+
   // Generate target group string based on selection
   const generateTargetGroup = () => {
     switch (targetType) {
       case 'all':
+
         return '1,2,3,4,5';
       case 'grade':
         return selectedGrades.length === 1 ? selectedGrades[0] : selectedGrades.join(',');
@@ -69,7 +76,7 @@ const CreateHealthCheck = () => {
     }
   };
 
-  // Handle submit like create vaccination campaign
+
   const handleSubmit = async (values) => {
     setLoading(true);
     setSuccessMsg('');
@@ -77,13 +84,14 @@ const CreateHealthCheck = () => {
     try {
       const targetGroup = generateTargetGroup();
       if (!targetGroup) {
+
         message.error('Vui lòng chọn đối tượng áp dụng!');
         setLoading(false);
         return;
       }
       const submitData = {
         campaignName: values.campaignName,
-        targetGroup: values.targetGroup,
+        targetGroup: targetGroup,
         type: values.type,
         address: values.address,
         organizer: values.organizer, // y tá nhập tay
@@ -98,6 +106,11 @@ const CreateHealthCheck = () => {
 
       setSuccessMsg('Tạo chiến dịch kiểm tra sức khỏe thành công!');
       form.resetFields();
+      // Reset target selection
+      setTargetType('specific');
+      setSelectedGrades([]);
+      setSelectedClasses([]);
+      setCustomTarget('');
     } catch (err) {
       setErrorMsg(err.message || 'Tạo chiến dịch thất bại! Vui lòng thử lại.');
     }
