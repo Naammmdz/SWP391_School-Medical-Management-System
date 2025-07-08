@@ -280,6 +280,7 @@ const CreateUser = () => {
                   icon={<CloseOutlined />}
                   size="large"
                   style={{ borderRadius: 8, minWidth: 120 }}
+                  // Return to user list
                 >
                   Hủy
                 </Button>

@@ -128,6 +128,9 @@ const StudentList = () => {
     
     // Try using state-based modal first
     setStudentToDelete({ id: studentId, name: studentName });
+    // Need delete local storage student
+    localStorage.removeItem('selectedStudentId');
+    localStorage.removeItem('selectedStudentInfo');
     setDeleteModalVisible(true);
   };
   

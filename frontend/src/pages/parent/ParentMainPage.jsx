@@ -50,8 +50,13 @@ const ParentMainPage = () => {
         });
         const students = Array.isArray(response.data) ? response.data : [];
         setStudentList(students);
-        
+        // Handle if student is deleted
+        if (students.length === 0) {
+          localStorage.removeItem('selectedStudentId');
+          localStorage.removeItem('selectedStudentInfo');
+        }
         if (students.length > 0) {
+
           const savedStudentId = localStorage.getItem('selectedStudentId');
           const savedStudent = students.find(s => s.studentId.toString() === savedStudentId) || students[0];
           setSelectedStudent(savedStudent);
