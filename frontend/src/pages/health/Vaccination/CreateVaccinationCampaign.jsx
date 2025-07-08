@@ -42,7 +42,7 @@ const CreateVaccinationCampaign = () => {
   const generateTargetGroup = () => {
     switch (targetType) {
       case 'all':
-        return 'toàn trường';
+        return '1,2,3,4,5';
       case 'grade':
         return selectedGrades.length === 1 ? selectedGrades[0] : selectedGrades.join(',');
       case 'specific':

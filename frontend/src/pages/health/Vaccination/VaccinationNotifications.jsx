@@ -149,12 +149,12 @@ const fetchNotifications = async () => {
     // Lấy thông tin học sinh từ localStorage (giả sử đã lưu object student)
     const studentInfo = JSON.parse(localStorage.getItem('selectedStudentInfo') || '{}');
     const studentClass = studentInfo.className || ""; // ví dụ: "3A"
+    
+
 
     const response = await vaccinationService.getVaccinationCampaignApproved(config);
     const data = Array.isArray(response.data) ? response.data : [];
-    
-    console.log('Student Class:', studentClass);
-    console.log('Total campaigns from API:', data.length);
+
     
     // Lọc chiến dịch phù hợp với lớp học sinh
     function removeVietnameseTones(str) {
@@ -163,13 +163,23 @@ const fetchNotifications = async () => {
         .replace(/đ/g, 'd').replace(/Đ/g, 'D');
     }
     
+
+    
     const filtered = data.filter(item => {
-      if (!studentClass || !item.targetGroup) return false;
+
+      
+      if (!studentClass || !item.targetGroup) {
+
+        return false;
+      }
       
       const target = item.targetGroup.toLowerCase().trim();
       const studentClassLower = studentClass.toLowerCase().trim();
       const targetNoSign = removeVietnameseTones(target).replace(/\s/g, '');
       const studentClassNoSign = removeVietnameseTones(studentClassLower).replace(/\s/g, '');
+      
+
+      
 
       // Toàn trường - matches all students
       if (targetNoSign === 'toantruong') {
@@ -226,6 +236,8 @@ const fetchNotifications = async () => {
 
       return false;
     });
+    
+
 
     const mapped = await Promise.all(filtered.map(async item => {
       let status = 'Chưa phản hồi';
@@ -263,7 +275,7 @@ const fetchNotifications = async () => {
           }
         }
       } catch (error) {
-        console.error('Error fetching student vaccination status:', error);
+
         // Keep default status as 'Chưa phản hồi'
       }
       
@@ -292,7 +304,6 @@ const fetchNotifications = async () => {
     setNotifications(mapped);
     setLoading(false);
   } catch (error) {
-    console.error('Error fetching notifications:', error);
     setNotifications([]);
     setLoading(false);
   }
