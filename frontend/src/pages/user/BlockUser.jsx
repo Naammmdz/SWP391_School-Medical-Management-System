@@ -7,16 +7,6 @@ import './BlockUser.css';
 
 const { Title, Text } = Typography;
 
-// Fix Không tìm thấy người dùng
-// Fix Không tìm thấy người dùng
-// Fix Không tìm thấy người dùng
-// Fix Không tìm thấy người dùng
-// Fix Không tìm thấy người dùng
-// Fix Không tìm thấy người dùng
-// Fix Không tìm thấy người dùng
-// Fix Không tìm thấy người dùng
-// Fix Không tìm thấy người dùng
-// Fix Không tìm thấy người dùng
 const BlockUser = () => {
   const navigate = useNavigate();
   const { userId } = useParams();
@@ -24,9 +14,6 @@ const BlockUser = () => {
   const [successMessage, setSuccessMessage] = useState(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  // BlockUser.jsx:67 Removing a style property during rerender (marginTop) when a conflicting property is set (margin) can lead to styling bugs. To avoid this, don't mix shorthand and non-shorthand properties for the same value; instead, replace the shorthand with separate values.
-
 
   // Fetch user data
   const fetchUserData = async () => {
@@ -40,7 +27,6 @@ const BlockUser = () => {
       const foundUser = response.data.find(u => u.id === parseInt(userId));
       if (foundUser) {
         setUser(foundUser);
-        console.log('User data fetched successfully:', foundUser);
       } else {
         setError('Không tìm thấy người dùng');
       }
@@ -78,7 +64,6 @@ const BlockUser = () => {
 
   if (loading) {
     return (
-      // <div style={{ maxWidth: 800, margin: '0 auto', padding: 24, marginTop: 50, textAlign: 'center' }}>
       <div style={{ maxWidth: 800, margin: '0 auto', padding: 24, textAlign: 'center' }}>
         <Spin size="large" />
         <div style={{ marginTop: 16 }}>
