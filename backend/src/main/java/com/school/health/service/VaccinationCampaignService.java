@@ -20,13 +20,13 @@ public interface VaccinationCampaignService {
 
     VaccinationCampaignResponseDTO updateVaccinationCampaign(Integer campaignId, VaccinationCampaignRequestDTO vaccinationCampaignRequestDTO);
 
-    VaccinationCampaignResponseDTO approveVaccinationCampaign(Integer campaignId, int approvedBy);
+    VaccinationCampaignResponseDTO approveVaccinationCampaign(Integer campaignId, int approvedBy, Status status, String rejectionReason);
 
     VaccinationCampaignResponseDTO updateVaccinationCampaignStatus(Integer campaignId, Status status);
 
     List<StudentResponseDTO> getStudentsRegistrations(Integer campaignId);
 
-    List<VaccineV2CampaignResponseDTO> getApprovedVaccination();
+    List<VaccineV2CampaignResponseDTO> getApprovedCampaigns(int parentId);
 
     VaccinationResponseDTO registerStudentVaccine(VaccinationRequestDTO request);
 
@@ -62,4 +62,9 @@ public interface VaccinationCampaignService {
 
     List<VaccinationResponseResultDTO> getAllVaccinationResultsWithParentConfirmationTrue();
 
+    // Get all students eligible for a campaign based on target group
+    List<StudentResponseDTO> getAllStudentsInCampaign(Integer campaignId);
+
+    // Get all students with their vaccination status for a campaign
+    List<VaccinationResponseResultDTO> getStudentsWithVaccinationStatus(Integer campaignId);
 }

@@ -61,8 +61,18 @@ public class VaccinationCampaignController {
     public ResponseEntity<?> approveVaccinationCampaign(@PathVariable @Valid int campaignId, Authentication authentication) {
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
         Integer approvedBy = userPrincipal.getId();
-        return ResponseEntity.ok(vaccinationCampaignService.approveVaccinationCampaign(campaignId, approvedBy));
+        return ResponseEntity.ok(vaccinationCampaignService.approveVaccinationCampaign(campaignId, approvedBy, Status.APPROVED, null));
     }
+
+    // Cập nhật trạng thái thành CANCELLED của chiến dịch tiêm chủng
+    @PutMapping("/{campaignId}/cancel")
+    @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN') or hasRole('NURSE')")
+    public ResponseEntity<?> cancelVaccinationCampaign(@PathVariable @Valid int campaignId, Authentication authentication, @RequestParam(required = false) String rejectionReason) {
+        UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
+        Integer cancelledBy = userPrincipal.getId();
+        return ResponseEntity.ok(vaccinationCampaignService.approveVaccinationCampaign(campaignId, cancelledBy, Status.CANCELLED, rejectionReason));
+    }
+
 
 
     // Cập nhật trạng thái của chiến dịch tiêm chủng
@@ -82,8 +92,10 @@ public class VaccinationCampaignController {
     // Lấy danh sách chiến dịch tiêm chủng đã được phê duyệt
     @GetMapping("/approved")
     @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN') or hasRole('NURSE')")
-    public ResponseEntity<?> getApprovedVaccinationCampaigns() {
-        return ResponseEntity.ok(vaccinationCampaignService.getApprovedVaccination());
+    public ResponseEntity<?> getApprovedVaccinationCampaigns(Authentication authentication) {
+        UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
+        Integer userId = userPrincipal.getId();
+        return ResponseEntity.ok(vaccinationCampaignService.getApprovedCampaigns(userId));
     }
 
     // Đăng ký học sinh tham gia chiến dịch tiêm chủng. Tức là phụ huynh sẽ đăng ký cho con mình tham gia chiến dịch tiêm chủng
@@ -190,5 +202,18 @@ public class VaccinationCampaignController {
 //        return ResponseEntity.ok(vaccinationCampaignService.getAllVaccinationResultsWithParentConfirmationTrue());
 //    }
 
+    // danh sách tất cả học sinh có thể tham gia chiến dịch (theo target group)
+    @GetMapping("/{campaignId}/all-students")
+    @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN') or hasRole('NURSE')")
+    public ResponseEntity<?> getAllStudentsInCampaign(@PathVariable @Valid int campaignId) {
+        return ResponseEntity.ok(vaccinationCampaignService.getAllStudentsInCampaign(campaignId));
+    }
+
+    // danh sách tất cả học sinh với trạng thái tiêm chủng
+    @GetMapping("/{campaignId}/students-with-status")
+    @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN') or hasRole('NURSE')")
+    public ResponseEntity<?> getStudentsWithVaccinationStatus(@PathVariable @Valid int campaignId) {
+        return ResponseEntity.ok(vaccinationCampaignService.getStudentsWithVaccinationStatus(campaignId));
+    }
 
 }

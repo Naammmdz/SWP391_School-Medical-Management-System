@@ -29,4 +29,5 @@ public class VaccinationCampaignResponseDTO {
     private Status status;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
+    private String rejectionReason; // lý do từ chối nếu có
 }

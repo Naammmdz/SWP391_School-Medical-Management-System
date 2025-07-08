@@ -1,5 +1,6 @@
 package com.school.health.repository;
 
+import com.school.health.entity.Student;
 import com.school.health.entity.Vaccination;
 import com.school.health.entity.VaccinationCampaign;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -31,4 +32,8 @@ public interface VaccinationRepository extends JpaRepository<Vaccination, Intege
 
     @Query("SELECT v FROM Vaccination v WHERE v.campaign IN :campaigns")
     List<Vaccination> findByCampaign(List<VaccinationCampaign> campaigns);
+
+    //findByStudentIn
+    @Query("SELECT v FROM Vaccination v WHERE v.student IN :students")
+    List<Vaccination> findByStudentIn(List<Student> students);
 }
