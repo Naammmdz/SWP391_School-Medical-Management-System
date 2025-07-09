@@ -98,6 +98,8 @@ const CreateHealthCheck = () => {
 
       setSuccessMsg('Tạo chiến dịch kiểm tra sức khỏe thành công!');
       form.resetFields();
+      // redirect to health check list
+      window.location.href = '/danhsachkiemtradinhky';
     } catch (err) {
       setErrorMsg(err.message || 'Tạo chiến dịch thất bại! Vui lòng thử lại.');
     }
