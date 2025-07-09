@@ -45,6 +45,21 @@ const studentService = {
     deleteStudent: (id, config) => {
         const headers = getAuthHeaders();
         return axios.delete(`${STUDENT_URL}/${id}`, { headers, ...config });
+    },
+    
+    getStudentsByClassName: (className, config) => {
+        const headers = getAuthHeaders();
+        return axios.get(`${STUDENT_URL}/class/${encodeURIComponent(className)}`, { headers, ...config });
+    },
+    
+    searchStudentsByName: (name, config) => {
+        const headers = getAuthHeaders();
+        return axios.get(`${STUDENT_URL}/search?name=${encodeURIComponent(name)}`, { headers, ...config });
+    },
+    
+    getDistinctClassNames: (config) => {
+        const headers = getAuthHeaders();
+        return axios.get(`${STUDENT_URL}/classes`, { headers, ...config });
     }
 };
 

@@ -2,40 +2,79 @@ import React, { useState, useEffect } from 'react';
 import './MedicalEvents.css';
 import MedicalEventService from '../../../services/MedicalEventService';
 import studentService from '../../../services/StudentService';
+import StudentSelectionModal from '../../../components/StudentSelectionModal';
 
-// Lựa chọn cho loại sự cố
+// Enum values from backend
+const SEVERITY_LEVELS = [
+  { value: 'MINOR', label: 'Nhẹ' },
+  { value: 'MODERATE', label: 'Trung bình' },
+  { value: 'MAJOR', label: 'Nặng' },
+  { value: 'CRITICAL', label: 'Cấp cứu' }
+];
 
+const MEDICAL_EVENT_STATUS = [
+  { value: 'PROCESSING', label: 'Đang xử lý' },
+  { value: 'RESOLVED', label: 'Đã xử lý' }
+];
 
-// Lựa chọn cho biện pháp xử lý
-const handlingMethods = [
-  { value: 'Sơ cứu', label: 'Sơ cứu' },
-  { value: 'Băng bó', label: 'Băng bó' },
-  { value: 'Thuốc', label: 'Cho uống thuốc' },
-  { value: 'Nghỉ ngơi', label: 'Cho nghỉ ngơi' },
-  { value: 'Liên hệ phụ huynh', label: 'Liên hệ phụ huynh' },
-  { value: 'Chuyển viện', label: 'Chuyển viện' },
-  { value: 'Khác', label: 'Khác' }
+const EVENT_TYPES = [
+  { value: 'INJURY', label: 'Chấn thương' },
+  { value: 'ILLNESS', label: 'Bệnh tật' },
+  { value: 'ALLERGIC_REACTION', label: 'Phản ứng dị ứng' },
+  { value: 'EMERGENCY', label: 'Cấp cứu' },
+  { value: 'OTHER', label: 'Khác' }
 ];
 
 const MedicalEvents = () => {
+  // Helper functions for enum translation
+  const getSeverityLevelText = (severityLevel) => {
+    switch (severityLevel) {
+      case 'MINOR': return 'Nhẹ';
+      case 'MODERATE': return 'Trung bình';
+      case 'MAJOR': return 'Nặng';
+      case 'CRITICAL': return 'Cấp cứu';
+      default: return severityLevel || 'Không có';
+    }
+  };
+  
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'PROCESSING': return 'Đang xử lý';
+      case 'RESOLVED': return 'Đã xử lý';
+      default: return status || 'Không có';
+    }
+  };
+  
   // State cho danh sách sự cố y tế
   const [medicalEvents, setMedicalEvents] = useState([]);
   // State cho thông tin học sinh
   const [studentsInfo, setStudentsInfo] = useState({});
-  // State cho form thêm/sửa sự cố
+  // State cho inventory items used
+  const [inventoryItems, setInventoryItems] = useState([]);
+  const [selectedInventoryItems, setSelectedInventoryItems] = useState([]);
+  // State cho form thêm/sửa sự cố - matching backend DTO
   const [currentEvent, setCurrentEvent] = useState({
     id: null,
     title: '',
-    incidentType: '',
-    date: new Date().toISOString().split('T')[0],
-    handlingMethod: '',
-    description: '',
-    studentName: '',
-    studentClass: '',
+    stuId: [], // Array of student IDs
+    eventType: '',
+    eventDate: new Date().toISOString().slice(0, 16), // datetime-local format
     location: '',
-    status: 'Đang xử lý',
-    severity: 'Nhẹ'
+    description: '',
+    relatedItemUsed: [], // Array of InventoryUsedInMedicalEventRequestDTO objects
+    notes: '',
+    handlingMeasures: '',
+    severityLevel: 'MINOR',
+    status: 'PROCESSING'
   });
+  
+  // State for student selection
+  const [availableStudents, setAvailableStudents] = useState([]);
+  const [selectedStudents, setSelectedStudents] = useState([]);
+  const [availableClasses, setAvailableClasses] = useState([]);
+  const [selectedClass, setSelectedClass] = useState('');
+  const [studentsInClass, setStudentsInClass] = useState([]);
+  const [studentSelectionModalOpen, setStudentSelectionModalOpen] = useState(false);
   // State cho chế độ chỉnh sửa
   const [editing, setEditing] = useState(false);
   // State cho hiển thị modal
@@ -60,6 +99,76 @@ const MedicalEvents = () => {
       console.error(`Error fetching student ${studentId}:`, error);
       return null;
     }
+  };
+  
+  // Hàm lấy danh sách tất cả học sinh
+  const fetchAllStudents = async () => {
+    try {
+      const response = await studentService.getAllStudents();
+      if (response.data && Array.isArray(response.data)) {
+        setAvailableStudents(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching students:', error);
+    }
+  };
+
+  // Hàm lấy danh sách lớp
+  const fetchAvailableClasses = async () => {
+    try {
+      const response = await studentService.getDistinctClassNames();
+      if (response.data && Array.isArray(response.data)) {
+        const classOptions = response.data.map(className => ({
+          id: className,
+          name: className
+        }));
+        setAvailableClasses(classOptions);
+      }
+    } catch (error) {
+      console.error('Error fetching classes:', error);
+      alert('Không thể lấy danh sách lớp. Vui lòng thử lại.');
+    }
+  };
+
+  // Hàm lấy danh sách học sinh trong lớp
+  const fetchStudentsInClass = async (className) => {
+    try {
+      const response = await studentService.getStudentsByClassName(className);
+      if (response.data && Array.isArray(response.data)) {
+        setStudentsInClass(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching students in class:', error);
+      setStudentsInClass([]);
+    }
+  };
+
+  // Hàm mở modal chọn học sinh
+  const handleOpenStudentModal = () => {
+    if (selectedClass) {
+      fetchStudentsInClass(selectedClass);
+      setStudentSelectionModalOpen(true);
+    }
+  };
+
+  // Hàm đóng modal chọn học sinh
+  const handleCloseStudentModal = () => {
+    setStudentSelectionModalOpen(false);
+  };
+
+  // Hàm xác nhận chọn học sinh
+  const handleConfirmStudentSelection = (selectedIds, selectedStudentObjects) => {
+    setCurrentEvent({...currentEvent, stuId: selectedIds});
+    setSelectedStudents(selectedStudentObjects);
+    setStudentSelectionModalOpen(false);
+  };
+
+  // Hàm xóa học sinh khỏi danh sách đã chọn
+  const handleRemoveStudent = (studentId) => {
+    const updatedStudentIds = currentEvent.stuId.filter(id => id !== studentId);
+    setCurrentEvent({...currentEvent, stuId: updatedStudentIds});
+    const updatedSelectedStudents = selectedStudents.filter(s => s.studentId !== studentId);
+    setSelectedStudents(updatedSelectedStudents);
   };
 
   // Hàm gọi API để lấy danh sách sự cố y tế
@@ -113,7 +222,118 @@ const MedicalEvents = () => {
     }
   };
 
-      // Hàm thêm sự cố y tế mới  const addMedicalEvent = async (event) => {    setLoading(true);    try {      // Use service to add new event      const newEvent = await MedicalEventService.createMedicalEvent(event);            setMedicalEvents([...medicalEvents, newEvent]);      setModalOpen(false);      setCurrentEvent({        id: null,        title: '',        incidentType: '',        date: new Date().toISOString().split('T')[0],        handlingMethod: '',        description: '',        studentName: '',        studentClass: '',        location: '',        status: 'Đang xử lý',        severity: 'Nhẹ'      });      setLoading(false);    } catch (error) {      console.error('Error adding medical event:', error);      setLoading(false);            // Fallback if API fails      const newEvent = {        ...event,        id: medicalEvents.length + 1,        date: event.date      };            setMedicalEvents([...medicalEvents, newEvent]);      setModalOpen(false);    }  };
+  // Hàm thêm sự cố y tế mới
+  const addMedicalEvent = async (event) => {
+    setLoading(true);
+    try {
+      // Transform event data to match backend DTO
+      const eventDTO = {
+        title: event.title,
+        stuId: event.stuId,
+        eventType: event.eventType,
+        eventDate: event.eventDate,
+        location: event.location,
+        description: event.description,
+        relatedItemUsed: event.relatedItemUsed || [],
+        notes: event.notes,
+        handlingMeasures: event.handlingMeasures,
+        severityLevel: event.severityLevel,
+        status: event.status
+      };
+      
+      // Debug logging
+      console.log('=== MEDICAL EVENT DEBUG ===');
+      console.log('Sending Event DTO:', JSON.stringify(eventDTO, null, 2));
+      console.log('Student IDs:', eventDTO.stuId);
+      console.log('Event Date:', eventDTO.eventDate);
+      console.log('Severity Level:', eventDTO.severityLevel);
+      console.log('Status:', eventDTO.status);
+      console.log('Related Items Used:', eventDTO.relatedItemUsed);
+      
+      const response = await MedicalEventService.createMedicalEvent(eventDTO);
+      
+      console.log('Medical event created successfully:', response.data);
+      
+      // Refresh the medical events list
+      await fetchMedicalEvents();
+      
+      setModalOpen(false);
+      resetCurrentEvent();
+      setLoading(false);
+      
+      alert('Tạo sự cố y tế thành công!');
+      
+    } catch (error) {
+      console.error('=== MEDICAL EVENT ERROR ===');
+      console.error('Full error object:', error);
+      console.error('Error message:', error.message);
+      console.error('Error code:', error.code);
+      
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response headers:', error.response.headers);
+        console.error('Response data:', error.response.data);
+        
+        // Try to extract detailed error message from response
+        let serverMessage = 'Unknown server error';
+        if (error.response.data) {
+          if (typeof error.response.data === 'string') {
+            serverMessage = error.response.data;
+          } else if (error.response.data.message) {
+            serverMessage = error.response.data.message;
+          } else if (error.response.data.error) {
+            serverMessage = error.response.data.error;
+          }
+        }
+        
+        console.error('Server error message:', serverMessage);
+        
+        let errorMessage = 'Không thể thêm sự cố y tế. Vui lòng thử lại.';
+        
+        if (error.response.status === 400) {
+          errorMessage = `Lỗi dữ liệu không hợp lệ: ${serverMessage}`;
+        } else if (error.response.status === 401) {
+          errorMessage = 'Bạn cần đăng nhập lại để thực hiện thao tác này.';
+          // Redirect to login
+          window.location.href = '/login';
+        } else if (error.response.status === 403) {
+          errorMessage = 'Bạn không có quyền thực hiện thao tác này.';
+        } else if (error.response.status === 500) {
+          errorMessage = `Lỗi máy chủ: ${serverMessage}`;
+        }
+        
+        alert(errorMessage);
+      } else if (error.request) {
+        console.error('Request made but no response received:', error.request);
+        alert('Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng.');
+      } else {
+        console.error('Error setting up request:', error.message);
+        alert('Có lỗi xảy ra khi chuẩn bị yêu cầu.');
+      }
+      
+      setLoading(false);
+    }
+  };
+  
+  // Hàm reset form
+  const resetCurrentEvent = () => {
+    setCurrentEvent({
+      id: null,
+      title: '',
+      stuId: [],
+      eventType: '',
+      eventDate: new Date().toISOString().slice(0, 16),
+      location: '',
+      description: '',
+      relatedItemUsed: [],
+      notes: '',
+      handlingMeasures: '',
+      severityLevel: 'MINOR',
+      status: 'PROCESSING'
+    });
+    setSelectedStudents([]);
+    setSelectedInventoryItems([]);
+  };
 
   // Hàm cập nhật sự cố y tế
   const updateMedicalEvent = async (id, updatedEvent) => {
@@ -132,19 +352,7 @@ const MedicalEvents = () => {
       ));
       setEditing(false);
       setModalOpen(false);
-      setCurrentEvent({
-        id: null,
-        title: '',
-        incidentType: '',
-        date: new Date().toISOString().split('T')[0],
-        handlingMethod: '',
-        description: '',
-        studentName: '',
-        studentClass: '',
-        location: '',
-        status: 'Đang xử lý',
-        severity: 'Nhẹ'
-      });
+      resetCurrentEvent();
       setLoading(false);
     } catch (error) {
       console.error('Error updating medical event:', error);
@@ -175,6 +383,15 @@ const MedicalEvents = () => {
   const editMedicalEvent = (event) => {
     setEditing(true);
     setCurrentEvent({...event});
+    // Set selected students for multi-select
+    if (event.stuId && Array.isArray(event.stuId)) {
+      const students = event.stuId.map(id => availableStudents.find(s => s.id === id)).filter(Boolean);
+      setSelectedStudents(students);
+    }
+    // Set selected inventory items for editing
+    if (event.relatedItemUsed && Array.isArray(event.relatedItemUsed)) {
+      setSelectedInventoryItems(event.relatedItemUsed);
+    }
     setModalOpen(true);
   };
 
@@ -188,11 +405,67 @@ const MedicalEvents = () => {
   // Xử lý submit form
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!currentEvent.title || !currentEvent.incidentType || !currentEvent.date) {
-      alert('Vui lòng điền đầy đủ các trường bắt buộc');
+    
+    console.log('=== FORM VALIDATION ===');
+    console.log('Current Event:', currentEvent);
+    console.log('Selected Students:', selectedStudents);
+    console.log('Available Classes:', availableClasses);
+    
+    // Enhanced validation
+    const validationErrors = [];
+    
+    if (!currentEvent.title || currentEvent.title.trim() === '') {
+      validationErrors.push('Tiêu đề sự cố không được để trống');
+    }
+    
+    if (!currentEvent.eventType || currentEvent.eventType.trim() === '') {
+      validationErrors.push('Loại sự cố không được để trống');
+    }
+    
+    if (!currentEvent.eventDate) {
+      validationErrors.push('Ngày xảy ra sự cố không được để trống');
+    }
+    
+    if (!currentEvent.stuId || currentEvent.stuId.length === 0) {
+      validationErrors.push('Phải chọn ít nhất một học sinh');
+    }
+    
+    // Check if selected students are valid
+    if (currentEvent.stuId && currentEvent.stuId.length > 0) {
+      const invalidStudents = currentEvent.stuId.filter(id => !id || id === null || id === undefined);
+      if (invalidStudents.length > 0) {
+        validationErrors.push('Có học sinh không hợp lệ trong danh sách đã chọn');
+      }
+    }
+    
+    // Check if eventDate is valid
+    if (currentEvent.eventDate) {
+      const eventDateObj = new Date(currentEvent.eventDate);
+      if (isNaN(eventDateObj.getTime())) {
+        validationErrors.push('Ngày xảy ra sự cố không hợp lệ');
+      }
+    }
+    
+    // Check severityLevel
+    const validSeverityLevels = ['MINOR', 'MODERATE', 'MAJOR', 'CRITICAL'];
+    if (!validSeverityLevels.includes(currentEvent.severityLevel)) {
+      validationErrors.push('Mức độ nghiêm trọng không hợp lệ');
+    }
+    
+    // Check status
+    const validStatuses = ['PROCESSING', 'RESOLVED'];
+    if (!validStatuses.includes(currentEvent.status)) {
+      validationErrors.push('Trạng thái không hợp lệ');
+    }
+    
+    if (validationErrors.length > 0) {
+      console.error('Validation errors:', validationErrors);
+      alert('Lỗi kiểm tra dữ liệu:\n' + validationErrors.join('\n'));
       return;
     }
-
+    
+    console.log('Form validation passed. Submitting...');
+    
     if (editing) {
       updateMedicalEvent(currentEvent.id, currentEvent);
     } else {
@@ -204,6 +477,51 @@ const MedicalEvents = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setCurrentEvent({...currentEvent, [name]: value});
+  };
+  
+  // Xử lý thay đổi student selection
+  const handleStudentSelection = (studentId) => {
+    let updatedStudentIds;
+    
+    if (currentEvent.stuId.includes(studentId)) {
+      // Remove student
+      updatedStudentIds = currentEvent.stuId.filter(id => id !== studentId);
+    } else {
+      // Add student
+      updatedStudentIds = [...currentEvent.stuId, studentId];
+    }
+    
+    setCurrentEvent({...currentEvent, stuId: updatedStudentIds});
+  };
+  
+  // Xử lý thay đổi inventory item selection
+  const handleInventoryItemSelection = (itemId, quantity = 1) => {
+    if (!itemId) return;
+    
+    const existingItemIndex = selectedInventoryItems.findIndex(item => item.inventoryId === itemId);
+    let updatedItems;
+    
+    if (existingItemIndex >= 0) {
+      // Update existing item quantity
+      updatedItems = [...selectedInventoryItems];
+      updatedItems[existingItemIndex].quantity = quantity;
+    } else {
+      // Add new item
+      updatedItems = [...selectedInventoryItems, {
+        inventoryId: itemId,
+        quantity: quantity
+      }];
+    }
+    
+    setSelectedInventoryItems(updatedItems);
+    setCurrentEvent({...currentEvent, relatedItemUsed: updatedItems});
+  };
+  
+  // Xử lý xóa inventory item
+  const handleRemoveInventoryItem = (itemId) => {
+    const updatedItems = selectedInventoryItems.filter(item => item.inventoryId !== itemId);
+    setSelectedInventoryItems(updatedItems);
+    setCurrentEvent({...currentEvent, relatedItemUsed: updatedItems});
   };
 
   // Xử lý thay đổi filter
@@ -228,6 +546,8 @@ const MedicalEvents = () => {
   // Lấy danh sách khi component mount
   useEffect(() => {
     fetchMedicalEvents();
+    fetchAllStudents();
+    fetchAvailableClasses();
   }, []);
 
   return (
@@ -281,19 +601,7 @@ const MedicalEvents = () => {
         className="add-event-btn"
         onClick={() => {
           setEditing(false);
-          setCurrentEvent({
-            id: null,
-            title: '',
-            incidentType: '',
-            date: new Date().toISOString().split('T')[0],
-            handlingMethod: '',
-            description: '',
-            studentName: '',
-            studentClass: '',
-            location: '',
-            status: 'Đang xử lý',
-            severity: 'Nhẹ'
-          });
+          resetCurrentEvent();
           setModalOpen(true);
         }}
       >
@@ -333,38 +641,38 @@ const MedicalEvents = () => {
                                 <span>
                                   <strong>{studentInfo.fullName}</strong>
                                   <br />
-                                  <small>ID: {studentId} | Class: {studentInfo.className}</small>
+                                  <small>ID: {studentId} | Lớp: {studentInfo.className}</small>
                                 </span>
                               ) : (
-                                <span>Loading student {studentId}...</span>
+                                <span>Đang tải thông tin học sinh {studentId}...</span>
                               )}
                             </div>
                           );
                         })}
                       </div>
                     ) : (
-                      <span>No student assigned</span>
+                      <span>Chưa gán học sinh</span>
                     )}
                   </td>
-                  <td>{event.eventDate ? new Date(event.eventDate).toLocaleDateString('vi-VN') : 'N/A'}</td>
-                  <td>{event.handlingMeasures || 'N/A'}</td>
+                  <td>{event.eventDate ? new Date(event.eventDate).toLocaleDateString('vi-VN') : 'Không có'}</td>
+                  <td>{event.handlingMeasures || 'Không có'}</td>
                   <td>
-                    <span className={`status ${event.status === 'IN_PROGRESS' ? 'pending' : 'resolved'}`}>
-                      {event.status}
+                    <span className={`status ${event.status === 'PROCESSING' ? 'pending' : 'resolved'}`}>
+                      {getStatusText(event.status)}
                     </span>
                   </td>
                   <td className="actions">
-                    <button className="view-btn" onClick={() => viewMedicalEventDetails(event)} title="View Details">
+                    <button className="view-btn" onClick={() => viewMedicalEventDetails(event)} title="Xem chi tiết">
                       <span className="btn-icon">👁️</span>
-                      View Details
+                      Xem
                     </button>
-                    <button className="edit-btn" onClick={() => editMedicalEvent(event)} title="Edit">
+                    <button className="edit-btn" onClick={() => editMedicalEvent(event)} title="Chỉnh sửa">
                       <span className="btn-icon">✏️</span>
-                      Edit
+                      Sửa
                     </button>
-                    <button className="delete-btn" onClick={() => deleteMedicalEvent(event.id)} title="Delete">
+                    <button className="delete-btn" onClick={() => deleteMedicalEvent(event.id)} title="Xóa">
                       <span className="btn-icon">🗑️</span>
-                      Delete
+                      Xóa
                     </button>
                   </td>
                 </tr>
@@ -402,41 +710,52 @@ const MedicalEvents = () => {
                     <strong>Loại sự cố:</strong> {currentEvent.eventType}
                   </div>
                   <div className="detail-row">
-                    <strong>Ngày xảy ra:</strong> {currentEvent.eventDate ? new Date(currentEvent.eventDate).toLocaleString('vi-VN') : 'N/A'}
+                    <strong>Ngày xảy ra:</strong> {currentEvent.eventDate ? new Date(currentEvent.eventDate).toLocaleString('vi-VN') : 'Không có'}
                   </div>
                   <div className="detail-row">
-                    <strong>Địa điểm:</strong> {currentEvent.location || 'N/A'}
+                    <strong>Địa điểm:</strong> {currentEvent.location || 'Không có'}
                   </div>
                   <div className="detail-row">
-                    <strong>Mức độ nghiêm trọng:</strong> {currentEvent.severityLevel || 'N/A'}
+                    <strong>Mức độ nghiêm trọng:</strong> {getSeverityLevelText(currentEvent.severityLevel)}
                   </div>
                   <div className="detail-row">
-                    <strong>Trạng thái:</strong> {currentEvent.status || 'N/A'}
+                    <strong>Trạng thái:</strong> {getStatusText(currentEvent.status)}
                   </div>
                 </div>
                 
                 <div className="event-details-right">
                   <div className="detail-row">
-                    <strong>Ngày tạo:</strong> {currentEvent.createdAt ? new Date(currentEvent.createdAt).toLocaleString('vi-VN') : 'N/A'}
+                    <strong>Ngày tạo:</strong> {currentEvent.createdAt ? new Date(currentEvent.createdAt).toLocaleString('vi-VN') : 'Không có'}
                   </div>
                   <div className="detail-row">
-                    <strong>Người tạo:</strong> {currentEvent.createdBy || 'N/A'}
+                    <strong>Người tạo:</strong> {currentEvent.createdBy || 'Không có'}
                   </div>
                   <div className="detail-row">
-                    <strong>Biện pháp xử lý:</strong> {currentEvent.handlingMeasures || 'N/A'}
+                    <strong>Biện pháp xử lý:</strong> {currentEvent.handlingMeasures || 'Không có'}
                   </div>
                   <div className="detail-row">
-                    <strong>Ghi chú:</strong> {currentEvent.notes || 'N/A'}
+                    <strong>Ghi chú:</strong> {currentEvent.notes || 'Không có'}
                   </div>
                   
-                  {/* Related medicines used */}
+                  {/* Related medicines/inventory items used */}
                   {currentEvent.relatedMedicinesUsed && currentEvent.relatedMedicinesUsed.length > 0 && (
                     <div className="detail-row">
-                      <strong>Thuốc đã sử dụng:</strong>
-                      <ul>
-                        {currentEvent.relatedMedicinesUsed.map((medicine, index) => (
-                          <li key={index}>
-                            {medicine.medicineName} - Số lượng: {medicine.quantity}
+                      <strong>Vật phẩm y tế đã sử dụng:</strong>
+                      <ul className="inventory-used-list">
+                        {currentEvent.relatedMedicinesUsed.map((item, index) => (
+                          <li key={index} className="inventory-used-item">
+                            <div className="item-info">
+                              <strong>{item.medicineName || `Vật phẩm ID: ${item.medicineId}`}</strong>
+                              <div className="item-details">
+                                <span className="quantity">Số lượng: {item.quantityUsed || item.quantity || 0}</span>
+                                {item.unit && <span className="unit">({item.unit})</span>}
+                                {item.usageNote && (
+                                  <div className="usage-note">
+                                    <em>Ghi chú: {item.usageNote}</em>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
                           </li>
                         ))}
                       </ul>
@@ -446,7 +765,7 @@ const MedicalEvents = () => {
                 
                 <div className="event-details-full">
                   <div className="detail-row">
-                    <strong>Mô tả:</strong> {currentEvent.description || 'N/A'}
+                    <strong>Mô tả:</strong> {currentEvent.description || 'Không có'}
                   </div>
                   
                   <div className="detail-row student-detail-row">
@@ -463,14 +782,14 @@ const MedicalEvents = () => {
                                   <br />
                                   <small>ID: {studentId}</small>
                                   <br />
-                                  <small>Class: {studentInfo.className}</small>
+                                  <small>Lớp: {studentInfo.className}</small>
                                   <br />
-                                  <small>DOB: {studentInfo.dob}</small>
+                                  <small>Ngày sinh: {studentInfo.dob}</small>
                                   <br />
-                                  <small>Gender: {studentInfo.gender}</small>
+                                  <small>Giới tính: {studentInfo.gender}</small>
                                 </div>
                               ) : (
-                                <span>Loading student {studentId}...</span>
+                                <span>Đang tải học sinh {studentId}...</span>
                               )}
                             </div>
                           );
@@ -494,10 +813,9 @@ const MedicalEvents = () => {
                 </div>
               </div>
             )}
-            
+
             {/* Edit/Add Form Mode */}
             {(editing || !currentEvent.id) && (
-            
             <form onSubmit={handleSubmit}>
               <div className="form-row">
                 <div className="form-group">
@@ -512,31 +830,14 @@ const MedicalEvents = () => {
                   />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="incidentType">Loại sự cố <span className="required">*</span></label>
-                  <input type="text" name="" required/>
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="studentName">Tên học sinh <span className="required">*</span></label>
+                  <label htmlFor="eventType">Loại sự cố <span className="required">*</span></label>
                   <input
                     type="text"
-                    name="studentName"
-                    id="studentName"
-                    value={currentEvent.studentName}
+                    name="eventType"
+                    id="eventType"
+                    value={currentEvent.eventType}
                     onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="studentClass">Lớp <span className="required">*</span></label>
-                  <input
-                    type="text"
-                    name="studentClass"
-                    id="studentClass"
-                    value={currentEvent.studentClass}
-                    onChange={handleInputChange}
+                    placeholder="Nhập loại sự cố (ví dụ: Chấn thương, Bệnh tật, Dị ứng...)"
                     required
                   />
                 </div>
@@ -544,12 +845,71 @@ const MedicalEvents = () => {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="date">Ngày xảy ra <span className="required">*</span></label>
+                  <label htmlFor="students">Học sinh liên quan <span className="required">*</span></label>
+                  <div className="students-selection">
+                    <div className="class-selection-row">
+                      <label htmlFor="classSelect">Chọn lớp để hiển thị học sinh:</label>
+                      <select
+                        id="classSelect"
+                        value={selectedClass}
+                        onChange={(e) => setSelectedClass(e.target.value)}
+                        className="class-dropdown"
+                      >
+                        <option value="">-- Chọn lớp --</option>
+                        {availableClasses.map(classItem => (
+                          <option key={classItem.id} value={classItem.id}>
+                            {classItem.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    {selectedClass && (
+                      <div className="class-actions">
+                        <button 
+                          type="button" 
+                          onClick={handleOpenStudentModal}
+                          className="open-student-modal-btn"
+                        >
+                          Chọn học sinh từ lớp {selectedClass}
+                        </button>
+                      </div>
+                    )}
+                    
+                    {currentEvent.stuId.length > 0 && (
+                      <div className="selected-students-summary">
+                        <strong>Đã chọn {currentEvent.stuId.length} học sinh:</strong>
+                        <div className="selected-students-list">
+                          {currentEvent.stuId.map(studentId => {
+                            const studentInfo = studentsInfo[studentId] || availableStudents.find(s => s.studentId === studentId);
+                            return (
+                              <span key={studentId} className="selected-student-tag">
+                                {studentInfo ? studentInfo.fullName : `ID: ${studentId}`} (ID: {studentId})
+                                <button 
+                                  type="button" 
+                                  onClick={() => handleRemoveStudent(studentId)}
+                                  className="remove-student-btn"
+                                >
+                                  ×
+                                </button>
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="eventDate">Ngày và giờ xảy ra <span className="required">*</span></label>
                   <input
-                    type="date"
-                    name="date"
-                    id="date"
-                    value={currentEvent.date}
+                    type="datetime-local"
+                    name="eventDate"
+                    id="eventDate"
+                    value={currentEvent.eventDate}
                     onChange={handleInputChange}
                     required
                   />
@@ -568,30 +928,27 @@ const MedicalEvents = () => {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="handlingMethod">Biện pháp xử lý</label>
-                  <select
-                    name="handlingMethod"
-                    id="handlingMethod"
-                    value={currentEvent.handlingMethod}
+                  <label htmlFor="handlingMeasures">Biện pháp xử lý</label>
+                  <textarea
+                    name="handlingMeasures"
+                    id="handlingMeasures"
+                    value={currentEvent.handlingMeasures}
                     onChange={handleInputChange}
-                  >
-                    <option value="">-- Chọn biện pháp xử lý --</option>
-                    {handlingMethods.map(method => (
-                      <option key={method.value} value={method.value}>{method.label}</option>
-                    ))}
-                  </select>
+                    rows="3"
+                    placeholder="Mô tả các biện pháp xử lý đã thực hiện..."
+                  ></textarea>
                 </div>
                 <div className="form-group">
-                  <label htmlFor="severity">Mức độ nghiêm trọng</label>
+                  <label htmlFor="severityLevel">Mức độ nghiêm trọng</label>
                   <select
-                    name="severity"
-                    id="severity"
-                    value={currentEvent.severity}
+                    name="severityLevel"
+                    id="severityLevel"
+                    value={currentEvent.severityLevel}
                     onChange={handleInputChange}
                   >
-                    <option value="Nhẹ">Nhẹ</option>
-                    <option value="Trung bình">Trung bình</option>
-                    <option value="Nặng">Nặng</option>
+                    {SEVERITY_LEVELS.map(level => (
+                      <option key={level.value} value={level.value}>{level.label}</option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -604,6 +961,68 @@ const MedicalEvents = () => {
                   value={currentEvent.description}
                   onChange={handleInputChange}
                   rows="4"
+                  placeholder="Mô tả chi tiết về sự cố..."
+                ></textarea>
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="inventoryItems">Vật phẩm y tế đã sử dụng</label>
+                <div className="inventory-selection">
+                  <div className="inventory-input-row">
+                    <select 
+                      onChange={(e) => {
+                        const itemId = parseInt(e.target.value);
+                        if (itemId) {
+                          handleInventoryItemSelection(itemId, 1);
+                          e.target.value = '';
+                        }
+                      }}
+                      value=""
+                    >
+                      <option value="">-- Chọn vật phẩm y tế --</option>
+                      {inventoryItems.map(item => (
+                        <option key={item.id} value={item.id}>
+                          {item.name} (Còn lại: {item.quantity})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="selected-inventory-items">
+                    {selectedInventoryItems.map(item => {
+                      const inventoryItem = inventoryItems.find(inv => inv.id === item.inventoryId);
+                      return (
+                        <div key={item.inventoryId} className="selected-inventory-item">
+                          <span>{inventoryItem?.name || `ID: ${item.inventoryId}`}</span>
+                          <input
+                            type="number"
+                            min="1"
+                            value={item.quantity}
+                            onChange={(e) => handleInventoryItemSelection(item.inventoryId, parseInt(e.target.value) || 1)}
+                            className="quantity-input"
+                          />
+                          <button 
+                            type="button" 
+                            onClick={() => handleRemoveInventoryItem(item.inventoryId)}
+                            className="remove-item-btn"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="notes">Ghi chú</label>
+                <textarea
+                  name="notes"
+                  id="notes"
+                  value={currentEvent.notes}
+                  onChange={handleInputChange}
+                  rows="3"
+                  placeholder="Ghi chú thêm..."
                 ></textarea>
               </div>
 
@@ -616,8 +1035,9 @@ const MedicalEvents = () => {
                     value={currentEvent.status}
                     onChange={handleInputChange}
                   >
-                    <option value="Đang xử lý">Đang xử lý</option>
-                    <option value="Đã xử lý">Đã xử lý</option>
+                    {MEDICAL_EVENT_STATUS.map(status => (
+                      <option key={status.value} value={status.value}>{status.label}</option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -635,6 +1055,15 @@ const MedicalEvents = () => {
           </div>
         </div>
       )}
+      
+      {/* Student Selection Modal */}
+      <StudentSelectionModal
+        isOpen={studentSelectionModalOpen}
+        onClose={handleCloseStudentModal}
+        onConfirm={handleConfirmStudentSelection}
+        selectedStudentIds={currentEvent.stuId}
+        availableClasses={availableClasses}
+      />
     </div>
   );
 };

@@ -14,4 +14,5 @@ public interface StudentService {
     List<StudentResponseDTO> getStudentsByClassName(String className);
     StudentResponseDTO mapToResponseDTO(Student student);
     List<StudentResponseDTO> getAllStudents();
+    List<String> getDistinctClassNames();
 }

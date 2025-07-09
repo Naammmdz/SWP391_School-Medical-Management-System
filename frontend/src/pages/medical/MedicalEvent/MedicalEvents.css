@@ -199,7 +199,78 @@
   text-align: center;
   padding: 20px;
   color: #6c757d;
-  font-style: italic;
+}
+
+/* Student Selection Styles */
+.students-selection {
+  margin-top: 10px;
+}
+
+.open-student-modal-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.open-student-modal-btn:hover {
+  background-color: #0056b3;
+}
+
+.open-student-modal-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.selected-students-summary {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+}
+
+.selected-students-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.selected-student-tag {
+  display: inline-flex;
+  align-items: center;
+  background-color: #007bff;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  gap: 5px;
+}
+
+.remove-student-btn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.remove-student-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
 /* Modal Styles */
@@ -629,5 +700,438 @@
   .student-detail-item-row {
     min-width: 100%;
     max-width: 100%;
+  }
+}
+
+/* Student Multi-Select Styles */
+.student-select-container {
+  position: relative;
+  width: 100%;
+}
+
+.student-select-input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  background: white;
+  position: relative;
+}
+
+.student-select-input:focus {
+  outline: none;
+  border-color: #28a745;
+  box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+.student-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ced4da;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.student-dropdown-option {
+  padding: 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #f1f3f4;
+  transition: background-color 0.2s;
+}
+
+.student-dropdown-option:hover {
+  background-color: #f8f9fa;
+}
+
+.student-dropdown-option:last-child {
+  border-bottom: none;
+}
+
+.student-dropdown-option.disabled {
+  color: #6c757d;
+  cursor: not-allowed;
+  background-color: #f8f9fa;
+}
+
+.selected-students {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.selected-student-tag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #28a745;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.selected-student-tag .remove-student {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.selected-student-tag .remove-student:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.placeholder-text {
+  color: #6c757d;
+  font-style: italic;
+}
+
+/* Enhanced Class Selection Styles */
+.class-selection-row {
+  margin-bottom: 15px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 5px;
+  border: 1px solid #dee2e6;
+}
+
+.class-selection-row label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #495057;
+  font-size: 14px;
+}
+
+.class-dropdown {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: white;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.class-dropdown:focus {
+  outline: none;
+  border-color: #28a745;
+  box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.25);
+}
+
+.class-actions {
+  margin-top: 15px;
+  text-align: center;
+}
+
+.open-student-modal-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.open-student-modal-btn:hover {
+  background-color: #0056b3;
+}
+
+.open-student-modal-btn:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+/* Enhanced Students Selection Container */
+.students-selection {
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 15px;
+  background-color: #f8f9fa;
+}
+
+.selected-students-summary {
+  margin-top: 15px;
+  padding: 15px;
+  background-color: white;
+  border-radius: 5px;
+  border: 1px solid #dee2e6;
+}
+
+.selected-students-summary strong {
+  color: #28a745;
+  font-size: 14px;
+}
+
+.selected-students-list {
+  margin-top: 10px;
+  max-height: 150px;
+  overflow-y: auto;
+  padding: 5px;
+}
+
+.remove-student-btn {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 14px;
+  cursor: pointer;
+  margin-left: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.remove-student-btn:hover {
+  background-color: #c82333;
+}
+
+/* Student tag improvements */
+.selected-student-tag {
+  display: inline-flex;
+  align-items: center;
+  background-color: #e9ecef;
+  padding: 6px 12px;
+  margin: 3px;
+  border-radius: 16px;
+  font-size: 12px;
+  color: #495057;
+  border: 1px solid #ced4da;
+  font-weight: 500;
+}
+
+.student-option-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.student-option-name {
+  font-weight: 500;
+  color: #495057;
+}
+
+.student-option-details {
+  font-size: 12px;
+  color: #6c757d;
+}
+
+/* Responsive adjustments for student selection */
+@media (max-width: 768px) {
+  .selected-students {
+    gap: 4px;
+  }
+  
+  .selected-student-tag {
+    padding: 3px 6px;
+    font-size: 11px;
+  }
+  
+  .student-dropdown {
+    max-height: 150px;
+  }
+  
+  .student-dropdown-option {
+    padding: 8px;
+  }
+}
+
+/* Inventory Item Selection Styles */
+.inventory-section {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 15px;
+  background-color: #f8f9fa;
+}
+
+.inventory-section h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #495057;
+  font-size: 18px;
+  font-weight: 600;
+  border-bottom: 2px solid #28a745;
+  padding-bottom: 8px;
+}
+
+.inventory-form {
+  display: flex;
+  gap: 15px;
+  align-items: flex-end;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.inventory-form .form-group {
+  flex: 1;
+  min-width: 200px;
+}
+
+.inventory-form .form-group:last-child {
+  flex: 0;
+  min-width: auto;
+}
+
+.inventory-form select,
+.inventory-form input {
+  padding: 8px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 14px;
+  width: 100%;
+}
+
+.add-inventory-btn {
+  background-color: #17a2b8;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+}
+
+.add-inventory-btn:hover {
+  background-color: #138496;
+}
+
+.add-inventory-btn:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+.selected-inventory {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.inventory-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: white;
+  padding: 12px 16px;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.inventory-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.inventory-item-name {
+  font-weight: 600;
+  color: #495057;
+  font-size: 14px;
+}
+
+.inventory-item-details {
+  display: flex;
+  gap: 15px;
+  font-size: 12px;
+  color: #6c757d;
+}
+
+.inventory-item-quantity {
+  font-weight: 500;
+  color: #28a745;
+  font-size: 14px;
+}
+
+.remove-inventory-btn {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: background-color 0.2s;
+}
+
+.remove-inventory-btn:hover {
+  background-color: #c82333;
+}
+
+.no-inventory-message {
+  text-align: center;
+  color: #6c757d;
+  font-style: italic;
+  padding: 20px;
+  background-color: white;
+  border: 1px dashed #dee2e6;
+  border-radius: 6px;
+}
+
+/* Responsive adjustments for inventory section */
+@media (max-width: 768px) {
+  .inventory-form {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .inventory-form .form-group {
+    min-width: 100%;
+  }
+  
+  .inventory-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .inventory-item-details {
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .remove-inventory-btn {
+    align-self: flex-end;
   }
 }

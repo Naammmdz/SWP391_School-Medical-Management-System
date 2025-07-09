@@ -49,6 +49,14 @@ const MedicalEventService = {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
         };
+        
+        // Debug logging
+        console.log('=== MEDICAL EVENT SERVICE DEBUG ===');
+        console.log('API_URL:', API_URL);
+        console.log('Token available:', !!token);
+        console.log('Headers:', headers);
+        console.log('Request data:', JSON.stringify(data, null, 2));
+        
         return axios.post(API_URL, data, { headers, ...config });
     },
     
