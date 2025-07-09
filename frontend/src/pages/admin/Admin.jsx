@@ -9,7 +9,7 @@ const Admin = () => {
 
   // Navigation functions
   const navigateToUserManagement = () => {
-    navigate('/admin/danhsachnguoidung');
+    navigate('/danhsachnguoidung');
   };
 
   const navigateToStudentManagement = () => {

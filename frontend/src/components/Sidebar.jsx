@@ -110,8 +110,8 @@ const getNavGroupsForRole = (role) => {
         title: 'Quản lý học sinh',
         items: [
           { path: '/danhsachhocsinh', name: 'Danh sách học sinh', icon: 'bookUser' },
-          { path: '/taomoihocsinh', name: 'Thêm học sinh mới', icon: 'bookUser' },
-          { path: '/capnhathocsinh', name: 'Cập nhật học sinh', icon: 'bookUser' },
+          // { path: '/taomoihocsinh', name: 'Thêm học sinh mới', icon: 'bookUser' },
+          // { path: '/capnhathocsinh', name: 'Cập nhật học sinh', icon: 'bookUser' },
         ]
       },
       {
