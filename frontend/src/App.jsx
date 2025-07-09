@@ -7,6 +7,8 @@ import Layout from './components/Layout';
 import MedicalEvents from './pages/medical/MedicalEvent/MedicalEvents';
 import MedicineDeclarations from './pages/health/MedicineDeclaration/MedicineDeclarations';
 import MedicineList from './pages/health/MedicineDeclaration/MedicineList';
+import MedicalEventList from './pages/medical/MedicalEvent/MedicalEventList';
+import MedicalEventStudent from './pages/medical/MedicalEvent/MedicalEventStudent';
 import MedicineLog from './pages/health/MedicineDeclaration/MedicineLog';
 import Pharmaceutical from './pages/medical/Pharmaceutical/Pharmaceutical'; 
 
@@ -48,6 +50,8 @@ import UpdateHealthCheckResult from './pages/health/HealthCheck/UpdateHealthChec
 import ImportInventory from './pages/medical/Inventory/ImportInventory';
 import InventoryList from './pages/medical/Inventory/InventoryList';
 
+import ParentPages from './pages/parent/ParentPages';
+
 // Component ProtectedRoute
 const ProtectedRoute = ({ element, requiredRole }) => {
   const user = JSON.parse(localStorage.getItem('user'));
@@ -76,8 +80,18 @@ function App() {
       <Route path="/login" element={<Layout><Login /></Layout>} />
       <Route path='/blog' element={<Layout><Blog /></Layout>} />
 
+      {/* Protected routes - có sidebar */}
+      <Route path="/hososuckhoe" element={<Layout showSidebar><HealthRecord /></Layout>} />
+      <Route path="/sukienyte" element={<Layout showSidebar><MedicalEvents /></Layout>} />
+      <Route path="/danhsachsukienyte" element={<Layout showSidebar><MedicalEventList /></Layout>} />
+      <Route path="/sukienytehocsinh" element={<Layout showSidebar><MedicalEventStudent /></Layout>} />
+      <Route path="/khaibaothuoc" element={<Layout showSidebar><MedicineDeclarations /></Layout>} />
+      <Route path="/donthuocdagui" element={<Layout showSidebar><MedicineList /></Layout>} />
+      <Route path="/quanlythuoc" element={<Layout showSidebar><Pharmaceutical /></Layout>} />
+
       {/* Parent routes - sử dụng UI riêng, không có sidebar */}
       <Route path="/parent" element={<ProtectedRoute element={<Layout><ParentMainPage /></Layout>} requiredRole="ROLE_PARENT" />} />
+
       
       {/* Parent-specific routes without sidebar */}
       <Route path="/parent/hososuckhoe" element={<ProtectedRoute element={<Layout><HealthRecord /></Layout>} requiredRole="ROLE_PARENT" />} />
@@ -88,12 +102,7 @@ function App() {
       <Route path="/parent/kiemtradinhkyhocsinh" element={<ProtectedRoute element={<Layout><HealthCheck /></Layout>} requiredRole="ROLE_PARENT" />} />
 
       {/* Protected routes - có sidebar (Admin/Nurse only) */}
-      <Route path="/hososuckhoe" element={<ProtectedRoute element={<Layout showSidebar><HealthRecord /></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE']} />} />
-      <Route path="/sukienyte" element={<ProtectedRoute element={<Layout showSidebar><MedicalEvents /></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE']} />} />
-      <Route path="/khaibaothuoc" element={<ProtectedRoute element={<Layout showSidebar><MedicineDeclarations /></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE']} />} />
-      <Route path="/donthuocdagui" element={<ProtectedRoute element={<Layout showSidebar><MedicineList /></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE']} />} />
-      <Route path="/quanlythuoc" element={<ProtectedRoute element={<Layout showSidebar><Pharmaceutical /></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE']} />} />
-      
+    
       <Route path="/quanlytiemchung" element={<ProtectedRoute element={<Layout showSidebar><VaccinationManagement /></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE']} />} />
       <Route path="/thongbaotiemchung" element={<ProtectedRoute element={<Layout showSidebar><VaccinationNotifications /></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE']} />} />
       <Route path="/taosukientiemchung" element={<ProtectedRoute element={<Layout showSidebar><CreateVaccinationCampaign /></Layout>} requiredRole="ROLE_ADMIN" />} />
@@ -132,6 +141,9 @@ function App() {
       
       <Route path="/nurse" element={<ProtectedRoute element={<Layout showSidebar><NursePages /></Layout>} requiredRole="ROLE_NURSE" />} />
       <Route path='/admin' element={<ProtectedRoute element={<Layout showSidebar><Admin /></Layout>} requiredRole="ROLE_ADMIN" />} />
+      <Route path="/parent" element={<ProtectedRoute element={<Layout showSidebar><ParentPages /></Layout>} requiredRole="ROLE_PARENT" />} />
+      
+      {/* Default route */}
     </Routes>
   );
 }

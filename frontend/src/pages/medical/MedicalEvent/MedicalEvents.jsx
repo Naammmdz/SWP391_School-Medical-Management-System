@@ -1,478 +1,331 @@
 import React, { useState, useEffect } from 'react';
-import './MedicalEvents.css';
 import MedicalEventService from '../../../services/MedicalEventService';
+import InventoryService from '../../../services/InventoryService';
+import { useNavigate } from 'react-router-dom';
 
-// Lựa chọn cho loại sự cố
-
-
-// Lựa chọn cho biện pháp xử lý
-const handlingMethods = [
-  { value: 'Sơ cứu', label: 'Sơ cứu' },
-  { value: 'Băng bó', label: 'Băng bó' },
-  { value: 'Thuốc', label: 'Cho uống thuốc' },
-  { value: 'Nghỉ ngơi', label: 'Cho nghỉ ngơi' },
-  { value: 'Liên hệ phụ huynh', label: 'Liên hệ phụ huynh' },
-  { value: 'Chuyển viện', label: 'Chuyển viện' },
-  { value: 'Khác', label: 'Khác' }
+const severityLevels = [
+  { value: 'MINOR', label: 'Nhẹ' },
+  { value: 'MODERATE', label: 'Trung bình' },
+  { value: 'SEVERE', label: 'Nặng' }
+];
+const statusOptions = [
+  { value: 'PROCESSING', label: 'Đang xử lý' },
+  { value: 'RESOLVED', label: 'Đã xử lý' }
 ];
 
+const boxStyle = {
+  background: '#fff',
+  borderRadius: 8,
+  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+  padding: 24,
+  marginBottom: 24
+};
+const labelStyle = { fontWeight: 600, marginBottom: 4, display: 'block' };
+const inputStyle = { marginBottom: 16, width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ccc' };
+const rowStyle = { display: 'flex', gap: 16, alignItems: 'center', marginBottom: 8 };
+
+// Popup component
+const Popup = ({ message, onClose }) => (
+  <div style={{
+    position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+    background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
+  }}>
+    <div style={{
+      background: '#fff', padding: 32, borderRadius: 10, minWidth: 320, boxShadow: '0 2px 16px rgba(0,0,0,0.2)', textAlign: 'center'
+    }}>
+      <div style={{ marginBottom: 20, fontSize: 18 }}>{message}</div>
+      <button
+        onClick={onClose}
+        style={{
+          padding: '8px 24px', background: '#43a047', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 600,
+          cursor: 'pointer', transition: 'filter 0.2s',
+        }}
+        onMouseOver={e => e.currentTarget.style.filter = 'brightness(1.1)'}
+        onMouseOut={e => e.currentTarget.style.filter = 'none'}
+      >
+        Đóng
+      </button>
+    </div>
+  </div>
+);
+
 const MedicalEvents = () => {
-  // State cho danh sách sự cố y tế
-  const [medicalEvents, setMedicalEvents] = useState([]);
-  // State cho form thêm/sửa sự cố
-  const [currentEvent, setCurrentEvent] = useState({
-    id: null,
+  const [students, setStudents] = useState([]);
+  const [inventoryItems, setInventoryItems] = useState([]);
+  const [selectedStudents, setSelectedStudents] = useState([]);
+  const [relatedItemUsed, setRelatedItemUsed] = useState([]);
+  const [form, setForm] = useState({
     title: '',
-    incidentType: '',
-    date: new Date().toISOString().split('T')[0],
-    handlingMethod: '',
-    description: '',
-    studentName: '',
-    studentClass: '',
+    eventType: '',
+    eventDate: new Date().toISOString().split('T')[0],
     location: '',
-    status: 'Đang xử lý',
-    severity: 'Nhẹ'
+    description: '',
+    notes: '',
+    handlingMeasures: '',
+    severityLevel: 'MINOR',
+    status: 'PROCESSING'
   });
-  // State cho chế độ chỉnh sửa
-  const [editing, setEditing] = useState(false);
-  // State cho hiển thị modal
-  const [modalOpen, setModalOpen] = useState(false);
-  // State cho loading
   const [loading, setLoading] = useState(false);
-  // State cho lọc và tìm kiếm
-  const [filters, setFilters] = useState({
-    searchTerm: '',
-    incidentType: '',
-    fromDate: '',
-    toDate: '',
-    status: ''
-  });
+  const [classFilter, setClassFilter] = useState('');
+  const [nameFilter, setNameFilter] = useState('');
+  const [quantityErrors, setQuantityErrors] = useState({});
+  const [popup, setPopup] = useState({ open: false, message: '' });
+  const navigate = useNavigate();
 
-  // Hàm gọi API để lấy danh sách sự cố y tế
-  const fetchMedicalEvents = async () => {
-    setLoading(true);
-    try {
-      // Use service to get data
-      const data = await MedicalEventService.getMedicalEvents();
-      setMedicalEvents(data);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching medical events:', error);
-      setLoading(false);
-      
-      // Fallback to mock data if API fails
-      const mockData = [
-        {
-          id: 1,
-          title: 'Trượt chân',
-          incidentType: 'Ngã',
-          date: '2020-10-07',
-          handlingMethod: 'Sơ ý',
-          description: 'Học sinh trượt chân tại cầu thang',
-          studentName: 'Nguyễn Văn A',
-          studentClass: '10A1',
-          location: 'Cầu thang tầng 2',
-          status: 'Đã xử lý',
-          severity: 'Nhẹ'
-        },
-        {
-          id: 2,
-          title: 'Sốt cao',
-          incidentType: 'Sốt',
-          date: '2020-10-10',
-          handlingMethod: 'Cho uống thuốc và liên hệ phụ huynh',
-          description: 'Học sinh sốt 38.5 độ trong giờ học',
-          studentName: 'Trần Thị B',
-          studentClass: '11A2',
-          location: 'Phòng học 11A2',
-          status: 'Đã xử lý',
-          severity: 'Trung bình'
-        }
-      ];
-      setMedicalEvents(mockData);
-    }
-  };
-
-      // Hàm thêm sự cố y tế mới  const addMedicalEvent = async (event) => {    setLoading(true);    try {      // Use service to add new event      const newEvent = await MedicalEventService.createMedicalEvent(event);            setMedicalEvents([...medicalEvents, newEvent]);      setModalOpen(false);      setCurrentEvent({        id: null,        title: '',        incidentType: '',        date: new Date().toISOString().split('T')[0],        handlingMethod: '',        description: '',        studentName: '',        studentClass: '',        location: '',        status: 'Đang xử lý',        severity: 'Nhẹ'      });      setLoading(false);    } catch (error) {      console.error('Error adding medical event:', error);      setLoading(false);            // Fallback if API fails      const newEvent = {        ...event,        id: medicalEvents.length + 1,        date: event.date      };            setMedicalEvents([...medicalEvents, newEvent]);      setModalOpen(false);    }  };
-
-  // Hàm cập nhật sự cố y tế
-  const updateMedicalEvent = async (id, updatedEvent) => {
-    setLoading(true);
-    try {
-      // Giả lập API call
-      // const response = await fetch(`api/medical-events/${id}`, {
-      //   method: 'PUT',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(updatedEvent)
-      // });
-      // const data = await response.json();
-      
-      setMedicalEvents(medicalEvents.map(event => 
-        event.id === id ? {...updatedEvent, id} : event
-      ));
-      setEditing(false);
-      setModalOpen(false);
-      setCurrentEvent({
-        id: null,
-        title: '',
-        incidentType: '',
-        date: new Date().toISOString().split('T')[0],
-        handlingMethod: '',
-        description: '',
-        studentName: '',
-        studentClass: '',
-        location: '',
-        status: 'Đang xử lý',
-        severity: 'Nhẹ'
-      });
-      setLoading(false);
-    } catch (error) {
-      console.error('Error updating medical event:', error);
-      setLoading(false);
-    }
-  };
-
-  // Hàm xóa sự cố y tế
-  const deleteMedicalEvent = async (id) => {
-    if (window.confirm('Bạn có chắc muốn xóa sự cố y tế này?')) {
-      setLoading(true);
+  useEffect(() => {
+    const storedStudents = localStorage.getItem('students');
+    if (storedStudents) {
       try {
-        // Giả lập API call
-        // await fetch(`api/medical-events/${id}`, {
-        //   method: 'DELETE'
-        // });
-        
-        setMedicalEvents(medicalEvents.filter(event => event.id !== id));
-        setLoading(false);
-      } catch (error) {
-        console.error('Error deleting medical event:', error);
-        setLoading(false);
+        setStudents(JSON.parse(storedStudents));
+      } catch {
+        setStudents([]);
       }
     }
-  };
-
-  // Hàm mở form chỉnh sửa
-  const editMedicalEvent = (event) => {
-    setEditing(true);
-    setCurrentEvent({...event});
-    setModalOpen(true);
-  };
-
-  // Xử lý submit form
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!currentEvent.title || !currentEvent.incidentType || !currentEvent.date) {
-      alert('Vui lòng điền đầy đủ các trường bắt buộc');
-      return;
-    }
-
-    if (editing) {
-      updateMedicalEvent(currentEvent.id, currentEvent);
-    } else {
-      addMedicalEvent(currentEvent);
-    }
-  };
-
-  // Xử lý thay đổi input
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setCurrentEvent({...currentEvent, [name]: value});
-  };
-
-  // Xử lý thay đổi filter
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters({...filters, [name]: value});
-  };
-
-  // Lọc danh sách sự cố y tế
-  const filteredEvents = medicalEvents.filter(event => {
-    return (
-      (filters.searchTerm === '' || 
-        event.title.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-        event.studentName.toLowerCase().includes(filters.searchTerm.toLowerCase())) &&
-      (filters.incidentType === '' || event.incidentType === filters.incidentType) &&
-      (filters.status === '' || event.status === filters.status) &&
-      (filters.fromDate === '' || new Date(event.date) >= new Date(filters.fromDate)) &&
-      (filters.toDate === '' || new Date(event.date) <= new Date(filters.toDate))
-    );
-  });
-
-  // Lấy danh sách khi component mount
-  useEffect(() => {
-    fetchMedicalEvents();
+    const fetchInventory = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const config = { headers: { Authorization: `Bearer ${token}` } };
+        const res = await InventoryService.getInventoryList(config);
+        setInventoryItems(Array.isArray(res) ? res : []);
+      } catch {
+        setInventoryItems([]);
+      }
+    };
+    fetchInventory();
   }, []);
 
+  const addItemRow = () => {
+    setRelatedItemUsed([
+      ...relatedItemUsed,
+      { itemId: '', quantityUsed: 1, notes: '' }
+    ]);
+  };
+  const removeItemRow = idx => {
+    setRelatedItemUsed(relatedItemUsed.filter((_, i) => i !== idx));
+  };
+  const updateItemRow = (idx, field, value) => {
+    const updated = [...relatedItemUsed];
+    updated[idx][field] = value;
+
+    // Kiểm tra số lượng tồn kho
+    let itemId = field === 'itemId' ? value : updated[idx].itemId;
+    let quantityUsed = field === 'quantityUsed' ? value : updated[idx].quantityUsed;
+    const inventory = inventoryItems.find(inv => String(inv.itemId || inv.id) === String(itemId));
+    if (inventory && Number(quantityUsed) > inventory.quantity) {
+      setQuantityErrors(prev => ({ ...prev, [idx]: `Đã sử dụng hết!` }));
+    } else {
+      setQuantityErrors(prev => {
+        const newErr = { ...prev };
+        delete newErr[idx];
+        return newErr;
+      });
+    }
+    setRelatedItemUsed(updated);
+  };
+
+  const handleStudentCheckbox = (id) => {
+    setSelectedStudents(prev =>
+      prev.includes(id) ? prev.filter(sid => sid !== id) : [...prev, id]
+    );
+  };
+
+  const classList = Array.from(new Set(students.map(stu => stu.className))).sort();
+  const filteredStudents = students.filter(stu =>
+    (classFilter === '' || stu.className === classFilter) &&
+    (nameFilter === '' || stu.fullName.toLowerCase().includes(nameFilter.toLowerCase()))
+  );
+
+  const handleSubmit = async e => {
+    e.preventDefault();
+    if (!form.title || !form.eventType || !form.eventDate || selectedStudents.length === 0) {
+      setPopup({ open: true, message: 'Vui lòng nhập đủ thông tin bắt buộc và chọn học sinh!' });
+      return;
+    }
+    const validItems = relatedItemUsed.filter(item => item.itemId !== '' && item.itemId !== undefined && item.itemId !== null);
+    if (validItems.length === 0) {
+      setPopup({ open: true, message: 'Vui lòng chọn ít nhất 1 thuốc/vật tư đã dùng!' });
+      return;
+    }
+    if (Object.keys(quantityErrors).length > 0) {
+      setPopup({ open: true, message: 'Có thuốc/vật tư vượt quá số lượng tồn kho!' });
+      return;
+    }
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      const payload = {
+        ...form,
+        stuId: selectedStudents,
+        relatedItemUsed: validItems.map(item => ({
+          ...item,
+          itemId: Number(item.itemId)
+        })),
+        eventDate: new Date(form.eventDate).toISOString()
+      };
+      await MedicalEventService.createMedicalEvent(payload, config);
+      setPopup({ open: true, message: 'Tạo sự kiện y tế thành công!' });
+      setForm({
+        title: '', eventType: '', eventDate: new Date().toISOString().split('T')[0],
+        location: '', description: '', notes: '', handlingMeasures: '', severityLevel: 'MINOR', status: 'PROCESSING'
+      });
+      setSelectedStudents([]);
+      setRelatedItemUsed([]);
+    } catch (err) {
+      setPopup({ open: true, message: 'Có lỗi khi tạo sự kiện y tế!' });
+    }
+    setLoading(false);
+  };
+
   return (
-    <div className="medical-events-page">
-      <h1 className="page-title">Quản lý sự cố y tế</h1>
-      
-      {/* Bộ lọc */}
-      <div className="filters-container">
-        <div className="search-box">
-          <input 
-            type="text"
-            name="searchTerm"
-            placeholder="Tìm kiếm theo tiêu đề hoặc tên học sinh"
-            value={filters.searchTerm}
-            onChange={handleFilterChange}
-          />
-        </div>
-        <div className="filter-options">
-        
-          
-          <select 
-            name="status" 
-            value={filters.status}
-            onChange={handleFilterChange}
-          >
-            <option value="">Tất cả trạng thái</option>
-            <option value="Đang xử lý">Đang xử lý</option>
-            <option value="Đã xử lý">Đã xử lý</option>
-          </select>
-          
-          <input 
-            type="date" 
-            name="fromDate"
-            value={filters.fromDate}
-            onChange={handleFilterChange}
-            placeholder="Từ ngày"
-          />
-          
-          <input 
-            type="date" 
-            name="toDate"
-            value={filters.toDate}
-            onChange={handleFilterChange}
-            placeholder="Đến ngày"
-          />
-        </div>
-      </div>
-
-      {/* Nút thêm sự cố mới */}
-      <button 
-        className="add-event-btn"
-        onClick={() => {
-          setEditing(false);
-          setCurrentEvent({
-            id: null,
-            title: '',
-            incidentType: '',
-            date: new Date().toISOString().split('T')[0],
-            handlingMethod: '',
-            description: '',
-            studentName: '',
-            studentClass: '',
-            location: '',
-            status: 'Đang xử lý',
-            severity: 'Nhẹ'
-          });
-          setModalOpen(true);
-        }}
+    <div style={{ maxWidth: 700, margin: '0 auto', background: '#f6f8fa', padding: 32, borderRadius: 12 }}>
+      <button
+        type="button"
+        style={{ marginBottom: 24, padding: '8px 20px', background: '#1976d2', color: '#fff', border: 'none', borderRadius: 4, fontWeight: 600, cursor: 'pointer', transition: 'filter 0.2s' }}
+        onClick={() => navigate('/danhsachsukienyte')}
+        onMouseOver={e => e.currentTarget.style.filter = 'brightness(1.1)'}
+        onMouseOut={e => e.currentTarget.style.filter = 'none'}
       >
-        Thêm sự cố y tế
+        Xem danh sách sự kiện y tế
       </button>
-
-      {/* Bảng danh sách sự cố */}
-      {loading ? (
-        <div className="loading">Đang tải dữ liệu...</div>
-      ) : (
-        <table className="events-table">
-          <thead>
-            <tr>
-              <th>Tiêu đề</th>
-              <th>Loại sự cố</th>
-              <th>Học sinh</th>
-              <th>Lớp</th>
-              <th>Ngày xảy ra</th>
-              <th>Biện pháp xử lý</th>
-              <th>Trạng thái</th>
-              <th>Thao tác</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredEvents.length > 0 ? (
-              filteredEvents.map(event => (
-                <tr key={event.id}>
-                  <td>{event.title}</td>
-                  <td>{event.incidentType}</td>
-                  <td>{event.studentName}</td>
-                  <td>{event.studentClass}</td>
-                  <td>{new Date(event.date).toLocaleDateString('vi-VN')}</td>
-                  <td>{event.handlingMethod}</td>
-                  <td>
-                    <span className={`status ${event.status === 'Đang xử lý' ? 'pending' : 'resolved'}`}>
-                      {event.status}
-                    </span>
-                  </td>
-                  <td className="actions">
-                    <button className="edit-btn" onClick={() => editMedicalEvent(event)}>
-                      Sửa
-                    </button>
-                    <button className="delete-btn" onClick={() => deleteMedicalEvent(event.id)}>
-                      Xóa
-                    </button>
-                    <button className="view-btn" onClick={() => {
-                      setCurrentEvent({...event});
-                      // Hiển thị chi tiết (có thể thêm modal riêng cho xem chi tiết)
-                    }}>
-                      Xem
-                    </button>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="8" className="no-data">Không có dữ liệu sự cố y tế</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      )}
-
-      {/* Modal thêm/sửa sự cố y tế */}
-      {modalOpen && (
-        <div className="modal">
-          <div className="modal-content">
-            <span className="close" onClick={() => setModalOpen(false)}>&times;</span>
-            <h2>{editing ? 'Sửa sự cố y tế' : 'Thêm sự cố y tế mới'}</h2>
-            
-            <form onSubmit={handleSubmit}>
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="title">Tiêu đề sự cố <span className="required">*</span></label>
-                  <input
-                    type="text"
-                    name="title"
-                    id="title"
-                    value={currentEvent.title}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="incidentType">Loại sự cố <span className="required">*</span></label>
-                  <input type="text" name="" required/>
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="studentName">Tên học sinh <span className="required">*</span></label>
-                  <input
-                    type="text"
-                    name="studentName"
-                    id="studentName"
-                    value={currentEvent.studentName}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="studentClass">Lớp <span className="required">*</span></label>
-                  <input
-                    type="text"
-                    name="studentClass"
-                    id="studentClass"
-                    value={currentEvent.studentClass}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="date">Ngày xảy ra <span className="required">*</span></label>
-                  <input
-                    type="date"
-                    name="date"
-                    id="date"
-                    value={currentEvent.date}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="location">Địa điểm</label>
-                  <input
-                    type="text"
-                    name="location"
-                    id="location"
-                    value={currentEvent.location}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="handlingMethod">Biện pháp xử lý</label>
-                  <select
-                    name="handlingMethod"
-                    id="handlingMethod"
-                    value={currentEvent.handlingMethod}
-                    onChange={handleInputChange}
-                  >
-                    <option value="">-- Chọn biện pháp xử lý --</option>
-                    {handlingMethods.map(method => (
-                      <option key={method.value} value={method.value}>{method.label}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label htmlFor="severity">Mức độ nghiêm trọng</label>
-                  <select
-                    name="severity"
-                    id="severity"
-                    value={currentEvent.severity}
-                    onChange={handleInputChange}
-                  >
-                    <option value="Nhẹ">Nhẹ</option>
-                    <option value="Trung bình">Trung bình</option>
-                    <option value="Nặng">Nặng</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="description">Mô tả chi tiết</label>
-                <textarea
-                  name="description"
-                  id="description"
-                  value={currentEvent.description}
-                  onChange={handleInputChange}
-                  rows="4"
-                ></textarea>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="status">Trạng thái</label>
-                  <select
-                    name="status"
-                    id="status"
-                    value={currentEvent.status}
-                    onChange={handleInputChange}
-                  >
-                    <option value="Đang xử lý">Đang xử lý</option>
-                    <option value="Đã xử lý">Đã xử lý</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="form-actions">
-                <button type="button" className="cancel-btn" onClick={() => setModalOpen(false)}>
-                  Hủy
-                </button>
-                <button type="submit" className="submit-btn">
-                  {editing ? 'Cập nhật' : 'Thêm mới'}
-                </button>
-              </div>
-            </form>
+      <h2 style={{ textAlign: 'center', marginBottom: 32 }}>Tạo sự kiện y tế</h2>
+      <form onSubmit={handleSubmit}>
+        <div style={boxStyle}>
+          <div style={rowStyle}>
+            <label style={labelStyle}>Tiêu đề*:</label>
+            <input style={inputStyle} type="text" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} required />
+          </div>
+          <div style={rowStyle}>
+            <label style={labelStyle}>Loại sự kiện*:</label>
+            <input style={inputStyle} type="text" value={form.eventType} onChange={e => setForm({ ...form, eventType: e.target.value })} required />
+          </div>
+          <div style={rowStyle}>
+            <label style={labelStyle}>Ngày xảy ra*:</label>
+            <input style={inputStyle} type="date" value={form.eventDate} onChange={e => setForm({ ...form, eventDate: e.target.value })} required />
+          </div>
+          <div style={rowStyle}>
+            <label style={labelStyle}>Địa điểm:</label>
+            <input style={inputStyle} type="text" value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} />
           </div>
         </div>
-      )}
+        <div style={boxStyle}>
+          <label style={labelStyle}>Lọc học sinh:</label>
+          <div style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
+            <select style={inputStyle} value={classFilter} onChange={e => setClassFilter(e.target.value)}>
+              <option value="">Tất cả lớp</option>
+              {classList.map(cls => (
+                <option key={cls} value={cls}>{cls}</option>
+              ))}
+            </select>
+            <input
+              style={inputStyle}
+              type="text"
+              placeholder="Tìm theo tên học sinh"
+              value={nameFilter}
+              onChange={e => setNameFilter(e.target.value)}
+            />
+          </div>
+          <div style={{ maxHeight: 220, overflowY: 'auto', border: '1px solid #eee', borderRadius: 4, padding: 8 }}>
+            {filteredStudents.length === 0 && <div style={{ color: '#888' }}>Không có học sinh phù hợp</div>}
+            {filteredStudents.map(stu => (
+              <label key={stu.studentId} style={{ minWidth: 180, display: 'flex', alignItems: 'center', gap: 4 }}>
+                <input
+                  type="checkbox"
+                  checked={selectedStudents.includes(stu.studentId)}
+                  onChange={() => handleStudentCheckbox(stu.studentId)}
+                />
+                {stu.fullName} - {stu.className}
+              </label>
+            ))}
+          </div>
+        </div>
+        <div style={boxStyle}>
+          <label style={labelStyle}>Mô tả:</label>
+          <textarea style={{ ...inputStyle, minHeight: 60 }} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
+          <label style={labelStyle}>Biện pháp xử lý:</label>
+          <input style={inputStyle} type="text" value={form.handlingMeasures} onChange={e => setForm({ ...form, handlingMeasures: e.target.value })} />
+          <div style={rowStyle}>
+            <label style={labelStyle}>Mức độ nghiêm trọng:</label>
+            <select style={inputStyle} value={form.severityLevel} onChange={e => setForm({ ...form, severityLevel: e.target.value })}>
+              {severityLevels.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div style={boxStyle}>
+          <label style={labelStyle}>Thuốc/vật tư đã dùng*:</label>
+          {relatedItemUsed.map((item, idx) => (
+            <div key={idx} style={{ display: 'flex', gap: 8, marginBottom: 4, alignItems: 'center' }}>
+              <select
+                style={{ ...inputStyle, width: 180, marginBottom: 0 }}
+                value={item.itemId !== undefined && item.itemId !== null ? String(item.itemId) : ''}
+                onChange={e => updateItemRow(idx, 'itemId', e.target.value)}
+                required
+              >
+                <option value="">Chọn thuốc/vật tư</option>
+                {inventoryItems.map(inv => (
+                  <option key={inv.itemId || inv.id} value={String(inv.itemId || inv.id)}>{inv.name}</option>
+                ))}
+              </select>
+              {inventoryItems.length > 0 && item.itemId && (
+                <span style={{ color: '#888', marginLeft: 8 }}>
+                  {(() => {
+                    const inv = inventoryItems.find(inv => String(inv.itemId || inv.id) === String(item.itemId));
+                    return inv ? `Còn lại: ${inv.quantity}` : '';
+                  })()}
+                </span>
+              )}
+              <input
+                style={{ ...inputStyle, width: 60, marginBottom: 0 }}
+                type="number"
+                min={1}
+                value={item.quantityUsed}
+                onChange={e => updateItemRow(idx, 'quantityUsed', e.target.value)}
+                required
+              />
+              <input
+                style={{ ...inputStyle, width: 120, marginBottom: 0 }}
+                type="text"
+                value={item.notes}
+                onChange={e => updateItemRow(idx, 'notes', e.target.value)}
+                placeholder="Ghi chú"
+              />
+              <button type="button" onClick={() => removeItemRow(idx)} style={{ padding: '4px 10px', background: '#f44336', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', transition: 'filter 0.2s' }}
+                onMouseOver={e => e.currentTarget.style.filter = 'brightness(1.1)'}
+                onMouseOut={e => e.currentTarget.style.filter = 'none'}>
+                Xóa
+              </button>
+              {quantityErrors[idx] && (
+                <span style={{ color: 'red', marginLeft: 8 }}>{quantityErrors[idx]}</span>
+              )}
+            </div>
+          ))}
+          <button type="button" onClick={addItemRow} style={{ marginTop: 8, padding: '6px 16px', background: '#1976d2', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', transition: 'filter 0.2s' }}
+            onMouseOver={e => e.currentTarget.style.filter = 'brightness(1.1)'}
+            onMouseOut={e => e.currentTarget.style.filter = 'none'}>
+            Thêm thuốc/vật tư
+          </button>
+        </div>
+        <div style={boxStyle}>
+          <label style={labelStyle}>Ghi chú:</label>
+          <input style={inputStyle} type="text" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
+          <div style={rowStyle}>
+            <label style={labelStyle}>Trạng thái:</label>
+            <select style={inputStyle} value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
+              {statusOptions.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <button type="submit" disabled={loading || Object.keys(quantityErrors).length > 0} style={{ width: '100%', padding: 12, background: '#43a047', color: '#fff', fontWeight: 600, fontSize: 18, border: 'none', borderRadius: 6, cursor: 'pointer', transition: 'filter 0.2s' }}
+          onMouseOver={e => e.currentTarget.style.filter = 'brightness(1.1)'}
+          onMouseOut={e => e.currentTarget.style.filter = 'none'}>
+          {loading ? 'Đang gửi...' : 'Tạo sự kiện'}
+        </button>
+      </form>
+      {popup.open && <Popup message={popup.message} onClose={() => setPopup({ open: false, message: '' })} />}
     </div>
   );
 };

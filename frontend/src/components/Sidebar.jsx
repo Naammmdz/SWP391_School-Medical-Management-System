@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import './Sidebar.css';
@@ -81,7 +80,9 @@ const getNavGroupsForRole = (role) => {
     overview: {
       title: 'Tổng quan & Hệ thống',
       items: [
-        { path: '/thongke', name: 'Bảng điều khiển', icon: 'home' },
+        { path: '/thongke', name: 'Bảng điều khiển', icon: 'home', roles: ['ROLE_ADMIN'] },
+        { path: '/parent', name: 'Bảng điều khiển', icon: 'home', roles: ['ROLE_PARENT'] },
+        { path: '/nurse', name: 'Bảng điều khiển', icon: 'home', roles: ['ROLE_NURSE'] },
         { path: '/thongbaotiemchung', name: 'Thông báo', icon: 'bell', badge: '3' },
       ]
     }
@@ -140,9 +141,8 @@ const getNavGroupsForRole = (role) => {
         title: 'Y tế & Thuốc',
         items: [
           { path: '/sukienyte', name: 'Sự kiện y tế', icon: 'activity' },
-          { path: '/quanlythuoc', name: 'Quản lý thuốc', icon: 'pill' },
-          { path: '/khaibaothuoc', name: 'Khai báo thuốc', icon: 'briefcase' },
-          { path: '/donthuocdagui', name: 'Đơn thuốc đã gửi', icon: 'clipboard' },
+          { path: '/quanlyvattuyte', name: 'Quản lý thuốc/Vật tư', icon: 'pill' },
+         
         ]
       }
     ],
@@ -172,7 +172,7 @@ const getNavGroupsForRole = (role) => {
         items: [
           { path: '/donthuoc', name: 'Đơn thuốc', icon: 'clipboard', badge: '2' },
           { path: '/sukienyte', name: 'Sự kiện y tế', icon: 'activity', badge: '1' },
-          { path: '/quanlythuoc', name: 'Quản lý thuốc', icon: 'pill' },
+          { path: '/quanlyvattuyte', name: 'Quản lý thuốc/Vật tư', icon: 'pill' },
         ]
       },
       {
@@ -185,13 +185,7 @@ const getNavGroupsForRole = (role) => {
          
         ]
       },
-      {
-        title: 'Khai báo thuốc',
-        items: [
-          { path: '/khaibaothuoc', name: 'Khai báo thuốc', icon: 'briefcase' },
-          { path: '/donthuocdagui', name: 'Đơn thuốc đã gửi', icon: 'clipboard' },
-        ]
-      }
+     
     ],
     ROLE_PARENT: [
       commonGroups.overview,
@@ -215,6 +209,7 @@ const getNavGroupsForRole = (role) => {
         items: [
           { path: '/ketquakiemtradinhkyhocsinh', name: 'Kết quả kiểm tra sức khỏe', icon: 'report' },
           { path: '/ketquatiemchunghocsinh', name: 'Kết quả tiêm chủng', icon: 'report' },
+          { path: '/sukienytehocsinh', name: 'Sự kiện y tế của học sinh', icon: 'activity' },
         ]
       },
       {
@@ -235,10 +230,11 @@ const navGroups = [
   {
     title: 'Tổng quan & Hệ thống',
     items: [
-      { path: '/thongke', name: 'Bảng điều khiển', icon: 'home', roles: ['ROLE_ADMIN', 'ROLE_NURSE', 'ROLE_PARENT'] },
+      { path: '/thongke', name: 'Bảng điều khiển', icon: 'home', roles: ['ROLE_ADMIN', 'ROLE_NURSE'] },
       { path: '/thongbaotiemchung', name: 'Thông báo', icon: 'bell', badge: '3', roles: ['ROLE_ADMIN', 'ROLE_NURSE', 'ROLE_PARENT'] },
       { path: '/admin', name: 'Quản trị hệ thống', icon: 'settings', roles: ['ROLE_ADMIN'] },
       { path: '/nurse', name: 'Trang Y tá', icon: 'stethoscope', roles: ['ROLE_NURSE'] },
+      { path: '/parent', name: 'Trang Phụ huynh', icon: 'users', roles: ['ROLE_PARENT'] },
     ]
   },
   {
@@ -275,7 +271,7 @@ const navGroups = [
     items: [
       { path: '/donthuoc', name: 'Đơn thuốc', icon: 'clipboard', badge: '2', roles: ['ROLE_NURSE'] },
       { path: '/sukienyte', name: 'Sự cố y tế', icon: 'activity', badge: '1', roles: ['ROLE_NURSE'] },
-      { path: '/quanlythuoc', name: 'Quản lý thuốc', icon: 'pill', roles: ['ROLE_NURSE'] },
+      { path: '/quanlyvattuyte', name: 'Quản lý thuốc/Vật tư', icon: 'pill', roles: ['ROLE_NURSE'] },
     ]
   },
   {
@@ -287,6 +283,16 @@ const navGroups = [
     ]
   },
 ];
+
+// Add a function to normalize Vietnamese text (remove diacritics and punctuation)
+function normalizeVietnamese(str) {
+  return str
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .replace(/[.,/#!$%^&*;:{}=\-_`~()\[\]"'?<>@+]/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .toLowerCase();
+}
 
 const Sidebar = ({ userRole, onToggleCollapse, className = "" }) => {
   const location = useLocation();
@@ -522,6 +528,9 @@ const Sidebar = ({ userRole, onToggleCollapse, className = "" }) => {
     const title = (notification.title || '').toLowerCase();
     const userRole = user?.userRole?.toUpperCase();
   
+    // Normalize for diacritic-insensitive search
+    const contentNorm = normalizeVietnamese(contentRaw);
+    const titleNorm = normalizeVietnamese(notification.title || '');
   
     // Check notification about medicine
     const isMedicineNotification = (
@@ -536,7 +545,15 @@ const Sidebar = ({ userRole, onToggleCollapse, className = "" }) => {
       content.includes('tiêm chủng') || content.includes('vaccination') ||
       content.includes('vaccine') || content.includes('tiêm') || content.includes('chủng') ||
       title.includes('tiêm chủng') || title.includes('vaccination') ||
-      title.includes('vaccine') || title.includes('tiêm') || title.includes('chủng')
+      title.includes('vaccine') || title.includes('tiem') || title.includes('chủng')
+    );
+  
+    // Check notification about health check campaign
+    const isHealthCheckNotification = (
+      contentNorm.includes('chien dich kiem tra suc khoe') ||
+      contentNorm.includes('kiem tra suc khoe') ||
+      titleNorm.includes('chien dich kiem tra suc khoe') ||
+      titleNorm.includes('kiem tra suc khoe')
     );
   
     if (isMedicineNotification) {
@@ -563,6 +580,21 @@ const Sidebar = ({ userRole, onToggleCollapse, className = "" }) => {
         case 'ROLE_PRINCIPAL':
           setShowNotifications(false);
           navigate('/quanlytiemchung');
+          break;
+        default:
+          break;
+      }
+    } else if (isHealthCheckNotification) {
+      switch (userRole) {
+        case 'ROLE_NURSE':
+        case 'ROLE_ADMIN':
+        case 'ROLE_PRINCIPAL':
+          setShowNotifications(false);
+          navigate('/danhsachkiemtradinhky');
+          break;
+        case 'ROLE_PARENT':
+          setShowNotifications(false);
+          navigate('/kiemtradinhkyhocsinh');
           break;
         default:
           break;
