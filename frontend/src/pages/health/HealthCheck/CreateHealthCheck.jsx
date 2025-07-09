@@ -83,15 +83,15 @@ const CreateHealthCheck = () => {
       }
       const submitData = {
         campaignName: values.campaignName,
-        targetGroup: values.targetGroup,
+        targetGroup: targetGroup, 
         type: values.type,
         address: values.address,
-        organizer: values.organizer, // y tá nhập tay
+        organizer: values.organizer, 
         description: values.description,
         scheduledDate: values.scheduledDate.format('YYYY-MM-DD'),
         status: 'PENDING',
       };
-
+       console.log('Submitting data:', submitData);
       await HealthCheckService.createHealthCheckCampaign(submitData, {
         headers: { Authorization: `Bearer ${token}` },
       });
