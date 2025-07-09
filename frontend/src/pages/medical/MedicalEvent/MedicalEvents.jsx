@@ -3,6 +3,7 @@ import './MedicalEvents.css';
 import MedicalEventService from '../../../services/MedicalEventService';
 import studentService from '../../../services/StudentService';
 import StudentSelectionModal from '../../../components/StudentSelectionModal';
+import InventoryService from '../../../services/InventoryService';
 
 // Enum values from backend
 const SEVERITY_LEVELS = [
@@ -234,6 +235,13 @@ const MedicalEvents = () => {
   const addMedicalEvent = async (event) => {
     setLoading(true);
     try {
+      // Transform inventory items to match backend DTO format
+      const transformedInventoryItems = event.relatedItemUsed ? event.relatedItemUsed.map(item => ({
+        itemId: item.inventoryId,
+        quantityUsed: item.quantity,
+        notes: item.notes || null
+      })) : [];
+      
       // Transform event data to match backend DTO
       const eventDTO = {
         title: event.title,
@@ -242,7 +250,7 @@ const MedicalEvents = () => {
         eventDate: event.eventDate,
         location: event.location,
         description: event.description,
-        relatedItemUsed: event.relatedItemUsed || [],
+        relatedItemUsed: transformedInventoryItems,
         notes: event.notes,
         handlingMeasures: event.handlingMeasures,
         severityLevel: event.severityLevel,
@@ -251,6 +259,9 @@ const MedicalEvents = () => {
       
       // Debug logging
       console.log('=== MEDICAL EVENT DEBUG ===');
+      console.log('Original event data:', JSON.stringify(event, null, 2));
+      console.log('Original inventory items:', event.relatedItemUsed);
+      console.log('Transformed inventory items:', transformedInventoryItems);
       console.log('Sending Event DTO:', JSON.stringify(eventDTO, null, 2));
       console.log('Student IDs:', eventDTO.stuId);
       console.log('Event Date:', eventDTO.eventDate);
@@ -466,6 +477,17 @@ const MedicalEvents = () => {
       validationErrors.push('Trạng thái không hợp lệ');
     }
     
+    // Check inventory items if any are selected
+    if (currentEvent.relatedItemUsed && currentEvent.relatedItemUsed.length > 0) {
+      const invalidInventoryItems = currentEvent.relatedItemUsed.filter(item => 
+        !item.inventoryId || item.inventoryId === null || item.inventoryId === undefined ||
+        !item.quantity || item.quantity <= 0
+      );
+      if (invalidInventoryItems.length > 0) {
+        validationErrors.push('Có vật phẩm y tế không hợp lệ trong danh sách đã chọn');
+      }
+    }
+    
     if (validationErrors.length > 0) {
       console.error('Validation errors:', validationErrors);
       alert('Lỗi kiểm tra dữ liệu:\n' + validationErrors.join('\n'));
@@ -504,23 +526,32 @@ const MedicalEvents = () => {
   
   // Xử lý thay đổi inventory item selection
   const handleInventoryItemSelection = (itemId, quantity = 1) => {
-    if (!itemId) return;
+    console.log('handleInventoryItemSelection called with:', { itemId, quantity });
+    console.log('Current selectedInventoryItems:', selectedInventoryItems);
+    
+    if (!itemId) {
+      console.log('No itemId provided, returning');
+      return;
+    }
     
     const existingItemIndex = selectedInventoryItems.findIndex(item => item.inventoryId === itemId);
     let updatedItems;
     
     if (existingItemIndex >= 0) {
       // Update existing item quantity
+      console.log('Updating existing item at index:', existingItemIndex);
       updatedItems = [...selectedInventoryItems];
       updatedItems[existingItemIndex].quantity = quantity;
     } else {
       // Add new item
+      console.log('Adding new item to selection');
       updatedItems = [...selectedInventoryItems, {
         inventoryId: itemId,
         quantity: quantity
       }];
     }
     
+    console.log('Updated items:', updatedItems);
     setSelectedInventoryItems(updatedItems);
     setCurrentEvent({...currentEvent, relatedItemUsed: updatedItems});
   };
@@ -603,11 +634,69 @@ const MedicalEvents = () => {
   // Events are already filtered by the backend and sorted by ID descending
   const filteredEvents = medicalEvents;
 
+// Fetch inventory items
+  const fetchInventoryItems = async () => {
+    try {
+      console.log('Fetching inventory items...');
+      const response = await InventoryService.getInventoryList();
+      console.log('Raw inventory response:', response);
+      
+      let inventoryData = response;
+      
+      // Handle different response formats
+      if (response && typeof response === 'object') {
+        // Check if response is wrapped in a data property
+        if (response.data && Array.isArray(response.data)) {
+          inventoryData = response.data;
+          console.log('Using response.data for inventory items');
+        } else if (response.content && Array.isArray(response.content)) {
+          inventoryData = response.content;
+          console.log('Using response.content for inventory items');
+        } else if (response.items && Array.isArray(response.items)) {
+          inventoryData = response.items;
+          console.log('Using response.items for inventory items');
+        } else if (Array.isArray(response)) {
+          inventoryData = response;
+          console.log('Using response directly for inventory items');
+        } else {
+          console.warn('Unknown response format:', response);
+          inventoryData = [];
+        }
+      }
+      
+      if (Array.isArray(inventoryData)) {
+        setInventoryItems(inventoryData);
+        console.log('Successfully loaded', inventoryData.length, 'inventory items:', inventoryData);
+      } else {
+        console.warn('Invalid inventory response format:', response);
+        setInventoryItems([]);
+      }
+    } catch (error) {
+      console.error('Error fetching inventory items:', error);
+      
+      // Handle authentication errors
+      if (error.response?.status === 401) {
+        console.error('Authentication failed - redirecting to login');
+        alert('Authentication failed. Please login again.');
+        window.location.href = '/login';
+      } else if (error.response?.status === 403) {
+        console.error('Access denied - insufficient permissions');
+        alert('Access denied. You need proper permissions to access inventory.');
+      } else {
+        console.error('Failed to fetch inventory items:', error.message);
+      }
+      
+      // Set empty array as fallback
+      setInventoryItems([]);
+    }
+  };
+
   // Lấy danh sách khi component mount
   useEffect(() => {
-    fetchMedicalEvents();
+fetchMedicalEvents();
     fetchAllStudents();
     fetchAvailableClasses();
+    fetchInventoryItems();
   }, []);
 
   return (
@@ -1027,46 +1116,121 @@ const MedicalEvents = () => {
                 <div className="inventory-selection">
                   <div className="inventory-input-row">
                     <select 
+                      id="inventoryItemsSelect"
                       onChange={(e) => {
-                        const itemId = parseInt(e.target.value);
-                        if (itemId) {
-                          handleInventoryItemSelection(itemId, 1);
-                          e.target.value = '';
+                        const itemId = e.target.value;
+                        
+                        if (itemId && itemId !== '') {
+                          const parsedItemId = parseInt(itemId);
+                          
+                          if (!isNaN(parsedItemId)) {
+                            handleInventoryItemSelection(parsedItemId, 1);
+                            
+                            // Reset the select to placeholder after selection
+                            e.target.selectedIndex = 0;
+                          }
                         }
                       }}
-                      value=""
+                      defaultValue=""
                     >
                       <option value="">-- Chọn vật phẩm y tế --</option>
-                      {inventoryItems.map(item => (
-                        <option key={item.id} value={item.id}>
-                          {item.name} (Còn lại: {item.quantity})
-                        </option>
-                      ))}
+                      {inventoryItems && inventoryItems.length > 0 ? (
+                        inventoryItems.map((item, index) => {
+                          // Handle different possible ID field names
+                          const itemId = item.id || item.inventoryId || item.itemId;
+                          const itemName = item.name || item.itemName || item.title || 'Unknown Item';
+                          const itemQuantity = item.quantity || item.stock || item.availableQuantity || 0;
+                          
+                          return (
+                            <option key={itemId || index} value={itemId}>
+                              {itemName} (Còn lại: {itemQuantity})
+                            </option>
+                          );
+                        })
+                      ) : (
+                        <option value="" disabled>Đang tải danh sách vật phẩm...</option>
+                      )}
                     </select>
+                    {inventoryItems && inventoryItems.length === 0 && (
+                      <div className="inventory-debug-info">
+                        <small style={{color: 'red'}}>Không có vật phẩm y tế nào. Kiểm tra console để xem lỗi.</small>
+                      </div>
+                    )}
                   </div>
                   <div className="selected-inventory-items">
+                    {selectedInventoryItems.length > 0 && (
+                      <div className="selected-items-header">
+                        <h4>Vật phẩm y tế đã chọn:</h4>
+                      </div>
+                    )}
                     {selectedInventoryItems.map(item => {
-                      const inventoryItem = inventoryItems.find(inv => inv.id === item.inventoryId);
+                      const inventoryItem = inventoryItems.find(inv => {
+                        const invId = inv.id || inv.inventoryId || inv.itemId;
+                        return invId === item.inventoryId;
+                      });
+                      
+                      // Extract item details with fallbacks
+                      const itemName = inventoryItem?.name || inventoryItem?.itemName || inventoryItem?.title || 'Unknown Item';
+                      const itemUnit = inventoryItem?.unit || inventoryItem?.measurementUnit || 'đơn vị';
+                      const itemExpiry = inventoryItem?.expirationDate || inventoryItem?.expiry || null;
+                      const itemCondition = inventoryItem?.condition || inventoryItem?.status || 'N/A';
+                      const availableQuantity = inventoryItem?.quantity || inventoryItem?.stock || inventoryItem?.availableQuantity || 0;
+                      
                       return (
-                        <div key={item.inventoryId} className="selected-inventory-item">
-                          <span>{inventoryItem?.name || `ID: ${item.inventoryId}`}</span>
-                          <input
-                            type="number"
-                            min="1"
-                            value={item.quantity}
-                            onChange={(e) => handleInventoryItemSelection(item.inventoryId, parseInt(e.target.value) || 1)}
-                            className="quantity-input"
-                          />
-                          <button 
-                            type="button" 
-                            onClick={() => handleRemoveInventoryItem(item.inventoryId)}
-                            className="remove-item-btn"
-                          >
-                            ×
-                          </button>
+                        <div key={item.inventoryId} className="selected-inventory-item-detailed">
+                          <div className="item-info">
+                            <div className="item-header">
+                              <h5 className="item-name">{itemName}</h5>
+                              <span className="item-id">ID: {item.inventoryId}</span>
+                            </div>
+                            <div className="item-details">
+                              <div className="item-detail-row">
+                                <span className="detail-label">Tình trạng:</span>
+                                <span className="detail-value">{itemCondition}</span>
+                              </div>
+                              <div className="item-detail-row">
+                                <span className="detail-label">Còn lại:</span>
+                                <span className="detail-value">{availableQuantity} {itemUnit}</span>
+                              </div>
+                              {itemExpiry && (
+                                <div className="item-detail-row">
+                                  <span className="detail-label">Hạn sử dụng:</span>
+                                  <span className="detail-value">{new Date(itemExpiry).toLocaleDateString('vi-VN')}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <div className="item-controls">
+                            <div className="quantity-control">
+                              <label htmlFor={`quantity-${item.inventoryId}`}>Số lượng sử dụng:</label>
+                              <input
+                                id={`quantity-${item.inventoryId}`}
+                                type="number"
+                                min="1"
+                                max={availableQuantity}
+                                value={item.quantity}
+                                onChange={(e) => handleInventoryItemSelection(item.inventoryId, parseInt(e.target.value) || 1)}
+                                className="quantity-input"
+                              />
+                              <span className="unit-label">{itemUnit}</span>
+                            </div>
+                            <button 
+                              type="button" 
+                              onClick={() => handleRemoveInventoryItem(item.inventoryId)}
+                              className="remove-item-btn"
+                              title="Xóa vật phẩm này"
+                            >
+                              🗑️ Xóa
+                            </button>
+                          </div>
                         </div>
                       );
                     })}
+                    {selectedInventoryItems.length === 0 && (
+                      <div className="no-selected-items">
+                        <p>Chưa chọn vật phẩm y tế nào.</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

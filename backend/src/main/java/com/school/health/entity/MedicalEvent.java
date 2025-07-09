@@ -28,7 +28,7 @@ public class MedicalEvent {
     private String title;
 
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
             name = "medical_event_student", // tên bảng trung gian
             joinColumns = @JoinColumn(name = "EventId"), // khóa ngoại tới bảng này
