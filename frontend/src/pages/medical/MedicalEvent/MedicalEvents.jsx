@@ -79,14 +79,24 @@ const MedicalEvents = () => {
   const [modalOpen, setModalOpen] = useState(false);
   // State cho loading
   const [loading, setLoading] = useState(false);
-  // State cho lọc và tìm kiếm
+  // State cho lọc và tìm kiếm - matching MedicalEventsFiltersRequestDTO
   const [filters, setFilters] = useState({
-    searchTerm: '',
-    incidentType: '',
-    fromDate: '',
-    toDate: '',
-    status: ''
+    stuId: null,
+    from: null,
+    to: null,
+    createdBy: null,
+    status: null
   });
+  
+  // Additional UI-only filters
+  const [uiFilters, setUIFilters] = useState({
+    searchTerm: '',
+    fromDate: '',
+    toDate: ''
+  });
+  
+  // Track if filters are active
+  const [isFiltering, setIsFiltering] = useState(false);
 
   // Hàm lấy thông tin học sinh theo ID
   const fetchStudentInfo = async (studentId) => {
@@ -155,18 +165,33 @@ const MedicalEvents = () => {
   };
 
   // Hàm gọi API để lấy danh sách sự cố y tế
-  const fetchMedicalEvents = async () => {
+  const fetchMedicalEvents = async (filterParams = null) => {
     setLoading(true);
     try {
-      const response = await MedicalEventService.getAllMedicalEvents();
+      let response;
+      
+      // If filtering is active, use the filtered endpoints
+      if (isFiltering || filterParams) {
+        const filtersToUse = filterParams || filters;
+        console.log('Fetching filtered medical events with filters:', filtersToUse);
+        response = await MedicalEventService.searchMedicalEvents(filtersToUse);
+      } else {
+        console.log('Fetching all medical events');
+        response = await MedicalEventService.getAllMedicalEvents();
+      }
+      
       console.log('API Response:', response.data); // Debug log
       
       if (response.data && Array.isArray(response.data)) {
-        setMedicalEvents(response.data);
+        // Sort medical events by ID in descending order (newest first)
+        const sortedEvents = response.data.sort((a, b) => b.id - a.id);
+        setMedicalEvents(sortedEvents);
+        
+        console.log('Medical events sorted by ID (desc):', sortedEvents.map(e => e.id).join(', '));
         
         // Lấy thông tin học sinh cho tất cả các sự cố
         const studentIds = new Set();
-        response.data.forEach(event => {
+        sortedEvents.forEach(event => {
           if (event.stuId && Array.isArray(event.stuId)) {
             event.stuId.forEach(id => studentIds.add(id));
           }
@@ -510,21 +535,73 @@ const MedicalEvents = () => {
   // Xử lý thay đổi filter
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFilters({...filters, [name]: value});
+    
+    // Handle UI filters
+    if (name === 'searchTerm' || name === 'fromDate' || name === 'toDate') {
+      setUIFilters({...uiFilters, [name]: value});
+    } else {
+      // Handle DTO filters
+      const updatedFilters = {...filters};
+      
+      // Convert UI values to DTO format
+      if (name === 'status') {
+        updatedFilters.status = value || null;
+      }
+      
+      setFilters(updatedFilters);
+    }
+  };
+  
+  // Apply filters function
+  const applyFilters = () => {
+    const filterParams = {...filters};
+    
+    // Convert UI date filters to DTO format
+    if (uiFilters.fromDate) {
+      filterParams.from = uiFilters.fromDate;
+    }
+    if (uiFilters.toDate) {
+      filterParams.to = uiFilters.toDate;
+    }
+    
+    // Remove empty filters
+    Object.keys(filterParams).forEach(key => {
+      if (filterParams[key] === null || filterParams[key] === '' || filterParams[key] === undefined) {
+        delete filterParams[key];
+      }
+    });
+    
+    console.log('Applying filters:', filterParams);
+    
+    // Check if any filters are active
+    const hasFilters = Object.keys(filterParams).length > 0;
+    setIsFiltering(hasFilters);
+    
+    // Fetch filtered results
+    fetchMedicalEvents(hasFilters ? filterParams : null);
+  };
+  
+  // Clear filters function
+  const clearFilters = () => {
+    setFilters({
+      stuId: null,
+      from: null,
+      to: null,
+      createdBy: null,
+      status: null
+    });
+    setUIFilters({
+      searchTerm: '',
+      fromDate: '',
+      toDate: ''
+    });
+    setIsFiltering(false);
+    fetchMedicalEvents(null);
   };
 
-  // Lọc danh sách sự cố y tế
-  const filteredEvents = medicalEvents.filter(event => {
-    return (
-      (filters.searchTerm === '' || 
-        event.title.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-        event.studentName.toLowerCase().includes(filters.searchTerm.toLowerCase())) &&
-      (filters.incidentType === '' || event.incidentType === filters.incidentType) &&
-      (filters.status === '' || event.status === filters.status) &&
-      (filters.fromDate === '' || new Date(event.date) >= new Date(filters.fromDate)) &&
-      (filters.toDate === '' || new Date(event.date) <= new Date(filters.toDate))
-    );
-  });
+
+  // Events are already filtered by the backend and sorted by ID descending
+  const filteredEvents = medicalEvents;
 
   // Lấy danh sách khi component mount
   useEffect(() => {
@@ -544,27 +621,26 @@ const MedicalEvents = () => {
             type="text"
             name="searchTerm"
             placeholder="Tìm kiếm theo tiêu đề hoặc tên học sinh"
-            value={filters.searchTerm}
+            value={uiFilters.searchTerm}
             onChange={handleFilterChange}
           />
         </div>
         <div className="filter-options">
-        
-          
-          <select 
+          <select
             name="status" 
-            value={filters.status}
+            value={filters.status || ''}
             onChange={handleFilterChange}
           >
             <option value="">Tất cả trạng thái</option>
-            <option value="Đang xử lý">Đang xử lý</option>
-            <option value="Đã xử lý">Đã xử lý</option>
+            {MEDICAL_EVENT_STATUS.map(status => (
+              <option key={status.value} value={status.value}>{status.label}</option>
+            ))}
           </select>
           
           <input 
             type="date" 
             name="fromDate"
-            value={filters.fromDate}
+            value={uiFilters.fromDate}
             onChange={handleFilterChange}
             placeholder="Từ ngày"
           />
@@ -572,10 +648,27 @@ const MedicalEvents = () => {
           <input 
             type="date" 
             name="toDate"
-            value={filters.toDate}
+            value={uiFilters.toDate}
             onChange={handleFilterChange}
             placeholder="Đến ngày"
           />
+        </div>
+        
+        <div className="filter-actions">
+          <button 
+            type="button" 
+            className="apply-filters-btn"
+            onClick={applyFilters}
+          >
+            Áp dụng lọc
+          </button>
+          <button 
+            type="button" 
+            className="clear-filters-btn"
+            onClick={clearFilters}
+          >
+            Xóa lọc
+          </button>
         </div>
       </div>
 
@@ -598,7 +691,7 @@ const MedicalEvents = () => {
         <table className="events-table">
           <thead>
             <tr>
-              <th>ID</th>
+              <th>ID <span className="sort-indicator">↓</span></th>
               <th>Tiêu đề</th>
               <th>Học sinh</th>
               <th>Ngày xảy ra</th>
