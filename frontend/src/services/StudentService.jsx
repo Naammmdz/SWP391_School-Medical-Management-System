@@ -2,25 +2,50 @@ import axios from "axios";
 
 const STUDENT_URL = import.meta.env.VITE_API_STUDENT;
 
+// Helper function to get auth headers
+const getAuthHeaders = () => {
+    const token = localStorage.getItem('token');
+    return {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+    };
+};
 
 const studentService = {
     getAllStudents: (config) => {
-        return axios.get(`${STUDENT_URL}`, config);
+        const headers = getAuthHeaders();
+        return axios.get(`${STUDENT_URL}`, { headers, ...config });
     },
-    getStudentByParentID(parentId, config) {
-        return axios.get(`${STUDENT_URL}/${parentId}`,config)
+    
+    getStudentById: (studentId, config) => {
+        const headers = getAuthHeaders();
+        return axios.get(`${STUDENT_URL}/list/${studentId}`, { headers, ...config });
     },
+    
+    getStudentByParentID: (parentId, config) => {
+        const headers = getAuthHeaders();
+        return axios.get(`${STUDENT_URL}/${parentId}`, { headers, ...config });
+    },
+    
     createStudent: (data, config) => {
-        return axios.post(`${STUDENT_URL}/create-students`, data, config);
+        const headers = getAuthHeaders();
+        return axios.post(`${STUDENT_URL}/create-students`, data, { headers, ...config });
     },
-     filterHealthRecord(body, config) {
-        return axios.post(`${STUDENT_URL}/filter`,body, config)
+    
+    filterHealthRecord: (body, config) => {
+        const headers = getAuthHeaders();
+        return axios.post(`${STUDENT_URL}/filter`, body, { headers, ...config });
     },
+    
     updateStudent: (id, data, config) => {
-        return axios.put(`${STUDENT_URL}/${id}`, data, config);
+        const headers = getAuthHeaders();
+        return axios.put(`${STUDENT_URL}/${id}`, data, { headers, ...config });
     },
+    
     deleteStudent: (id, config) => {
-        return axios.delete(`${STUDENT_URL}/${id}`, config);
+        const headers = getAuthHeaders();
+        return axios.delete(`${STUDENT_URL}/${id}`, { headers, ...config });
     }
-}
+};
+
 export default studentService;

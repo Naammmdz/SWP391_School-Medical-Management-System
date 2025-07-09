@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './MedicalEvents.css';
 import MedicalEventService from '../../../services/MedicalEventService';
+import studentService from '../../../services/StudentService';
 
 // Lựa chọn cho loại sự cố
 
@@ -19,6 +20,8 @@ const handlingMethods = [
 const MedicalEvents = () => {
   // State cho danh sách sự cố y tế
   const [medicalEvents, setMedicalEvents] = useState([]);
+  // State cho thông tin học sinh
+  const [studentsInfo, setStudentsInfo] = useState({});
   // State cho form thêm/sửa sự cố
   const [currentEvent, setCurrentEvent] = useState({
     id: null,
@@ -48,48 +51,65 @@ const MedicalEvents = () => {
     status: ''
   });
 
+  // Hàm lấy thông tin học sinh theo ID
+  const fetchStudentInfo = async (studentId) => {
+    try {
+      const response = await studentService.getStudentById(studentId);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching student ${studentId}:`, error);
+      return null;
+    }
+  };
+
   // Hàm gọi API để lấy danh sách sự cố y tế
   const fetchMedicalEvents = async () => {
     setLoading(true);
     try {
-      // Use service to get data
-      const data = await MedicalEventService.getMedicalEvents();
-      setMedicalEvents(data);
+      const response = await MedicalEventService.getAllMedicalEvents();
+      console.log('API Response:', response.data); // Debug log
+      
+      if (response.data && Array.isArray(response.data)) {
+        setMedicalEvents(response.data);
+        
+        // Lấy thông tin học sinh cho tất cả các sự cố
+        const studentIds = new Set();
+        response.data.forEach(event => {
+          if (event.stuId && Array.isArray(event.stuId)) {
+            event.stuId.forEach(id => studentIds.add(id));
+          }
+        });
+        
+        // Fetch thông tin học sinh
+        const studentsData = {};
+        for (const studentId of studentIds) {
+          const studentInfo = await fetchStudentInfo(studentId);
+          if (studentInfo) {
+            studentsData[studentId] = studentInfo;
+          }
+        }
+        setStudentsInfo(studentsData);
+      } else {
+        console.warn('API response is not an array:', response.data);
+        setMedicalEvents([]);
+      }
       setLoading(false);
     } catch (error) {
       console.error('Error fetching medical events:', error);
-      setLoading(false);
       
-      // Fallback to mock data if API fails
-      const mockData = [
-        {
-          id: 1,
-          title: 'Trượt chân',
-          incidentType: 'Ngã',
-          date: '2020-10-07',
-          handlingMethod: 'Sơ ý',
-          description: 'Học sinh trượt chân tại cầu thang',
-          studentName: 'Nguyễn Văn A',
-          studentClass: '10A1',
-          location: 'Cầu thang tầng 2',
-          status: 'Đã xử lý',
-          severity: 'Nhẹ'
-        },
-        {
-          id: 2,
-          title: 'Sốt cao',
-          incidentType: 'Sốt',
-          date: '2020-10-10',
-          handlingMethod: 'Cho uống thuốc và liên hệ phụ huynh',
-          description: 'Học sinh sốt 38.5 độ trong giờ học',
-          studentName: 'Trần Thị B',
-          studentClass: '11A2',
-          location: 'Phòng học 11A2',
-          status: 'Đã xử lý',
-          severity: 'Trung bình'
-        }
-      ];
-      setMedicalEvents(mockData);
+      // Check if it's an authentication error
+      if (error.response?.status === 401) {
+        alert('Authentication failed. Please login again.');
+        // Redirect to login page
+        window.location.href = '/login';
+      } else if (error.response?.status === 403) {
+        alert('Access denied. You need NURSE role to access medical events.');
+      } else {
+        alert('Failed to fetch medical events. Please try again.');
+      }
+      
+      setMedicalEvents([]);
+      setLoading(false);
     }
   };
 
@@ -155,6 +175,13 @@ const MedicalEvents = () => {
   const editMedicalEvent = (event) => {
     setEditing(true);
     setCurrentEvent({...event});
+    setModalOpen(true);
+  };
+
+  // Hàm xem chi tiết sự cố y tế
+  const viewMedicalEventDetails = (event) => {
+    setCurrentEvent({...event});
+    setEditing(false);
     setModalOpen(true);
   };
 
@@ -280,10 +307,9 @@ const MedicalEvents = () => {
         <table className="events-table">
           <thead>
             <tr>
+              <th>ID</th>
               <th>Tiêu đề</th>
-              <th>Loại sự cố</th>
               <th>Học sinh</th>
-              <th>Lớp</th>
               <th>Ngày xảy ra</th>
               <th>Biện pháp xử lý</th>
               <th>Trạng thái</th>
@@ -294,48 +320,183 @@ const MedicalEvents = () => {
             {filteredEvents.length > 0 ? (
               filteredEvents.map(event => (
                 <tr key={event.id}>
+                  <td>{event.id}</td>
                   <td>{event.title}</td>
-                  <td>{event.incidentType}</td>
-                  <td>{event.studentName}</td>
-                  <td>{event.studentClass}</td>
-                  <td>{new Date(event.date).toLocaleDateString('vi-VN')}</td>
-                  <td>{event.handlingMethod}</td>
                   <td>
-                    <span className={`status ${event.status === 'Đang xử lý' ? 'pending' : 'resolved'}`}>
+                    {event.stuId && event.stuId.length > 0 ? (
+                      <div>
+                        {event.stuId.map(studentId => {
+                          const studentInfo = studentsInfo[studentId];
+                          return (
+                            <div key={studentId} className="student-info">
+                              {studentInfo ? (
+                                <span>
+                                  <strong>{studentInfo.fullName}</strong>
+                                  <br />
+                                  <small>ID: {studentId} | Class: {studentInfo.className}</small>
+                                </span>
+                              ) : (
+                                <span>Loading student {studentId}...</span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <span>No student assigned</span>
+                    )}
+                  </td>
+                  <td>{event.eventDate ? new Date(event.eventDate).toLocaleDateString('vi-VN') : 'N/A'}</td>
+                  <td>{event.handlingMeasures || 'N/A'}</td>
+                  <td>
+                    <span className={`status ${event.status === 'IN_PROGRESS' ? 'pending' : 'resolved'}`}>
                       {event.status}
                     </span>
                   </td>
                   <td className="actions">
-                    <button className="edit-btn" onClick={() => editMedicalEvent(event)}>
-                      Sửa
+                    <button className="view-btn" onClick={() => viewMedicalEventDetails(event)} title="View Details">
+                      <span className="btn-icon">👁️</span>
+                      View Details
                     </button>
-                    <button className="delete-btn" onClick={() => deleteMedicalEvent(event.id)}>
-                      Xóa
+                    <button className="edit-btn" onClick={() => editMedicalEvent(event)} title="Edit">
+                      <span className="btn-icon">✏️</span>
+                      Edit
                     </button>
-                    <button className="view-btn" onClick={() => {
-                      setCurrentEvent({...event});
-                      // Hiển thị chi tiết (có thể thêm modal riêng cho xem chi tiết)
-                    }}>
-                      Xem
+                    <button className="delete-btn" onClick={() => deleteMedicalEvent(event.id)} title="Delete">
+                      <span className="btn-icon">🗑️</span>
+                      Delete
                     </button>
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="8" className="no-data">Không có dữ liệu sự cố y tế</td>
+                <td colSpan="7" className="no-data">Không có dữ liệu sự cố y tế</td>
               </tr>
             )}
           </tbody>
         </table>
       )}
 
-      {/* Modal thêm/sửa sự cố y tế */}
+      {/* Modal thêm/sửa/xem chi tiết sự cố y tế */}
       {modalOpen && (
         <div className="modal">
           <div className="modal-content">
             <span className="close" onClick={() => setModalOpen(false)}>&times;</span>
-            <h2>{editing ? 'Sửa sự cố y tế' : 'Thêm sự cố y tế mới'}</h2>
+            <h2>
+              {!editing && currentEvent.id ? 'Chi tiết sự cố y tế' : 
+               editing ? 'Sửa sự cố y tế' : 'Thêm sự cố y tế mới'}
+            </h2>
+            
+            {/* View Details Mode */}
+            {!editing && currentEvent.id && (
+              <div className="event-details">
+                <div className="event-details-left">
+                  <div className="detail-row">
+                    <strong>ID:</strong> {currentEvent.id}
+                  </div>
+                  <div className="detail-row">
+                    <strong>Tiêu đề:</strong> {currentEvent.title}
+                  </div>
+                  <div className="detail-row">
+                    <strong>Loại sự cố:</strong> {currentEvent.eventType}
+                  </div>
+                  <div className="detail-row">
+                    <strong>Ngày xảy ra:</strong> {currentEvent.eventDate ? new Date(currentEvent.eventDate).toLocaleString('vi-VN') : 'N/A'}
+                  </div>
+                  <div className="detail-row">
+                    <strong>Địa điểm:</strong> {currentEvent.location || 'N/A'}
+                  </div>
+                  <div className="detail-row">
+                    <strong>Mức độ nghiêm trọng:</strong> {currentEvent.severityLevel || 'N/A'}
+                  </div>
+                  <div className="detail-row">
+                    <strong>Trạng thái:</strong> {currentEvent.status || 'N/A'}
+                  </div>
+                </div>
+                
+                <div className="event-details-right">
+                  <div className="detail-row">
+                    <strong>Ngày tạo:</strong> {currentEvent.createdAt ? new Date(currentEvent.createdAt).toLocaleString('vi-VN') : 'N/A'}
+                  </div>
+                  <div className="detail-row">
+                    <strong>Người tạo:</strong> {currentEvent.createdBy || 'N/A'}
+                  </div>
+                  <div className="detail-row">
+                    <strong>Biện pháp xử lý:</strong> {currentEvent.handlingMeasures || 'N/A'}
+                  </div>
+                  <div className="detail-row">
+                    <strong>Ghi chú:</strong> {currentEvent.notes || 'N/A'}
+                  </div>
+                  
+                  {/* Related medicines used */}
+                  {currentEvent.relatedMedicinesUsed && currentEvent.relatedMedicinesUsed.length > 0 && (
+                    <div className="detail-row">
+                      <strong>Thuốc đã sử dụng:</strong>
+                      <ul>
+                        {currentEvent.relatedMedicinesUsed.map((medicine, index) => (
+                          <li key={index}>
+                            {medicine.medicineName} - Số lượng: {medicine.quantity}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="event-details-full">
+                  <div className="detail-row">
+                    <strong>Mô tả:</strong> {currentEvent.description || 'N/A'}
+                  </div>
+                  
+                  <div className="detail-row student-detail-row">
+                    <strong>Học sinh liên quan:</strong>
+                    {currentEvent.stuId && currentEvent.stuId.length > 0 ? (
+                      <div className="students-detail">
+                        {currentEvent.stuId.map(studentId => {
+                          const studentInfo = studentsInfo[studentId];
+                          return (
+                            <div key={studentId} className="student-detail-item-row">
+                              {studentInfo ? (
+                                <div>
+                                  <strong>{studentInfo.fullName}</strong>
+                                  <br />
+                                  <small>ID: {studentId}</small>
+                                  <br />
+                                  <small>Class: {studentInfo.className}</small>
+                                  <br />
+                                  <small>DOB: {studentInfo.dob}</small>
+                                  <br />
+                                  <small>Gender: {studentInfo.gender}</small>
+                                </div>
+                              ) : (
+                                <span>Loading student {studentId}...</span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      'Không có'
+                    )}
+                  </div>
+                </div>
+                
+                <div className="modal-actions event-details-full">
+                  <button className="close-btn" onClick={() => setModalOpen(false)}>
+                    <span className="btn-icon">❌</span>
+                    Đóng
+                  </button>
+                  <button className="edit-btn" onClick={() => setEditing(true)}>
+                    <span className="btn-icon">✏️</span>
+                    Chỉnh sửa
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            {/* Edit/Add Form Mode */}
+            {(editing || !currentEvent.id) && (
             
             <form onSubmit={handleSubmit}>
               <div className="form-row">
@@ -470,6 +631,7 @@ const MedicalEvents = () => {
                 </button>
               </div>
             </form>
+            )}
           </div>
         </div>
       )}

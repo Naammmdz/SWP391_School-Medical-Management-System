@@ -94,6 +94,16 @@
   vertical-align: middle;
 }
 
+.events-table td.actions {
+  vertical-align: middle;
+  text-align: center;
+  padding: 12px !important;
+  height: 100%;
+  display: table-cell;
+  min-width: 200px;
+  width: 200px;
+}
+
 .events-table tr:nth-child(even) {
   background-color: #f8f9fa;
 }
@@ -122,16 +132,34 @@
 
 .actions {
   display: flex;
-  gap: 8px;
+  gap: 4px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: nowrap;
+  height: 100%;
+  width: 100%;
 }
 
 .edit-btn, .delete-btn, .view-btn {
-  padding: 6px 10px;
+  padding: 2px 4px;
   border: none;
-  border-radius: 4px;
+  border-radius: 3px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 9px;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 50px;
+  height: 22px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.btn-icon {
+  font-size: 12px;
+  line-height: 1;
 }
 
 .edit-btn {
@@ -176,42 +204,71 @@
 
 /* Modal Styles */
 .modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 1000 !important;
+}
+
+/* Very specific selector for modal content */
+.medical-events-page .modal .modal-content {
+  background-color: white !important;
+  padding: 30px !important;
+  border-radius: 8px !important;
+  width: 90vw !important;
+  min-width: 800px !important;
+  max-width: 1400px !important;
+  max-height: 85vh !important;
+  overflow-y: auto !important;
+  position: relative !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2) !important;
+  transform: none !important;
 }
 
 .modal-content {
-  background-color: white;
-  padding: 25px;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 800px;
-  max-height: 90vh;
-  overflow-y: auto;
-  position: relative;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  background-color: white !important;
+  padding: 30px !important;
+  border-radius: 8px !important;
+  width: 90vw !important;
+  min-width: 800px !important;
+  max-width: 1400px !important;
+  max-height: 85vh !important;
+  overflow-y: auto !important;
+  position: relative !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2) !important;
+  transform: none !important;
 }
 
 .close {
-  position: absolute;
-  top: 15px;
-  right: 20px;
-  font-size: 28px;
-  font-weight: bold;
-  cursor: pointer;
-  color: #6c757d;
+  position: absolute !important;
+  top: 15px !important;
+  right: 25px !important;
+  font-size: 30px !important;
+  font-weight: bold !important;
+  cursor: pointer !important;
+  color: #6c757d !important;
+  z-index: 1001 !important;
 }
 
 .close:hover {
-  color: #343a40;
+  color: #343a40 !important;
+}
+
+/* Modal header styling */
+.modal-content h2 {
+  margin-top: 0 !important;
+  margin-bottom: 20px !important;
+  padding-bottom: 10px !important;
+  border-bottom: 2px solid #28a745 !important;
+  font-size: 24px !important;
+  color: #28a745 !important;
+  font-weight: 600 !important;
 }
 
 /* Form Styles */
@@ -289,6 +346,220 @@
   color: #dc3545;
 }
 
+/* Student Information Styles */
+.student-info {
+  margin-bottom: 8px;
+  padding: 8px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border-left: 3px solid #28a745;
+}
+
+.student-info:last-child {
+  margin-bottom: 0;
+}
+
+.student-info strong {
+  color: #28a745;
+  font-size: 14px;
+}
+
+.student-info small {
+  color: #6c757d;
+  font-size: 12px;
+}
+
+/* Detail View Student Styles */
+.students-detail {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: flex-start;
+}
+
+.student-detail-item {
+  background-color: #f8f9fa;
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+}
+
+.student-detail-item:last-child {
+  margin-bottom: 0;
+}
+
+.student-detail-item strong {
+  color: #28a745;
+  font-size: 16px;
+}
+
+.student-detail-item small {
+  color: #6c757d;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+/* Single row student details */
+.student-detail-item-row {
+  background-color: #f8f9fa;
+  padding: 12px;
+  margin-bottom: 0;
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+  border-left: 4px solid #28a745;
+  flex: 0 0 calc(33.333% - 10px);
+  min-width: 280px;
+  max-width: calc(33.333% - 10px);
+  box-sizing: border-box;
+}
+
+.student-detail-item-row:last-child {
+  margin-bottom: 0;
+}
+
+.student-info-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0;
+}
+
+.student-info-row strong {
+  color: #28a745;
+  font-size: 16px;
+  font-weight: 600;
+  margin-right: 8px;
+}
+
+.student-info-row small {
+  color: #6c757d;
+  font-size: 13px;
+  margin-right: 8px;
+}
+
+.student-details-separator {
+  color: #adb5bd;
+  font-weight: 300;
+  margin: 0 4px;
+}
+
+/* Detail Row Styles */
+.detail-row {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f1f3f4;
+}
+
+/* Special layout for student section */
+.student-detail-row {
+  display: block !important;
+  padding: 4px 0 0 0 !important;
+  align-items: unset !important;
+}
+
+.student-detail-row strong {
+  display: block;
+  margin-bottom: 8px;
+  min-width: auto;
+}
+
+.student-detail-row .students-detail {
+  margin-top: 0px;
+  margin-left: 0px;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-row strong {
+  min-width: 160px;
+  color: #495057;
+  font-weight: 600;
+  margin-right: 10px;
+}
+
+.event-details {
+  max-height: 70vh;
+  overflow-y: auto;
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 30px !important;
+  margin-top: 20px !important;
+  width: 100% !important;
+}
+
+.event-details-left,
+.event-details-right {
+  display: flex;
+  flex-direction: column;
+}
+
+.event-details-full {
+  grid-column: 1 / -1;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #dee2e6;
+}
+
+.close-btn {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.close-btn:hover {
+  background-color: #5a6268;
+}
+
+/* Loading State */
+.loading-student {
+  color: #6c757d;
+  font-style: italic;
+  font-size: 13px;
+}
+
+/* Large screen modal sizing */
+@media (min-width: 1400px) {
+  .modal-content {
+    width: 1300px !important;
+    max-width: 1300px !important;
+  }
+}
+
+@media (min-width: 1200px) and (max-width: 1399px) {
+  .modal-content {
+    width: 1100px !important;
+    max-width: 1100px !important;
+  }
+}
+
+@media (min-width: 992px) and (max-width: 1199px) {
+  .modal-content {
+    width: 900px !important;
+    max-width: 900px !important;
+  }
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .form-row {
@@ -309,4 +580,54 @@
   .filters-container {
     flex-direction: column;
   }
-} 
+  
+  .student-info {
+    margin-bottom: 5px;
+    padding: 6px;
+  }
+  
+  .detail-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .detail-row strong {
+    min-width: auto;
+    margin-bottom: 4px;
+  }
+  
+  /* Modal responsive adjustments */
+  .modal-content {
+    width: 95%;
+    max-width: 95%;
+    margin: 10px;
+    padding: 15px;
+  }
+  
+  /* Single column layout on mobile */
+  .event-details {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  
+  .event-details-left,
+  .event-details-right {
+    order: 1;
+  }
+  
+  .event-details-full {
+    grid-column: 1;
+    order: 2;
+  }
+  
+  /* Mobile responsive for student layout */
+  .students-detail {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .student-detail-item-row {
+    min-width: 100%;
+    max-width: 100%;
+  }
+}
