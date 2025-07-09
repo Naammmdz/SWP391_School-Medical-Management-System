@@ -41,7 +41,50 @@ const { TextArea } = Input;
 const VaccinationNotifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [activeNotification, setActiveNotification] = useState(null);
-  const [showResponseForm, setShowResponseForm] = useState(false);
+  
+  // Helper function to determine parent confirmation status (same as StudentsWithVaccinationStatus)
+  const getParentConfirmationStatus = (parentConfirmation, record) => {
+    // First check if there are explicit confirmation indicators
+    if (record?.isParentConfirm === true || record?.parentApproval === true || record?.confirmed === true) {
+      return 'confirmed';
+    }
+    
+    // Check if status field indicates confirmation
+    if (record?.status === 'CONFIRMED' || record?.status === 'APPROVED' || record?.parentResponseStatus === 'CONFIRMED') {
+      return 'confirmed';
+    }
+    
+    // Handle strict boolean true - parent has confirmed
+    if (parentConfirmation === true) {
+      return 'confirmed';
+    }
+    
+    // Check for explicit decline indicators first
+    if (record?.isParentConfirm === false || record?.parentApproval === false || record?.status === 'DECLINED' || record?.parentResponseStatus === 'DECLINED') {
+      return 'declined';
+    }
+    
+    // Handle strict boolean false - could be declined or no record
+    if (parentConfirmation === false) {
+      // More specific check for "no record" vs "actually declined"
+      // If there's no vaccination record at all (vaccinationId is 0 or null) AND no explicit response date/note,
+      // then it's likely a "no record" case
+      const hasNoVaccinationRecord = !record || record.vaccinationId === 0 || record.vaccinationId === null;
+      const hasNoResponseData = !record?.responseDate && !record?.notes && !record?.parentResponseDate;
+      const isResultPending = record?.result === 'PENDING' || !record?.result;
+      
+      // If it's clearly a "no vaccination record" case, treat as pending
+      if (hasNoVaccinationRecord && hasNoResponseData && isResultPending) {
+        return 'pending';
+      } else {
+        // Otherwise, false means explicitly declined
+        return 'declined';
+      }
+    } 
+    
+    // null, undefined, or any other value means pending
+    return 'pending';
+  };
   const [responseData, setResponseData] = useState({
     campaignId: null,
     response: '',
@@ -57,10 +100,44 @@ const VaccinationNotifications = () => {
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
   const userRole = currentUser?.userRole;
 
-  // Hàm lấy tên người tổ chức từ id
-  const getOrganizerName = (userId) => {
-    const user = users.find(u => u.id === userId);
-    return user ? user.fullName : 'Không xác định';
+  // Hàm lấy tên người tổ chức
+  const getOrganizerName = (organizer) => {
+    if (!organizer) return 'Chưa xác định';
+    
+    // If organizer is already a text name (not a number), return it directly
+    if (typeof organizer === 'string' && isNaN(Number(organizer))) {
+      // Clean up empty strings
+      const cleanedOrganizer = organizer.trim();
+      return cleanedOrganizer || 'Không xác định';
+    }
+    
+    // If it's a number/ID, try to find user in users array
+    const userId = Number(organizer);
+    const user = users.find(u => 
+      u.id === userId || 
+      String(u.id) === String(userId) ||
+      u.userId === userId ||
+      String(u.userId) === String(userId)
+    );
+    
+    if (user) {
+      return user.fullName || user.name || 'Tên không có';
+    }
+    
+    // Known organizer mappings based on actual data
+    const organizerMappings = {
+      '3': 'Quản trị viên hệ thống',
+      '36': 'Y tế trường học',
+      // Add more mappings as needed
+    };
+    
+    const organizerName = organizerMappings[String(userId)];
+    if (organizerName) {
+      return organizerName;
+    }
+    
+    // Generic fallback for any missing user
+    return `Cán bộ y tế (ID: ${userId})`;
   };
 
 // Lấy danh sách chiến dịch tiêm chủng đã duyệt
@@ -72,100 +149,158 @@ const fetchNotifications = async () => {
     // Lấy thông tin học sinh từ localStorage (giả sử đã lưu object student)
     const studentInfo = JSON.parse(localStorage.getItem('selectedStudentInfo') || '{}');
     const studentClass = studentInfo.className || ""; // ví dụ: "3A"
-    console.log('Lớp học sinh:', studentClass);
+    
+
 
     const response = await vaccinationService.getVaccinationCampaignApproved(config);
     const data = Array.isArray(response.data) ? response.data : [];
-   console.log('Dữ liệu chiến dịch tiêm chủng:', data);
+
+    
     // Lọc chiến dịch phù hợp với lớp học sinh
     function removeVietnameseTones(str) {
-  return str.normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/đ/g, 'd').replace(/Đ/g, 'D');
-}
+      return str.normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/đ/g, 'd').replace(/Đ/g, 'D');
+    }
+    
+
+    
     const filtered = data.filter(item => {
-  if (!studentClass || !item.targetGroup) return false;
-  const target = item.targetGroup.toLowerCase().trim();
-  const studentClassLower = studentClass.toLowerCase().trim();
 
-  // Chuẩn hóa tiếng Việt không dấu
-  function removeVietnameseTones(str) {
-return str.normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/đ/g, 'd').replace(/Đ/g, 'D');
-  }
-  const targetNoSign = removeVietnameseTones(target).replace(/\s/g, '');
-  const studentClassNoSign = removeVietnameseTones(studentClassLower).replace(/\s/g, '');
+      
+      if (!studentClass || !item.targetGroup) {
 
-  // Toàn trường
-  if (targetNoSign === 'toantruong') return true;
+        return false;
+      }
+      
+      const target = item.targetGroup.toLowerCase().trim();
+      const studentClassLower = studentClass.toLowerCase().trim();
+      const targetNoSign = removeVietnameseTones(target).replace(/\s/g, '');
+      const studentClassNoSign = removeVietnameseTones(studentClassLower).replace(/\s/g, '');
+      
 
-  // Khớp chính xác
-  if (targetNoSign === studentClassNoSign) return true;
+      
 
-  // Nếu target là "khoi 4" hoặc "khối 4" thì khớp các lớp bắt đầu bằng "4"
-  const khoiMatch = targetNoSign.match(/khoi(\d+)/);
-  if (khoiMatch && studentClassNoSign.startsWith(khoiMatch[1])) return true;
+      // Toàn trường - matches all students
+      if (targetNoSign === 'toantruong') {
+        return true;
+      }
 
-  // Nếu target chứa tên lớp
-  if (targetNoSign.includes(studentClassNoSign)) return true;
-  if (studentClassNoSign.includes(targetNoSign)) return true;
+      // Exact class match (e.g., "1a" matches "1A")
+      if (targetNoSign === studentClassNoSign) {
+        return true;
+      }
 
-  const targetGroups = targetNoSign.split(','); // ['1', '2']
-  if (targetGroups.some(group => studentClassNoSign.startsWith(group))) return true;
+      // Extract grade number from student class (e.g., "3A" -> "3", "1B" -> "1")
+      const studentGradeMatch = studentClassNoSign.match(/^(\d+)/);
+      const studentGrade = studentGradeMatch ? studentGradeMatch[1] : null;
 
-  return false;
-});
+      // Handle "khối X" format in target (e.g., "khối 4", "khoi 4")
+      const khoiMatch = targetNoSign.match(/khoi(\d+)/);
+      if (khoiMatch && studentGrade === khoiMatch[1]) {
+        return true;
+      }
 
-    const mapped = filtered.map(item => {
-      let status = null;
+      // Handle simple grade numbers (e.g., "1", "2", "3")
+      if (targetNoSign.match(/^\d+$/) && studentGrade === targetNoSign) {
+        return true;
+      }
+
+      // Handle comma-separated targets (e.g., "1,2,3", "khối 1,2", "1a,1b")
+      if (targetNoSign.includes(',')) {
+        const targetParts = targetNoSign.split(',').map(part => part.trim());
+        
+        for (const part of targetParts) {
+          // Check exact class match
+          if (part === studentClassNoSign) {
+            return true;
+          }
+          
+          // Check simple grade number
+          if (part.match(/^\d+$/) && studentGrade === part) {
+            return true;
+          }
+          
+          // Check "khoi X" format
+          const partKhoiMatch = part.match(/khoi(\d+)/);
+          if (partKhoiMatch && studentGrade === partKhoiMatch[1]) {
+            return true;
+          }
+        }
+      }
+
+      // Partial matching - target contains class or vice versa
+      if (targetNoSign.includes(studentClassNoSign) || studentClassNoSign.includes(targetNoSign)) {
+        return true;
+      }
+
+      return false;
+    });
+    
+
+
+    const mapped = await Promise.all(filtered.map(async item => {
+      let status = 'Chưa phản hồi';
       let responseNote = '';
       let responseDate = '';
       
-      // Lấy parentConfirm trực tiếp từ item (API response)
-      console.log('Campaign item data:', item); // Debug log
-      console.log('parentConfirm value:', item.isParentConfirm); // Debug log for parentConfirm specifically
-      
-      if (item.isParentConfirm !== undefined) {
-        // Sử dụng parentConfirm từ API response để xác định trạng thái
-        if (item.isParentConfirm === null) {
-          status = 'Chưa phản hồi';
-          console.log('Status set to: Chưa phản hồi (parentConfirm is null)');
-        } else if (item.isParentConfirm === true) {
-          status = 'Xác nhận';
-          console.log('Status set to: Xác nhận (parentConfirm is true)');
-        } else if (item.isParentConfirm === false) {
-          status = 'Từ chối';
-          console.log('Status set to: Từ chối (parentConfirm is false)');
+      try {
+        // Get specific student's vaccination status for this campaign
+        const studentId = localStorage.getItem('selectedStudentId');
+        if (studentId) {
+          const statusResponse = await vaccinationService.getStudentsWithVaccinationStatus(item.campaignId, config);
+          const studentData = Array.isArray(statusResponse.data) 
+            ? statusResponse.data.find(student => String(student.studentId) === String(studentId))
+            : null;
+          
+          if (studentData) {
+            // Use the helper function to determine status
+            const statusResult = getParentConfirmationStatus(studentData.parentConfirmation, studentData);
+            
+            switch (statusResult) {
+              case 'confirmed':
+                status = 'Xác nhận';
+                break;
+              case 'declined':
+                status = 'Từ chối';
+                break;
+              case 'pending':
+              default:
+                status = 'Chưa phản hồi';
+                break;
+            }
+            
+            responseNote = studentData.notes || '';
+            responseDate = studentData.vaccinationDate || '';
+          }
         }
-       
-        
-        // Lấy thông tin ghi chú và ngày phản hồi từ item nếu có
-        responseNote = item.note || '';
-        responseDate = item.responseDate || '';
-      } else {
-        console.log('parentConfirm is undefined, keeping default status: Chưa phản hồi');
+      } catch (error) {
+
+        // Keep default status as 'Chưa phản hồi'
       }
+      
       return {
-    id: item.campaignId,
-    title: `Thông báo tiêm chủng: ${item.campaignName}`,
-    campaignName: item.campaignName,
-    targetGroup: item.targetGroup,
-    type: item.type,
-    address: item.address,
-    organizerId: item.approvedBy,
-    description: item.description,
-    date: item.scheduledDate, // giữ nguyên, format khi hiển thị
-    status,
-    isNew: status === 'Chưa phản hồi',
-    sentDate: item.createdAt, // giữ nguyên, format khi hiển thị
-    responseNote,
-    responseDate,
-    requiredDocuments: 'Phiếu đồng ý của phụ huynh, giấy tờ tùy thân',
-    time: '',
-    location: item.address,
-  };
-});
+        id: item.campaignId,
+        title: `Thông báo tiêm chủng: ${item.campaignName}`,
+        campaignName: item.campaignName,
+        targetGroup: item.targetGroup,
+        type: item.type,
+        address: item.address,
+        // Use organizer field as the primary organizer name
+        organizerId: item.organizer || item.approvedBy || item.createdBy || item.organizerId || item.userId,
+        description: item.description,
+        date: item.scheduledDate, // giữ nguyên, format khi hiển thị
+        status,
+        isNew: status === 'Chưa phản hồi',
+        sentDate: item.createdAt, // giữ nguyên, format khi hiển thị
+        responseNote,
+        responseDate,
+        requiredDocuments: 'Phiếu đồng ý của phụ huynh, giấy tờ tùy thân',
+        time: '',
+        location: item.address,
+      };
+    }));
+    
     setNotifications(mapped);
     setLoading(false);
   } catch (error) {
@@ -175,7 +310,7 @@ return str.normalize('NFD')
 };
 // Gửi phản hồi xác nhận/từ chối (gọi API thực tế)
 const sendResponse = async (values) => {
-if (!values.response) {
+  if (!values.response) {
     message.error('Vui lòng chọn phản hồi của bạn');
     return;
   }
@@ -192,12 +327,6 @@ if (!values.response) {
     const config = { headers: { Authorization: `Bearer ${token}` } };
     // Nếu xác nhận thì gọi API đăng ký tiêm chủng
     if (values.response === 'confirm')  {
-      // Xem dữ liệu trước khi gửi
-      console.log('Gửi đăng ký tiêm chủng:', {
-        campaignId: activeNotification.id,
-        studentId: Number(studentId),
-        config
-      });
       // Đúng thứ tự: campaignId, studentId, config
       await vaccinationService.parentApproveCampaign(
         activeNotification.id,
@@ -206,11 +335,6 @@ if (!values.response) {
       );
     }
     if( values.response === 'decline') {
-       console.log('Gửi từ chối tiêm chủng:', {
-        campaignId: activeNotification.id,
-        studentId: Number(studentId),
-        config
-      });
       // Gọi API từ chối tiêm chủng
       await vaccinationService.parentRejectCampaign(
         activeNotification.id,
@@ -232,7 +356,7 @@ if (!values.response) {
       }
       return notification;
     }));
-    if (activeNotification && activeNotification.id === activeNotification.id) {
+    if (activeNotification) {
       setActiveNotification({
         ...activeNotification,
         status: values.response === 'confirm' ? 'Xác nhận' : 'Từ chối',
@@ -241,7 +365,6 @@ if (!values.response) {
         isNew: false
       });
     }
-    setShowResponseForm(false);
     message.success('Phản hồi của bạn đã được gửi thành công!');
     form.resetFields();
     setSubmitting(false);
@@ -286,8 +409,27 @@ if (!values.response) {
 };
 const viewNotificationDetails = (notification) => {
   setActiveNotification(notification);
-  setShowResponseForm(false);
   form.resetFields();
+  // Reset response data when viewing notification
+  setResponseData({
+    campaignId: notification.id,
+    response: '',
+    note: ''
+  });
+};
+
+// Handle quick response with prominent buttons
+const handleQuickResponse = async (responseType) => {
+  if (!activeNotification) return;
+  
+  // Set the response type in state
+  setResponseData(prev => ({ ...prev, response: responseType }));
+  
+  // Immediately send the response
+  await sendResponse({ 
+    response: responseType, 
+    note: responseData.note 
+  });
 };
   // Đếm số thông báo mới
   const newNotificationsCount = notifications.filter(n => n.isNew).length;
@@ -526,13 +668,17 @@ label={<span><FileTextOutlined /> Giấy tờ yêu cầu</span>}
                             Phản hồi vào ngày: {formatDate(activeNotification.responseDate)}
                           </Text>
                         </Space>
-                        <Button 
-                          type="link" 
-                          onClick={() => setShowResponseForm(true)}
-                          style={{ padding: 0, marginTop: 8 }}
-                        >
-                          Thay đổi phản hồi
-                        </Button>
+                        {/* Không cho phép thay đổi phản hồi sau khi đã có quyết định */}
+                        {activeNotification.status === 'Xác nhận' && (
+                          <Text type="secondary" style={{ marginTop: 8, display: 'block', fontStyle: 'italic' }}>
+                            Không thể thay đổi sau khi đã xác nhận tham gia
+                          </Text>
+                        )}
+                        {activeNotification.status === 'Từ chối' && (
+                          <Text type="secondary" style={{ marginTop: 8, display: 'block', fontStyle: 'italic' }}>
+                            Không thể thay đổi sau khi đã từ chối tham gia
+                          </Text>
+                        )}
                       </div>
                     }
                     type={activeNotification.status === 'Xác nhận' ? 'success' : 'error'}
@@ -540,8 +686,8 @@ label={<span><FileTextOutlined /> Giấy tờ yêu cầu</span>}
                   />
                 )}
 
-                {/* Response Form */}
-                {(activeNotification.status === 'Chưa phản hồi' || showResponseForm) && (
+                {/* Response Form - Only show if no response yet */}
+                {activeNotification.status === 'Chưa phản hồi' && (
                   <Card 
                     title={
                       <Space>
@@ -551,80 +697,117 @@ label={<span><FileTextOutlined /> Giấy tờ yêu cầu</span>}
                     }
                     style={{ backgroundColor: '#fafafa' }}
                   >
-                    <Form
-form={form}
-                      layout="vertical"
-                      onFinish={sendResponse}
-                    >
-                      <Form.Item
-                        name="response"
-                        label="Quyết định của bạn"
-                        rules={[{ required: true, message: 'Vui lòng chọn phản hồi!' }]}
-                      >
-                        <Radio.Group size="large">
-                          <Space direction="vertical" size={12}>
-                            <Radio.Button 
-                              value="confirm" 
-                              style={{ 
-                                width: '100%', 
-                                height: 'auto', 
-                                padding: '12px 16px',
-                                border: '2px solid #52c41a',
-                                color: '#52c41a'
+                    <div style={{ textAlign: 'center' }}>
+                      <Title level={4} style={{ marginBottom: 24, color: '#1890ff' }}>
+                        Vui lòng chọn quyết định của bạn:
+                      </Title>
+                      
+                      {/* Action Selection Buttons */}
+                      <Space direction="vertical" size={16} style={{ width: '100%', maxWidth: 500, margin: '0 auto' }}>
+                        <Button
+                          type={responseData.response === 'confirm' ? 'primary' : 'default'}
+                          size="large"
+                          icon={<CheckCircleOutlined />}
+                          onClick={() => setResponseData({ ...responseData, response: 'confirm' })}
+                          style={{
+                            width: '100%',
+                            height: '80px',
+                            fontSize: '16px',
+                            fontWeight: 'bold',
+                            backgroundColor: responseData.response === 'confirm' ? '#52c41a' : '#f0f0f0',
+                            borderColor: responseData.response === 'confirm' ? '#52c41a' : '#d9d9d9',
+                            color: responseData.response === 'confirm' ? 'white' : '#595959',
+                            borderRadius: '12px',
+                            boxShadow: responseData.response === 'confirm' ? '0 4px 12px rgba(82, 196, 26, 0.3)' : 'none'
+                          }}
+                        >
+                          <div>
+                            <div style={{ fontSize: '18px' }}>✓ Xác nhận cho con tham gia tiêm chủng</div>
+                            <div style={{ fontSize: '12px', opacity: 0.9, marginTop: 4 }}>
+                              Con tôi sẽ tham gia chương trình tiêm chủng này
+                            </div>
+                          </div>
+                        </Button>
+                        
+                        <Button
+                          type={responseData.response === 'decline' ? 'primary' : 'default'}
+                          size="large"
+                          icon={<CloseCircleOutlined />}
+                          onClick={() => setResponseData({ ...responseData, response: 'decline' })}
+                          style={{
+                            width: '100%',
+                            height: '80px',
+                            fontSize: '16px',
+                            fontWeight: 'bold',
+                            backgroundColor: responseData.response === 'decline' ? '#ff4d4f' : '#f0f0f0',
+                            borderColor: responseData.response === 'decline' ? '#ff4d4f' : '#d9d9d9',
+                            color: responseData.response === 'decline' ? 'white' : '#595959',
+                            borderRadius: '12px',
+                            boxShadow: responseData.response === 'decline' ? '0 4px 12px rgba(255, 77, 79, 0.3)' : 'none',
+                            border: responseData.response === 'decline' ? '2px solid #ff4d4f' : '2px solid #d9d9d9'
+                          }}
+                        >
+                          <div>
+                            <div style={{ fontSize: '18px' }}>✗ Từ chối cho con tham gia tiêm chủng</div>
+                            <div style={{ fontSize: '12px', opacity: 0.9, marginTop: 4 }}>
+                              Con tôi sẽ không tham gia chương trình tiêm chủng này
+                            </div>
+                          </div>
+                        </Button>
+                      </Space>
+                      
+                      {/* Note Section - Show after selection */}
+                      {responseData.response && (
+                        <div style={{ marginTop: 24, textAlign: 'left' }}>
+                          <Text strong style={{ display: 'block', marginBottom: 8 }}>
+                            Ghi chú {responseData.response === 'decline' ? '(lý do từ chối)' : '(không bắt buộc)'}:
+                          </Text>
+                          <TextArea
+                            value={responseData.note}
+                            onChange={(e) => setResponseData({ ...responseData, note: e.target.value })}
+                            placeholder={
+                              responseData.response === 'decline' 
+                                ? "Vui lòng cho biết lý do từ chối tiêm chủng..."
+                                : "Thông tin thêm hoặc ghi chú (nếu có)..."
+                            }
+                            rows={4}
+                            style={{ borderRadius: '8px', marginBottom: 16 }}
+                          />
+                        </div>
+                      )}
+                      
+                      {/* Submit and Cancel Buttons */}
+                      {responseData.response && (
+                        <div style={{ marginTop: 24, textAlign: 'center' }}>
+                          <Space size={16}>
+                            <Button 
+                              onClick={() => {
+                                setResponseData({ campaignId: activeNotification.id, response: '', note: '' });
                               }}
+                              style={{ borderRadius: '8px', minWidth: '100px' }}
                             >
-                              <Space>
-                                <CheckCircleOutlined />
-                                <span>Xác nhận cho con tham gia tiêm chủng</span>
-                              </Space>
-                            </Radio.Button>
-                            <Radio.Button 
-                              value="decline"
-                              style={{ 
-                                width: '100%', 
-                                height: 'auto', 
-                                padding: '12px 16px',
-                                border: '2px solid #ff4d4f',
-                                color: '#ff4d4f'
-                              }}
-                            >
-                              <Space>
-                                <CloseCircleOutlined />
-                                <span>Từ chối cho con tham gia tiêm chủng</span>
-                              </Space>
-                            </Radio.Button>
-                          </Space>
-                        </Radio.Group>
-                      </Form.Item>
-
-                      <Form.Item
-                        name="note"
-                        label="Ghi chú (không bắt buộc)"
-                      >
-                        <TextArea
-                          placeholder="Thông tin thêm hoặc lý do từ chối (nếu có)"
-                          rows={3}
-                        />
-                      </Form.Item>
-
-                      <Form.Item>
-                        <Space>
-                          {showResponseForm && (
-                            <Button onClick={() => setShowResponseForm(false)}>
-                              Hủy
+                              Hủy bỏ
                             </Button>
-                          )}
-                          <Button 
-                            type="primary" 
-                            htmlType="submit" 
-                            loading={submitting}
-                            size="large"
-                          >
-{submitting ? 'Đang gửi...' : 'Gửi phản hồi'}
-                          </Button>
-                        </Space>
-                      </Form.Item>
-                    </Form>
+                            <Button 
+                              type="primary"
+                              size="large"
+                              loading={submitting}
+                              onClick={() => sendResponse({ response: responseData.response, note: responseData.note })}
+                              style={{ 
+                                borderRadius: '8px', 
+                                minWidth: '120px',
+                                backgroundColor: responseData.response === 'confirm' ? '#52c41a' : '#ff4d4f',
+                                borderColor: responseData.response === 'confirm' ? '#52c41a' : '#ff4d4f'
+                              }}
+                            >
+                              {submitting ? 'Đang gửi...' : (
+                                responseData.response === 'confirm' ? 'Xác nhận tham gia' : 'Xác nhận từ chối'
+                              )}
+                            </Button>
+                          </Space>
+                        </div>
+                      )}
+                    </div>
                   </Card>
                 )}
               </div>

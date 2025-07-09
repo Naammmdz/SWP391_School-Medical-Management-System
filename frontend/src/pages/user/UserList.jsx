@@ -190,6 +190,17 @@ const UserList = () => {
     // eslint-disable-next-line
   }, [page]);
 
+  // Listen for navigation back to this page to refresh data
+  useEffect(() => {
+    const handleFocus = () => {
+      // Refresh data when user navigates back to this page
+      fetchUsers();
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, []);
+
    return (
     <div style={{ maxWidth: 1200, margin: '0 auto', padding: 24 }}>
       {/* Header */}

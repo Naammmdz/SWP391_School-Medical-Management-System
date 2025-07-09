@@ -70,10 +70,10 @@ const Layout = ({ children, showSidebar = false }) => {
         className="main-content"
         style={{
           marginLeft: shouldShowSidebar ? (isCollapsed ? '64px' : '256px') : '0',
-          marginTop: shouldShowSidebar ? '0' : '0px', // Chỉ margin top khi có Header
+          marginTop: shouldShowSidebar ? '0' : (location.pathname.startsWith('/parent') ? '0' : '0px'),
           transition: 'margin-left 0.3s ease-in-out',
-          minHeight: 'calc(100vh - 144px)', // Trừ header (72px) và footer (72px)
-          padding: shouldShowSidebar ? '20px' : '0'
+          minHeight: location.pathname.startsWith('/parent') ? '100vh' : 'calc(100vh - 144px)',
+          padding: shouldShowSidebar ? '20px' : (location.pathname.startsWith('/parent') ? '0' : '0')
         }}
       >
         {children}

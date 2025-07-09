@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Input, Button, Alert, Spin, Typography, Space, Row, Col, Table, Tag, Select, Modal, Tooltip } from 'antd';
+import { Card, Input, Button, Alert, Spin, Typography, Space, Row, Col, Table, Tag, Select, Modal, Tooltip, message, Avatar } from 'antd';
 import { 
   UserOutlined,
   SearchOutlined,
@@ -13,7 +13,8 @@ import {
   CalendarOutlined,
   HomeOutlined,
   ManOutlined,
-  WomanOutlined
+  WomanOutlined,
+  PhoneOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import studentService from '../../services/StudentService';
@@ -26,8 +27,8 @@ const { confirm } = Modal;
 
 const genderOptions = [
   { value: '', label: 'Giới tính' },
-  { value: 'Male', label: 'Nam' },
-  { value: 'Female', label: 'Nữ' }
+  { value: 'Nam', label: 'Nam' },
+  { value: 'Nữ', label: 'Nữ' }
 ];
 
 const StudentList = () => {
@@ -46,6 +47,10 @@ const StudentList = () => {
     gender: '',
     parentName: ''
   });
+  
+  // State for delete modal
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [studentToDelete, setStudentToDelete] = useState(null);
 
   // Fetch both students and users data
   const fetchData = async () => {
@@ -83,6 +88,28 @@ const StudentList = () => {
     return parent ? parent.fullName : 'Không xác định';
   };
 
+  //Get parent phone number from users list
+const getParentPhone = (parentId) => {
+  if (!parentId) {
+    console.log('No parentId provided');
+    return 'Không có thông tin';
+  }
+  
+  const parent = users.find(user => user.id === parentId);
+  console.log('Found parent:', parent); // Debug log
+  
+  if (!parent) {
+    console.log(`Parent with ID ${parentId} not found in users:`, users);
+    return 'Không tìm thấy';
+  }
+  
+  // Try different possible field names for phone number
+  const phoneNumber = parent.phoneNumber || parent.phone || parent.phoneNo || parent.tel;
+  console.log('Phone number:', phoneNumber); // Debug log
+  
+  return phoneNumber || 'Không có số điện thoại';
+};
+
   // Format date from YYYY-MM-DD to DD/MM/YYYY
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -93,7 +120,15 @@ const StudentList = () => {
   const filteredStudents = students.filter(student => {
     const matchesName = !filter.fullName || student.fullName.toLowerCase().includes(filter.fullName.toLowerCase());
     const matchesClass = !filter.className || student.className.toLowerCase().includes(filter.className.toLowerCase());
-    const matchesGender = !filter.gender || student.gender === filter.gender;
+    
+    // Normalize gender for filtering
+    const normalizeGender = (gender) => {
+      if (gender === 'Male' || gender === 'Nam') return 'Nam';
+      if (gender === 'Female' || gender === 'Nữ') return 'Nữ';
+      return gender;
+    };
+    
+    const matchesGender = !filter.gender || normalizeGender(student.gender) === filter.gender;
     const parentName = getParentName(student.parentId);
     const matchesParent = !filter.parentName || parentName.toLowerCase().includes(filter.parentName.toLowerCase());
     
@@ -110,32 +145,72 @@ const StudentList = () => {
     navigate('/taomoihocsinh');
   };
 
-  // Delete student
-  const deleteStudent = async (studentId, studentName) => {
-    confirm({
-      title: 'Xác nhận xóa học sinh',
-      icon: <ExclamationCircleOutlined />,
-      content: `Bạn có chắc chắn muốn xóa học sinh "${studentName}"?`,
-      okText: 'Xác nhận',
-      cancelText: 'Hủy',
-      okType: 'danger',
-      onOk: async () => {
-        try {
-          const token = localStorage.getItem('token');
-          await studentService.deleteStudent(studentId, {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          });
-          setSuccessMessage('Xóa học sinh thành công!');
-          setTimeout(() => setSuccessMessage(null), 3000);
-          fetchData(); // Refresh the list
-        } catch (error) {
-          setError('Không thể xóa học sinh');
-          setTimeout(() => setError(null), 3000);
+  // Show delete confirmation
+  const showDeleteConfirm = (studentId, studentName) => {
+    console.log('showDeleteConfirm called:', studentId, studentName);
+    
+    // Try using state-based modal first
+    setStudentToDelete({ id: studentId, name: studentName });
+    // Need delete local storage student
+    localStorage.removeItem('selectedStudentId');
+    localStorage.removeItem('selectedStudentInfo');
+    setDeleteModalVisible(true);
+  };
+  
+  // Handle actual deletion
+  const handleDelete = async () => {
+    if (!studentToDelete) return;
+    
+    const token = localStorage.getItem('token');
+    if (!token) {
+      message.error('Không tìm thấy token xác thực.');
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const response = await studentService.deleteStudent(studentToDelete.id, {
+        headers: {
+          Authorization: `Bearer ${token}`
         }
+      });
+      
+      console.log('Delete response:', response);
+      message.success('Xóa học sinh thành công!');
+      setDeleteModalVisible(false);
+      setStudentToDelete(null);
+      
+      // Refresh the list
+      await fetchData();
+    } catch (error) {
+      console.error('Lỗi khi xóa:', error);
+      message.error('Không thể xóa học sinh. Vui lòng thử lại!');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Delete student with fallback
+  const deleteStudent = (studentId, studentName) => {
+    console.log('Delete button clicked - ID:', studentId, 'Name:', studentName);
+    
+    if (!studentId) {
+      message.error('Không tìm thấy học sinh để xóa.');
+      return;
+    }
+    
+    // Try modal first
+    try {
+      showDeleteConfirm(studentId, studentName);
+    } catch (error) {
+      console.error('Modal error:', error);
+      // Fallback to window.confirm
+      const confirmed = window.confirm(`Bạn có chắc chắn muốn xóa học sinh "${studentName}"?\n\nHành động này không thể hoàn tác!`);
+      if (confirmed) {
+        setStudentToDelete({ id: studentId, name: studentName });
+        handleDelete();
       }
-    });
+    }
   };
 
   // Handle filter change
@@ -161,14 +236,37 @@ const StudentList = () => {
   }, []);
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto', padding: 24 }}>
+    <div style={{ 
+      maxWidth: 1200, 
+      margin: '0 auto', 
+      padding: '24px',
+      backgroundColor: '#f0f2f5',
+      minHeight: '100vh'
+    }}>
       {/* Header */}
-      <Row justify="space-between" align="middle" style={{ marginBottom: 32, marginTop: 50 }}>
+      <Row justify="space-between" align="middle" style={{ 
+        marginBottom: 32, 
+        marginTop: 50,
+        padding: '20px 24px',
+        background: 'linear-gradient(135deg, #fff 0%, #f8f9fa 100%)',
+        borderRadius: 16,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+      }}>
         <Col>
-          <Title level={2} style={{ margin: 0, color: '#15803d' }}>
-            <TeamOutlined style={{ marginRight: 12 }} />
-            Danh sách học sinh
-          </Title>
+          <Space direction="vertical" size={4}>
+            <Title level={2} style={{ 
+              margin: 0, 
+              color: '#15803d',
+              fontSize: 28,
+              fontWeight: 600
+            }}>
+              <TeamOutlined style={{ marginRight: 12 }} />
+              Danh sách học sinh
+            </Title>
+            <Text style={{ color: '#8c8c8c', fontSize: 14 }}>
+              Quản lý thông tin {filteredStudents.length} học sinh trong hệ thống
+            </Text>
+          </Space>
         </Col>
         <Col>
           <Button
@@ -176,9 +274,15 @@ const StudentList = () => {
             icon={<UserAddOutlined />}
             size="large"
             onClick={navigateToCreateStudent}
-            style={{ borderRadius: 8 }}
+            style={{ 
+              borderRadius: 8,
+              background: '#15803d',
+              borderColor: '#15803d',
+              boxShadow: '0 2px 4px rgba(21,128,61,0.2)',
+              height: 44
+            }}
           >
-            Thêm học sinh
+            Thêm học sinh mới
           </Button>
         </Col>
       </Row>
@@ -188,15 +292,26 @@ const StudentList = () => {
         style={{ 
           marginBottom: 24, 
           borderRadius: 16, 
-          boxShadow: '0 4px 16px rgba(0,0,0,0.07)'
+          boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+          border: 'none'
         }}
-        bodyStyle={{ padding: 24 }}
+        bodyStyle={{ padding: '28px 32px' }}
       >
-        <Space direction="vertical" size={16} style={{ width: '100%' }}>
-          <Title level={4} style={{ margin: 0, color: '#15803d' }}>
-            <SearchOutlined style={{ marginRight: 8 }} />
-            Tìm kiếm và lọc học sinh
-          </Title>
+        <Space direction="vertical" size={20} style={{ width: '100%' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Title level={4} style={{ 
+              margin: 0, 
+              color: '#262626',
+              fontSize: 18,
+              fontWeight: 600
+            }}>
+              <SearchOutlined style={{ marginRight: 8, color: '#15803d' }} />
+              Tìm kiếm và lọc
+            </Title>
+            <Tag color="green" style={{ margin: 0 }}>
+              {filteredStudents.length} kết quả
+            </Tag>
+          </div>
           
           <Row gutter={[16, 16]}>
             <Col xs={24} sm={12} md={6}>
@@ -224,7 +339,10 @@ const StudentList = () => {
                 placeholder="Chọn giới tính"
                 value={filter.gender || undefined}
                 onChange={(value) => handleFilterChange('gender', value || '')}
-                style={{ width: '100%', borderRadius: 8 }}
+                style={{ 
+                  width: '100%', 
+                  borderRadius: 8
+                }}
                 size="large"
                 allowClear
               >
@@ -239,7 +357,10 @@ const StudentList = () => {
                 value={filter.parentName}
                 onChange={(e) => handleFilterChange('parentName', e.target.value)}
                 prefix={<UserOutlined style={{ color: '#8c8c8c' }} />}
-                style={{ borderRadius: 8 }}
+                style={{ 
+                  borderRadius: 8,
+                  border: '1px solid #d9d9d9'
+                }}
                 size="large"
               />
             </Col>
@@ -248,10 +369,15 @@ const StudentList = () => {
                 <Button
                   icon={<ClearOutlined />}
                   onClick={handleClearFilter}
-                  style={{ borderRadius: 8 }}
+                  style={{ 
+                    borderRadius: 8,
+                    background: '#fff',
+                    borderColor: '#d9d9d9',
+                    color: '#595959'
+                  }}
                   size="large"
                 >
-                  Xóa lọc
+                  Xóa bộ lọc
                 </Button>
               </Space>
             </Col>
@@ -279,27 +405,66 @@ const StudentList = () => {
       )}
 
       {/* Students table */}
-      <Card style={{ borderRadius: 16, boxShadow: '0 4px 16px rgba(0,0,0,0.07)' }}>
+      <Card 
+        style={{ 
+          borderRadius: 16, 
+          boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+          border: 'none',
+          overflow: 'hidden'
+        }}
+        bodyStyle={{ padding: 0 }}
+      >
+        <div style={{
+          padding: '20px 24px',
+          borderBottom: '1px solid #f0f0f0',
+          background: '#fafafa'
+        }}>
+          <Title level={4} style={{ 
+            margin: 0,
+            color: '#262626',
+            fontSize: 18,
+            fontWeight: 600
+          }}>
+            <TeamOutlined style={{ marginRight: 8, color: '#15803d' }} />
+            Danh sách học sinh
+          </Title>
+        </div>
         <Table 
           dataSource={filteredStudents}
           loading={loading}
           rowKey={(record) => record.studentId}
           locale={{
-            emptyText: 'Không có học sinh nào trong hệ thống.'
+            emptyText: (
+              <div style={{ padding: '40px 0' }}>
+                <TeamOutlined style={{ fontSize: 48, color: '#d9d9d9' }} />
+                <p style={{ marginTop: 16, color: '#8c8c8c' }}>Không có học sinh nào trong hệ thống.</p>
+              </div>
+            )
           }}
+          rowClassName={(record, index) => index % 2 === 0 ? 'even-row' : 'odd-row'}
           columns={[
             {
               title: 'Họ và tên',
               dataIndex: 'fullName',
               key: 'fullName',
-              render: (text) => <strong style={{ color: '#2563eb' }}>{text}</strong>
+              render: (text) => (
+                <Space>
+                  <Avatar 
+                    size="small" 
+                    style={{ backgroundColor: '#15803d' }}
+                  >
+                    {text.charAt(0).toUpperCase()}
+                  </Avatar>
+                  <strong style={{ color: '#262626' }}>{text}</strong>
+                </Space>
+              )
             },
             {
               title: 'Ngày sinh',
               dataIndex: 'dob',
               key: 'dob',
               render: (date) => (
-                <span>
+                <span style={{ color: '#595959' }}>
                   <CalendarOutlined style={{ marginRight: 4, color: '#8c8c8c' }} />
                   {formatDate(date)}
                 </span>
@@ -309,37 +474,64 @@ const StudentList = () => {
               title: 'Giới tính',
               dataIndex: 'gender',
               key: 'gender',
-              render: (gender) => (
-                <Tag 
-                  color={gender === 'Male' ? 'blue' : 'pink'}
-                  icon={gender === 'Male' ? <ManOutlined /> : <WomanOutlined />}
-                >
-                  {gender === 'Male' ? 'Nam' : 'Nữ'}
-                </Tag>
-              )
+              render: (gender) => {
+                // Handle both English and Vietnamese gender values
+                const isNam = gender === 'Male' || gender === 'Nam';
+                return (
+                  <Tag 
+                    color={isNam ? 'blue' : 'pink'}
+                    icon={isNam ? <ManOutlined /> : <WomanOutlined />}
+                  >
+                    {isNam ? 'Nam' : 'Nữ'}
+                  </Tag>
+                );
+              }
             },
             {
               title: 'Lớp',
               dataIndex: 'className',
               key: 'className',
               render: (className) => (
-                <Tag color="green">
+                <Tag 
+                  color="green"
+                  style={{ 
+                    borderRadius: 6,
+                    padding: '2px 12px',
+                    fontSize: 13
+                  }}
+                >
                   <HomeOutlined style={{ marginRight: 4 }} />
                   {className}
                 </Tag>
               )
             },
+            // Parent information
             {
               title: 'Phụ huynh',
               dataIndex: 'parentId',
               key: 'parentId',
               render: (parentId) => (
-                <span>
+                <span style={{ color: '#595959' }}>
                   <UserOutlined style={{ marginRight: 4, color: '#8c8c8c' }} />
                   {getParentName(parentId)}
                 </span>
               )
+              
             },
+            {
+  title: 'Số điện thoại phụ huynh',
+  dataIndex: 'parentId',
+  key: 'parentPhone',
+  render: (parentId) => {
+    const phoneNumber = getParentPhone(parentId);
+    return (
+      <span style={{ color: '#595959' }}>
+        <PhoneOutlined style={{ marginRight: 4, color: '#8c8c8c' }} />
+        {phoneNumber}
+      </span>
+    );
+  }
+},
             {
               title: 'Hành động',
               key: 'action',
@@ -355,10 +547,14 @@ const StudentList = () => {
                   </Tooltip>
                   <Tooltip title="Xóa">
                     <Button
-                      type="danger"
+                      danger
                       shape="circle"
                       icon={<DeleteOutlined />}
-                      onClick={() => deleteStudent(record.studentId, record.fullName)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        console.log('Delete button clicked:', record.studentId, record.fullName);
+                        deleteStudent(record.studentId, record.fullName);
+                      }}
                     />
                   </Tooltip>
                 </Space>
@@ -367,12 +563,40 @@ const StudentList = () => {
           ]}
           pagination={{
             pageSize: 10,
-            showSizeChanger: false,
+            showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} học sinh`
+            showTotal: (total, range) => (
+              <span style={{ color: '#595959' }}>
+                Hiển thị <strong>{range[0]}-{range[1]}</strong> trong tổng số <strong>{total}</strong> học sinh
+              </span>
+            ),
+            pageSizeOptions: ['10', '20', '50', '100']
           }}
         />
       </Card>
+      
+      {/* Delete Confirmation Modal */}
+      <Modal
+        title="Xác nhận xóa học sinh"
+        open={deleteModalVisible}
+        onOk={handleDelete}
+        onCancel={() => {
+          setDeleteModalVisible(false);
+          setStudentToDelete(null);
+        }}
+        okText="Xác nhận xóa"
+        cancelText="Hủy"
+        okType="danger"
+        confirmLoading={loading}
+      >
+        {studentToDelete && (
+          <div>
+            <p>Bạn có chắc chắn muốn xóa học sinh:</p>
+            <p><strong>{studentToDelete.name}</strong></p>
+            <p style={{ color: 'red' }}>Hành động này không thể hoàn tác!</p>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

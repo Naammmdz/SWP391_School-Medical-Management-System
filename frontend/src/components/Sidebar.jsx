@@ -43,6 +43,13 @@ import {
 import studentService from '../services/StudentService';
 import NotificationService from '../services/NotificationService';
 import axios from "axios";
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import 'dayjs/locale/vi';
+
+// Configure dayjs
+dayjs.extend(relativeTime);
+dayjs.locale('vi');
 
 // Icons - sử dụng emoji hoặc text thay thế lucide-react
 const iconMap = {
@@ -94,9 +101,9 @@ const getNavGroupsForRole = (role) => {
         title: 'Quản lý người dùng',
         items: [
           { path: '/danhsachnguoidung', name: 'Danh sách người dùng', icon: 'users' },
-          { path: '/taomoinguoidung', name: 'Tạo người dùng mới', icon: 'users' },
-          { path: '/capnhatnguoidung', name: 'Cập nhật người dùng', icon: 'users' },
-          { path: '/khoanguoidung', name: 'Khóa người dùng', icon: 'shield' },
+          // { path: '/taomoinguoidung', name: 'Tạo người dùng mới', icon: 'users' },
+          // { path: '/capnhatnguoidung', name: 'Cập nhật người dùng', icon: 'users' },
+          // { path: '/khoanguoidung', name: 'Khóa người dùng', icon: 'shield' },
         ]
       },
       {
@@ -110,10 +117,10 @@ const getNavGroupsForRole = (role) => {
       {
         title: 'Tiêm chủng',
         items: [
-          { path: '/taosukientiemchung', name: 'Tạo chiến dịch tiêm chủng', icon: 'syringe' },
+          // { path: '/taosukientiemchung', name: 'Tạo chiến dịch tiêm chủng', icon: 'syringe' },
           { path: '/quanlytiemchung', name: 'Quản lý tiêm chủng', icon: 'syringe' },
-          { path: '/capnhatthongtintiemchung', name: 'Cập nhật thông tin tiêm chủng', icon: 'syringe' },
-          { path: '/capnhattiemchung', name: 'Cập nhật tiêm chủng', icon: 'syringe' },
+          // { path: '/capnhatthongtintiemchung', name: 'Cập nhật thông tin tiêm chủng', icon: 'syringe' },
+          // { path: '/capnhattiemchung', name: 'Cập nhật tiêm chủng', icon: 'syringe' },
           { path: '/ketquatiemchung', name: 'Kết quả tiêm chủng', icon: 'report' },
           
         ]
@@ -121,13 +128,13 @@ const getNavGroupsForRole = (role) => {
       {
         title: 'Khám sức khỏe',
         items: [
-          { path: '/kiemtradinhky', name: 'Tạo kiểm tra định kỳ', icon: 'stethoscope' },
+          // { path: '/kiemtradinhky', name: 'Tạo kiểm tra định kỳ', icon: 'stethoscope' },
           { path: '/danhsachkiemtradinhky', name: 'Danh sách kiểm tra định kỳ', icon: 'stethoscope' },
-          { path: '/capnhatkiemtradinhky', name: 'Cập nhật kiểm tra định kỳ', icon: 'stethoscope' },
+          // { path: '/capnhatkiemtradinhky', name: 'Cập nhật kiểm tra định kỳ', icon: 'stethoscope' },
           { path: '/kiemtradinhkyhocsinh', name: 'Kiểm tra định kỳ học sinh', icon: 'stethoscope' },
           { path: '/ketquakiemtradinhky', name: 'Kết quả kiểm tra định kỳ', icon: 'report' },
           
-          { path: '/capnhatketquakiemtra', name: 'Cập nhật kết quả kiểm tra', icon: 'report' },
+          // { path: '/capnhatketquakiemtra', name: 'Cập nhật kết quả kiểm tra', icon: 'report' },
         ]
       },
       {
@@ -151,13 +158,13 @@ const getNavGroupsForRole = (role) => {
         title: 'Khám sức khỏe',
         items: [
           { path: '/hososuckhoe', name: 'Hồ sơ sức khỏe', icon: 'heart' },
-          { path: '/kiemtradinhky', name: 'Tạo kiểm tra định kỳ', icon: 'stethoscope' },
+          // { path: '/kiemtradinhky', name: 'Tạo kiểm tra định kỳ', icon: 'stethoscope' },
           { path: '/danhsachkiemtradinhky', name: 'Danh sách kiểm tra định kỳ', icon: 'stethoscope' },
-          { path: '/capnhatkiemtradinhky', name: 'Cập nhật kiểm tra định kỳ', icon: 'stethoscope' },
+          // { path: '/capnhatkiemtradinhky', name: 'Cập nhật kiểm tra định kỳ', icon: 'stethoscope' },
           { path: '/kiemtradinhkyhocsinh', name: 'Kiểm tra định kỳ học sinh', icon: 'stethoscope' },
           { path: '/ketquakiemtradinhky', name: 'Kết quả kiểm tra định kỳ', icon: 'report' },
           
-          { path: '/capnhatketquakiemtra', name: 'Cập nhật kết quả kiểm tra', icon: 'report' },
+          // { path: '/capnhatketquakiemtra', name: 'Cập nhật kết quả kiểm tra', icon: 'report' },
         ]
       },
       {
@@ -172,7 +179,7 @@ const getNavGroupsForRole = (role) => {
         title: 'Tiêm chủng',
         items: [
           { path: '/quanlytiemchung', name: 'Quản lý tiêm chủng', icon: 'syringe' },
-          { path: '/capnhatthongtintiemchung', name: 'Cập nhật thông tin tiêm chủng', icon: 'syringe' },
+          // { path: '/capnhatthongtintiemchung', name: 'Cập nhật thông tin tiêm chủng', icon: 'syringe' },
           { path: '/capnhattiemchung', name: 'Cập nhật tiêm chủng', icon: 'syringe' },
           { path: '/ketquatiemchung', name: 'Kết quả tiêm chủng', icon: 'report' },
          
@@ -247,7 +254,7 @@ const navGroups = [
   {
     title: 'Chiến dịch tiêm chủng',
     items: [
-      { path: '/taosukientiemchung', name: 'Tạo chiến dịch tiêm chủng', icon: 'syringe', roles: ['ROLE_ADMIN'] },
+      // { path: '/taosukientiemchung', name: 'Tạo chiến dịch tiêm chủng', icon: 'syringe', roles: ['ROLE_ADMIN'] },
       { path: '/quanlytiemchung', name: 'Quản lý tiêm chủng', icon: 'syringe', roles: ['ROLE_ADMIN'] },
     ]
   },
@@ -795,7 +802,13 @@ const Sidebar = ({ userRole, onToggleCollapse, className = "" }) => {
                       <div className="notification-title">{n.title || 'Thông báo'}</div>
                       <div className="notification-content">{n.content}</div>
                       <div className="notification-time">
-                        {n.createdAt ? new Date(n.createdAt).toLocaleString() : ''}
+                        {n.createdAt ? (
+                          dayjs(n.createdAt).isValid() 
+                            ? dayjs(n.createdAt).fromNow()
+                            : dayjs(n.createdAt).format('DD/MM/YYYY HH:mm')
+                        ) : (
+                          'Chưa xác định'
+                        )}
                       </div>
                       {!n.read && <span className="notification-dot" />}
                     </div>

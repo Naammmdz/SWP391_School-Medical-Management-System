@@ -253,4 +253,92 @@
     width: 100%;
     justify-content: center;
   }
-} 
+}
+
+/* Ensure table action buttons are clickable */
+.ant-btn {
+  cursor: pointer !important;
+}
+
+.ant-table-cell .ant-btn {
+  pointer-events: auto !important;
+  z-index: 1 !important;
+  position: relative !important;
+}
+
+.ant-table-cell .ant-space {
+  pointer-events: none;
+}
+
+.ant-table-cell .ant-space > * {
+  pointer-events: auto !important;
+}
+
+/* Table row styling */
+.even-row {
+  background-color: #fafafa;
+}
+
+.odd-row {
+  background-color: #ffffff;
+}
+
+.ant-table-tbody > tr:hover > td {
+  background-color: #f5f5f5 !important;
+}
+
+/* Button hover effects */
+.ant-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(21,128,61,0.3);
+}
+
+.ant-btn-circle:hover {
+  transform: scale(1.1);
+}
+
+/* Tag styling */
+.ant-tag {
+  font-weight: 500;
+}
+
+/* Alert styling */
+.ant-alert {
+  border: none;
+}
+
+/* Input focus effects */
+.ant-input:focus,
+.ant-input-focused,
+.ant-select-focused .ant-select-selector {
+  border-color: #15803d !important;
+  box-shadow: 0 0 0 2px rgba(21,128,61,0.1) !important;
+}
+
+/* Card hover effect */
+.ant-card {
+  transition: all 0.3s ease;
+}
+
+.ant-card:hover {
+  transform: translateY(-2px);
+}
+
+/* Pagination styling */
+.ant-pagination {
+  margin-top: 24px;
+  text-align: center;
+}
+
+.ant-pagination-item-active {
+  border-color: #15803d;
+}
+
+.ant-pagination-item-active a {
+  color: #15803d;
+}
+
+/* Loading spinner */
+.ant-spin-nested-loading {
+  min-height: 300px;
+}

@@ -113,23 +113,32 @@ const VaccinationResult = () => {
     setConfirmedLoading(true);
     try {
       const token = localStorage.getItem('token');
-      // Luôn gửi parentConfirmation đúng kiểu boolean theo tab
+      // Ensure parentConfirmation is properly set based on the current tab or passed value
+      const parentConfirmation = filterValues.hasOwnProperty('parentConfirmation') 
+        ? filterValues.parentConfirmation 
+        : parentConfirmationTab === 'confirmed';
+      
       const params = {
         ...filterValues,
-        parentConfirmation: parentConfirmationTab === 'confirmed',
+        parentConfirmation: parentConfirmation,
       };
+      
+      console.log('Fetching with params:', params); // Debug log
+      
       const config = { headers: { Authorization: `Bearer ${token}` }, params };
       let res = await VaccinationService.filterResult(config);
       setConfirmedResults(Array.isArray(res.data) ? res.data : []);
-      console.log(res.data);
+      console.log('Response data:', res.data);
     } catch (err) {
+      console.error('Error fetching results:', err);
       setConfirmedResults([]);
     }
     setConfirmedLoading(false);
   };
 
   useEffect(() => {
-    fetchConfirmedResults();
+    // Load confirmed results by default
+    fetchConfirmedResults({ parentConfirmation: true });
   }, []);
 
   const getCampaignInfo = (campaignId) => {
@@ -145,22 +154,46 @@ const VaccinationResult = () => {
     return studentInfoMap[studentId]?.className || '';
   };
 
-  // Xử lý filter
-  const handleFilter = (values) => {
-    setFilterForm(values);
+  // Real-time filter handling
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    const newFilterForm = { ...filterForm, [name]: value };
+    setFilterForm(newFilterForm);
+    
+    // Apply filter immediately
     fetchConfirmedResults({
-      ...values,
+      ...newFilterForm,
       parentConfirmation: parentConfirmationTab === 'confirmed',
     });
   };
 
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilterForm(prev => ({ ...prev, [name]: value }));
+  const handleSelectChange = (name, value) => {
+    const newFilterForm = { ...filterForm, [name]: value };
+    setFilterForm(newFilterForm);
+    
+    // Apply filter immediately
+    fetchConfirmedResults({
+      ...newFilterForm,
+      parentConfirmation: parentConfirmationTab === 'confirmed',
+    });
   };
 
   const handleDateChange = (name, value) => {
-    setFilterForm(prev => ({ ...prev, [name]: value ? value.format('YYYY-MM-DD') : '' }));
+    const newFilterForm = { ...filterForm, [name]: value ? value.format('YYYY-MM-DD') : null };
+    setFilterForm(newFilterForm);
+    
+    // Apply filter immediately
+    fetchConfirmedResults({
+      ...newFilterForm,
+      parentConfirmation: parentConfirmationTab === 'confirmed',
+    });
+  };
+
+  const handleClearFilters = () => {
+    setFilterForm({});
+    fetchConfirmedResults({ 
+      parentConfirmation: parentConfirmationTab === 'confirmed' 
+    });
   };
 
   // Xem chi tiết
@@ -232,7 +265,7 @@ const VaccinationResult = () => {
     setParentConfirmationTab(key);
     fetchConfirmedResults({
       ...filterForm,
-      parentConfirmation: key === 'confirmed',
+      parentConfirmation: key === 'confirmed' ? true : false,
     });
   };
 
@@ -285,18 +318,20 @@ const VaccinationResult = () => {
     {
       title: 'Thao tác',
       key: 'actions',
-      render: (_, record) => (
-        record.parentConfirmation ? (
+      render: (_, record) => {
+        const isConfirmed = record.result === 'SUCCESS';
+        return record.parentConfirmation ? (
           <Button 
-            type="primary" 
+            type={isConfirmed ? "default" : "primary"}
             size="small" 
-            icon={<EyeOutlined />}
+            icon={isConfirmed ? <EyeOutlined /> : <EditOutlined />}
             onClick={() => handleOpenDetail(record)}
+            disabled={isConfirmed}
           >
-            Xem chi tiết
+            {isConfirmed ? 'Đã xác nhận' : 'Xem chi tiết'}
           </Button>
-        ) : null
-      )
+        ) : null;
+      }
     }
   ];
 
@@ -331,7 +366,7 @@ const VaccinationResult = () => {
         }
         style={{ marginBottom: 24, borderRadius: 8 }}
       >
-        <Form layout="vertical" onFinish={handleFilter}>
+        <Form layout="vertical">
           <Row gutter={[16, 16]}>
             <Col xs={24} sm={12} md={6}>
               <Form.Item label="Tên lớp">
@@ -350,7 +385,7 @@ const VaccinationResult = () => {
                   name="campaignName"
                   placeholder="Chọn chiến dịch"
                   value={filterForm.campaignName || undefined}
-                  onChange={(value) => setFilterForm(prev => ({ ...prev, campaignName: value }))}
+                  onChange={(value) => handleSelectChange('campaignName', value)}
                   allowClear
                 >
                   {approvedCampaigns.map(campaign => (
@@ -391,20 +426,15 @@ const VaccinationResult = () => {
               </Form.Item>
             </Col>
           </Row>
-          <Row justify="end" gutter={[8, 8]}>
-            <Col>
-              <Button icon={<ClearOutlined />} onClick={() => { setFilterForm({}); fetchConfirmedResults({ parentConfirmation: parentConfirmationTab === 'confirmed' }); }}>
-                Xóa bộ lọc
-              </Button>
-            </Col>
+          <Row justify="end">
             <Col>
               <Button 
-            type="primary" 
-            
-            onClick={() => fetchConfirmedResults(filterForm)}
-          >
-            Tìm kiếm
-          </Button>
+                icon={<ClearOutlined />} 
+                onClick={handleClearFilters}
+                style={{ borderRadius: 8 }}
+              >
+                Xóa bộ lọc
+              </Button>
             </Col>
           </Row>
         </Form>

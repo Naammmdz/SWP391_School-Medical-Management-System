@@ -19,12 +19,12 @@ const BlockUser = () => {
   const fetchUserData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await userService.getAllUsers({
+      const userResponse = await userService.getUserByIdForAdmin(userId, {
         headers: {
           Authorization: `Bearer ${token}`
         }
       });
-      const foundUser = response.data.find(u => u.id === parseInt(userId));
+      const foundUser = userResponse.data
       if (foundUser) {
         setUser(foundUser);
       } else {
@@ -64,7 +64,7 @@ const BlockUser = () => {
 
   if (loading) {
     return (
-      <div style={{ maxWidth: 800, margin: '0 auto', padding: 24, marginTop: 50, textAlign: 'center' }}>
+      <div style={{ maxWidth: 800, margin: '0 auto', padding: 24, textAlign: 'center' }}>
         <Spin size="large" />
         <div style={{ marginTop: 16 }}>
           <Text>Đang tải dữ liệu...</Text>

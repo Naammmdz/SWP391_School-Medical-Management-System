@@ -2,10 +2,7 @@ package com.school.health.service;
 
 import com.school.health.dto.request.VaccinationCampaignRequestDTO;
 import com.school.health.dto.request.VaccinationRequestDTO;
-import com.school.health.dto.response.StudentResponseDTO;
-import com.school.health.dto.response.VaccinationCampaignResponseDTO;
-import com.school.health.dto.response.VaccinationResponseDTO;
-import com.school.health.dto.response.VaccinationResponseResultDTO;
+import com.school.health.dto.response.*;
 import com.school.health.entity.VaccinationCampaign;
 import com.school.health.enums.Status;
 
@@ -23,13 +20,13 @@ public interface VaccinationCampaignService {
 
     VaccinationCampaignResponseDTO updateVaccinationCampaign(Integer campaignId, VaccinationCampaignRequestDTO vaccinationCampaignRequestDTO);
 
-    VaccinationCampaignResponseDTO approveVaccinationCampaign(Integer campaignId, int approvedBy);
+    VaccinationCampaignResponseDTO approveVaccinationCampaign(Integer campaignId, int approvedBy, Status status, String rejectionReason);
 
     VaccinationCampaignResponseDTO updateVaccinationCampaignStatus(Integer campaignId, Status status);
 
     List<StudentResponseDTO> getStudentsRegistrations(Integer campaignId);
 
-    List<VaccinationCampaignResponseDTO> getApprovedVaccination();
+    List<VaccineV2CampaignResponseDTO> getApprovedCampaigns(int parentId);
 
     VaccinationResponseDTO registerStudentVaccine(VaccinationRequestDTO request);
 
@@ -65,4 +62,9 @@ public interface VaccinationCampaignService {
 
     List<VaccinationResponseResultDTO> getAllVaccinationResultsWithParentConfirmationTrue();
 
+    // Get all students eligible for a campaign based on target group
+    List<StudentResponseDTO> getAllStudentsInCampaign(Integer campaignId);
+
+    // Get all students with their vaccination status for a campaign
+    List<VaccinationResponseResultDTO> getStudentsWithVaccinationStatus(Integer campaignId);
 }

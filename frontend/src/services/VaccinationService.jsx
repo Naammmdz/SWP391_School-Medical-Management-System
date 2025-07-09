@@ -20,11 +20,12 @@ const VaccinationService = {
     approveVaccinationCampaign: (id, data, config) => {
         return axios.put(`${vaccinationApiUrl}/${id}/approve`, data, config);
     },
-    rejectVaccinationCampaign: (id, data, config) => {
-        return axios.put(`${vaccinationApiUrl}/${id}/cancel`, data, config);
+    cancelVaccinationCampaign: (id, config) => {
+        return axios.put(`${vaccinationApiUrl}/${id}/cancel`, null, config);
+
     },
     updateStatus: (id, status, config) => {
-        return axios.put(`${vaccinationApiUrl}/${id}/status/${status}`, data, config);
+        return axios.put(`${vaccinationApiUrl}/${id}/status/${status}`, null, config);
     },
     deleteVaccinationCampaign: (id, config) => {
         return axios.delete(`${vaccinationApiUrl}/${id}`, config);
@@ -70,6 +71,16 @@ const VaccinationService = {
     },
     updateVaccinationResult: (VaccinCheckId, data, config) => {
         return axios.put(`${vaccinationApiUrl}/${VaccinCheckId}/update`, data, config);
+    },
+    
+    // Get all students that can participate in a campaign (based on target group)
+    getAllStudentsInCampaign: (campaignId, config) => {
+        return axios.get(`${vaccinationApiUrl}/${campaignId}/all-students`, config);
+    },
+    
+    // Get all students with their vaccination status in a campaign
+    getStudentsWithVaccinationStatus: (campaignId, config) => {
+        return axios.get(`${vaccinationApiUrl}/${campaignId}/students-with-status`, config);
     },
     
 }

@@ -1,23 +1,24 @@
 package com.school.health.service.impl;
 
-import com.school.health.dto.request.InventoryRequestDTO;
+import com.school.health.dto.request.InventoryUsedInMedicalEventRequestDTO;
+import com.school.health.dto.request.InventoryUsedInMedicalEventUpdateRequestDTO;
 import com.school.health.dto.request.InventoryUsedRequestDTO;
-import com.school.health.dto.response.InventoryResponseDTO;
+import com.school.health.dto.request.InventoryUsedUpdateRequestDTO;
 import com.school.health.dto.response.InventoryUsedResponseDTO;
 import com.school.health.entity.Inventory;
 import com.school.health.entity.InventoryUsedLog;
-import com.school.health.entity.User;
+
+import com.school.health.event.noti.LowStockInventoryEvent;
 import com.school.health.exception.ResourceNotFoundException;
 import com.school.health.repository.InventoryRepo;
 import com.school.health.repository.InventoryUsedRepo;
 import com.school.health.repository.MedicalEventsRepository;
-import com.school.health.repository.UserRepository;
-import com.school.health.service.InventoryUsedLogService;
-import com.school.health.service.NotificationService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
-import java.util.List;
+import com.school.health.service.InventoryUsedLogService;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Service;
 
 @Service
 public class InventoryUsedServiceImpl implements InventoryUsedLogService {
@@ -29,22 +30,45 @@ public class InventoryUsedServiceImpl implements InventoryUsedLogService {
     @Autowired
     private InventoryUsedRepo inventoryUsedRepo;
     @Autowired
-    private NotificationService notificationService;
-    @Autowired
-    private UserRepository userRepo;
+    private ApplicationEventPublisher publisher;
     @Override
 
-    public InventoryUsedResponseDTO createInventoryUsed(Integer id, InventoryUsedRequestDTO DTO) {
+    public InventoryUsedResponseDTO createInventoryUsed(Integer itemId, InventoryUsedRequestDTO DTO) {
         InventoryUsedLog inventoryUsedLog = new InventoryUsedLog();
-        inventoryUsedLog.setItem(inventoryRepo.findById(id).get());
+        inventoryUsedLog.setItem(inventoryRepo.findById(itemId).get());
         inventoryUsedLog.setQuantityUsed(DTO.getQuantityUsed());
-        inventoryUsedLog.setRelatedEvent(medicalEventsRepo.getReferenceById(DTO.getRelatedEvenId()));
+        inventoryUsedLog.setRelatedEvent(medicalEventsRepo.getReferenceById(DTO.getRelatedEventId()));
         inventoryUsedLog.setNotes(DTO.getNotes());
-        updateInventoryItem(id,DTO);
+        updateInventoryItem(itemId,DTO.getQuantityUsed());
         inventoryUsedRepo.save(inventoryUsedLog);
         return mapDTO(inventoryUsedLog);
 
     }
+    @Override
+    public InventoryUsedResponseDTO createInventoryUsedInMedicalEvent(Integer evenID,InventoryUsedInMedicalEventRequestDTO DTO) {
+        InventoryUsedLog inventoryUsedLog = new InventoryUsedLog();
+        inventoryUsedLog.setItem(inventoryRepo.getReferenceById(DTO.getItemId()));
+        inventoryUsedLog.setQuantityUsed(DTO.getQuantityUsed());
+        inventoryUsedLog.setRelatedEvent(medicalEventsRepo.getReferenceById(evenID));
+        inventoryUsedLog.setNotes(DTO.getNotes());
+        updateInventoryItem(DTO.getItemId(),DTO.getQuantityUsed());
+        inventoryUsedRepo.save(inventoryUsedLog);
+        return mapDTO(inventoryUsedLog);
+
+    }
+    public InventoryUsedResponseDTO InventoryUsedInMedicalEvent(Integer evenID, InventoryUsedInMedicalEventUpdateRequestDTO DTO) {
+        InventoryUsedLog inventoryUsedLog = new InventoryUsedLog();
+        inventoryUsedLog.setItem(inventoryRepo.findById(DTO.getItemId()).get());
+        inventoryUsedLog.setQuantityUsed(DTO.getQuantityUsed());
+        inventoryUsedLog.setRelatedEvent(medicalEventsRepo.findById(evenID).orElseThrow());
+        inventoryUsedLog.setNotes(DTO.getNotes());
+        inventoryUsedLog.setId(DTO.getId());
+        updateInventoryItem(DTO.getItemId(),DTO.getQuantityUsed());
+        inventoryUsedRepo.save(inventoryUsedLog);
+        return mapDTO(inventoryUsedLog);
+
+    }
+
 
     @Override
     public InventoryUsedResponseDTO mapDTO(InventoryUsedLog inventoryUsedLog) {
@@ -58,21 +82,73 @@ public class InventoryUsedServiceImpl implements InventoryUsedLogService {
         return DTO;
     }
 
-    public Inventory updateInventoryItem(Integer id, InventoryUsedRequestDTO dto) {
-        Inventory item = inventoryRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException("Item Not Found"));
+    //Cập nhật lại cái vật  tư đã dùng
+    @Override
+    public InventoryUsedResponseDTO updateInventoryUsed(Integer inventoryUsedId, InventoryUsedUpdateRequestDTO dto) {
 
-        if (dto.getQuantityUsed()> item.getQuantity()) {
-            throw new IllegalArgumentException("Số lượng sử dụng vượt quá tồn kho");
+        InventoryUsedLog log = inventoryUsedRepo.findById(inventoryUsedId)
+                .orElseThrow(() -> new ResourceNotFoundException("InventoryUsedLog not found"));
+        // trước khi cập nhật trả lại kho rồi trừ lại sau
+        //
+        backUpdateInventoryItem(log.getItem().getId(),log.getQuantityUsed());
+        // Cập nhật vật tư nếu có
+        if (dto.getItemId() != null) {
+            Inventory item = inventoryRepo.findById(dto.getItemId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Inventory not found"));
+            log.setItem(item);
         }
 
-        item.setQuantity(item.getQuantity() - dto.getQuantityUsed());
+        // Cập nhật số lượng nếu có
+        if (dto.getQuantityUsed() != null && dto.getQuantityUsed() > 0) {
+            log.setQuantityUsed(dto.getQuantityUsed());
+        }
+
+        // Cập nhật sự kiện y tế nếu có
+        if (dto.getRelatedEventId() != null) {
+            log.setRelatedEvent(medicalEventsRepo.getReferenceById(dto.getRelatedEventId()));
+
+        }
+
+        // Cập nhật ghi chú nếu có
+        if (dto.getNotes() != null && !dto.getNotes().isBlank()) {
+            log.setNotes(dto.getNotes());
+        }
+
+        inventoryUsedRepo.save(log);
+        updateInventoryItem(dto.getItemId(),dto.getQuantityUsed());
+
+
+        // Trả về DTO phản hồi
+        return mapDTO(log);
+    }
+
+
+
+//Update số lượng trong kho sau khi dùng
+    public Inventory updateInventoryItem(Integer itemId, Integer quantityUsed) {
+        Inventory item = inventoryRepo.findById(itemId).orElseThrow(() -> new ResourceNotFoundException("Item Not Found"));
+
+        if (quantityUsed > item.getQuantity()) {
+            throw new IllegalArgumentException("Số lượng sử dụng vượt quá tồn kho");
+        }
+        item.setQuantity(item.getQuantity() - quantityUsed);
+        // Nếu như item sau khi dùng mà ít hơn mức minStock thì gửi Event thông báo
         if(item.getQuantity()<=item.getMinStockLevel()){
-           List<User> users = userRepo.findAllAdminAndNurse();
-            users.forEach(user -> {
-                notificationService.createNotification(user.getUserId(),"Vật phẩm/thuốc trong kho đang sắp hết",item.getName() +" đang sắp hết trong kho, vui lòng nhập thêm hàng để tránh việc thiếu sót vật tư khi xử lí các sự kiện y tế!!");
-            });
+            publisher.publishEvent(new LowStockInventoryEvent(item));
         }
         return inventoryRepo.save(item);
     }
 
+    // cập nhật lại số lượng trong kho trước khi trừ để trừ cái mới
+    public Inventory backUpdateInventoryItem(Integer itemId, Integer quantityUsed) {
+        Inventory item = inventoryRepo.findById(itemId).orElseThrow(() -> new ResourceNotFoundException("Item Not Found"));
+       item.setQuantity(item.getQuantity() + quantityUsed);
+        return inventoryRepo.save(item);
+    }
+
+    public void deleteInventoryUsed(Integer inventoryUsedId) {
+       InventoryUsedLog iUsed =  inventoryUsedRepo.findById(inventoryUsedId).orElseThrow(() -> new ResourceNotFoundException("InventoryUsedLog not found"));
+        backUpdateInventoryItem(iUsed.getItem().getId(),iUsed.getQuantityUsed());
+        inventoryUsedRepo.deleteById(inventoryUsedId);
+    }
 }

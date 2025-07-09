@@ -35,6 +35,9 @@ const userService = {
     },
     getParentId: (id, config) => {
         return axios.get(USER_URL + `/user/${id}`, config);
+    },
+    getUserByIdForAdmin: (id, config) => {
+        return axios.get(USER_URL + `/user/${id}`, config);
     }
     
     

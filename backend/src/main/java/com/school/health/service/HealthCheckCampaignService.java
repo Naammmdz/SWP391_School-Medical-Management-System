@@ -19,13 +19,13 @@ public interface HealthCheckCampaignService {
 
     HealthCampaignResponseDTO updateCampaign(int campaignId, HealthCampaignRequestDTO healthCampaignRequestDTO);
 
-    HealthCampaignResponseDTO approveCampaign(int campaignId, int approvedBy);
+    HealthCampaignResponseDTO approveCampaign(int campaignId, int approvedBy, Status status, String rejectionReason);
 
     HealthCampaignResponseDTO updateCampaignStatus(int campaignId, Status status);
 
     List<StudentResponseDTO> getStudentsRegistrations(int campaignId);
 
-    List<HealthCampaignResponseDTO> getApprovedCampaigns();
+    List<HealthV2CampaignResponseDTO> getApprovedCampaigns(int parentId);
 
     HealthCheckResponseDTO registerStudentHealthCheck(HealthCheckRequestDTO request);
 
