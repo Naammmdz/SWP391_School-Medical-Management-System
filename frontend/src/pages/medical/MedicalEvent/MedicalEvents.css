@@ -808,44 +808,7 @@
   font-style: italic;
 }
 
-/* Enhanced Class Selection Styles */
-.class-selection-row {
-  margin-bottom: 15px;
-  padding: 15px;
-  background-color: #f8f9fa;
-  border-radius: 5px;
-  border: 1px solid #dee2e6;
-}
-
-.class-selection-row label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 600;
-  color: #495057;
-  font-size: 14px;
-}
-
-.class-dropdown {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
-  font-size: 14px;
-  background-color: white;
-  cursor: pointer;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.class-dropdown:focus {
-  outline: none;
-  border-color: #28a745;
-  box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.25);
-}
-
-.class-actions {
-  margin-top: 15px;
-  text-align: center;
-}
+/* Removed unused class selection styles since they're now handled in modal */
 
 .open-student-modal-btn {
   background-color: #007bff;
@@ -874,6 +837,11 @@
   border-radius: 6px;
   padding: 15px;
   background-color: #f8f9fa;
+}
+
+.student-selection-actions {
+  margin-bottom: 15px;
+  text-align: center;
 }
 
 .selected-students-summary {

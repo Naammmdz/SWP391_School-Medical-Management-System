@@ -72,10 +72,8 @@ const MedicalEvents = () => {
   const [availableStudents, setAvailableStudents] = useState([]);
   const [selectedStudents, setSelectedStudents] = useState([]);
   const [availableClasses, setAvailableClasses] = useState([]);
-  const [selectedClass, setSelectedClass] = useState('');
-  const [studentsInClass, setStudentsInClass] = useState([]);
   const [studentSelectionModalOpen, setStudentSelectionModalOpen] = useState(false);
-  // State cho chế độ chỉnh sửa
+  const [resetStudentModal, setResetStudentModal] = useState(false);
   const [editing, setEditing] = useState(false);
   // State cho hiển thị modal
   const [modalOpen, setModalOpen] = useState(false);
@@ -130,25 +128,10 @@ const MedicalEvents = () => {
     }
   };
 
-  // Hàm lấy danh sách học sinh trong lớp
-  const fetchStudentsInClass = async (className) => {
-    try {
-      const response = await studentService.getStudentsByClassName(className);
-      if (response.data && Array.isArray(response.data)) {
-        setStudentsInClass(response.data);
-      }
-    } catch (error) {
-      console.error('Error fetching students in class:', error);
-      setStudentsInClass([]);
-    }
-  };
 
   // Hàm mở modal chọn học sinh
   const handleOpenStudentModal = () => {
-    if (selectedClass) {
-      fetchStudentsInClass(selectedClass);
-      setStudentSelectionModalOpen(true);
-    }
+    setStudentSelectionModalOpen(true);
   };
 
   // Hàm đóng modal chọn học sinh
@@ -847,34 +830,15 @@ const MedicalEvents = () => {
                 <div className="form-group">
                   <label htmlFor="students">Học sinh liên quan <span className="required">*</span></label>
                   <div className="students-selection">
-                    <div className="class-selection-row">
-                      <label htmlFor="classSelect">Chọn lớp để hiển thị học sinh:</label>
-                      <select
-                        id="classSelect"
-                        value={selectedClass}
-                        onChange={(e) => setSelectedClass(e.target.value)}
-                        className="class-dropdown"
+                    <div className="student-selection-actions">
+                      <button 
+                        type="button" 
+                        onClick={handleOpenStudentModal}
+                        className="open-student-modal-btn"
                       >
-                        <option value="">-- Chọn lớp --</option>
-                        {availableClasses.map(classItem => (
-                          <option key={classItem.id} value={classItem.id}>
-                            {classItem.name}
-                          </option>
-                        ))}
-                      </select>
+                        Chọn học sinh
+                      </button>
                     </div>
-                    
-                    {selectedClass && (
-                      <div className="class-actions">
-                        <button 
-                          type="button" 
-                          onClick={handleOpenStudentModal}
-                          className="open-student-modal-btn"
-                        >
-                          Chọn học sinh từ lớp {selectedClass}
-                        </button>
-                      </div>
-                    )}
                     
                     {currentEvent.stuId.length > 0 && (
                       <div className="selected-students-summary">
