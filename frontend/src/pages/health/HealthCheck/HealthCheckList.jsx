@@ -16,6 +16,9 @@ const HealthCheckList = () => {
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState(null);
   const users = JSON.parse(localStorage.getItem('users') || '[]');
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+  const [rejectingCampaignId, setRejectingCampaignId] = useState(null);
 
   const getUserNameById = (id) => {
     const user = users.find(u => String(u.id) === String(id));
@@ -83,9 +86,19 @@ const HealthCheckList = () => {
 
   // Hàm reject chiến dịch
   const handleReject = async (campaignId) => {
-    setRejectingId(campaignId);
+    setRejectingCampaignId(campaignId);
+    setRejectReason('');
+    setRejectModalOpen(true);
+  };
+
+  const handleConfirmReject = async () => {
+    if (!rejectReason.trim()) {
+      message.warning('Vui lòng nhập lý do từ chối!');
+      return;
+    }
     try {
-      await HealthCheckService.rejectHealthCheckCampaign(campaignId, {
+      await HealthCheckService.rejectHealthCheckCampaign(rejectingCampaignId, {
+        params: { rejectionReason: rejectReason },
         headers: { Authorization: `Bearer ${token}` }
       });
       message.success('Từ chối chiến dịch thành công!');
@@ -95,10 +108,11 @@ const HealthCheckList = () => {
       });
       setCampaigns(data);
       localStorage.setItem('healthCheckCampaigns', JSON.stringify(data));
+      setRejectModalOpen(false);
     } catch (err) {
       message.error('Từ chối chiến dịch thất bại!');
     }
-    setRejectingId(null);
+    setRejectingCampaignId(null);
   };
 
   // Hàm format ngày dự kiến
@@ -200,6 +214,30 @@ const HealthCheckList = () => {
             <div><b>Ngày tạo:</b> {selectedCampaign.createdAt}</div>
           </div>
         )}
+      </Modal>
+      {/* Modal xác nhận từ chối với lý do */}
+      <Modal
+        open={rejectModalOpen}
+        title={<span>Từ chối chiến dịch</span>}
+        onCancel={() => setRejectModalOpen(false)}
+        onOk={handleConfirmReject}
+        okText="Từ chối"
+        okType="danger"
+        cancelText="Hủy"
+        confirmLoading={rejectingId === rejectingCampaignId}
+      >
+        <div style={{ marginBottom: 12 }}>
+          Bạn có chắc muốn từ chối chiến dịch này? Hành động này không thể hoàn tác.<br/>
+          <b>Vui lòng nhập lý do từ chối:</b>
+        </div>
+        <textarea
+          rows={4}
+          style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #d9d9d9' }}
+          placeholder="Nhập lý do từ chối..."
+          value={rejectReason}
+          onChange={e => setRejectReason(e.target.value)}
+          maxLength={255}
+        />
       </Modal>
     </div>
   );
