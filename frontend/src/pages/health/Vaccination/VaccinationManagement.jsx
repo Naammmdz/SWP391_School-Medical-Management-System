@@ -58,6 +58,10 @@ const VaccinationManagement = () => {
   // Modal states
   const [notificationModalOpen, setNotificationModalOpen] = useState(false);
   const [currentCampaign, setCurrentCampaign] = useState(null);
+  // Thêm state cho modal hủy
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelTarget, setCancelTarget] = useState(null);
   
   // User info
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -156,31 +160,36 @@ const VaccinationManagement = () => {
 
   // Handle cancel
   const handleCancel = (record) => {
-    modal.confirm({
-      title: 'Xác nhận hủy chiến dịch',
-      icon: <ExclamationCircleOutlined />,
-      content: `Bạn có chắc muốn hủy chiến dịch "${record.title}"? Hành động này không thể hoàn tác.`,
-      okText: 'Hủy chiến dịch',
-      cancelText: 'Không',
-      okType: 'danger',
-      onOk: async () => {
-        try {
-          setLoading(true);
-          const token = localStorage.getItem('token');
-          await VaccinationService.cancelVaccinationCampaign(
-            record.id,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-          message.success('Đã hủy chiến dịch thành công');
-          fetchVaccinationEvents();
-        } catch (error) {
-          const errorMessage = error.response?.data?.message || 'Có lỗi khi hủy chiến dịch';
-          message.error(errorMessage);
-        } finally {
-          setLoading(false);
+    setCancelTarget(record);
+    setCancelReason('');
+    setCancelModalOpen(true);
+  };
+
+  const handleConfirmCancel = async () => {
+    if (!cancelReason.trim()) {
+      message.warning('Vui lòng nhập lý do hủy chiến dịch!');
+      return;
+    }
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      await VaccinationService.cancelVaccinationCampaign(
+        cancelTarget.id,
+        // Truyền rejectionReason dưới dạng query param
+        { 
+          params: { rejectionReason: cancelReason },
+          headers: { Authorization: `Bearer ${token}` }
         }
-      },
-    });
+      );
+      message.success('Đã hủy chiến dịch thành công');
+      setCancelModalOpen(false);
+      fetchVaccinationEvents();
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Có lỗi khi hủy chiến dịch';
+      message.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
 
@@ -740,6 +749,28 @@ const VaccinationManagement = () => {
         </Form>
       </Modal>
 
+      {/* Cancel Campaign Modal */}
+      <Modal
+        title={<span><ExclamationCircleOutlined style={{ color: '#ff4d4f', marginRight: 8 }} />Xác nhận hủy chiến dịch</span>}
+        open={cancelModalOpen}
+        onCancel={() => setCancelModalOpen(false)}
+        onOk={handleConfirmCancel}
+        okText="Hủy chiến dịch"
+        okType="danger"
+        cancelText="Không"
+        confirmLoading={loading}
+      >
+        <div style={{ marginBottom: 12 }}>
+          Bạn có chắc muốn hủy chiến dịch <b>"{cancelTarget?.title}"</b>? Hành động này không thể hoàn tác.
+        </div>
+        <Input.TextArea
+          rows={4}
+          placeholder="Nhập lý do hủy chiến dịch..."
+          value={cancelReason}
+          onChange={e => setCancelReason(e.target.value)}
+          maxLength={255}
+        />
+      </Modal>
     </div>
   );
 };
