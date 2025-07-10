@@ -53,6 +53,7 @@ const MedicalEvents = () => {
   // State cho inventory items used
   const [inventoryItems, setInventoryItems] = useState([]);
   const [selectedInventoryItems, setSelectedInventoryItems] = useState([]);
+  const [inventoryUsageLogs, setInventoryUsageLogs] = useState([]);
   // State cho form thêm/sửa sự cố - matching backend DTO
   const [currentEvent, setCurrentEvent] = useState({
     id: null,
@@ -214,17 +215,35 @@ const MedicalEvents = () => {
       setLoading(false);
     } catch (error) {
       console.error('Error fetching medical events:', error);
+      console.error('Error response:', error.response);
+      console.error('Error message:', error.message);
+      
+      let errorMessage = 'Failed to fetch medical events. Please try again.';
       
       // Check if it's an authentication error
       if (error.response?.status === 401) {
-        alert('Authentication failed. Please login again.');
+        errorMessage = 'Authentication failed. Please login again.';
         // Redirect to login page
         window.location.href = '/login';
       } else if (error.response?.status === 403) {
-        alert('Access denied. You need NURSE role to access medical events.');
-      } else {
-        alert('Failed to fetch medical events. Please try again.');
+        errorMessage = 'Access denied. You need NURSE role to access medical events.';
+      } else if (error.response?.status === 400) {
+        // Bad request - likely invalid filter parameters
+        const serverMessage = error.response?.data?.message || error.response?.data || 'Invalid filter parameters';
+        errorMessage = `Invalid request: ${serverMessage}`;
+        console.error('Server response data:', error.response?.data);
+      } else if (error.response?.status === 500) {
+        // Internal server error
+        const serverMessage = error.response?.data?.message || error.response?.data || 'Internal server error';
+        errorMessage = `Server error: ${serverMessage}`;
+        console.error('Server response data:', error.response?.data);
+      } else if (error.request) {
+        // Network error
+        errorMessage = 'Network error. Please check your connection.';
+        console.error('Network error - no response received:', error.request);
       }
+      
+      alert(errorMessage);
       
       setMedicalEvents([]);
       setLoading(false);
@@ -352,6 +371,7 @@ const MedicalEvents = () => {
     });
     setSelectedStudents([]);
     setSelectedInventoryItems([]);
+    setInventoryUsageLogs([]);
   };
 
   // Hàm cập nhật sự cố y tế
@@ -398,20 +418,94 @@ const MedicalEvents = () => {
     }
   };
 
+  // Hàm lấy inventory usage logs theo medical event ID và trả về chúng
+  const fetchInventoryUsageLogsAndReturn = async (medicalEventId) => {
+    try {
+      console.log('=== FETCHING INVENTORY USAGE LOGS ===');
+      console.log('Medical Event ID:', medicalEventId);
+      
+      const response = await InventoryService.getInventoryUsageLogsByMedicalEventId(medicalEventId);
+      console.log('Raw API response:', response);
+      console.log('Response type:', typeof response);
+      console.log('Is array:', Array.isArray(response));
+      
+      // Handle different response formats
+      let usageLogs = [];
+      if (Array.isArray(response)) {
+        usageLogs = response;
+        console.log('Using direct array response');
+      } else if (response && Array.isArray(response.data)) {
+        usageLogs = response.data;
+        console.log('Using response.data array');
+      } else if (response && Array.isArray(response.content)) {
+        usageLogs = response.content;
+        console.log('Using response.content array');
+      } else {
+        console.log('No valid array found in response');
+        console.log('Response structure:', JSON.stringify(response, null, 2));
+      }
+      
+      console.log('Final usage logs:', usageLogs);
+      console.log('Usage logs count:', usageLogs.length);
+      
+      // Before returning or setting the logs, let's clean up if necessary
+      setInventoryUsageLogs(usageLogs);
+      return usageLogs;
+    } catch (error) {
+      console.error('=== ERROR FETCHING INVENTORY USAGE LOGS ===');
+      console.error('Error details:', error);
+      if (error.response) {
+        console.error('Error response status:', error.response.status);
+        console.error('Error response data:', error.response.data);
+      }
+      setInventoryUsageLogs([]);
+      return [];
+    }
+  };
+
   // Hàm mở form chỉnh sửa
-  const editMedicalEvent = (event) => {
+  const editMedicalEvent = async (event) => {
+    setLoading(true);
     setEditing(true);
-    setCurrentEvent({...event});
-    // Set selected students for multi-select
-    if (event.stuId && Array.isArray(event.stuId)) {
-      const students = event.stuId.map(id => availableStudents.find(s => s.id === id)).filter(Boolean);
-      setSelectedStudents(students);
+    try {
+      const response = await MedicalEventService.getMedicalEventById(event.id);
+      const fullEventData = response.data;
+      setCurrentEvent({...fullEventData});
+      
+      // Set selected students for multi-select
+      if (fullEventData.stuId && Array.isArray(fullEventData.stuId)) {
+        const students = fullEventData.stuId.map(id => availableStudents.find(s => s.id === id)).filter(Boolean);
+        setSelectedStudents(students);
+      }
+
+      // Set selected inventory items for editing
+      if (fullEventData.relatedItemUsed && Array.isArray(fullEventData.relatedItemUsed)) {
+        setSelectedInventoryItems(fullEventData.relatedItemUsed);
+      }
+      
+      // Fetch inventory usage logs for this medical event
+      const fetchedLogs = await fetchInventoryUsageLogsAndReturn(event.id);
+      
+      // Fallback: if no usage logs found, try to use existing relatedItemUsed data
+      if (fetchedLogs.length === 0 && fullEventData.relatedItemUsed && fullEventData.relatedItemUsed.length > 0) {
+        console.log('Using fallback: converting relatedItemUsed to usage logs format');
+        const fallbackLogs = fullEventData.relatedItemUsed.map(item => ({
+          itemId: item.inventoryId || item.itemId,
+          quantityUsed: item.quantity || item.quantityUsed,
+          notes: item.notes || item.usageNote,
+          usedDate: fullEventData.eventDate || fullEventData.createdAt,
+          usedBy: fullEventData.createdBy || 'Unknown'
+        }));
+        console.log('Fallback usage logs:', fallbackLogs);
+        setInventoryUsageLogs(fallbackLogs);
+      }
+      
+      setModalOpen(true);
+    } catch (error) {
+      console.error('Error fetching medical event details:', error);
+      alert('Failed to load event details. Please try again.');
     }
-    // Set selected inventory items for editing
-    if (event.relatedItemUsed && Array.isArray(event.relatedItemUsed)) {
-      setSelectedInventoryItems(event.relatedItemUsed);
-    }
-    setModalOpen(true);
+    setLoading(false);
   };
 
   // Hàm xem chi tiết sự cố y tế
@@ -588,11 +682,11 @@ const MedicalEvents = () => {
     const filterParams = {...filters};
     
     // Convert UI date filters to DTO format
-    if (uiFilters.fromDate) {
-      filterParams.from = uiFilters.fromDate;
+if (uiFilters.fromDate) {
+      filterParams.from = `${uiFilters.fromDate}T00:00:00`;
     }
-    if (uiFilters.toDate) {
-      filterParams.to = uiFilters.toDate;
+if (uiFilters.toDate) {
+      filterParams.to = `${uiFilters.toDate}T23:59:59`;
     }
     
     // Remove empty filters
@@ -1234,6 +1328,63 @@ fetchMedicalEvents();
                   </div>
                 </div>
               </div>
+              
+              {/* Inventory Usage Logs Section - Only show in edit mode */}
+              {editing && currentEvent.id && (
+                <div className="form-group">
+                  <label>Lịch sử sử dụng vật phẩm y tế</label>
+                  <div className="inventory-usage-logs">
+                    {inventoryUsageLogs.length > 0 ? (
+                      <div className="usage-logs-container">
+                        <h4>Các vật phẩm đã sử dụng trong sự cố này:</h4>
+                        <div className="usage-logs-list">
+                          {inventoryUsageLogs.map((log, index) => {
+                            const inventoryItem = inventoryItems.find(item => 
+                              (item.id || item.inventoryId) === log.itemId
+                            );
+                            const itemName = inventoryItem?.name || inventoryItem?.itemName || log.itemName || `Vật phẩm ID: ${log.itemId}`;
+                            
+                            return (
+                              <div key={index} className="usage-log-item">
+                                <div className="log-item-header">
+                                  <strong>{itemName}</strong>
+                                  <span className="log-item-id">ID: {log.itemId}</span>
+                                </div>
+                                <div className="log-item-details">
+                                  <div className="log-detail-row">
+                                    <span className="log-label">Số lượng sử dụng:</span>
+                                    <span className="log-value">{log.quantityUsed || log.quantity || 0}</span>
+                                  </div>
+                                  <div className="log-detail-row">
+                                    <span className="log-label">Ngày sử dụng:</span>
+                                    <span className="log-value">{log.usedDate ? new Date(log.usedDate).toLocaleString('vi-VN') : 'Không có'}</span>
+                                  </div>
+                                  {log.notes && (
+                                    <div className="log-detail-row">
+                                      <span className="log-label">Ghi chú:</span>
+                                      <span className="log-value">{log.notes}</span>
+                                    </div>
+                                  )}
+                                  {log.usedBy && (
+                                    <div className="log-detail-row">
+                                      <span className="log-label">Người sử dụng:</span>
+                                      <span className="log-value">{log.usedBy}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="no-usage-logs">
+                        <p>Chưa có lịch sử sử dụng vật phẩm y tế cho sự cố này.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
               
               <div className="form-group">
                 <label htmlFor="notes">Ghi chú</label>

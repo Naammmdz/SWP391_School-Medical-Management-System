@@ -19,8 +19,8 @@ public interface MedicalEventsRepository extends JpaRepository<MedicalEvent, Int
     SELECT DISTINCT m FROM MedicalEvent m
     JOIN m.studentList s
     WHERE
-        (:from IS NULL OR m.createdAt >= :from)
-        AND (:to IS NULL OR m.createdAt <= :to)
+        (:from IS NULL OR m.eventDate >= :from)
+        AND (:to IS NULL OR m.eventDate <= :to)
         AND (:eventType IS NULL OR m.eventType LIKE CONCAT('%', :eventType, '%'))
         AND (:stuId IS NULL OR s.studentId  = :stuId)
         AND (:createBy IS NULL OR m.createdBy.userId = :createBy)

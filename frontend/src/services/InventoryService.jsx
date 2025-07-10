@@ -47,5 +47,20 @@ const InventoryService = {
       throw error;
     }
   },
+  
+  getInventoryUsageLogsByMedicalEventId: async (medicalEventId, config) => {
+    try {
+      const token = localStorage.getItem('token');
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      };
+      const response = await axios.get(`${API_URL}/usage-logs/medical-event/${medicalEventId}`, { headers, ...config });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching inventory usage logs:', error);
+      throw error;
+    }
+  },
 }
 export default InventoryService;

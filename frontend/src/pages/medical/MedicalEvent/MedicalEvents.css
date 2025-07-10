@@ -198,6 +198,99 @@
 
 .btn-icon {
   font-size: 12px;
+}
+
+/* Inventory Usage Logs Styles */
+.inventory-usage-logs {
+  margin-top: 10px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 5px;
+  border: 1px solid #dee2e6;
+}
+
+.usage-logs-container h4 {
+  margin: 0 0 15px 0;
+  color: #495057;
+  font-size: 16px;
+  font-weight: 600;
+  border-bottom: 1px solid #dee2e6;
+  padding-bottom: 5px;
+}
+
+.usage-logs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.usage-log-item {
+  background-color: white;
+  border: 1px solid #dee2e6;
+  border-radius: 5px;
+  padding: 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.log-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.log-item-header strong {
+  color: #495057;
+  font-size: 14px;
+}
+
+.log-item-id {
+  color: #6c757d;
+  font-size: 12px;
+  background-color: #e9ecef;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.log-item-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.log-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+}
+
+.log-label {
+  font-weight: 500;
+  color: #495057;
+  font-size: 13px;
+  min-width: 120px;
+}
+
+.log-value {
+  color: #212529;
+  font-size: 13px;
+  text-align: right;
+  flex: 1;
+}
+
+.no-usage-logs {
+  text-align: center;
+  padding: 20px;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.no-usage-logs p {
+  margin: 0;
+  font-size: 14px;
   line-height: 1;
 }
 
