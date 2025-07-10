@@ -14,6 +14,7 @@ public class StudentResponseDTO {
     private String className;
     private boolean isActive;
     private Integer parentId;
+    private String phone;
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
 }

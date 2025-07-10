@@ -27,4 +27,6 @@ public class HealthProfileResponseDTO {
     private String notes;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
+    private String parentName;
+    private String phone;
 }
