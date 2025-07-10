@@ -69,20 +69,19 @@ const VaccinationManagement = () => {
   const isAdmin = user.userRole === 'ROLE_ADMIN';
   
   const getOrganizerName = (organizerId, record) => {
-    // Try different organizer field names from the record
-    const organizer = organizerId || record?.organizer || record?.organizerName || record?.createdBy || record?.approvedBy;
+    // Use organizer field from backend response
+    const organizer = organizerId || record?.organizer;
     
     if (!organizer) {
-      // If no organizer ID, try to get current user info as fallback
-      return user?.fullName || user?.name || 'Không xác định';
+      return 'Không xác định';
     }
     
-    // If organizer is already a string (name), return it
+    // If organizer is already a string (organization name), return it
     if (typeof organizer === 'string' && organizer !== '' && !Number.isInteger(Number(organizer))) {
       return organizer;
     }
     
-    // Try to find user by ID
+    // Try to find user by ID if it's a number
     const foundUser = users.find(u => 
       u.id === organizer || 
       u.userId === organizer || 
@@ -103,21 +102,26 @@ const VaccinationManagement = () => {
       });
       const data = Array.isArray(response.data) ? response.data : response.data.content || [];
       const mappedData = data.map((item, idx) => ({
-        key: item.id || idx,
-        id: item.id || item.campaignId || idx + 1,
+        key: item.campaignId || idx,
+        id: item.campaignId || idx + 1,
         title: item.campaignName || '',
         vaccineType: item.type || '',
         description: item.description || '',
         scheduledDate: item.scheduledDate || '',
         scheduledTime: item.scheduledTime || '09:00',
-        location: item.location || 'Phòng y tế trường',
+        location: item.address || 'Phòng y tế trường',
         targetClass: item.targetGroup || '',
         status: item.status || 'PENDING',
         notes: item.notes || '',
         vaccineBatch: item.vaccineBatch || '',
         manufacturer: item.manufacturer || '',
         doseAmount: item.doseAmount || '',
-        organizer: item.organizer || item.approvedBy || '',
+        organizer: item.organizer || '',
+        createdBy: item.createdBy || '',
+        approvedBy: item.approvedBy || '',
+        approvedAt: item.approvedAt || '',
+        createdAt: item.createdAt || '',
+        rejectionReason: item.rejectionReason || '',
         requiredDocuments: item.requiredDocuments || '',
         responses: item.responses || {
           total: 0,
@@ -247,7 +251,11 @@ const VaccinationManagement = () => {
     let matchesDateRange = true;
     if (dateRange && dateRange.length === 2) {
       const eventDate = dayjs(event.scheduledDate);
-      matchesDateRange = eventDate.isAfter(dateRange[0]) && eventDate.isBefore(dateRange[1]);
+      const startDate = dayjs(dateRange[0]);
+      const endDate = dayjs(dateRange[1]);
+      // Check if eventDate is within range (inclusive): startDate <= eventDate <= endDate
+      matchesDateRange = (eventDate.isAfter(startDate) || eventDate.isSame(startDate, 'day')) && 
+                        (eventDate.isBefore(endDate) || eventDate.isSame(endDate, 'day'));
     }
     
     return matchesSearch && matchesStatus && matchesVaccineType && matchesDateRange;
@@ -368,9 +376,14 @@ const VaccinationManagement = () => {
                 <Text>{record.description || 'Không có mô tả'}</Text>
               </div>
               <div style={{ marginBottom: 12 }}>
-                <Text strong style={{ color: '#595959' }}>Thời gian:</Text>
+                <Text strong style={{ color: '#595959' }}>Loại vắc-xin:</Text>
                 <br />
-                <Text>{record.scheduledTime || '09:00'}</Text>
+                <Text>{record.vaccineType || 'Không xác định'}</Text>
+              </div>
+              <div style={{ marginBottom: 12 }}>
+                <Text strong style={{ color: '#595959' }}>Ngày tiêm:</Text>
+                <br />
+                <Text>{record.scheduledDate ? dayjs(record.scheduledDate).format('DD/MM/YYYY') : 'Chưa xác định'}</Text>
               </div>
               <div style={{ marginBottom: 12 }}>
                 <Text strong style={{ color: '#595959' }}>Địa điểm:</Text>
@@ -548,14 +561,14 @@ const VaccinationManagement = () => {
         <Row gutter={[16, 16]} align="middle">
           <Col xs={24} sm={8}>
             <Input
-              placeholder="Tìm kiếm theo tên hoặc loại vắc-xin..."
+              placeholder="Tìm kiếm theo tên chiến dịch tiêm chủng"
               prefix={<SearchOutlined />}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               allowClear
             />
           </Col>
-          <Col xs={24} sm={4}>
+          <Col xs={24} sm={6}>
             <Select
               placeholder="Chọn trạng thái"
               value={selectedStatus}
@@ -570,7 +583,7 @@ const VaccinationManagement = () => {
               ))}
             </Select>
           </Col>
-          <Col xs={24} sm={4}>
+          {/* <Col xs={24} sm={4}>
             <Select
               placeholder="Chọn loại vắc-xin"
               value={selectedVaccineType}
@@ -584,8 +597,8 @@ const VaccinationManagement = () => {
                 </Option>
               ))}
             </Select>
-          </Col>
-          <Col xs={24} sm={6}>
+          </Col> */}
+          <Col xs={24} sm={8}>
             <RangePicker
               placeholder={['Từ ngày', 'Đến ngày']}
               value={dateRange}

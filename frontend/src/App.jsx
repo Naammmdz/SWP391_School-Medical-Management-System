@@ -104,10 +104,10 @@ function App() {
       {/* Protected routes - có sidebar (Admin/Nurse only) */}
     
       <Route path="/quanlytiemchung" element={<ProtectedRoute element={<Layout showSidebar><VaccinationManagement /></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE']} />} />
-      <Route path="/thongbaotiemchung" element={<ProtectedRoute element={<Layout showSidebar><VaccinationNotifications /></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE']} />} />
-      <Route path="/taosukientiemchung" element={<ProtectedRoute element={<Layout showSidebar><CreateVaccinationCampaign /></Layout>} requiredRole="ROLE_ADMIN" />} />
-      <Route path="/capnhatthongtintiemchung" element={<ProtectedRoute element={<Layout showSidebar><UpdateVaccination /></Layout>} requiredRole="ROLE_ADMIN" />} />
-      <Route path="/capnhattiemchung" element={<ProtectedRoute element={<Layout showSidebar><UpdateVaccination /></Layout>} requiredRole="ROLE_ADMIN" />} />
+      {/* <Route path="/thongbaotiemchung" element={<ProtectedRoute element={<Layout showSidebar><VaccinationNotifications /></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE']} />} /> */}
+      <Route path="/taosukientiemchung" element={<ProtectedRoute element={<Layout showSidebar><CreateVaccinationCampaign /></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE']} />} />
+      <Route path="/capnhatthongtintiemchung" element={<ProtectedRoute element={<Layout showSidebar><UpdateVaccination /></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE']} />} />
+      <Route path="/capnhattiemchung" element={<ProtectedRoute element={<Layout showSidebar><UpdateVaccination /></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE']} />} />
       <Route path="/ketquatiemchung" element={<ProtectedRoute element={<Layout showSidebar><VaccinationResult /></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE']} />} />
       <Route path="/ketquatiemchunghocsinh" element={<ProtectedRoute element={<Layout showSidebar><VaccinationStudentResult /></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE']} />} />
       

@@ -62,6 +62,9 @@ const CreateStudent = () => {
      
       message.success('Tạo học sinh thành công!');
       form.resetFields();
+      // Redirect to student list
+      window.location.href = '/danhsachhocsinh';
+
     } catch (err) {
       message.error('Tạo học sinh thất bại!');
     }
