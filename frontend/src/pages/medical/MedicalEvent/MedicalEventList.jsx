@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import MedicalEventService from '../../../services/MedicalEventService';
 import { useNavigate } from 'react-router-dom';
 
+
 const tableHeader = {
   title: 'Tiêu đề',
   eventType: 'Loại sự kiện',

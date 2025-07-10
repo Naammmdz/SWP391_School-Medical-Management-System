@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import HealthCheckService from '../../../services/HealthCheckService';
 import './HealthCheckList.css';
-import { Table, Button, Modal, Tag, message, Space } from 'antd';
+import { Table, Button, Modal, Tag, message, Space, Tabs } from 'antd';
 
 const HealthCheckList = () => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -19,6 +19,9 @@ const HealthCheckList = () => {
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [rejectingCampaignId, setRejectingCampaignId] = useState(null);
+  const [approveSuccess, setApproveSuccess] = useState(false);
+  const [rejectSuccess, setRejectSuccess] = useState(false);
+  const [activeTab, setActiveTab] = useState('PENDING');
 
   const getUserNameById = (id) => {
     const user = users.find(u => String(u.id) === String(id));
@@ -78,6 +81,11 @@ const HealthCheckList = () => {
       });
       setCampaigns(data);
       localStorage.setItem('healthCheckCampaigns', JSON.stringify(data));
+      setApproveSuccess(true);
+      setTimeout(() => {
+        setApproveSuccess(false);
+        setDetailModalOpen(false);
+      }, 2000);
     } catch (err) {
       alert('Duyệt chiến dịch thất bại!');
     }
@@ -101,14 +109,17 @@ const HealthCheckList = () => {
         params: { rejectionReason: rejectReason },
         headers: { Authorization: `Bearer ${token}` }
       });
-      message.success('Từ chối chiến dịch thành công!');
+      setRejectSuccess(true);
       // Reload lại danh sách
       const data = await HealthCheckService.getAllHealthCheckCampaign({
         headers: { Authorization: `Bearer ${token}` }
       });
       setCampaigns(data);
       localStorage.setItem('healthCheckCampaigns', JSON.stringify(data));
-      setRejectModalOpen(false);
+      setTimeout(() => {
+        setRejectSuccess(false);
+        setRejectModalOpen(false);
+      }, 2000);
     } catch (err) {
       message.error('Từ chối chiến dịch thất bại!');
     }
@@ -178,6 +189,54 @@ const HealthCheckList = () => {
     }
   ];
 
+  const campaignsByStatus = {
+    PENDING: campaigns.filter(c => c.status === 'PENDING'),
+    APPROVED: campaigns.filter(c => c.status === 'APPROVED'),
+    CANCELLED: campaigns.filter(c => c.status === 'CANCELLED'),
+  };
+
+  const tabItems = [
+    {
+      key: 'PENDING',
+      label: 'Chờ duyệt',
+      children: (
+        <Table
+          className="health-check-table"
+          columns={columns}
+          dataSource={campaignsByStatus.PENDING}
+          rowKey={c => c.campaignId}
+          pagination={{ pageSize: 10 }}
+        />
+      ),
+    },
+    {
+      key: 'APPROVED',
+      label: 'Đã duyệt',
+      children: (
+        <Table
+          className="health-check-table"
+          columns={columns}
+          dataSource={campaignsByStatus.APPROVED}
+          rowKey={c => c.campaignId}
+          pagination={{ pageSize: 10 }}
+        />
+      ),
+    },
+    {
+      key: 'CANCELLED',
+      label: 'Đã từ chối',
+      children: (
+        <Table
+          className="health-check-table"
+          columns={columns}
+          dataSource={campaignsByStatus.CANCELLED}
+          rowKey={c => c.campaignId}
+          pagination={{ pageSize: 10 }}
+        />
+      ),
+    },
+  ];
+
   return (
     <div className="health-check-list-container">
       <h2>Danh sách chiến dịch kiểm tra sức khỏe</h2>
@@ -189,12 +248,12 @@ const HealthCheckList = () => {
       {loading && <div>Đang tải...</div>}
       {error && <div className="text-danger">{error}</div>}
       {!loading && !error && (
-        <Table
-          className="health-check-table"
-          columns={columns}
-          dataSource={campaigns}
-          rowKey={c => c.campaignId}
-          pagination={{ pageSize: 10 }}
+        <Tabs
+          activeKey={activeTab}
+          onChange={setActiveTab}
+          items={tabItems}
+          tabBarGutter={32}
+          type="card"
         />
       )}
       <Modal
@@ -213,6 +272,11 @@ const HealthCheckList = () => {
           ] : null
         }
       >
+        {approveSuccess && (
+          <div style={{ background: '#e6fffb', color: '#08979c', padding: 10, borderRadius: 6, marginBottom: 12, textAlign: 'center', fontWeight: 600 }}>
+            Duyệt chiến dịch thành công!
+          </div>
+        )}
         {selectedCampaign && (
           <div style={{ lineHeight: 2, fontSize: 16 }}>
             <div><b>Tên chiến dịch:</b> {selectedCampaign.campaignName}</div>
@@ -240,6 +304,11 @@ const HealthCheckList = () => {
         cancelText="Hủy"
         confirmLoading={rejectingId === rejectingCampaignId}
       >
+        {rejectSuccess && (
+          <div style={{ background: '#f6ffed', color: '#389e0d', padding: 10, borderRadius: 6, marginBottom: 12, textAlign: 'center', fontWeight: 600 }}>
+            Từ chối chiến dịch thành công!
+          </div>
+        )}
         <div style={{ marginBottom: 12 }}>
           Bạn có chắc muốn từ chối chiến dịch này? Hành động này không thể hoàn tác.<br/>
           <b>Vui lòng nhập lý do từ chối:</b>
@@ -251,6 +320,7 @@ const HealthCheckList = () => {
           value={rejectReason}
           onChange={e => setRejectReason(e.target.value)}
           maxLength={255}
+          disabled={rejectSuccess}
         />
       </Modal>
     </div>
