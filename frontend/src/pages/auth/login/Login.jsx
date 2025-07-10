@@ -30,16 +30,27 @@ const Login = () => {
       localStorage.setItem('token', response.data.accessToken);
 
       toast.success('Đăng nhập thành công!');
+      
+      // Tự động làm mới trang sau khi đăng nhập thành công
       setTimeout(() => window.location.reload(), 800);
+     
 
+
+      
       switch (response.data.userRole) {
+        
         case 'ROLE_ADMIN':
+          // Add local storage student list if role is admin and nurse
+          localStorage.setItem('students', JSON.stringify(response.data.students || []));
           navigate('/admin');
+
           break;
         case 'ROLE_PARENT':
           navigate('/parent');
           break;
         case 'ROLE_NURSE':
+          // Add local storage student list if role is nurse
+          localStorage.setItem('students', JSON.stringify(response.data.students || []));
           navigate('/nurse');
           break;
         default:

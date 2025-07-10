@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import MedicineDeclarationService from "../../../services/MedicineDeclarationService";
+import StudentService from "../../../services/StudentService";
 import { Card, Modal, Image, Typography, Spin, Alert, Empty, Button, Popconfirm, message, Row, Col, Badge, Divider, Space, Tag } from "antd";
 import { UserOutlined, FileTextOutlined, DeleteOutlined, PlusOutlined, CalendarOutlined, ClockCircleOutlined, MedicineBoxOutlined, CheckCircleOutlined, CloseCircleOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
@@ -35,13 +36,37 @@ const MedicineList = () => {
   const [logModalOpen, setLogModalOpen] = useState(false);
   const [medicineLog, setMedicineLog] = useState(null);
   const [logLoading, setLogLoading] = useState(false);
+  const [studentInfo, setStudentInfo] = useState(null);
+  const [studentLoading, setStudentLoading] = useState(false);
 
   const navigate = useNavigate();
 
-  // Lấy studentId từ localStorage (phụ huynh đã chọn con ở ParentPages.jsx)
-  const studentId = localStorage.getItem("selectedStudentId");
-  const students = JSON.parse(localStorage.getItem("students") || "[]");
-  const student = students.find(s => String(s.studentId) === String(studentId));
+  // Lấy studentId từ URL params hoặc localStorage
+  const urlParams = new URLSearchParams(window.location.search);
+  const studentId = urlParams.get('studentId') || localStorage.getItem("selectedStudentId");
+
+  // Fetch thông tin học sinh từ API
+  const fetchStudentInfo = async () => {
+    if (!studentId) return;
+    
+    setStudentLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      
+      // Fetch tất cả học sinh và tìm học sinh theo ID
+      const response = await StudentService.getAllStudents(config);
+      const students = Array.isArray(response.data) ? response.data : [];
+      const student = students.find(s => String(s.studentId) === String(studentId));
+      
+      setStudentInfo(student || null);
+      console.log("Found student info:", student);
+    } catch (error) {
+      console.error("Error fetching student info:", error);
+      setStudentInfo(null);
+    }
+    setStudentLoading(false);
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -60,6 +85,7 @@ const MedicineList = () => {
   useEffect(() => {
     if (studentId) {
       fetchData();
+      fetchStudentInfo();
     } else {
       setMedicineList([]);
       setLoading(false);
@@ -298,7 +324,7 @@ const MedicineList = () => {
       </div>
 
       {/* Thông tin học sinh */}
-      {student ? (
+      {studentInfo ? (
         <Card
           style={{ 
             marginBottom: 32, 
@@ -322,14 +348,26 @@ const MedicineList = () => {
               <UserOutlined style={{ fontSize: 40, color: "white" }} />
             </div>
             <div>
-              <Title level={3} style={{ margin: 0, color: "white" }}>{student.fullName}</Title>
+              <Title level={3} style={{ margin: 0, color: "white" }}>{studentInfo.fullName}</Title>
               <Text style={{ color: "rgba(255,255,255,0.9)", fontSize: 16 }}>
-                <strong>Lớp:</strong> {student.className} | 
-                <strong> Ngày sinh:</strong> {formatDate(student.dob || student.yob)} | 
-                <strong> Giới tính:</strong> {student.gender === "Male" ? "Nam" : "Nữ"}
+                <strong>Lớp:</strong> {
+                  studentInfo.className || 
+                  studentInfo.class || 
+                  studentInfo.classroom || 
+                  studentInfo.grade || 
+                  studentInfo.classroomName ||
+                  studentInfo.academicYear ||
+                  "Chưa cập nhật"
+                } | 
+                <strong> Ngày sinh:</strong> {formatDate(studentInfo.dob || studentInfo.yob)} | 
+                <strong> Giới tính:</strong> {studentInfo.gender === "Male" ? "Nam" : "Nữ"}
               </Text>
             </div>
           </div>
+        </Card>
+      ) : studentLoading ? (
+        <Card style={{ marginBottom: 32, textAlign: "center", padding: "20px" }}>
+          <Spin /> <Text style={{ marginLeft: 8 }}>Đang tải thông tin học sinh...</Text>
         </Card>
       ) : null}
 
