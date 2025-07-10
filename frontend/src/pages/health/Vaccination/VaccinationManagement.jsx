@@ -54,6 +54,7 @@ const VaccinationManagement = () => {
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [selectedVaccineType, setSelectedVaccineType] = useState(null);
   const [dateRange, setDateRange] = useState([]);
+  const [activeTab, setActiveTab] = useState('PENDING');
   
   // Modal states
   const [notificationModalOpen, setNotificationModalOpen] = useState(false);
@@ -471,6 +472,70 @@ const VaccinationManagement = () => {
   };
 
 
+  // Phân danh sách chiến dịch tiêm chủng thành 3 tab: Chờ phê duyệt, Đã duyệt, Đã hủy
+  const eventsByStatus = {
+    PENDING: filteredEvents.filter(e => e.status === 'PENDING'),
+    APPROVED: filteredEvents.filter(e => e.status === 'APPROVED'),
+    CANCELLED: filteredEvents.filter(e => e.status === 'CANCELLED'),
+  };
+
+  const tabItems = [
+    {
+      key: 'PENDING',
+      label: 'Chờ phê duyệt',
+      children: (
+        <Table
+          columns={briefColumns}
+          dataSource={eventsByStatus.PENDING}
+          loading={loading}
+          expandable={{ expandedRowRender, expandIcon: ({ expanded, onExpand, record }) => expanded ? (
+            <Button size="small" type="text" icon={<EyeOutlined />} onClick={e => onExpand(record, e)} style={{ color: '#52c41a' }}>Ẩn chi tiết</Button>
+          ) : (
+            <Button size="small" type="primary" icon={<EyeOutlined />} onClick={e => onExpand(record, e)} style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}>Xem chi tiết</Button>
+          ), expandIconColumnIndex: 5, rowExpandable: () => true }}
+          pagination={{ total: eventsByStatus.PENDING.length, pageSize: 10, showSizeChanger: true, showQuickJumper: true, showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} chiến dịch`, }}
+          scroll={{ x: 1000 }}
+        />
+      ),
+    },
+    {
+      key: 'APPROVED',
+      label: 'Đã duyệt',
+      children: (
+        <Table
+          columns={briefColumns}
+          dataSource={eventsByStatus.APPROVED}
+          loading={loading}
+          expandable={{ expandedRowRender, expandIcon: ({ expanded, onExpand, record }) => expanded ? (
+            <Button size="small" type="text" icon={<EyeOutlined />} onClick={e => onExpand(record, e)} style={{ color: '#52c41a' }}>Ẩn chi tiết</Button>
+          ) : (
+            <Button size="small" type="primary" icon={<EyeOutlined />} onClick={e => onExpand(record, e)} style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}>Xem chi tiết</Button>
+          ), expandIconColumnIndex: 5, rowExpandable: () => true }}
+          pagination={{ total: eventsByStatus.APPROVED.length, pageSize: 10, showSizeChanger: true, showQuickJumper: true, showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} chiến dịch`, }}
+          scroll={{ x: 1000 }}
+        />
+      ),
+    },
+    {
+      key: 'CANCELLED',
+      label: 'Đã hủy',
+      children: (
+        <Table
+          columns={briefColumns}
+          dataSource={eventsByStatus.CANCELLED}
+          loading={loading}
+          expandable={{ expandedRowRender, expandIcon: ({ expanded, onExpand, record }) => expanded ? (
+            <Button size="small" type="text" icon={<EyeOutlined />} onClick={e => onExpand(record, e)} style={{ color: '#52c41a' }}>Ẩn chi tiết</Button>
+          ) : (
+            <Button size="small" type="primary" icon={<EyeOutlined />} onClick={e => onExpand(record, e)} style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}>Xem chi tiết</Button>
+          ), expandIconColumnIndex: 5, rowExpandable: () => true }}
+          pagination={{ total: eventsByStatus.CANCELLED.length, pageSize: 10, showSizeChanger: true, showQuickJumper: true, showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} chiến dịch`, }}
+          scroll={{ x: 1000 }}
+        />
+      ),
+    },
+  ];
+
   return (
     <div style={{ maxWidth: 1600, margin: '0 auto', padding: '24px' }}>
       {contextHolder}
@@ -629,49 +694,12 @@ const VaccinationManagement = () => {
         }
         style={{ borderRadius: 8 }}
       >
-        <Table
-          columns={briefColumns}
-          dataSource={filteredEvents}
-          loading={loading}
-          expandable={{
-            expandedRowRender,
-            expandIcon: ({ expanded, onExpand, record }) =>
-              expanded ? (
-                <Button 
-                  size="small" 
-                  type="text" 
-                  icon={<EyeOutlined />} 
-                  onClick={e => onExpand(record, e)}
-                  style={{ color: '#52c41a' }}
-                >
-                  Ẩn chi tiết
-                </Button>
-              ) : (
-                <Button 
-                  size="small" 
-                  type="primary" 
-                  icon={<EyeOutlined />} 
-                  onClick={e => onExpand(record, e)}
-                  style={{ 
-                    backgroundColor: '#52c41a',
-                    borderColor: '#52c41a'
-                  }}
-                >
-                  Xem chi tiết
-                </Button>
-              ),
-            expandIconColumnIndex: 5,
-            rowExpandable: () => true,
-          }}
-          pagination={{
-            total: filteredEvents.length,
-            pageSize: 10,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total, range) => 
-              `${range[0]}-${range[1]} của ${total} chiến dịch`,
-          }}
-          scroll={{ x: 1000 }}
+        <Tabs
+          activeKey={activeTab}
+          onChange={setActiveTab}
+          items={tabItems}
+          tabBarGutter={32}
+          type="card"
         />
       </Card>
 
