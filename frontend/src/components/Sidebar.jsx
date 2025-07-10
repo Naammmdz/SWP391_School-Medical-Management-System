@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import './Sidebar.css';
@@ -81,8 +80,9 @@ const getNavGroupsForRole = (role) => {
     overview: {
       title: 'Tổng quan & Hệ thống',
       items: [
-        { path: '/thongke', name: 'Bảng điều khiển', icon: 'home' },
-        { path: '/thongbaotiemchung', name: 'Thông báo', icon: 'bell', badge: '3' },
+        { path: '/thongke', name: 'Bảng điều khiển', icon: 'home', roles: ['ROLE_ADMIN'] },
+        { path: '/parent', name: 'Bảng điều khiển', icon: 'home', roles: ['ROLE_PARENT'] },
+        { path: '/nurse', name: 'Bảng điều khiển', icon: 'home', roles: ['ROLE_NURSE'] },
       ]
     }
   };
@@ -109,8 +109,8 @@ const getNavGroupsForRole = (role) => {
         title: 'Quản lý học sinh',
         items: [
           { path: '/danhsachhocsinh', name: 'Danh sách học sinh', icon: 'bookUser' },
-          { path: '/taomoihocsinh', name: 'Thêm học sinh mới', icon: 'bookUser' },
-          { path: '/capnhathocsinh', name: 'Cập nhật học sinh', icon: 'bookUser' },
+          // { path: '/taomoihocsinh', name: 'Thêm học sinh mới', icon: 'bookUser' },
+          // { path: '/capnhathocsinh', name: 'Cập nhật học sinh', icon: 'bookUser' },
         ]
       },
       {
@@ -130,7 +130,7 @@ const getNavGroupsForRole = (role) => {
           // { path: '/kiemtradinhky', name: 'Tạo kiểm tra định kỳ', icon: 'stethoscope' },
           { path: '/danhsachkiemtradinhky', name: 'Danh sách kiểm tra định kỳ', icon: 'stethoscope' },
           // { path: '/capnhatkiemtradinhky', name: 'Cập nhật kiểm tra định kỳ', icon: 'stethoscope' },
-          { path: '/kiemtradinhkyhocsinh', name: 'Kiểm tra định kỳ học sinh', icon: 'stethoscope' },
+          // { path: '/kiemtradinhkyhocsinh', name: 'Kiểm tra định kỳ học sinh', icon: 'stethoscope' },
           { path: '/ketquakiemtradinhky', name: 'Kết quả kiểm tra định kỳ', icon: 'report' },
           
           // { path: '/capnhatketquakiemtra', name: 'Cập nhật kết quả kiểm tra', icon: 'report' },
@@ -140,9 +140,8 @@ const getNavGroupsForRole = (role) => {
         title: 'Y tế & Thuốc',
         items: [
           { path: '/sukienyte', name: 'Sự kiện y tế', icon: 'activity' },
-          { path: '/quanlythuoc', name: 'Quản lý thuốc', icon: 'pill' },
-          { path: '/khaibaothuoc', name: 'Khai báo thuốc', icon: 'briefcase' },
-          { path: '/donthuocdagui', name: 'Đơn thuốc đã gửi', icon: 'clipboard' },
+          { path: '/quanlyvattuyte', name: 'Quản lý thuốc/Vật tư', icon: 'pill' },
+         
         ]
       }
     ],
@@ -161,7 +160,7 @@ const getNavGroupsForRole = (role) => {
           // { path: '/kiemtradinhky', name: 'Tạo kiểm tra định kỳ', icon: 'stethoscope' },
           { path: '/danhsachkiemtradinhky', name: 'Danh sách kiểm tra định kỳ', icon: 'stethoscope' },
           // { path: '/capnhatkiemtradinhky', name: 'Cập nhật kiểm tra định kỳ', icon: 'stethoscope' },
-          { path: '/kiemtradinhkyhocsinh', name: 'Kiểm tra định kỳ học sinh', icon: 'stethoscope' },
+          // { path: '/kiemtradinhkyhocsinh', name: 'Kiểm tra định kỳ học sinh', icon: 'stethoscope' },
           { path: '/ketquakiemtradinhky', name: 'Kết quả kiểm tra định kỳ', icon: 'report' },
           
           // { path: '/capnhatketquakiemtra', name: 'Cập nhật kết quả kiểm tra', icon: 'report' },
@@ -172,7 +171,7 @@ const getNavGroupsForRole = (role) => {
         items: [
           { path: '/donthuoc', name: 'Đơn thuốc', icon: 'clipboard', badge: '2' },
           { path: '/sukienyte', name: 'Sự kiện y tế', icon: 'activity', badge: '1' },
-          { path: '/quanlythuoc', name: 'Quản lý thuốc', icon: 'pill' },
+          { path: '/quanlyvattuyte', name: 'Quản lý thuốc/Vật tư', icon: 'pill' },
         ]
       },
       {
@@ -180,51 +179,46 @@ const getNavGroupsForRole = (role) => {
         items: [
           { path: '/quanlytiemchung', name: 'Quản lý tiêm chủng', icon: 'syringe' },
           // { path: '/capnhatthongtintiemchung', name: 'Cập nhật thông tin tiêm chủng', icon: 'syringe' },
-          { path: '/capnhattiemchung', name: 'Cập nhật tiêm chủng', icon: 'syringe' },
+          // { path: '/capnhattiemchung', name: 'Cập nhật tiêm chủng', icon: 'syringe' },
           { path: '/ketquatiemchung', name: 'Kết quả tiêm chủng', icon: 'report' },
          
         ]
       },
-      {
-        title: 'Khai báo thuốc',
-        items: [
-          { path: '/khaibaothuoc', name: 'Khai báo thuốc', icon: 'briefcase' },
-          { path: '/donthuocdagui', name: 'Đơn thuốc đã gửi', icon: 'clipboard' },
-        ]
-      }
-    ],
-    ROLE_PARENT: [
-      commonGroups.overview,
-      {
-        title: 'Hồ sơ sức khỏe',
-        items: [
-          { path: '/hososuckhoe', name: 'Hồ sơ sức khỏe', icon: 'heart' },
-          { path: '/kiemtradinhkyhocsinh', name: 'Kiểm tra định kỳ', icon: 'stethoscope' },
-        ]
-      },
-      {
-        title: 'Khai báo & Đơn thuốc',
-        items: [
-          { path: '/khaibaothuoc', name: 'Khai báo thuốc', icon: 'briefcase' },
-          { path: '/donthuocdagui', name: 'Đơn thuốc đã gửi', icon: 'clipboard' },
-          { path: '/chouongthuoc', name: 'Chờ uống thuốc', icon: 'pill' },
-        ]
-      },
-      {
-        title: 'Kết quả sức khỏe',
-        items: [
-          { path: '/ketquakiemtradinhkyhocsinh', name: 'Kết quả kiểm tra sức khỏe', icon: 'report' },
-          { path: '/ketquatiemchunghocsinh', name: 'Kết quả tiêm chủng', icon: 'report' },
-        ]
-      },
-      {
-        title: 'Cài đặt tài khoản',
-        items: [
-          { path: '/capnhatthongtin', name: 'Cập nhật thông tin', icon: 'users' },
-          { path: '/doimatkhau', name: 'Đổi mật khẩu', icon: 'shield' },
-        ]
-      }
+     
     ]
+    // ROLE_PARENT: [
+    //   commonGroups.overview,
+    //   {
+    //     title: 'Hồ sơ sức khỏe',
+    //     items: [
+    //       { path: '/hososuckhoe', name: 'Hồ sơ sức khỏe', icon: 'heart' },
+    //       { path: '/kiemtradinhkyhocsinh', name: 'Kiểm tra định kỳ', icon: 'stethoscope' },
+    //     ]
+    //   },
+    //   {
+    //     title: 'Khai báo & Đơn thuốc',
+    //     items: [
+    //       { path: '/khaibaothuoc', name: 'Khai báo thuốc', icon: 'briefcase' },
+    //       { path: '/donthuocdagui', name: 'Đơn thuốc đã gửi', icon: 'clipboard' },
+    //       { path: '/chouongthuoc', name: 'Chờ uống thuốc', icon: 'pill' },
+    //     ]
+    //   },
+    //   {
+    //     title: 'Kết quả sức khỏe',
+    //     items: [
+    //       { path: '/ketquakiemtradinhkyhocsinh', name: 'Kết quả kiểm tra sức khỏe', icon: 'report' },
+    //       { path: '/ketquatiemchunghocsinh', name: 'Kết quả tiêm chủng', icon: 'report' },
+    //       { path: '/sukienytehocsinh', name: 'Sự kiện y tế của học sinh', icon: 'activity' },
+    //     ]
+    //   },
+    //   {
+    //     title: 'Cài đặt tài khoản',
+    //     items: [
+    //       { path: '/capnhatthongtin', name: 'Cập nhật thông tin', icon: 'users' },
+    //       { path: '/doimatkhau', name: 'Đổi mật khẩu', icon: 'shield' },
+    //     ]
+    //   }
+    // ]
   };
 
   return roleSpecificGroups[role] || [];
@@ -235,10 +229,11 @@ const navGroups = [
   {
     title: 'Tổng quan & Hệ thống',
     items: [
-      { path: '/thongke', name: 'Bảng điều khiển', icon: 'home', roles: ['ROLE_ADMIN', 'ROLE_NURSE', 'ROLE_PARENT'] },
-      { path: '/thongbaotiemchung', name: 'Thông báo', icon: 'bell', badge: '3', roles: ['ROLE_ADMIN', 'ROLE_NURSE', 'ROLE_PARENT'] },
+      { path: '/thongke', name: 'Bảng điều khiển', icon: 'home', roles: ['ROLE_ADMIN', 'ROLE_NURSE'] },
+      { path: '/thongbaotiemchung', name: 'Thông báo', icon: 'bell', badge: '3', roles: ['ROLE_PARENT'] },
       { path: '/admin', name: 'Quản trị hệ thống', icon: 'settings', roles: ['ROLE_ADMIN'] },
       { path: '/nurse', name: 'Trang Y tá', icon: 'stethoscope', roles: ['ROLE_NURSE'] },
+      { path: '/parent', name: 'Trang Phụ huynh', icon: 'users', roles: ['ROLE_PARENT'] },
     ]
   },
   {
@@ -267,7 +262,7 @@ const navGroups = [
     items: [
       { path: '/kiemtradinhky', name: 'Tạo kiểm tra định kỳ', icon: 'stethoscope', roles: ['ROLE_NURSE'] },
       { path: '/danhsachkiemtradinhky', name: 'Danh sách kiểm tra', icon: 'stethoscope', roles: ['ROLE_NURSE'] },
-      { path: '/kiemtradinhkyhocsinh', name: 'Khám sức khỏe', icon: 'stethoscope', roles: ['ROLE_NURSE'] },
+      // { path: '/kiemtradinhkyhocsinh', name: 'Khám sức khỏe', icon: 'stethoscope', roles: ['ROLE_NURSE'] },
     ]
   },
   {
@@ -275,7 +270,7 @@ const navGroups = [
     items: [
       { path: '/donthuoc', name: 'Đơn thuốc', icon: 'clipboard', badge: '2', roles: ['ROLE_NURSE'] },
       { path: '/sukienyte', name: 'Sự cố y tế', icon: 'activity', badge: '1', roles: ['ROLE_NURSE'] },
-      { path: '/quanlythuoc', name: 'Quản lý thuốc', icon: 'pill', roles: ['ROLE_NURSE'] },
+      { path: '/quanlyvattuyte', name: 'Quản lý thuốc/Vật tư', icon: 'pill', roles: ['ROLE_NURSE'] },
     ]
   },
   {
@@ -287,6 +282,16 @@ const navGroups = [
     ]
   },
 ];
+
+// Add a function to normalize Vietnamese text (remove diacritics and punctuation)
+function normalizeVietnamese(str) {
+  return str
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .replace(/[.,/#!$%^&*;:{}=\-_`~()\[\]"'?<>@+]/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .toLowerCase();
+}
 
 const Sidebar = ({ userRole, onToggleCollapse, className = "" }) => {
   const location = useLocation();
@@ -522,6 +527,9 @@ const Sidebar = ({ userRole, onToggleCollapse, className = "" }) => {
     const title = (notification.title || '').toLowerCase();
     const userRole = user?.userRole?.toUpperCase();
   
+    // Normalize for diacritic-insensitive search
+    const contentNorm = normalizeVietnamese(contentRaw);
+    const titleNorm = normalizeVietnamese(notification.title || '');
   
     // Check notification about medicine
     const isMedicineNotification = (
@@ -536,7 +544,15 @@ const Sidebar = ({ userRole, onToggleCollapse, className = "" }) => {
       content.includes('tiêm chủng') || content.includes('vaccination') ||
       content.includes('vaccine') || content.includes('tiêm') || content.includes('chủng') ||
       title.includes('tiêm chủng') || title.includes('vaccination') ||
-      title.includes('vaccine') || title.includes('tiêm') || title.includes('chủng')
+      title.includes('vaccine') || title.includes('tiem') || title.includes('chủng')
+    );
+  
+    // Check notification about health check campaign
+    const isHealthCheckNotification = (
+      contentNorm.includes('chien dich kiem tra suc khoe') ||
+      contentNorm.includes('kiem tra suc khoe') ||
+      titleNorm.includes('chien dich kiem tra suc khoe') ||
+      titleNorm.includes('kiem tra suc khoe')
     );
   
     if (isMedicineNotification) {
@@ -563,6 +579,21 @@ const Sidebar = ({ userRole, onToggleCollapse, className = "" }) => {
         case 'ROLE_PRINCIPAL':
           setShowNotifications(false);
           navigate('/quanlytiemchung');
+          break;
+        default:
+          break;
+      }
+    } else if (isHealthCheckNotification) {
+      switch (userRole) {
+        case 'ROLE_NURSE':
+        case 'ROLE_ADMIN':
+        case 'ROLE_PRINCIPAL':
+          setShowNotifications(false);
+          navigate('/danhsachkiemtradinhky');
+          break;
+        case 'ROLE_PARENT':
+          setShowNotifications(false);
+          navigate('/kiemtradinhkyhocsinh');
           break;
         default:
           break;
@@ -718,7 +749,7 @@ const Sidebar = ({ userRole, onToggleCollapse, className = "" }) => {
                 background: 'none',
                 border: 'none',
                 cursor: 'pointer',
-                padding: '8px',
+                padding: '25px',
                 borderRadius: '4px',
                 marginLeft: '8px',
                 position: 'relative',

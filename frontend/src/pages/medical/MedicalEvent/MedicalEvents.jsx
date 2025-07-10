@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import './MedicalEvents.css';
 import MedicalEventService from '../../../services/MedicalEventService';
+
 import studentService from '../../../services/StudentService';
 import StudentSelectionModal from '../../../components/StudentSelectionModal';
 import InventoryService from '../../../services/InventoryService';
@@ -64,11 +64,13 @@ const MedicalEvents = () => {
     location: '',
     description: '',
     relatedItemUsed: [], // Array of InventoryUsedInMedicalEventRequestDTO objects
+
     notes: '',
     handlingMeasures: '',
     severityLevel: 'MINOR',
     status: 'PROCESSING'
   });
+
   
   // State for student selection
   const [availableStudents, setAvailableStudents] = useState([]);
@@ -396,26 +398,15 @@ const MedicalEvents = () => {
     } catch (error) {
       console.error('Error updating medical event:', error);
       setLoading(false);
+
     }
+    setRelatedItemUsed(updated);
   };
 
-  // Hàm xóa sự cố y tế
-  const deleteMedicalEvent = async (id) => {
-    if (window.confirm('Bạn có chắc muốn xóa sự cố y tế này?')) {
-      setLoading(true);
-      try {
-        // Giả lập API call
-        // await fetch(`api/medical-events/${id}`, {
-        //   method: 'DELETE'
-        // });
-        
-        setMedicalEvents(medicalEvents.filter(event => event.id !== id));
-        setLoading(false);
-      } catch (error) {
-        console.error('Error deleting medical event:', error);
-        setLoading(false);
-      }
-    }
+  const handleStudentCheckbox = (id) => {
+    setSelectedStudents(prev =>
+      prev.includes(id) ? prev.filter(sid => sid !== id) : [...prev, id]
+    );
   };
 
   // Hàm lấy inventory usage logs theo medical event ID và trả về chúng
@@ -515,10 +506,10 @@ const MedicalEvents = () => {
     setModalOpen(true);
   };
 
-  // Xử lý submit form
-  const handleSubmit = (e) => {
+
+  const handleSubmit = async e => {
     e.preventDefault();
-    
+
     console.log('=== FORM VALIDATION ===');
     console.log('Current Event:', currentEvent);
     console.log('Selected Students:', selectedStudents);
@@ -594,8 +585,40 @@ const MedicalEvents = () => {
       updateMedicalEvent(currentEvent.id, currentEvent);
     } else {
       addMedicalEvent(currentEvent);
+
     }
+    if (Object.keys(quantityErrors).length > 0) {
+      setPopup({ open: true, message: 'Có thuốc/vật tư vượt quá số lượng tồn kho!' });
+      return;
+    }
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      const payload = {
+        ...form,
+        stuId: selectedStudents,
+        relatedItemUsed: validItems.map(item => ({
+          ...item,
+          itemId: Number(item.itemId)
+        })),
+        eventDate: new Date(form.eventDate).toISOString()
+      };
+      console.log('Submitting medical event:', payload);
+      await MedicalEventService.createMedicalEvent(payload, config);
+      setPopup({ open: true, message: 'Tạo sự kiện y tế thành công!' });
+      setForm({
+        title: '', eventType: '', eventDate: new Date().toISOString().split('T')[0],
+        location: '', description: '', notes: '', handlingMeasures: '', severityLevel: 'MINOR', status: 'PROCESSING'
+      });
+      setSelectedStudents([]);
+      setRelatedItemUsed([]);
+    } catch (err) {
+      setPopup({ open: true, message: 'Có lỗi khi tạo sự kiện y tế!' });
+    }
+    setLoading(false);
   };
+
 
   // Xử lý thay đổi input
   const handleInputChange = (e) => {
@@ -863,9 +886,11 @@ fetchMedicalEvents();
           resetCurrentEvent();
           setModalOpen(true);
         }}
+
       >
-        Thêm sự cố y tế
+        Xem danh sách sự kiện y tế
       </button>
+
 
       {/* Bảng danh sách sự cố */}
       {loading ? (
@@ -1436,6 +1461,7 @@ fetchMedicalEvents();
         selectedStudentIds={currentEvent.stuId}
         availableClasses={availableClasses}
       />
+
     </div>
   );
 };

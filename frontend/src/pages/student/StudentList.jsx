@@ -268,7 +268,7 @@ const getParentPhone = (parentId) => {
             </Text>
           </Space>
         </Col>
-        <Col>
+        {/* <Col>
           <Button
             type="primary"
             icon={<UserAddOutlined />}
@@ -284,7 +284,7 @@ const getParentPhone = (parentId) => {
           >
             Thêm học sinh mới
           </Button>
-        </Col>
+        </Col> */}
       </Row>
 
       {/* Filter Form */}

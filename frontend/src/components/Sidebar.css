@@ -400,8 +400,8 @@
   /* Notification Styles */
   .notification-badge {
     position: absolute;
-    top: -4px;
-    right: -4px;
+    top: -6px;
+    right: 3px !important;
     background: #ef4444;
     color: white;
     font-size: 10px;

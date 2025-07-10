@@ -446,8 +446,6 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
         } else if (Boolean.FALSE.equals(parentConfirmation)) {
             spec = spec.and((root, query, cb) -> cb.isFalse(root.get("parentConfirmation")));
         }
-// else null => không thêm gì vào spec
-
 
         if (startDate != null && endDate != null) {
             spec = spec.and((root, query, cb) ->

@@ -54,10 +54,15 @@ const VaccinationManagement = () => {
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [selectedVaccineType, setSelectedVaccineType] = useState(null);
   const [dateRange, setDateRange] = useState([]);
+  const [activeTab, setActiveTab] = useState('PENDING');
   
   // Modal states
   const [notificationModalOpen, setNotificationModalOpen] = useState(false);
   const [currentCampaign, setCurrentCampaign] = useState(null);
+  // Thêm state cho modal hủy
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelTarget, setCancelTarget] = useState(null);
   
   // User info
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -65,20 +70,19 @@ const VaccinationManagement = () => {
   const isAdmin = user.userRole === 'ROLE_ADMIN';
   
   const getOrganizerName = (organizerId, record) => {
-    // Try different organizer field names from the record
-    const organizer = organizerId || record?.organizer || record?.organizerName || record?.createdBy || record?.approvedBy;
+    // Use organizer field from backend response
+    const organizer = organizerId || record?.organizer;
     
     if (!organizer) {
-      // If no organizer ID, try to get current user info as fallback
-      return user?.fullName || user?.name || 'Không xác định';
+      return 'Không xác định';
     }
     
-    // If organizer is already a string (name), return it
+    // If organizer is already a string (organization name), return it
     if (typeof organizer === 'string' && organizer !== '' && !Number.isInteger(Number(organizer))) {
       return organizer;
     }
     
-    // Try to find user by ID
+    // Try to find user by ID if it's a number
     const foundUser = users.find(u => 
       u.id === organizer || 
       u.userId === organizer || 
@@ -99,21 +103,26 @@ const VaccinationManagement = () => {
       });
       const data = Array.isArray(response.data) ? response.data : response.data.content || [];
       const mappedData = data.map((item, idx) => ({
-        key: item.id || idx,
-        id: item.id || item.campaignId || idx + 1,
+        key: item.campaignId || idx,
+        id: item.campaignId || idx + 1,
         title: item.campaignName || '',
         vaccineType: item.type || '',
         description: item.description || '',
         scheduledDate: item.scheduledDate || '',
         scheduledTime: item.scheduledTime || '09:00',
-        location: item.location || 'Phòng y tế trường',
+        location: item.address || 'Phòng y tế trường',
         targetClass: item.targetGroup || '',
         status: item.status || 'PENDING',
         notes: item.notes || '',
         vaccineBatch: item.vaccineBatch || '',
         manufacturer: item.manufacturer || '',
         doseAmount: item.doseAmount || '',
-        organizer: item.organizer || item.approvedBy || '',
+        organizer: item.organizer || '',
+        createdBy: item.createdBy || '',
+        approvedBy: item.approvedBy || '',
+        approvedAt: item.approvedAt || '',
+        createdAt: item.createdAt || '',
+        rejectionReason: item.rejectionReason || '',
         requiredDocuments: item.requiredDocuments || '',
         responses: item.responses || {
           total: 0,
@@ -156,31 +165,36 @@ const VaccinationManagement = () => {
 
   // Handle cancel
   const handleCancel = (record) => {
-    modal.confirm({
-      title: 'Xác nhận hủy chiến dịch',
-      icon: <ExclamationCircleOutlined />,
-      content: `Bạn có chắc muốn hủy chiến dịch "${record.title}"? Hành động này không thể hoàn tác.`,
-      okText: 'Hủy chiến dịch',
-      cancelText: 'Không',
-      okType: 'danger',
-      onOk: async () => {
-        try {
-          setLoading(true);
-          const token = localStorage.getItem('token');
-          await VaccinationService.cancelVaccinationCampaign(
-            record.id,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-          message.success('Đã hủy chiến dịch thành công');
-          fetchVaccinationEvents();
-        } catch (error) {
-          const errorMessage = error.response?.data?.message || 'Có lỗi khi hủy chiến dịch';
-          message.error(errorMessage);
-        } finally {
-          setLoading(false);
+    setCancelTarget(record);
+    setCancelReason('');
+    setCancelModalOpen(true);
+  };
+
+  const handleConfirmCancel = async () => {
+    if (!cancelReason.trim()) {
+      message.warning('Vui lòng nhập lý do hủy chiến dịch!');
+      return;
+    }
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      await VaccinationService.cancelVaccinationCampaign(
+        cancelTarget.id,
+        // Truyền rejectionReason dưới dạng query param
+        { 
+          params: { rejectionReason: cancelReason },
+          headers: { Authorization: `Bearer ${token}` }
         }
-      },
-    });
+      );
+      message.success('Đã hủy chiến dịch thành công');
+      setCancelModalOpen(false);
+      fetchVaccinationEvents();
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Có lỗi khi hủy chiến dịch';
+      message.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
 
@@ -238,7 +252,11 @@ const VaccinationManagement = () => {
     let matchesDateRange = true;
     if (dateRange && dateRange.length === 2) {
       const eventDate = dayjs(event.scheduledDate);
-      matchesDateRange = eventDate.isAfter(dateRange[0]) && eventDate.isBefore(dateRange[1]);
+      const startDate = dayjs(dateRange[0]);
+      const endDate = dayjs(dateRange[1]);
+      // Check if eventDate is within range (inclusive): startDate <= eventDate <= endDate
+      matchesDateRange = (eventDate.isAfter(startDate) || eventDate.isSame(startDate, 'day')) && 
+                        (eventDate.isBefore(endDate) || eventDate.isSame(endDate, 'day'));
     }
     
     return matchesSearch && matchesStatus && matchesVaccineType && matchesDateRange;
@@ -359,14 +377,19 @@ const VaccinationManagement = () => {
                 <Text>{record.description || 'Không có mô tả'}</Text>
               </div>
               <div style={{ marginBottom: 12 }}>
-                <Text strong style={{ color: '#595959' }}>Thời gian:</Text>
+                <Text strong style={{ color: '#595959' }}>Loại vắc-xin:</Text>
                 <br />
-                <Text>{record.scheduledTime || '09:00'}</Text>
+                <Text>{record.vaccineType || 'Không xác định'}</Text>
+              </div>
+              <div style={{ marginBottom: 12 }}>
+                <Text strong style={{ color: '#595959' }}>Ngày tiêm:</Text>
+                <br />
+                <Text>{record.scheduledDate ? dayjs(record.scheduledDate).format('DD/MM/YYYY') : 'Chưa xác định'}</Text>
               </div>
               <div style={{ marginBottom: 12 }}>
                 <Text strong style={{ color: '#595959' }}>Địa điểm:</Text>
                 <br />
-                <Text>{record.location || 'Phòng y tế trường'}</Text>
+                <Text>{record.organizer || 'Phòng y tế trường'}</Text>
               </div>
               <div>
                 <Text strong style={{ color: '#595959' }}>Đối tượng:</Text>
@@ -448,6 +471,70 @@ const VaccinationManagement = () => {
     );
   };
 
+
+  // Phân danh sách chiến dịch tiêm chủng thành 3 tab: Chờ phê duyệt, Đã duyệt, Đã hủy
+  const eventsByStatus = {
+    PENDING: filteredEvents.filter(e => e.status === 'PENDING'),
+    APPROVED: filteredEvents.filter(e => e.status === 'APPROVED'),
+    CANCELLED: filteredEvents.filter(e => e.status === 'CANCELLED'),
+  };
+
+  const tabItems = [
+    {
+      key: 'PENDING',
+      label: 'Chờ phê duyệt',
+      children: (
+        <Table
+          columns={briefColumns}
+          dataSource={eventsByStatus.PENDING}
+          loading={loading}
+          expandable={{ expandedRowRender, expandIcon: ({ expanded, onExpand, record }) => expanded ? (
+            <Button size="small" type="text" icon={<EyeOutlined />} onClick={e => onExpand(record, e)} style={{ color: '#52c41a' }}>Ẩn chi tiết</Button>
+          ) : (
+            <Button size="small" type="primary" icon={<EyeOutlined />} onClick={e => onExpand(record, e)} style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}>Xem chi tiết</Button>
+          ), expandIconColumnIndex: 5, rowExpandable: () => true }}
+          pagination={{ total: eventsByStatus.PENDING.length, pageSize: 10, showSizeChanger: true, showQuickJumper: true, showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} chiến dịch`, }}
+          scroll={{ x: 1000 }}
+        />
+      ),
+    },
+    {
+      key: 'APPROVED',
+      label: 'Đã duyệt',
+      children: (
+        <Table
+          columns={briefColumns}
+          dataSource={eventsByStatus.APPROVED}
+          loading={loading}
+          expandable={{ expandedRowRender, expandIcon: ({ expanded, onExpand, record }) => expanded ? (
+            <Button size="small" type="text" icon={<EyeOutlined />} onClick={e => onExpand(record, e)} style={{ color: '#52c41a' }}>Ẩn chi tiết</Button>
+          ) : (
+            <Button size="small" type="primary" icon={<EyeOutlined />} onClick={e => onExpand(record, e)} style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}>Xem chi tiết</Button>
+          ), expandIconColumnIndex: 5, rowExpandable: () => true }}
+          pagination={{ total: eventsByStatus.APPROVED.length, pageSize: 10, showSizeChanger: true, showQuickJumper: true, showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} chiến dịch`, }}
+          scroll={{ x: 1000 }}
+        />
+      ),
+    },
+    {
+      key: 'CANCELLED',
+      label: 'Đã hủy',
+      children: (
+        <Table
+          columns={briefColumns}
+          dataSource={eventsByStatus.CANCELLED}
+          loading={loading}
+          expandable={{ expandedRowRender, expandIcon: ({ expanded, onExpand, record }) => expanded ? (
+            <Button size="small" type="text" icon={<EyeOutlined />} onClick={e => onExpand(record, e)} style={{ color: '#52c41a' }}>Ẩn chi tiết</Button>
+          ) : (
+            <Button size="small" type="primary" icon={<EyeOutlined />} onClick={e => onExpand(record, e)} style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}>Xem chi tiết</Button>
+          ), expandIconColumnIndex: 5, rowExpandable: () => true }}
+          pagination={{ total: eventsByStatus.CANCELLED.length, pageSize: 10, showSizeChanger: true, showQuickJumper: true, showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} chiến dịch`, }}
+          scroll={{ x: 1000 }}
+        />
+      ),
+    },
+  ];
 
   return (
     <div style={{ maxWidth: 1600, margin: '0 auto', padding: '24px' }}>
@@ -539,14 +626,14 @@ const VaccinationManagement = () => {
         <Row gutter={[16, 16]} align="middle">
           <Col xs={24} sm={8}>
             <Input
-              placeholder="Tìm kiếm theo tên hoặc loại vắc-xin..."
+              placeholder="Tìm kiếm theo tên chiến dịch tiêm chủng"
               prefix={<SearchOutlined />}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               allowClear
             />
           </Col>
-          <Col xs={24} sm={4}>
+          <Col xs={24} sm={6}>
             <Select
               placeholder="Chọn trạng thái"
               value={selectedStatus}
@@ -561,7 +648,7 @@ const VaccinationManagement = () => {
               ))}
             </Select>
           </Col>
-          <Col xs={24} sm={4}>
+          {/* <Col xs={24} sm={4}>
             <Select
               placeholder="Chọn loại vắc-xin"
               value={selectedVaccineType}
@@ -575,8 +662,8 @@ const VaccinationManagement = () => {
                 </Option>
               ))}
             </Select>
-          </Col>
-          <Col xs={24} sm={6}>
+          </Col> */}
+          <Col xs={24} sm={8}>
             <RangePicker
               placeholder={['Từ ngày', 'Đến ngày']}
               value={dateRange}
@@ -607,49 +694,12 @@ const VaccinationManagement = () => {
         }
         style={{ borderRadius: 8 }}
       >
-        <Table
-          columns={briefColumns}
-          dataSource={filteredEvents}
-          loading={loading}
-          expandable={{
-            expandedRowRender,
-            expandIcon: ({ expanded, onExpand, record }) =>
-              expanded ? (
-                <Button 
-                  size="small" 
-                  type="text" 
-                  icon={<EyeOutlined />} 
-                  onClick={e => onExpand(record, e)}
-                  style={{ color: '#52c41a' }}
-                >
-                  Ẩn chi tiết
-                </Button>
-              ) : (
-                <Button 
-                  size="small" 
-                  type="primary" 
-                  icon={<EyeOutlined />} 
-                  onClick={e => onExpand(record, e)}
-                  style={{ 
-                    backgroundColor: '#52c41a',
-                    borderColor: '#52c41a'
-                  }}
-                >
-                  Xem chi tiết
-                </Button>
-              ),
-            expandIconColumnIndex: 5,
-            rowExpandable: () => true,
-          }}
-          pagination={{
-            total: filteredEvents.length,
-            pageSize: 10,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total, range) => 
-              `${range[0]}-${range[1]} của ${total} chiến dịch`,
-          }}
-          scroll={{ x: 1000 }}
+        <Tabs
+          activeKey={activeTab}
+          onChange={setActiveTab}
+          items={tabItems}
+          tabBarGutter={32}
+          type="card"
         />
       </Card>
 
@@ -740,6 +790,28 @@ const VaccinationManagement = () => {
         </Form>
       </Modal>
 
+      {/* Cancel Campaign Modal */}
+      <Modal
+        title={<span><ExclamationCircleOutlined style={{ color: '#ff4d4f', marginRight: 8 }} />Xác nhận hủy chiến dịch</span>}
+        open={cancelModalOpen}
+        onCancel={() => setCancelModalOpen(false)}
+        onOk={handleConfirmCancel}
+        okText="Hủy chiến dịch"
+        okType="danger"
+        cancelText="Không"
+        confirmLoading={loading}
+      >
+        <div style={{ marginBottom: 12 }}>
+          Bạn có chắc muốn hủy chiến dịch <b>"{cancelTarget?.title}"</b>? Hành động này không thể hoàn tác.
+        </div>
+        <Input.TextArea
+          rows={4}
+          placeholder="Nhập lý do hủy chiến dịch..."
+          value={cancelReason}
+          onChange={e => setCancelReason(e.target.value)}
+          maxLength={255}
+        />
+      </Modal>
     </div>
   );
 };

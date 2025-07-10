@@ -82,8 +82,8 @@ public class UserServiceImpl implements UserService {
         }
         if (email != null && !email.isEmpty()) {
             spec = spec.and((root, query, criteriaBuilder) ->
-                    criteriaBuilder.equal(criteriaBuilder.
-                            lower(root.get("email")), email.toLowerCase()));
+                    criteriaBuilder.like(criteriaBuilder.
+                            lower(root.get("email")), "%" + email.toLowerCase() + "%"));
         }
         if (phone != null && !phone.isEmpty()) {
             spec = spec.and((root, query, criteriaBuilder) ->
