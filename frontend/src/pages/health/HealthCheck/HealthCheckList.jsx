@@ -125,6 +125,20 @@ const HealthCheckList = () => {
     return '';
   };
 
+  // Helper to render campaign status in Vietnamese
+  const renderStatusVN = (status) => {
+    switch (status) {
+      case 'PENDING':
+        return 'Chờ duyệt';
+      case 'APPROVED':
+        return 'Đã duyệt';
+      case 'CANCELLED':
+        return 'Đã từ chối';
+      default:
+        return status;
+    }
+  };
+
   const columns = [
     { title: 'STT', dataIndex: 'index', key: 'index', render: (_, __, idx) => idx + 1 },
     { title: 'Tên chiến dịch', dataIndex: 'campaignName', key: 'campaignName' },
@@ -135,8 +149,8 @@ const HealthCheckList = () => {
       let color = 'default';
       if (status === 'PENDING') color = 'orange';
       if (status === 'APPROVED') color = 'green';
-      if (status === 'REJECTED') color = 'red';
-      return <Tag color={color}>{status}</Tag>;
+      if (status === 'CANCELLED') color = 'red';
+      return <Tag color={color}>{renderStatusVN(status)}</Tag>;
     } },
     { title: 'Người tạo', dataIndex: 'createdBy', key: 'createdBy', render: getUserNameById },
     { title: 'Ngày tạo', dataIndex: 'createdAt', key: 'createdAt' },
@@ -208,7 +222,7 @@ const HealthCheckList = () => {
             <div><b>Đối tượng:</b> {selectedCampaign.targetGroup}</div>
             <div><b>Loại:</b> {selectedCampaign.type}</div>
             <div><b>Người thực hiện:</b> {selectedCampaign.organizer}</div>
-            <div><b>Trạng thái:</b> <Tag color={selectedCampaign.status === 'PENDING' ? 'orange' : selectedCampaign.status === 'APPROVED' ? 'green' : 'red'}>{selectedCampaign.status}</Tag></div>
+            <div><b>Trạng thái:</b> <Tag color={selectedCampaign.status === 'PENDING' ? 'orange' : selectedCampaign.status === 'APPROVED' ? 'green' : selectedCampaign.status === 'CANCELLED' ? 'red' : 'default'}>{renderStatusVN(selectedCampaign.status)}</Tag></div>
             <div><b>Người tạo:</b> {getUserNameById(selectedCampaign.createdBy)}</div>
             <div><b>Người duyệt:</b> {selectedCampaign.approvedBy ? getUserNameById(selectedCampaign.approvedBy) : <span style={{ color: '#bfbfbf' }}>Chưa duyệt</span>}</div>
             <div><b>Ngày tạo:</b> {selectedCampaign.createdAt}</div>

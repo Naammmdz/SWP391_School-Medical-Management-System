@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Form, Input, Select, Button, Alert, Spin, Avatar, Typography, Row, Col, message, DatePicker } from 'antd';
+import { Card, Form, Input, Select, Button, Alert, Spin, Avatar, Typography, Row, Col, DatePicker } from 'antd';
 import { UserAddOutlined, SaveOutlined, UserOutlined, CalendarOutlined, TeamOutlined, BookOutlined } from '@ant-design/icons';
 import userService from '../../services/UserService';
 import studentService from '../../services/StudentService';
@@ -16,6 +16,8 @@ const CreateStudent = () => {
   const [parent, setParent] = useState(null);
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
+  const [successMsg, setSuccessMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
 
   // Lấy thông tin phụ huynh từ parentId
   useEffect(() => {
@@ -29,7 +31,7 @@ const CreateStudent = () => {
         });
         setParent(res.data);
       } catch (err) {
-        message.error('Không tìm thấy thông tin phụ huynh!');
+        setErrorMsg('Không tìm thấy thông tin phụ huynh!');
       }
       setLoading(false);
     };
@@ -39,10 +41,12 @@ const CreateStudent = () => {
   // Tạo mới học sinh
   const handleSubmit = async (values) => {
     if (!parentId) {
-      message.error('Không xác định được phụ huynh!');
+      setErrorMsg('Không xác định được phụ huynh!');
       return;
     }
     setLoading(true);
+    setSuccessMsg('');
+    setErrorMsg('');
     try {
       const token = localStorage.getItem('token');
       const createRequest = {
@@ -59,14 +63,14 @@ const CreateStudent = () => {
           'Content-Type': 'application/json'
         }
       });
-     
-      message.success('Tạo học sinh thành công!');
+      setSuccessMsg('Tạo học sinh thành công!');
       form.resetFields();
-      // Redirect to student list
-      window.location.href = '/danhsachhocsinh';
-
+      setTimeout(() => {
+        setSuccessMsg('');
+        window.location.href = '/danhsachhocsinh';
+      }, 3000);
     } catch (err) {
-      message.error('Tạo học sinh thất bại!');
+      setErrorMsg('Tạo học sinh thất bại!');
     }
     setLoading(false);
   };
@@ -98,6 +102,12 @@ const CreateStudent = () => {
       <Row gutter={[24, 24]}>
         <Col xs={24} lg={16}>
           <Card className="form-card" title="Thông tin học sinh" extra={<UserOutlined />}>
+            {successMsg && (
+              <Alert message={successMsg} type="success" showIcon style={{ marginBottom: 16 }} />
+            )}
+            {errorMsg && (
+              <Alert message={errorMsg} type="error" showIcon style={{ marginBottom: 16 }} />
+            )}
             <Form
               form={form}
               layout="vertical"

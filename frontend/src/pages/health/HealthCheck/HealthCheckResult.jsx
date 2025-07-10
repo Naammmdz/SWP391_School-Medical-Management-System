@@ -239,15 +239,15 @@ const HealthCheckResult = () => {
   const columns = [
     { 
       title: 'Học sinh', 
-      dataIndex: 'studentId', 
-      key: 'studentId',
-      render: (studentId) => getStudentInfo(studentId).fullName
+      dataIndex: 'studentName', 
+      key: 'studentName',
+      render: (studentName) => studentName || '-' 
     },
     { 
       title: 'Lớp', 
-      dataIndex: 'studentId', 
+      dataIndex: 'className', 
       key: 'className',
-      render: (studentId) => getStudentInfo(studentId).className
+      render: (className) => className || '-' 
     },
     {
       title: 'Chiến dịch',

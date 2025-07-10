@@ -6,7 +6,8 @@ import { useNavigate } from 'react-router-dom';
 const severityLevels = [
   { value: 'MINOR', label: 'Nhẹ' },
   { value: 'MODERATE', label: 'Trung bình' },
-  { value: 'SEVERE', label: 'Nặng' }
+  { value: 'SERIOUS', label: 'Nặng' },
+  { value: 'CRITICAL', label: 'Rất nặng' }
 ];
 const statusOptions = [
   { value: 'PROCESSING', label: 'Đang xử lý' },
@@ -163,6 +164,7 @@ const MedicalEvents = () => {
         })),
         eventDate: new Date(form.eventDate).toISOString()
       };
+      console.log('Submitting medical event:', payload);
       await MedicalEventService.createMedicalEvent(payload, config);
       setPopup({ open: true, message: 'Tạo sự kiện y tế thành công!' });
       setForm({
@@ -225,18 +227,44 @@ const MedicalEvents = () => {
               onChange={e => setNameFilter(e.target.value)}
             />
           </div>
-          <div style={{ maxHeight: 220, overflowY: 'auto', border: '1px solid #eee', borderRadius: 4, padding: 8 }}>
+          <div style={{ maxHeight: 220, overflowY: 'auto', border: '1px solid #eee', borderRadius: 4, padding: 8, background: '#fafcff' }}>
             {filteredStudents.length === 0 && <div style={{ color: '#888' }}>Không có học sinh phù hợp</div>}
-            {filteredStudents.map(stu => (
-              <label key={stu.studentId} style={{ minWidth: 180, display: 'flex', alignItems: 'center', gap: 4 }}>
-                <input
-                  type="checkbox"
-                  checked={selectedStudents.includes(stu.studentId)}
-                  onChange={() => handleStudentCheckbox(stu.studentId)}
-                />
-                {stu.fullName} - {stu.className}
-              </label>
-            ))}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {filteredStudents.map(stu => {
+                const checked = selectedStudents.includes(stu.studentId);
+                return (
+                  <label
+                    key={stu.studentId}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      padding: '8px 12px',
+                      borderRadius: 6,
+                      background: checked ? '#e6f7ff' : '#fff',
+                      border: checked ? '1.5px solid #1890ff' : '1.5px solid #f0f0f0',
+                      fontWeight: checked ? 700 : 500,
+                      fontSize: 16,
+                      color: checked ? '#1890ff' : '#222',
+                      cursor: 'pointer',
+                      transition: 'background 0.2s, border 0.2s',
+                      boxShadow: checked ? '0 2px 8px rgba(24,144,255,0.08)' : 'none',
+                      userSelect: 'none',
+                    }}
+                    onMouseOver={e => e.currentTarget.style.background = '#f0faff'}
+                    onMouseOut={e => e.currentTarget.style.background = checked ? '#e6f7ff' : '#fff'}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => handleStudentCheckbox(stu.studentId)}
+                      style={{ width: 22, height: 22, accentColor: '#1890ff', marginRight: 8 }}
+                    />
+                    <span style={{ flex: 1 }}>{stu.fullName} <span style={{ color: '#888', fontWeight: 400 }}>- {stu.className}</span></span>
+                  </label>
+                );
+              })}
+            </div>
           </div>
         </div>
         <div style={boxStyle}>
