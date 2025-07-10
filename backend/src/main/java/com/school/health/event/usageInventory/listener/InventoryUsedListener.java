@@ -20,9 +20,22 @@ public class InventoryUsedListener {
 
     @EventListener
     public void handleInventoryUsedEvent(InventoryUsedEvent event){
-        InventoryUsedInMedicalEventRequestDTO reqDTO = event.getRequest();
-        Integer id = event.getEventID();
-     inventoryUsedService.createInventoryUsedInMedicalEvent(id, reqDTO);
-
+        try {
+            InventoryUsedInMedicalEventRequestDTO reqDTO = event.getRequest();
+            Integer id = event.getEventID();
+            System.out.println("=== HANDLING INVENTORY USED EVENT (LEGACY) ===");
+            System.out.println("Event ID: " + id);
+            System.out.println("Request DTO: " + reqDTO);
+            
+            // Note: This is now handled directly in the main service method
+            // This event listener is kept for backward compatibility
+            inventoryUsedService.createInventoryUsedInMedicalEvent(id, reqDTO);
+            
+            System.out.println("Successfully handled inventory used event");
+        } catch (Exception e) {
+            System.err.println("Error handling inventory used event: " + e.getMessage());
+            e.printStackTrace();
+            // Don't rethrow to avoid affecting the main transaction
+        }
     }
 }

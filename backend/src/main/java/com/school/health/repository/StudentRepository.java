@@ -48,4 +48,8 @@ public interface StudentRepository extends JpaRepository<Student, Integer> {
 
     // Tìm tất cả học sinh đang hoạt động
     List<Student> findByIsActive(boolean isActive);
+
+    // Lấy danh sách tên lớp không trùng lặp
+    @Query("SELECT DISTINCT s.className FROM Student s WHERE s.className IS NOT NULL AND s.isActive = true ORDER BY s.className")
+    List<String> findDistinctClassNames();
 }

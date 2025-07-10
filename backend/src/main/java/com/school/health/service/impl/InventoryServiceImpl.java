@@ -42,7 +42,15 @@ public class InventoryServiceImpl implements InventoryService {
         dto.setType(item.getType());
         dto.setUnit(item.getUnit());
         dto.setQuantity(item.getQuantity());
+        dto.setMinStockLevel(item.getMinStockLevel());
         dto.setExpiryDate(item.getExpiryDate());
+        dto.setBatchNumber(item.getBatchNumber());
+        dto.setManufacturer(item.getManufacturer());
+        dto.setImportDate(item.getImportDate());
+        dto.setImportPrice(item.getImportPrice());
+        dto.setStorageLocation(item.getStorageLocation());
+        dto.setStatus(item.getStatus());
+        dto.setSource(item.getSource());
         dto.setCreatedAt(item.getCreatedAt().toString());
         return dto;
     }
@@ -54,7 +62,15 @@ public class InventoryServiceImpl implements InventoryService {
         inventory.setType(requestDTO.getType());
         inventory.setUnit(requestDTO.getUnit());
         inventory.setQuantity(requestDTO.getQuantity());
+        inventory.setMinStockLevel(requestDTO.getMinStockLevel());
         inventory.setExpiryDate(requestDTO.getExpiryDate());
+        inventory.setBatchNumber(requestDTO.getBatchNumber());
+        inventory.setManufacturer(requestDTO.getManufacturer());
+        inventory.setImportDate(requestDTO.getImportDate());
+        inventory.setImportPrice(requestDTO.getImportPrice());
+        inventory.setStorageLocation(requestDTO.getStorageLocation());
+        inventory.setStatus(requestDTO.getStatus());
+        inventory.setSource(requestDTO.getSource());
         inventoryRepo.save(inventory);
         return mapToDTO(inventory);
     }
@@ -63,10 +79,18 @@ public class InventoryServiceImpl implements InventoryService {
     public InventoryResponseDTO updateInventoryItem(Integer id,InventoryRequestDTO dto) {
         Inventory item = inventoryRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException("Item Not Found"));
         if (dto.getName() != null) item.setName(dto.getName());
+        if (dto.getType() != null) item.setType(dto.getType());
         if (dto.getUnit() != null) item.setUnit(dto.getUnit());
-        if (dto.getQuantity() != 0) item.setQuantity(dto.getQuantity());
-        if (dto.getMinStockLevel() != 0) item.setMinStockLevel(dto.getMinStockLevel());
+        if (dto.getQuantity() != null) item.setQuantity(dto.getQuantity());
+        if (dto.getMinStockLevel() != null) item.setMinStockLevel(dto.getMinStockLevel());
         if (dto.getExpiryDate() != null) item.setExpiryDate(dto.getExpiryDate());
+        if (dto.getBatchNumber() != null) item.setBatchNumber(dto.getBatchNumber());
+        if (dto.getManufacturer() != null) item.setManufacturer(dto.getManufacturer());
+        if (dto.getImportDate() != null) item.setImportDate(dto.getImportDate());
+        if (dto.getImportPrice() != null) item.setImportPrice(dto.getImportPrice());
+        if (dto.getStorageLocation() != null) item.setStorageLocation(dto.getStorageLocation());
+        if (dto.getStatus() != null) item.setStatus(dto.getStatus());
+        if (dto.getSource() != null) item.setSource(dto.getSource());
         inventoryRepo.save(item);
         return mapToDTO(item);
     }
