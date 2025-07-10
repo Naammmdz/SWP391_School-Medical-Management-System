@@ -6,9 +6,9 @@ import com.school.health.dto.request.StatusUpdateRequest;
 import com.school.health.dto.response.*;
 import com.school.health.entity.*;
 import com.school.health.enums.MedicineSubmissionStatus;
-import com.school.health.event.MarkMedicineTakenEvent;
-import com.school.health.event.MedicineSubmissionApprovedEvent;
-import com.school.health.event.MedicineSubmissionCreatedEvent;
+import com.school.health.event.noti.MarkMedicineTakenEvent;
+import com.school.health.event.noti.MedicineSubmissionApprovedEvent;
+import com.school.health.event.noti.MedicineSubmissionCreatedEvent;
 import com.school.health.exception.AccessDeniedException;
 import com.school.health.exception.BadRequestException;
 import com.school.health.exception.ResourceNotFoundException;
@@ -17,7 +17,6 @@ import com.school.health.repository.MedicineSubmissionRepository;
 import com.school.health.repository.StudentRepository;
 import com.school.health.repository.UserRepository;
 import com.school.health.service.MedicineSubmissionService;
-import com.school.health.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -456,7 +455,7 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
 
         return toLogResponse(log);
     }
-// TODO ---------------------------
+
     private MedicineLogResponse toLogResponse(MedicineLog log) {
         MedicineLogResponse response = new MedicineLogResponse();
         response.setId(log.getMedicineLogId());

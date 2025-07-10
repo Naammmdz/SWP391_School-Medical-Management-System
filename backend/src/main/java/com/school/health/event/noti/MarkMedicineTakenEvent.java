@@ -1,7 +1,6 @@
-package com.school.health.event;
+package com.school.health.event.noti;
 
 import com.school.health.dto.response.MedicineLogResponse;
-import com.school.health.entity.MedicineLog;
 
 public class MarkMedicineTakenEvent {
     private MedicineLogResponse medicineLog;
