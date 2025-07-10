@@ -375,7 +375,7 @@ const VaccinationManagement = () => {
               <div style={{ marginBottom: 12 }}>
                 <Text strong style={{ color: '#595959' }}>Địa điểm:</Text>
                 <br />
-                <Text>{record.location || 'Phòng y tế trường'}</Text>
+                <Text>{record.organizer || 'Phòng y tế trường'}</Text>
               </div>
               <div>
                 <Text strong style={{ color: '#595959' }}>Đối tượng:</Text>
