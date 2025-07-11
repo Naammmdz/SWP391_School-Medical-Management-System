@@ -29,8 +29,8 @@ public class MedicineLog {
     @Column(name = "Notes", length = 500)
     private String notes;
 
-    @Column(name = "Status", nullable = false)
-    private boolean status = false;
+    @Column(name = "Status")
+    private Boolean status = null;
 
     @Column(name = "ImageData", columnDefinition = "TEXT")
     private String imageData; // Base64 encoded image

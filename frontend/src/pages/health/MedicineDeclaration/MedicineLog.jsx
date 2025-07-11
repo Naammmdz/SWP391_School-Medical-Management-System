@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Card, Typography, Button, Input, message, Descriptions, Space, Row, Col, Image, Tag, Divider, Alert, Upload } from 'antd';
-import { MedicineBoxOutlined, ArrowLeftOutlined, UserOutlined, CalendarOutlined, FileTextOutlined, CameraOutlined, CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { Card, Typography, Button, Input, message, Descriptions, Space, Row, Col, Image, Tag, Divider, Alert, Upload, Modal } from 'antd';
+import { MedicineBoxOutlined, ArrowLeftOutlined, UserOutlined, CalendarOutlined, FileTextOutlined, CameraOutlined, CheckCircleOutlined, ClockCircleOutlined, CloseOutlined, EditOutlined } from '@ant-design/icons';
 import MedicineDeclarationService from '../../../services/MedicineDeclarationService';
 import dayjs from 'dayjs';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
@@ -32,6 +32,12 @@ const MedicineLog = () => {
   const [markTakenDayLoading, setMarkTakenDayLoading] = useState({});
   const [refresh, setRefresh] = useState(false);
   const [medicineLogsStatus, setMedicineLogsStatus] = useState({});
+  
+  // Modal states
+  const [checkInModalOpen, setCheckInModalOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [currentNote, setCurrentNote] = useState('');
+  const [currentImage, setCurrentImage] = useState(null);
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const isParent = user.userRole === 'ROLE_PARENT';
@@ -57,6 +63,7 @@ const MedicineLog = () => {
         const logsMap = {};
         response.data.medicineLogs.forEach(log => {
           console.log('Processing log:', log);
+          console.log('Log status type:', typeof log.status, 'Value:', log.status);
           // Ensure date format consistency
           const logDate = dayjs(log.givenAt).format('YYYY-MM-DD');
           console.log('Log date formatted:', logDate, 'Original:', log.givenAt);
@@ -66,6 +73,7 @@ const MedicineLog = () => {
             givenByName: log.givenByName,
             imageData: log.imageData
           };
+          console.log('Stored in logsMap:', logsMap[logDate]);
         });
         console.log('Final logs map:', logsMap);
         setMedicineLogsStatus(logsMap);
@@ -85,13 +93,14 @@ const MedicineLog = () => {
     }
   }, [submission, navigate, refresh]);
 
-  const handleMarkTakenByDay = async (date) => {
+  const handleMarkTakenByDay = async (date, isGiven = true) => {
     if (!submission) return;
     
-    // Prevent double submission
+    // Prevent double submission for the same status
     const logStatus = medicineLogsStatus[date];
-    if (logStatus?.status === true) {
-      message.warning('Thuốc ngày này đã được ghi nhận rồi!');
+    if (logStatus?.status === isGiven) {
+      const statusText = isGiven ? 'đã được ghi nhận' : 'đã được đánh dấu là chưa uống';
+      message.warning(`Thuốc ngày này ${statusText} rồi!`);
       return;
     }
     
@@ -99,35 +108,52 @@ const MedicineLog = () => {
     try {
       const token = localStorage.getItem('token');
       const nurse = JSON.parse(localStorage.getItem('user') || '{}');
+      const requestData = {
+        givenByUserId: nurse.id,
+        givenAt: date,
+        notes: currentNote || dailyNotes[date] || '',
+        status: isGiven // true = given, false = not given
+      };
+      console.log('Sending request data:', requestData);
+      console.log('Status being sent:', isGiven, 'Type:', typeof isGiven);
+      
       const formData = new FormData();
       formData.append(
         'request',
         new Blob(
           [
-            JSON.stringify({
-              givenByUserId: nurse.id,
-              givenAt: date,
-              notes: dailyNotes[date] || ''
-            })
+            JSON.stringify(requestData)
           ],
           { type: 'application/json' }
         )
       );
-      if (dailyImages[date]) {
+      if (currentImage) {
+        formData.append('image', currentImage);
+      } else if (dailyImages[date]) {
         formData.append('image', dailyImages[date]);
       }
       await MedicineDeclarationService.markMedicineTaken(submission.id, formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      message.success(`Đã ghi nhận uống thuốc ngày ${dayjs(date).format('DD/MM/YYYY')}`);
+      const successMessage = isGiven 
+        ? `Đã ghi nhận uống thuốc ngày ${dayjs(date).format('DD/MM/YYYY')}`
+        : `Đã ghi nhận KHÔNG uống thuốc ngày ${dayjs(date).format('DD/MM/YYYY')}`;
+      message.success(successMessage);
       setDailyNotes(prev => ({ ...prev, [date]: '' }));
       setDailyImages(prev => ({ ...prev, [date]: null }));
+      
+      // Close modal and reset modal state
+      setCheckInModalOpen(false);
+      setCurrentNote('');
+      setCurrentImage(null);
+      setSelectedDate(null);
+      
       // Immediately update the status for this date
       setMedicineLogsStatus(prev => ({
         ...prev,
         [date]: {
-          status: true,
-          notes: dailyNotes[date] || '',
+          status: isGiven,
+          notes: currentNote || dailyNotes[date] || '',
           givenByName: nurse.fullName || nurse.username || 'Bạn',
           imageData: null
         }
@@ -137,7 +163,7 @@ const MedicineLog = () => {
         fetchMedicineLogsStatus();
       }, 500);
     } catch (err) {
-      message.error('Ghi nhận uống thuốc thất bại!');
+      message.error('Ghi nhận trạng thái uống thuốc thất bại!');
     }
     setMarkTakenDayLoading(prev => ({ ...prev, [date]: false }));
   };
@@ -311,10 +337,23 @@ const MedicineLog = () => {
                 const today = dayjs().format('YYYY-MM-DD');
                 const isTodayOrPast = dayjs(date).isSameOrBefore(today, 'day');
                 const isToday = dayjs(date).isSame(today, 'day');
-                const logStatus = medicineLogsStatus[date];
-                const isCheckedIn = logStatus?.status === true;
+const logStatus = medicineLogsStatus[date];
+                // Status logic: null = default (no action yet), true = given, false = not given
+                const isCheckedIn = logStatus?.status !== null && logStatus?.status !== undefined;
+                const isGiven = logStatus?.status === true;
+                const isNotGiven = logStatus?.status === false;
+                const isDefault = logStatus?.status === null || logStatus?.status === undefined;
                 const dayOfWeek = dayjs(date).day(); // 0: Chủ nhật, 6: Thứ 7
                 const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                
+                console.log(`Status check for ${date}:`, {
+                  logStatus,
+                  statusValue: logStatus?.status,
+                  statusType: typeof logStatus?.status,
+                  isCheckedIn,
+                  isGiven,
+                  isNotGiven
+                });
               
                 console.log(`Date ${date}:`, {
                   logStatus,
@@ -332,9 +371,11 @@ const MedicineLog = () => {
                       size="small"
                       style={{
                         borderRadius: 12,
-                        border: isCheckedIn ? '2px solid #52c41a' : 
+                        border: isGiven ? '2px solid #52c41a' : 
+                               isNotGiven ? '2px solid #ff4d4f' :
                                isToday ? '2px solid #15803d' : '1px solid #f0f0f0',
-                        background: isCheckedIn ? '#f6ffed' : 
+                        background: isGiven ? '#f6ffed' : 
+                                   isNotGiven ? '#fff2f0' :
                                    isToday ? '#f0fdf4' : 'white'
                       }}
                       title={
@@ -349,7 +390,9 @@ const MedicineLog = () => {
                           }}>
                             {dayjs(date).format('DD/MM/YYYY')}
                           </Text>
-                          {isCheckedIn && <Tag color="green" icon={<CheckCircleOutlined />}>Đã uống</Tag>}
+                          {isGiven && <Tag color="green" icon={<CheckCircleOutlined />}>Đã uống</Tag>}
+                          {isNotGiven && <Tag color="red" icon={<CloseOutlined />}>Không uống</Tag>}
+                          {isDefault && !isToday && !isWeekend && <Tag color="default">Chưa ghi nhận</Tag>}
                           {isToday && !isCheckedIn && <Tag color="blue">Hôm nay</Tag>}
                           {!isTodayOrPast && !isCheckedIn && <Tag color="orange">Tương lai</Tag>}
                           {isWeekend && <Tag color="red">Cuối tuần</Tag>}
@@ -359,7 +402,7 @@ const MedicineLog = () => {
                       <Space direction="vertical" style={{ width: '100%' }} size={12}>
                         {isCheckedIn && (
                           <Alert
-                            message="Đã ghi nhận uống thuốc"
+                            message={isGiven ? "Đã ghi nhận uống thuốc" : "Đã ghi nhận không uống thuốc"}
                             description={
                               <div>
                                 {logStatus.givenByName && (
@@ -376,112 +419,42 @@ const MedicineLog = () => {
                                 )}
                               </div>
                             }
-                            type="success"
+                            type={isGiven ? "success" : "warning"}
                             showIcon
                             style={{ marginBottom: 12 }}
                           />
                         )}
-                        <div>
-                          <Text strong style={{ fontSize: 12, color: '#666' }}>Ghi chú:</Text>
-                          <TextArea
-                            rows={2}
-                            placeholder="Ghi chú về việc uống thuốc..."
-                            value={isCheckedIn ? (logStatus?.notes || '') : (dailyNotes[date] || '')}
-                            onChange={e => setDailyNotes(prev => ({ ...prev, [date]: e.target.value }))}
-                            disabled={!isTodayOrPast || isCheckedIn || isWeekend}
-                            readOnly={isCheckedIn}
-                            style={{ marginTop: 4, borderRadius: 8 }}
-                          />
-                        </div>
                         
-                        <div>
-                          <Text strong style={{ fontSize: 12, color: '#666' }}>Ảnh xác nhận:</Text>
-                          {!isCheckedIn && (
-                            <Upload
-                              accept="image/*"
-                              beforeUpload={() => false}
-                              onChange={(info) => {
-                                const file = info.file.originFileObj || info.file;
-                                setDailyImages(prev => ({ ...prev, [date]: file }));
-                              }}
-                              disabled={!isTodayOrPast || isWeekend}
-                              maxCount={1}
-                              listType="picture-card"
-                              style={{ marginTop: 4 }}
-                            >
-                              {!dailyImages[date] && (
-                                <div>
-                                  <CameraOutlined />
-                                  <div style={{ marginTop: 8, fontSize: 12 }}>Tải ảnh</div>
-                                </div>
-                              )}
-                            </Upload>
-                          )}
-                          {/* Show existing image for checked-in logs */}
-                          {isCheckedIn && logStatus?.imageData && (
-                            <div style={{ marginTop: 8 }}>
-                              <Text strong style={{ fontSize: 12, color: '#666' }}>Ảnh đã ghi nhận:</Text>
-                              <div style={{ marginTop: 4 }}>
-                                <Image
-                                  src={logStatus.imageData}
-                                  alt="Ảnh xác nhận"
-                                  style={{
-                                    width: 120,
-                                    height: 120,
-                                    borderRadius: 8,
-                                    objectFit: 'cover',
-                                    border: '2px solid #52c41a'
-                                  }}
-                                />
-                              </div>
-                            </div>
-                          )}
-                          
-                          {/* Show current upload for non-checked-in logs */}
-                          {!isCheckedIn && dailyImages[date] && (
-                            <div style={{ marginTop: 8 }}>
-                              <Text strong style={{ fontSize: 12, color: '#666' }}>Ảnh sẽ gửi:</Text>
-                              <div style={{ marginTop: 4 }}>
-                                <Image
-                                  src={URL.createObjectURL(dailyImages[date])}
-                                  alt="Ảnh xác nhận"
-                                  style={{
-                                    width: 80,
-                                    height: 80,
-                                    borderRadius: 8,
-                                    objectFit: 'cover'
-                                  }}
-                                />
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        
-                        {!isCheckedIn ? (
-                          <Button
-                            type="primary"
-                            icon={<CheckCircleOutlined />}
-                            loading={markTakenDayLoading[date]}
-                            onClick={() => handleMarkTakenByDay(date)}
-                            disabled={!isTodayOrPast || !dailyImages[date]}
-                            style={{ borderRadius: 8, width: '100%' }}
+                        {!isCheckedIn && (
+                          <Button 
+                            type="primary" 
+                            icon={<EditOutlined />} 
+                            onClick={() => {
+                              setSelectedDate(date);
+                              setCheckInModalOpen(true);
+                              setCurrentNote(logStatus?.notes || '');
+                              setCurrentImage(dailyImages[date] || null);
+                            }}
+                            disabled={isWeekend || !isTodayOrPast}
+                            style={{ width: '100%' }}
                           >
-                            Xác nhận đã uống thuốc
+                            Ghi nhận
                           </Button>
-                        ) : (
-                          <Button
-                            type="default"
-                            icon={<CheckCircleOutlined />}
+                        )}
+                        
+                        {isCheckedIn && (
+                          <Button 
+                            type="default" 
+                            icon={isGiven ? <CheckCircleOutlined /> : <CloseOutlined />}
                             disabled
                             style={{ 
-                              borderRadius: 8, 
                               width: '100%',
-                              backgroundColor: '#f6ffed',
-                              borderColor: '#52c41a',
-                              color: '#52c41a'
+                              backgroundColor: isGiven ? '#f6ffed' : '#fff2f0',
+                              borderColor: isGiven ? '#52c41a' : '#ff4d4f',
+                              color: isGiven ? '#52c41a' : '#ff4d4f'
                             }}
                           >
-                            ✓ Đã xác nhận
+                            {isGiven ? '✓ Đã xác nhận uống' : '✗ Đã xác nhận không uống'}
                           </Button>
                         )}
                       </Space>
@@ -492,6 +465,60 @@ const MedicineLog = () => {
             </Row>
           </Card>
         )}
+      <Modal
+        title={`Chi tiết ghi nhận ngày ${selectedDate}`}
+        visible={checkInModalOpen}
+        onCancel={() => setCheckInModalOpen(false)}
+        footer={null}
+      >
+        <div>
+          <Text strong style={{ fontSize: 12, color: '#666' }}>Ghi chú:</Text>
+          <TextArea
+            rows={2}
+            placeholder="Ghi chú về việc uống thuốc..."
+            value={currentNote}
+            onChange={e => setCurrentNote(e.target.value)}
+            style={{ marginTop: 4, borderRadius: 8 }}
+          />
+          
+          <Text strong style={{ fontSize: 12, color: '#666', marginTop: 16 }}>Ảnh xác nhận:</Text>
+          <Upload
+            accept="image/*"
+            beforeUpload={() => false}
+            onChange={(info) => {
+              const file = info.file.originFileObj || info.file;
+              setCurrentImage(file);
+            }}
+            maxCount={1}
+            listType="picture-card"
+            style={{ marginTop: 4 }}
+          >
+            {!currentImage && (
+              <div>
+                <CameraOutlined />
+                <div style={{ marginTop: 8, fontSize: 12 }}>Tải ảnh</div>
+              </div>
+            )}
+          </Upload>
+          <Button
+            type="primary"
+            block
+            style={{ marginTop: 16 }}
+            onClick={() => handleMarkTakenByDay(selectedDate, true)}
+          >
+            Xác nhận đã uống thuốc
+          </Button>
+          
+          <Button
+            type="danger"
+            block
+            style={{ marginTop: 8 }}
+            onClick={() => handleMarkTakenByDay(selectedDate, false)}
+          >
+            Xác nhận không uống thuốc
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 };

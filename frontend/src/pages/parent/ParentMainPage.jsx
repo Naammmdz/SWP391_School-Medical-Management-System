@@ -150,7 +150,7 @@ const ParentMainPage = () => {
       icon: <AlertOutlined style={{ fontSize: 28, color: '#d4380d' }} />, 
       gradient: 'linear-gradient(135deg,rgb(23, 144, 138) 0%, #fed6e3 100%)',
       shadowColor: 'rgba(168, 237, 234, 0.3)',
-      path: '/sukienytehocsinh',
+      path: '/parent/sukienytehocsinh',
       priority: 'medium'
     }
   ];

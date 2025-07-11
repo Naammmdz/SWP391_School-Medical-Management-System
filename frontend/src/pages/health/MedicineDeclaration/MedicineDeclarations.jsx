@@ -143,7 +143,7 @@ const MedicineDeclarations = () => {
             type="primary"
             icon={<FileTextOutlined />}
             size="large"
-            onClick={() => navigate('/donthuocdagui')}
+            onClick={() => navigate('/parent/donthuocdagui')}
             style={{ borderRadius: 8 }}
           >
             Xem đơn thuốc đã gửi

@@ -96,6 +96,8 @@ function App() {
       {/* Parent-specific routes without sidebar */}
       <Route path="/parent/hososuckhoe" element={<ProtectedRoute element={<Layout><HealthRecord /></Layout>} requiredRole="ROLE_PARENT" />} />
       <Route path="/parent/khaibaothuoc" element={<ProtectedRoute element={<Layout><MedicineDeclarations /></Layout>} requiredRole="ROLE_PARENT" />} />
+      <Route path="/parent/sukienytehocsinh" element={<ProtectedRoute element={<Layout><MedicalEventStudent /></Layout>} requiredRole="ROLE_PARENT" />} />
+      <Route path="/parent/donthuocdagui" element={<ProtectedRoute element={<Layout><MedicineList /></Layout>} requiredRole="ROLE_PARENT" />} />
       <Route path="/parent/thongbaotiemchung" element={<ProtectedRoute element={<Layout><VaccinationNotifications /></Layout>} requiredRole="ROLE_PARENT" />} />
       <Route path="/parent/ketquakiemtradinhkyhocsinh" element={<ProtectedRoute element={<Layout><HealthCheckResultStudent /></Layout>} requiredRole="ROLE_PARENT" />} />
       <Route path="/parent/ketquatiemchunghocsinh" element={<ProtectedRoute element={<Layout><VaccinationStudentResult /></Layout>} requiredRole="ROLE_PARENT" />} />

@@ -290,7 +290,7 @@ const MedicineList = () => {
           type="primary"
           icon={<PlusOutlined />}
           size="large"
-          onClick={() => navigate("/khaibaothuoc")}
+          onClick={() => navigate("/parent/khaibaothuoc")}
           style={{ borderRadius: 8, height: 40 }}
         >
           Gửi đơn thuốc mới

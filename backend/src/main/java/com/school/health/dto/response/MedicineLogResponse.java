@@ -12,6 +12,6 @@ public class MedicineLogResponse {
     private String givenByName;
     private LocalDate givenAt;
     private String notes;
-    private boolean status = false;
+    private Boolean status;
     private String imageData; // Base64 encoded image
 }
