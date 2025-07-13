@@ -310,7 +310,7 @@ const Pharmaceutical = () => {
     
     if (expiryDate < today) {
       return 'expired';
-    } else if (monthDiff <= 3) {
+    } else if (monthDiff <= 1) {
       return 'expiring-soon';
     } else {
       return 'valid';
