@@ -46,6 +46,17 @@ const MedicalEvents = () => {
     }
   };
   
+  // Helper function to translate inventory status to Vietnamese
+  const getInventoryStatusText = (status) => {
+    switch (status) {
+      case 'ACTIVE': return 'Hoạt động';
+      case 'INACTIVE': return 'Không hoạt động';
+      case 'EXPIRED': return 'Hết hạn';
+      case 'DAMAGED': return 'Hư hỏng';
+      default: return status || 'Không có';
+    }
+  };
+  
   // State cho danh sách sự cố y tế
   const [medicalEvents, setMedicalEvents] = useState([]);
   // State cho thông tin học sinh
@@ -79,6 +90,11 @@ const MedicalEvents = () => {
   const [editing, setEditing] = useState(false);
   // State cho hiển thị modal
   const [modalOpen, setModalOpen] = useState(false);
+  
+  // State for inventory search modal
+  const [inventorySearchModalOpen, setInventorySearchModalOpen] = useState(false);
+  const [inventorySearchTerm, setInventorySearchTerm] = useState('');
+  const [filteredInventoryItems, setFilteredInventoryItems] = useState([]);
   // State cho loading
   const [loading, setLoading] = useState(false);
   // State cho lọc và tìm kiếm - matching MedicalEventsFiltersRequestDTO
@@ -378,45 +394,84 @@ const MedicalEvents = () => {
   const updateMedicalEvent = async (id, updatedEvent) => {
     setLoading(true);
     try {
-      // Giả lập API call
-      // const response = await fetch(`api/medical-events/${id}`, {
-      //   method: 'PUT',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(updatedEvent)
-      // });
-      // const data = await response.json();
+      // Transform inventory items to match backend DTO format
+      const transformedInventoryItems = updatedEvent.relatedItemUsed ? updatedEvent.relatedItemUsed.map(item => ({
+        itemId: item.inventoryId || item.itemId,
+        quantityUsed: item.quantity || item.quantityUsed,
+        notes: item.notes || item.usageNote || null
+      })) : [];
       
-      setMedicalEvents(medicalEvents.map(event => 
-        event.id === id ? {...updatedEvent, id} : event
-      ));
+      // Transform event data to match backend DTO
+      const eventDTO = {
+        title: updatedEvent.title,
+        stuId: updatedEvent.stuId,
+        eventType: updatedEvent.eventType,
+        eventDate: updatedEvent.eventDate,
+        location: updatedEvent.location,
+        description: updatedEvent.description,
+        relatedItemUsed: transformedInventoryItems,
+        notes: updatedEvent.notes,
+        handlingMeasures: updatedEvent.handlingMeasures,
+        severityLevel: updatedEvent.severityLevel,
+        status: updatedEvent.status
+      };
+      
+      console.log('=== UPDATING MEDICAL EVENT ===');
+      console.log('Event ID:', id);
+      console.log('Update data:', JSON.stringify(eventDTO, null, 2));
+      
+      // Call the API to update the medical event
+      await MedicalEventService.updateMedicalEvent(id, eventDTO);
+      
+      console.log('Medical event updated successfully');
+      
+      // Refresh the medical events list
+      await fetchMedicalEvents();
+      
       setEditing(false);
       setModalOpen(false);
       resetCurrentEvent();
       setLoading(false);
+      
+      alert('Cập nhật sự cố y tế thành công!');
+      
     } catch (error) {
-      console.error('Error updating medical event:', error);
+      console.error('=== UPDATE MEDICAL EVENT ERROR ===');
+      console.error('Full error object:', error);
+      console.error('Error message:', error.message);
+      
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response data:', error.response.data);
+        
+        let errorMessage = 'Không thể cập nhật sự cố y tế. Vui lòng thử lại.';
+        
+        if (error.response.status === 400) {
+          errorMessage = `Lỗi dữ liệu không hợp lệ: ${error.response.data.message || error.response.data}`;
+        } else if (error.response.status === 401) {
+          errorMessage = 'Bạn cần đăng nhập lại để thực hiện thao tác này.';
+          window.location.href = '/login';
+        } else if (error.response.status === 403) {
+          errorMessage = 'Bạn không có quyền thực hiện thao tác này.';
+        } else if (error.response.status === 404) {
+          errorMessage = 'Không tìm thấy sự cố y tế cần cập nhật.';
+        } else if (error.response.status === 500) {
+          errorMessage = `Lỗi máy chủ: ${error.response.data.message || error.response.data}`;
+        }
+        
+        alert(errorMessage);
+      } else if (error.request) {
+        console.error('Request made but no response received:', error.request);
+        alert('Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng.');
+      } else {
+        console.error('Error setting up request:', error.message);
+        alert('Có lỗi xảy ra khi chuẩn bị yêu cầu.');
+      }
+      
       setLoading(false);
     }
   };
 
-  // Hàm xóa sự cố y tế
-  const deleteMedicalEvent = async (id) => {
-    if (window.confirm('Bạn có chắc muốn xóa sự cố y tế này?')) {
-      setLoading(true);
-      try {
-        // Giả lập API call
-        // await fetch(`api/medical-events/${id}`, {
-        //   method: 'DELETE'
-        // });
-        
-        setMedicalEvents(medicalEvents.filter(event => event.id !== id));
-        setLoading(false);
-      } catch (error) {
-        console.error('Error deleting medical event:', error);
-        setLoading(false);
-      }
-    }
-  };
 
   // Hàm lấy inventory usage logs theo medical event ID và trả về chúng
   const fetchInventoryUsageLogsAndReturn = async (medicalEventId) => {
@@ -573,12 +628,13 @@ const MedicalEvents = () => {
     
     // Check inventory items if any are selected
     if (currentEvent.relatedItemUsed && currentEvent.relatedItemUsed.length > 0) {
-      const invalidInventoryItems = currentEvent.relatedItemUsed.filter(item => 
-        !item.inventoryId || item.inventoryId === null || item.inventoryId === undefined ||
-        !item.quantity || item.quantity <= 0
-      );
+      const invalidInventoryItems = currentEvent.relatedItemUsed.filter(item => {
+        const quantity = typeof item.quantity === 'string' ? parseInt(item.quantity) : item.quantity;
+        return !item.inventoryId || item.inventoryId === null || item.inventoryId === undefined ||
+               quantity === null || quantity === undefined || quantity < 0 || isNaN(quantity);
+      });
       if (invalidInventoryItems.length > 0) {
-        validationErrors.push('Có vật phẩm y tế không hợp lệ trong danh sách đã chọn');
+        validationErrors.push('Có vật phẩm y tế không hợp lệ trong danh sách đã chọn. Số lượng phải là số nguyên không âm.');
       }
     }
     
@@ -632,7 +688,7 @@ const MedicalEvents = () => {
     let updatedItems;
     
     if (existingItemIndex >= 0) {
-      // Update existing item quantity
+      // Update existing item quantity (allow empty strings and zero during editing)
       console.log('Updating existing item at index:', existingItemIndex);
       updatedItems = [...selectedInventoryItems];
       updatedItems[existingItemIndex].quantity = quantity;
@@ -655,6 +711,61 @@ const MedicalEvents = () => {
     const updatedItems = selectedInventoryItems.filter(item => item.inventoryId !== itemId);
     setSelectedInventoryItems(updatedItems);
     setCurrentEvent({...currentEvent, relatedItemUsed: updatedItems});
+  };
+
+  // Filter inventory items based on search term
+  const filterInventoryItems = (searchTerm) => {
+    // Always filter to only show active items
+    const activeItems = inventoryItems.filter(item => item.status === 'ACTIVE');
+    
+    if (!searchTerm.trim()) {
+      setFilteredInventoryItems(activeItems);
+      return;
+    }
+    
+    const filtered = activeItems.filter(item => {
+      const itemName = item.name || item.itemName || '';
+      const itemType = item.type || item.category || '';
+      const itemManufacturer = item.manufacturer || '';
+      const itemBatchNumber = item.batchNumber || '';
+      const itemSource = item.source || '';
+      const itemStorageLocation = item.storageLocation || '';
+      
+      return itemName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+             itemType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+             itemManufacturer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+             itemBatchNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+             itemSource.toLowerCase().includes(searchTerm.toLowerCase()) ||
+             itemStorageLocation.toLowerCase().includes(searchTerm.toLowerCase());
+    });
+    
+    setFilteredInventoryItems(filtered);
+  };
+
+  // Handle inventory search modal
+  const openInventorySearchModal = () => {
+    setInventorySearchTerm('');
+    // Only show active items when modal opens
+    const activeItems = inventoryItems.filter(item => item.status === 'ACTIVE');
+    setFilteredInventoryItems(activeItems);
+    setInventorySearchModalOpen(true);
+  };
+
+  const closeInventorySearchModal = () => {
+    setInventorySearchModalOpen(false);
+    setInventorySearchTerm('');
+    setFilteredInventoryItems([]);
+  };
+
+  const handleInventorySearchChange = (e) => {
+    const searchTerm = e.target.value;
+    setInventorySearchTerm(searchTerm);
+    filterInventoryItems(searchTerm);
+  };
+
+  const handleInventoryItemSelect = (itemId) => {
+    handleInventoryItemSelection(itemId, 1);
+    closeInventorySearchModal();
   };
 
   // Xử lý thay đổi filter
@@ -759,8 +870,10 @@ if (uiFilters.toDate) {
       }
       
       if (Array.isArray(inventoryData)) {
-        setInventoryItems(inventoryData);
-        console.log('Successfully loaded', inventoryData.length, 'inventory items:', inventoryData);
+        // Filter to only show active inventory items
+        const activeInventoryItems = inventoryData.filter(item => item.status === 'ACTIVE');
+        setInventoryItems(activeInventoryItems);
+        console.log('Successfully loaded', activeInventoryItems.length, 'active inventory items out of', inventoryData.length, 'total items');
       } else {
         console.warn('Invalid inventory response format:', response);
         setInventoryItems([]);
@@ -928,10 +1041,6 @@ fetchMedicalEvents();
                     <button className="edit-btn" onClick={() => editMedicalEvent(event)} title="Chỉnh sửa">
                       <span className="btn-icon">✏️</span>
                       Sửa
-                    </button>
-                    <button className="delete-btn" onClick={() => deleteMedicalEvent(event.id)} title="Xóa">
-                      <span className="btn-icon">🗑️</span>
-                      Xóa
                     </button>
                   </td>
                 </tr>
@@ -1229,22 +1338,32 @@ fetchMedicalEvents();
                     >
                       <option value="">-- Chọn vật phẩm y tế --</option>
                       {inventoryItems && inventoryItems.length > 0 ? (
-                        inventoryItems.map((item, index) => {
-                          // Handle different possible ID field names
-                          const itemId = item.id || item.inventoryId || item.itemId;
-                          const itemName = item.name || item.itemName || item.title || 'Unknown Item';
-                          const itemQuantity = item.quantity || item.stock || item.availableQuantity || 0;
-                          
-                          return (
-                            <option key={itemId || index} value={itemId}>
-                              {itemName} (Còn lại: {itemQuantity})
-                            </option>
-                          );
-                        })
+                        inventoryItems
+                          .filter(item => item.status === 'ACTIVE') // Only show active items
+                          .map((item, index) => {
+                            // Handle different possible ID field names
+                            const itemId = item.id || item.inventoryId || item.itemId;
+                            const itemName = item.name || item.itemName || item.title || 'Unknown Item';
+                            const itemQuantity = item.quantity || item.stock || item.availableQuantity || 0;
+                            
+                            return (
+                              <option key={itemId || index} value={itemId}>
+                                {itemName} (Còn lại: {itemQuantity})
+                              </option>
+                            );
+                          })
                       ) : (
                         <option value="" disabled>Đang tải danh sách vật phẩm...</option>
                       )}
                     </select>
+                    <button 
+                      type="button" 
+                      className="search-inventory-btn"
+                      onClick={openInventorySearchModal}
+                      title="Tìm kiếm vật phẩm y tế"
+                    >
+                      🔍 Tìm kiếm
+                    </button>
                     {inventoryItems && inventoryItems.length === 0 && (
                       <div className="inventory-debug-info">
                         <small style={{color: 'red'}}>Không có vật phẩm y tế nào. Kiểm tra console để xem lỗi.</small>
@@ -1269,6 +1388,7 @@ fetchMedicalEvents();
                       const itemExpiry = inventoryItem?.expirationDate || inventoryItem?.expiry || null;
                       const itemCondition = inventoryItem?.condition || inventoryItem?.status || 'N/A';
                       const availableQuantity = inventoryItem?.quantity || inventoryItem?.stock || inventoryItem?.availableQuantity || 0;
+                      const itemStatus = inventoryItem?.status || '';
                       
                       return (
                         <div key={item.inventoryId} className="selected-inventory-item-detailed">
@@ -1280,7 +1400,7 @@ fetchMedicalEvents();
                             <div className="item-details">
                               <div className="item-detail-row">
                                 <span className="detail-label">Tình trạng:</span>
-                                <span className="detail-value">{itemCondition}</span>
+                                <span className="detail-value">{itemStatus ? getInventoryStatusText(itemStatus) : (itemCondition || 'Không có')}</span>
                               </div>
                               <div className="item-detail-row">
                                 <span className="detail-label">Còn lại:</span>
@@ -1300,10 +1420,20 @@ fetchMedicalEvents();
                               <input
                                 id={`quantity-${item.inventoryId}`}
                                 type="number"
-                                min="1"
+                                min="0"
                                 max={availableQuantity}
                                 value={item.quantity}
-                                onChange={(e) => handleInventoryItemSelection(item.inventoryId, parseInt(e.target.value) || 1)}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  handleInventoryItemSelection(item.inventoryId, parseInt(value) || 0);
+                                }}
+                                onBlur={(e) => {
+                                  // When user leaves the field, ensure it has a valid value
+                                  const value = e.target.value;
+                                  if (value === '' || parseInt(value) < 0) {
+                                    handleInventoryItemSelection(item.inventoryId, 0);
+                                  }
+                                }}
                                 className="quantity-input"
                               />
                               <span className="unit-label">{itemUnit}</span>
@@ -1436,6 +1566,130 @@ fetchMedicalEvents();
         selectedStudentIds={currentEvent.stuId}
         availableClasses={availableClasses}
       />
+      
+      {/* Inventory Search Modal */}
+      {inventorySearchModalOpen && (
+        <div className="modal inventory-search-modal">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2>Tìm kiếm vật phẩm y tế</h2>
+              <button className="close-btn" onClick={closeInventorySearchModal}>
+                ×
+              </button>
+            </div>
+            
+            <div className="inventory-search-content">
+              <div className="search-input-container">
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm theo tên, loại, nhà sản xuất, số lô, nguồn cung cấp, vị trí lưu trữ..."
+                  value={inventorySearchTerm}
+                  onChange={handleInventorySearchChange}
+                  className="inventory-search-input"
+                  autoFocus
+                />
+                <div className="search-results-info">
+                  {inventorySearchTerm && `Tìm thấy ${filteredInventoryItems.length} kết quả`}
+                </div>
+              </div>
+              
+              <div className="inventory-search-results">
+                {filteredInventoryItems.length > 0 ? (
+                  <div className="inventory-items-grid">
+                    {filteredInventoryItems.map((item) => {
+                      const itemId = item.id || item.inventoryId || item.itemId;
+                      const itemName = item.name || item.itemName || item.title || 'Unknown Item';
+                      const itemQuantity = item.quantity || item.stock || item.availableQuantity || 0;
+                      const itemType = item.type || item.category || '';
+                      const itemManufacturer = item.manufacturer || '';
+                      const itemBatchNumber = item.batchNumber || '';
+                      const itemExpiryDate = item.expiryDate || item.expiration_date || '';
+                      const itemStorageLocation = item.storageLocation || '';
+                      const itemUnit = item.unit || '';
+                      const itemStatus = item.status || '';
+                      
+                      // Check if item is already selected
+                      const isSelected = selectedInventoryItems.some(selected => selected.inventoryId === itemId);
+                      
+                      return (
+                        <div 
+                          key={itemId} 
+                          className={`inventory-item-card ${isSelected ? 'selected' : ''}`}
+                          onClick={() => !isSelected && handleInventoryItemSelect(itemId)}
+                        >
+                          <div className="item-header">
+                            <h4 className="item-name">{itemName}</h4>
+                            <span className="item-id">ID: {itemId}</span>
+                          </div>
+                          
+                          <div className="item-details">
+                            {itemType && (
+                              <div className="item-detail">
+                                <span className="detail-label">Loại:</span>
+                                <span className="detail-value">{itemType}</span>
+                              </div>
+                            )}
+                            
+                            <div className="item-detail">
+                              <span className="detail-label">Số lượng:</span>
+                              <span className="detail-value">{itemQuantity} {itemUnit}</span>
+                            </div>
+                            
+                            {itemManufacturer && (
+                              <div className="item-detail">
+                                <span className="detail-label">Nhà sản xuất:</span>
+                                <span className="detail-value">{itemManufacturer}</span>
+                              </div>
+                            )}
+                            
+                            {itemBatchNumber && (
+                              <div className="item-detail">
+                                <span className="detail-label">Số lô:</span>
+                                <span className="detail-value">{itemBatchNumber}</span>
+                              </div>
+                            )}
+                            
+                            {itemExpiryDate && (
+                              <div className="item-detail">
+                                <span className="detail-label">Hạn sử dụng:</span>
+                                <span className="detail-value">{itemExpiryDate}</span>
+                              </div>
+                            )}
+                            
+                            {itemStorageLocation && (
+                              <div className="item-detail">
+                                <span className="detail-label">Vị trí:</span>
+                                <span className="detail-value">{itemStorageLocation}</span>
+                              </div>
+                            )}
+                            
+                            {itemStatus && (
+                              <div className="item-detail">
+                                <span className="detail-label">Trạng thái:</span>
+                                <span className="detail-value">{getInventoryStatusText(itemStatus)}</span>
+                              </div>
+                            )}
+                          </div>
+                          
+                          {isSelected && (
+                            <div className="item-selected-indicator">
+                              ✓ Đã chọn
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="no-results">
+                    {inventorySearchTerm ? 'Không tìm thấy vật phẩm nào phù hợp.' : 'Nhập từ khóa để tìm kiếm vật phẩm y tế.'}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

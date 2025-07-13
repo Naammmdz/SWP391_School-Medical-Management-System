@@ -13,7 +13,7 @@ public class InventoryUsedRequestDTO {
 
 
     @NotNull(message = "Số lượng đã dùng không được để trống")
-    @Min(value = 1, message = "Số lượng đã dùng phải lớn hơn 0")
+    @Min(value = 0, message = "Số lượng đã dùng không khả dụng!!")
     private Integer quantityUsed;
 
     @NotNull(message = "Sự kiện y tế liên quan không được để trống")

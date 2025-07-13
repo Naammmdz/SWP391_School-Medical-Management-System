@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Plus, Edit, Trash2, X, Save, RefreshCw, AlertTriangle } from 'lucide-react';
+import InventoryService from '../../../services/InventoryService';
 import './Pharmaceutical.css';
 
 const Pharmaceutical = () => {
@@ -8,6 +9,30 @@ const Pharmaceutical = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState('all');
+  
+  // Calculate tab counts by status
+  const getTabCounts = () => {
+    const counts = {
+      all: medications.length,
+      active: medications.filter(med => med.status === 'ACTIVE').length,
+      inactive: medications.filter(med => med.status === 'INACTIVE').length,
+      expired: medications.filter(med => med.status === 'EXPIRED').length,
+      damaged: medications.filter(med => med.status === 'DAMAGED').length
+    };
+    return counts;
+  };
+  
+  // Helper function to translate inventory status to Vietnamese
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'ACTIVE': return 'Hoạt động';
+      case 'INACTIVE': return 'Không hoạt động';
+      case 'EXPIRED': return 'Hết hạn';
+      case 'DAMAGED': return 'Hư hỏng';
+      default: return status || 'Không có';
+    }
+  };
   
   // CRUD state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -15,162 +40,118 @@ const Pharmaceutical = () => {
   const [currentMedication, setCurrentMedication] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
-    generic_name: '',
-    category: '',
-    dosage: '',
-    dosage_form: '',
-    quantity: '',
+    type: '',
     unit: '',
-    expiration_date: '',
+    quantity: '',
+    minStockLevel: '',
+    expiryDate: '',
+    batchNumber: '',
     manufacturer: '',
-    instructions: '',
-    side_effects: '',
-    storage: '',
-    for_conditions: '',
+    importDate: '',
+    importPrice: '',
+    storageLocation: '',
+    status: 'ACTIVE',
+    source: '',
   });
 
-  // State for medication selection and notification
-  const [isSelectingMedication, setIsSelectingMedication] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState(null);
-  const [selectedMedications, setSelectedMedications] = useState([]);
-  const [notificationModalOpen, setNotificationModalOpen] = useState(false);
-  const [notification, setNotification] = useState({
-    studentId: null,
-    studentName: '',
-    medications: [],
-    notes: '',
-    dosage: '',
-    time: '',
-    date: new Date().toISOString().split('T')[0]
-  });
-
-  // Mock data for students
-  const mockStudents = [
-    { id: 1, name: 'Nguyễn Văn A', class: '10A1' },
-    { id: 2, name: 'Trần Thị B', class: '10A1' },
-    { id: 3, name: 'Lê Văn C', class: '10A2' },
-  ];
 
   // Get all medications from API
   useEffect(() => {
     fetchMedications();
   }, []);
 
-  // Filter medications when search term changes
+  // Filter medications when search term or active tab changes
   useEffect(() => {
-    if (searchTerm.trim() === '') {
-      setFilteredMedications(medications);
-    } else {
-      const filtered = medications.filter(
+    let filtered = medications;
+    
+    // Filter by tab (status)
+    if (activeTab !== 'all') {
+      filtered = filtered.filter(medication => 
+        medication.status === activeTab.toUpperCase()
+      );
+    }
+    
+    // Filter by search term
+    if (searchTerm.trim() !== '') {
+      filtered = filtered.filter(
         medication => 
           medication.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          medication.generic_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          medication.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          medication.for_conditions.toLowerCase().includes(searchTerm.toLowerCase())
+          (medication.type && medication.type.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (medication.manufacturer && medication.manufacturer.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (medication.batchNumber && medication.batchNumber.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (medication.source && medication.source.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (medication.storageLocation && medication.storageLocation.toLowerCase().includes(searchTerm.toLowerCase()))
       );
-      setFilteredMedications(filtered);
     }
-  }, [searchTerm, medications]);
+    
+    setFilteredMedications(filtered);
+  }, [searchTerm, medications, activeTab]);
 
   const fetchMedications = async () => {
     setIsLoading(true);
     setError(null);
     
     try {
-      // API call would go here
-      // const response = await fetch('api/medications');
-      // const data = await response.json();
+      const response = await InventoryService.getInventoryList();
+      console.log('API Response:', response); // Debug log
       
-      // For now, using mock data
-      const mockData = [
-        { 
-          id: 1, 
-          name: 'Paracetamol', 
-          generic_name: 'Acetaminophen',
-          category: 'Thuốc giảm đau',
-          dosage: '500mg', 
-          dosage_form: 'Viên nén',
-          quantity: 100, 
-          unit: 'viên', 
-          expiration_date: '2025-04-15',
-          manufacturer: 'Công ty Dược phẩm Nam Hà',
-          instructions: 'Uống sau khi ăn. Người lớn: 1-2 viên/lần, 3-4 lần/ngày. Trẻ em: theo hướng dẫn của bác sĩ.',
-          side_effects: 'Buồn nôn, nôn, đau dạ dày, dị ứng (hiếm gặp)',
-          storage: 'Nơi khô ráo, nhiệt độ dưới 30°C',
-          for_conditions: 'Đau nhẹ, đau đầu, sốt, cảm cúm',
-        },
-        { 
-          id: 2, 
-          name: 'Cetirizine', 
-          generic_name: 'Cetirizine Hydrochloride',
-          category: 'Thuốc kháng histamine',
-          dosage: '10mg', 
-          dosage_form: 'Viên nén',
-          quantity: 50, 
-          unit: 'viên', 
-          expiration_date: '2025-02-20',
-          manufacturer: 'Công ty Cổ phần Dược phẩm OPC',
-          instructions: 'Uống 1 viên/ngày, tốt nhất vào buổi tối',
-          side_effects: 'Buồn ngủ, khô miệng, mệt mỏi',
-          storage: 'Nơi khô ráo, nhiệt độ phòng',
-          for_conditions: 'Dị ứng, viêm mũi dị ứng, mày đay',
-        },
-        { 
-          id: 3, 
-          name: 'Amoxicillin', 
-          generic_name: 'Amoxicillin Trihydrate',
-          category: 'Kháng sinh',
-          dosage: '500mg', 
-          dosage_form: 'Viên nang',
-          quantity: 60, 
-          unit: 'viên', 
-          expiration_date: '2024-10-10',
-          manufacturer: 'Công ty CP Dược phẩm Hà Tây',
-          instructions: 'Uống 1 viên mỗi 8 giờ. Hoàn thành đủ liệu trình điều trị.',
-          side_effects: 'Tiêu chảy, buồn nôn, phát ban. Dị ứng kháng sinh (gọi bác sĩ ngay nếu xảy ra)',
-          storage: 'Nơi khô ráo, nhiệt độ dưới 25°C',
-          for_conditions: 'Nhiễm trùng đường hô hấp, tai, mũi họng, tiết niệu',
-        },
-        { 
-          id: 4, 
-          name: 'Loratadine', 
-          generic_name: 'Loratadine',
-          category: 'Thuốc kháng histamine',
-          dosage: '10mg', 
-          dosage_form: 'Viên nén',
-          quantity: 30, 
-          unit: 'viên', 
-          expiration_date: '2025-04-30',
-          manufacturer: 'Công ty Dược phẩm Trung ương 1',
-          instructions: 'Uống 1 viên mỗi ngày',
-          side_effects: 'Ít gây buồn ngủ, đau đầu (hiếm gặp)',
-          storage: 'Nơi khô ráo, tránh ánh sáng',
-          for_conditions: 'Dị ứng, viêm mũi dị ứng theo mùa',
-        },
-        { 
-          id: 5, 
-          name: 'Ibuprofen', 
-          generic_name: 'Ibuprofen',
-          category: 'Thuốc giảm đau, chống viêm',
-          dosage: '400mg', 
-          dosage_form: 'Viên nén bao phim',
-          quantity: 80, 
-          unit: 'viên', 
-          expiration_date: '2025-01-15',
-          manufacturer: 'Công ty TNHH Dược phẩm Boston',
-          instructions: 'Uống sau khi ăn. Người lớn: 1 viên/lần, 3 lần/ngày',
-          side_effects: 'Đau dạ dày, buồn nôn, có thể gây loét dạ dày nếu dùng kéo dài',
-          storage: 'Nơi khô ráo, nhiệt độ phòng',
-          for_conditions: 'Đau, viêm khớp, đau đầu, đau răng, đau kinh',
-        }
-      ];
+      // Check different possible response structures
+      let medicationsData = [];
       
-      setMedications(mockData);
-      setFilteredMedications(mockData);
+      if (response && Array.isArray(response)) {
+        // Response is directly an array
+        medicationsData = response;
+      } else if (response && response.data && Array.isArray(response.data)) {
+        // Response has data property with array
+        medicationsData = response.data;
+      } else if (response && response.result && Array.isArray(response.result)) {
+        // Response has result property with array
+        medicationsData = response.result;
+      } else if (response && response.items && Array.isArray(response.items)) {
+        // Response has items property with array
+        medicationsData = response.items;
+      }
+      
+      console.log('Medications Data:', medicationsData); // Debug log
+      
+      // Transform inventory data to match the expected medication format
+      const transformedData = medicationsData
+        .map(item => ({
+          id: item.itemId || item.id || item._id,
+          name: item.name || item.itemName || item.medication_name || 'Không có tên',
+          type: item.type || item.category || '',
+          unit: item.unit || item.unitOfMeasure || '',
+          quantity: item.quantity || item.stock || item.amount || 0,
+          minStockLevel: item.minStockLevel || 0,
+          expiryDate: item.expiryDate || item.expiration_date || item.exp_date || '',
+          batchNumber: item.batchNumber || '',
+          manufacturer: item.manufacturer || item.supplier || '',
+          importDate: item.importDate || '',
+          importPrice: item.importPrice || 0,
+          storageLocation: item.storageLocation || '',
+          status: item.status || '',
+          source: item.source || '',
+          createdAt: item.createdAt || '',
+          // Keep legacy fields for backward compatibility
+          generic_name: item.generic_name || item.description || item.activeIngredient || '',
+          category: item.category || item.type || '',
+          dosage: item.dosage || item.strength || '',
+          dosage_form: item.dosage_form || item.form || item.dosageForm || '',
+          expiration_date: item.expiryDate || item.expiration_date || item.exp_date || '',
+          instructions: item.instructions || item.usage || '',
+          side_effects: item.side_effects || item.sideEffects || '',
+          storage: item.storage || item.storageConditions || '',
+          for_conditions: item.for_conditions || item.indications || item.description || '',
+        }));
+      
+      console.log('Transformed Data:', transformedData); // Debug log
+      
+      setMedications(transformedData);
+      setFilteredMedications(transformedData);
       setIsLoading(false);
     } catch (err) {
       console.error('Error fetching medications:', err);
-      setError('Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.');
+      setError('Có lỗi xảy ra khi tải dữ liệu từ server. Vui lòng thử lại sau.');
       setIsLoading(false);
     }
   };
@@ -187,18 +168,18 @@ const Pharmaceutical = () => {
     setIsEditMode(false);
     setFormData({
       name: '',
-      generic_name: '',
-      category: '',
-      dosage: '',
-      dosage_form: '',
-      quantity: '',
+      type: '',
       unit: '',
-      expiration_date: '',
+      quantity: '',
+      minStockLevel: '',
+      expiryDate: '',
+      batchNumber: '',
       manufacturer: '',
-      instructions: '',
-      side_effects: '',
-      storage: '',
-      for_conditions: '',
+      importDate: '',
+      importPrice: '',
+      storageLocation: '',
+      status: 'ACTIVE',
+      source: '',
     });
     setIsModalOpen(true);
   };
@@ -207,19 +188,19 @@ const Pharmaceutical = () => {
     setIsEditMode(true);
     setCurrentMedication(medication);
     setFormData({
-      name: medication.name,
-      generic_name: medication.generic_name || '',
-      category: medication.category || '',
-      dosage: medication.dosage || '',
-      dosage_form: medication.dosage_form || '',
-      quantity: medication.quantity,
+      name: medication.name || '',
+      type: medication.type || '',
       unit: medication.unit || '',
-      expiration_date: medication.expiration_date || '',
+      quantity: medication.quantity || '',
+      minStockLevel: medication.minStockLevel || '',
+      expiryDate: medication.expiryDate || medication.expiration_date || '',
+      batchNumber: medication.batchNumber || '',
       manufacturer: medication.manufacturer || '',
-      instructions: medication.instructions || '',
-      side_effects: medication.side_effects || '',
-      storage: medication.storage || '',
-      for_conditions: medication.for_conditions || '',
+      importDate: medication.importDate || '',
+      importPrice: medication.importPrice || '',
+      storageLocation: medication.storageLocation || '',
+      status: medication.status || 'ACTIVE',
+      source: medication.source || '',
     });
     setIsModalOpen(true);
   };
@@ -231,46 +212,69 @@ const Pharmaceutical = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.dosage || !formData.quantity || !formData.unit) {
+    if (!formData.name || !formData.type || !formData.quantity || !formData.unit) {
       alert('Vui lòng điền đầy đủ các trường bắt buộc');
       return;
     }
     
     try {
       if (isEditMode) {
-        // Update existing medication
-        // API call would go here
-        // await fetch(`api/medications/${currentMedication.id}`, {
-        //   method: 'PUT',
-        //   headers: { 'Content-Type': 'application/json' },
-        //   body: JSON.stringify(formData)
-        // });
+        // Update existing medication using InventoryService
+        const updateData = {
+          name: formData.name,
+          type: formData.type,
+          unit: formData.unit,
+          quantity: parseInt(formData.quantity),
+          minStockLevel: parseInt(formData.minStockLevel || 0),
+          expiryDate: formData.expiryDate || null,
+          batchNumber: formData.batchNumber,
+          manufacturer: formData.manufacturer,
+          importDate: formData.importDate || null,
+          importPrice: parseFloat(formData.importPrice || 0),
+          storageLocation: formData.storageLocation,
+          status: formData.status,
+          source: formData.source,
+        };
         
-        // Update local state
+        await InventoryService.updateInventory(currentMedication.id, updateData);
+        
+        // Update local state for now
         const updatedMedications = medications.map(medication => 
-          medication.id === currentMedication.id ? { ...medication, ...formData } : medication
+          medication.id === currentMedication.id ? { ...medication, ...updateData } : medication
         );
         setMedications(updatedMedications);
       } else {
-        // Add new medication
-        // API call would go here
-        // const response = await fetch('api/medications', {
-        //   method: 'POST',
-        //   headers: { 'Content-Type': 'application/json' },
-        //   body: JSON.stringify(formData)
-        // });
-        // const newMedication = await response.json();
+        // Add new medication using InventoryService
+        const newInventoryData = {
+          name: formData.name,
+          type: formData.type,
+          unit: formData.unit,
+          quantity: parseInt(formData.quantity),
+          minStockLevel: parseInt(formData.minStockLevel || 0),
+          expiryDate: formData.expiryDate || null,
+          batchNumber: formData.batchNumber,
+          manufacturer: formData.manufacturer,
+          importDate: formData.importDate || null,
+          importPrice: parseFloat(formData.importPrice || 0),
+          storageLocation: formData.storageLocation,
+          status: formData.status,
+          source: formData.source,
+        };
         
-        // Mock response
+        const response = await InventoryService.createInventory(newInventoryData);
+        
+        // Mock response for now
         const newMedication = {
           id: medications.length + 1,
-          ...formData
+          ...newInventoryData
         };
         
         setMedications([...medications, newMedication]);
       }
       
       closeModal();
+      // Refresh data from API
+      fetchMedications();
     } catch (err) {
       console.error('Error saving medication:', err);
       alert('Có lỗi xảy ra khi lưu dữ liệu. Vui lòng thử lại sau.');
@@ -313,101 +317,72 @@ const Pharmaceutical = () => {
     }
   };
 
-  // Handle medication selection
-  const handleMedicationSelect = (medication) => {
-    if (selectedMedications.find(m => m.id === medication.id)) {
-      setSelectedMedications(selectedMedications.filter(m => m.id !== medication.id));
-    } else {
-      setSelectedMedications([...selectedMedications, medication]);
-    }
+  // State for details modal
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+
+  const openDetailsModal = (item) => {
+    setSelectedItem(item);
+    setDetailsModalOpen(true);
   };
 
-  // Open medication selection modal
-  const openMedicationSelection = (student) => {
-    setSelectedStudent(student);
-    setSelectedMedications([]);
-    setIsSelectingMedication(true);
+  const closeDetailsModal = () => {
+    setDetailsModalOpen(false);
+    setSelectedItem(null);
   };
 
-  // Close medication selection modal
-  const closeMedicationSelection = () => {
-    setIsSelectingMedication(false);
-    setSelectedStudent(null);
-    setSelectedMedications([]);
-  };
-
-  // Open notification modal
-  const openNotificationModal = () => {
-    if (selectedMedications.length === 0) {
-      alert('Vui lòng chọn ít nhất một loại thuốc');
-      return;
-    }
-
-    setNotification({
-      studentId: selectedStudent.id,
-      studentName: selectedStudent.name,
-      medications: selectedMedications,
-      notes: '',
-      dosage: '',
-      time: '',
-      date: new Date().toISOString().split('T')[0]
-    });
-    setNotificationModalOpen(true);
-  };
-
-  // Handle notification input changes
-  const handleNotificationChange = (e) => {
-    const { name, value } = e.target;
-    setNotification({...notification, [name]: value});
-  };
-
-  // Send notification to parent
-  const sendNotification = async (e) => {
-    e.preventDefault();
-    
-    if (!notification.dosage || !notification.time) {
-      alert('Vui lòng điền đầy đủ thông tin liều lượng và thời gian uống thuốc');
-      return;
-    }
-    
-    try {
-      // API call would go here
-      // const response = await fetch('api/medication-notifications', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(notification)
-      // });
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      alert('Thông báo đã được gửi thành công đến phụ huynh!');
-      setNotificationModalOpen(false);
-      closeMedicationSelection();
-    } catch (error) {
-      console.error('Error sending notification:', error);
-      alert('Có lỗi xảy ra khi gửi thông báo. Vui lòng thử lại sau.');
-    }
-  };
 
   return (
     <div className="nurse-page">
       <div className="page-header">
-        <h1>Quản Lý Thuốc</h1>
+        <h1>Quản Lý Kho Vật Tư</h1>
         <div className="header-actions">
-          <button className="add-button" onClick={() => openMedicationSelection(mockStudents[0])}>
-            <Plus size={16} />
-            Chọn thuốc cho học sinh
-          </button>
           <button className="refresh-button" onClick={fetchMedications}>
             <RefreshCw size={16} />
             Làm mới
           </button>
           <button className="add-button" onClick={openAddModal}>
             <Plus size={16} />
-            Thêm thuốc
+            Thêm vật tư
           </button>
         </div>
+      </div>
+
+      <div className="tabs-container">
+        <button 
+          className={`tab-button ${activeTab === 'all' ? 'active' : ''}`}
+          onClick={() => setActiveTab('all')}
+        >
+          Tất cả <span className="tab-count">({getTabCounts().all})</span>
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'active' ? 'active' : ''}`}
+          data-status="active"
+          onClick={() => setActiveTab('active')}
+        >
+          Hoạt động <span className="tab-count">({getTabCounts().active})</span>
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'inactive' ? 'active' : ''}`}
+          data-status="inactive"
+          onClick={() => setActiveTab('inactive')}
+        >
+          Không hoạt động <span className="tab-count">({getTabCounts().inactive})</span>
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'expired' ? 'active' : ''}`}
+          data-status="expired"
+          onClick={() => setActiveTab('expired')}
+        >
+          Hết hạn <span className="tab-count">({getTabCounts().expired})</span>
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'damaged' ? 'active' : ''}`}
+          data-status="damaged"
+          onClick={() => setActiveTab('damaged')}
+        >
+          Hư hỏng <span className="tab-count">({getTabCounts().damaged})</span>
+        </button>
       </div>
 
       <div className="search-container">
@@ -415,7 +390,7 @@ const Pharmaceutical = () => {
           <Search size={18} className="search-icon" />
           <input
             type="text"
-            placeholder="Tìm kiếm theo tên thuốc, thành phần, loại thuốc, công dụng..."
+            placeholder="Tìm kiếm theo tên, loại, nhà sản xuất, số lô, nguồn cung cấp, vị trí lưu trữ..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"
@@ -438,49 +413,49 @@ const Pharmaceutical = () => {
           <table className="data-table">
             <thead>
               <tr>
-                <th>Tên thuốc</th>
-                <th>Thành phần</th>
-                <th>Liều lượng</th>
-                <th>Dạng thuốc</th>
+                <th>ID</th>
+                <th>Tên thuốc/Vật tư</th>
                 <th>Số lượng</th>
                 <th>Hạn sử dụng</th>
-                <th>Công dụng</th>
+                <th>Trạng thái</th>
                 <th>Thao tác</th>
               </tr>
             </thead>
             <tbody>
               {filteredMedications.length > 0 ? (
                 filteredMedications.map((medication) => {
-                  const expiryStatus = checkExpirationStatus(medication.expiration_date);
+                  const expiryStatus = checkExpirationStatus(medication.expiryDate || medication.expiration_date);
                   
                   return (
                     <tr key={medication.id}>
+                      <td>{medication.id}</td>
                       <td>{medication.name}</td>
-                      <td>{medication.generic_name}</td>
-                      <td>{medication.dosage}</td>
-                      <td>{medication.dosage_form}</td>
                       <td>{medication.quantity} {medication.unit}</td>
                       <td className={`expiry-cell ${expiryStatus}`}>
                         {expiryStatus === 'expired' && <AlertTriangle size={14} className="expiry-icon" />}
-                        {medication.expiration_date || 'Không có'}
+                        {medication.expiryDate || medication.expiration_date || 'Không có'}
                         {expiryStatus === 'expired' && <span className="expiry-label">Hết hạn</span>}
                         {expiryStatus === 'expiring-soon' && <span className="expiry-label">Sắp hết hạn</span>}
                       </td>
-                      <td>{medication.for_conditions}</td>
+                      <td className={`status-cell ${medication.status ? medication.status.toLowerCase() : 'unknown'}`}>
+                        {getStatusText(medication.status)}
+                      </td>
                       <td className="actions">
+                        <button 
+                          className="view-button" 
+                          onClick={() => openDetailsModal(medication)}
+                          title="Xem chi tiết"
+                        >
+                          <Search size={16} />
+                          Chi tiết
+                        </button>
                         <button 
                           className="edit-button" 
                           onClick={() => openEditModal(medication)}
                           title="Chỉnh sửa"
                         >
                           <Edit size={16} />
-                        </button>
-                        <button 
-                          className="delete-button" 
-                          onClick={() => handleDelete(medication.id)}
-                          title="Xóa"
-                        >
-                          <Trash2 size={16} />
+                          Chỉnh sửa
                         </button>
                       </td>
                     </tr>
@@ -488,7 +463,7 @@ const Pharmaceutical = () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan="8" className="no-data">Không tìm thấy dữ liệu</td>
+                  <td colSpan="6" className="no-data">Không tìm thấy dữ liệu</td>
                 </tr>
               )}
             </tbody>
@@ -500,7 +475,7 @@ const Pharmaceutical = () => {
         <div className="modal">
           <div className="modal-content">
             <div className="modal-header">
-              <h2>{isEditMode ? 'Chỉnh sửa thông tin thuốc' : 'Thêm thuốc mới'}</h2>
+              <h2>{isEditMode ? 'Chỉnh sửa thông tin vật tư/thuốc' : 'Thêm vật tư/thuốc mới'}</h2>
               <button className="close-button" onClick={closeModal}>
                 <X size={20} />
               </button>
@@ -509,7 +484,7 @@ const Pharmaceutical = () => {
             <form onSubmit={handleSubmit}>
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="name">Tên thuốc <span className="required">*</span></label>
+                  <label htmlFor="name">Tên thuốc/Vật tư <span className="required">*</span></label>
                   <input
                     type="text"
                     id="name"
@@ -521,71 +496,17 @@ const Pharmaceutical = () => {
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="generic_name">Thành phần hoạt chất</label>
-                  <input
-                    type="text"
-                    id="generic_name"
-                    name="generic_name"
-                    value={formData.generic_name}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="category">Loại thuốc</label>
-                  <input
-                    type="text"
-                    id="category"
-                    name="category"
-                    value={formData.category}
-                    onChange={handleInputChange}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="manufacturer">Nhà sản xuất</label>
-                  <input
-                    type="text"
-                    id="manufacturer"
-                    name="manufacturer"
-                    value={formData.manufacturer}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="dosage">Liều lượng <span className="required">*</span></label>
-                  <input
-                    type="text"
-                    id="dosage"
-                    name="dosage"
-                    value={formData.dosage}
+                  <label htmlFor="type">Loại <span className="required">*</span></label>
+                  <select
+                    id="type"
+                    name="type"
+                    value={formData.type}
                     onChange={handleInputChange}
                     required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="dosage_form">Dạng thuốc</label>
-                  <select
-                    id="dosage_form"
-                    name="dosage_form"
-                    value={formData.dosage_form}
-                    onChange={handleInputChange}
                   >
-                    <option value="">-- Chọn dạng thuốc --</option>
-                    <option value="Viên nén">Viên nén</option>
-                    <option value="Viên nang">Viên nang</option>
-                    <option value="Viên sủi">Viên sủi</option>
-                    <option value="Sirô">Sirô</option>
-                    <option value="Thuốc tiêm">Thuốc tiêm</option>
-                    <option value="Thuốc mỡ">Thuốc mỡ</option>
-                    <option value="Thuốc nhỏ mắt">Thuốc nhỏ mắt</option>
-                    <option value="Khác">Khác</option>
+                    <option value="">-- Chọn loại --</option>
+                    <option value="medicine">Thuốc</option>
+                    <option value="medical supplies">Vật tư y tế</option>
                   </select>
                 </div>
               </div>
@@ -612,66 +533,123 @@ const Pharmaceutical = () => {
                     name="unit"
                     value={formData.unit}
                     onChange={handleInputChange}
+                    placeholder="Ví dụ: viên, hộp, chai, lọ"
                     required
                   />
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="expiration_date">Hạn sử dụng</label>
+                  <label htmlFor="minStockLevel">Mức tồn kho tối thiểu</label>
+                  <input
+                    type="number"
+                    id="minStockLevel"
+                    name="minStockLevel"
+                    min="0"
+                    value={formData.minStockLevel}
+                    onChange={handleInputChange}
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="expiryDate">Hạn sử dụng</label>
                   <input
                     type="date"
-                    id="expiration_date"
-                    name="expiration_date"
-                    value={formData.expiration_date}
+                    id="expiryDate"
+                    name="expiryDate"
+                    value={formData.expiryDate}
+                    onChange={handleInputChange}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="batchNumber">Số lô</label>
+                  <input
+                    type="text"
+                    id="batchNumber"
+                    name="batchNumber"
+                    value={formData.batchNumber}
+                    onChange={handleInputChange}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="manufacturer">Nhà sản xuất</label>
+                  <input
+                    type="text"
+                    id="manufacturer"
+                    name="manufacturer"
+                    value={formData.manufacturer}
                     onChange={handleInputChange}
                   />
                 </div>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="for_conditions">Công dụng</label>
-                <input
-                  type="text"
-                  id="for_conditions"
-                  name="for_conditions"
-                  value={formData.for_conditions}
-                  onChange={handleInputChange}
-                  placeholder="Liệt kê các tình trạng, bệnh lý mà thuốc có thể điều trị"
-                />
-              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="importDate">Ngày nhập</label>
+                  <input
+                    type="date"
+                    id="importDate"
+                    name="importDate"
+                    value={formData.importDate}
+                    onChange={handleInputChange}
+                  />
+                </div>
 
-              <div className="form-group">
-                <label htmlFor="instructions">Hướng dẫn sử dụng</label>
-                <textarea
-                  id="instructions"
-                  name="instructions"
-                  value={formData.instructions}
-                  onChange={handleInputChange}
-                  rows="3"
-                ></textarea>
+                <div className="form-group">
+                  <label htmlFor="importPrice">Giá nhập (VND)</label>
+                  <input
+                    type="number"
+                    id="importPrice"
+                    name="importPrice"
+                    min="0"
+                    step="0.01"
+                    value={formData.importPrice}
+                    onChange={handleInputChange}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="storageLocation">Vị trí lưu trữ</label>
+                  <input
+                    type="text"
+                    id="storageLocation"
+                    name="storageLocation"
+                    value={formData.storageLocation}
+                    onChange={handleInputChange}
+                    placeholder="Ví dụ: Kệ A1, Tủ lạnh B2"
+                  />
+                </div>
               </div>
 
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="side_effects">Tác dụng phụ</label>
-                  <textarea
-                    id="side_effects"
-                    name="side_effects"
-                    value={formData.side_effects}
+                  <label htmlFor="status">Trạng thái</label>
+                  <select
+                    id="status"
+                    name="status"
+                    value={formData.status}
                     onChange={handleInputChange}
-                    rows="3"
-                  ></textarea>
+                  >
+                    <option value="ACTIVE">Hoạt động</option>
+                    <option value="INACTIVE">Không hoạt động</option>
+                    <option value="EXPIRED">Hết hạn</option>
+                    <option value="DAMAGED">Hư hỏng</option>
+                  </select>
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="storage">Bảo quản</label>
+                  <label htmlFor="source">Nguồn cung cấp</label>
                   <input
                     type="text"
-                    id="storage"
-                    name="storage"
-                    value={formData.storage}
+                    id="source"
+                    name="source"
+                    value={formData.source}
                     onChange={handleInputChange}
-                    placeholder="Điều kiện bảo quản"
+                    placeholder="Ví dụ: Nhà cung cấp A, Bệnh viện B"
                   />
                 </div>
               </div>
@@ -690,176 +668,71 @@ const Pharmaceutical = () => {
         </div>
       )}
 
-      {/* Medication Selection Modal */}
-      {isSelectingMedication && (
+
+      {/* Item Details Modal */}
+      {detailsModalOpen && selectedItem && (
         <div className="modal">
           <div className="modal-content">
             <div className="modal-header">
-              <h2>Chọn thuốc cho học sinh {selectedStudent?.name}</h2>
-              <button className="close-button" onClick={closeMedicationSelection}>
+              <h2>Chi tiết vật tư/thuốc</h2>
+              <button className="close-button" onClick={closeDetailsModal}>
                 <X size={20} />
               </button>
             </div>
 
-            <div className="medication-selection">
-              <div className="selected-medications">
-                <h3>Thuốc đã chọn ({selectedMedications.length})</h3>
-                {selectedMedications.length > 0 ? (
-                  <ul>
-                    {selectedMedications.map(medication => (
-                      <li key={medication.id}>
-                        {medication.name} - {medication.dosage}
-                        <button 
-                          className="remove-button"
-                          onClick={() => handleMedicationSelect(medication)}
-                        >
-                          <X size={16} />
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p>Chưa chọn thuốc nào</p>
-                )}
+            <div className="details-content">
+              <div className="detail-row">
+                <strong>ID:</strong> {selectedItem.id}
               </div>
-
-              <div className="medication-list">
-                <h3>Danh sách thuốc</h3>
-                <div className="search-container">
-                  <div className="search-input-wrapper">
-                    <Search size={18} className="search-icon" />
-                    <input
-                      type="text"
-                      placeholder="Tìm kiếm thuốc..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="search-input"
-                    />
-                  </div>
-                </div>
-
-                <div className="medication-grid">
-                  {filteredMedications.map(medication => (
-                    <div 
-                      key={medication.id}
-                      className={`medication-card ${selectedMedications.find(m => m.id === medication.id) ? 'selected' : ''}`}
-                      onClick={() => handleMedicationSelect(medication)}
-                    >
-                      <h4>{medication.name}</h4>
-                      <p>Liều lượng: {medication.dosage}</p>
-                      <p>Dạng thuốc: {medication.dosage_form}</p>
-                      <p>Công dụng: {medication.for_conditions}</p>
-                    </div>
-                  ))}
-                </div>
+              <div className="detail-row">
+                <strong>Tên:</strong> {selectedItem.name}
+              </div>
+              <div className="detail-row">
+                <strong>Loại:</strong> {selectedItem.type || 'Không có'}
+              </div>
+              <div className="detail-row">
+                <strong>Đơn vị:</strong> {selectedItem.unit || 'Không có'}
+              </div>
+              <div className="detail-row">
+                <strong>Số lượng:</strong> {selectedItem.quantity}
+              </div>
+              <div className="detail-row">
+                <strong>Mức tồn kho tối thiểu:</strong> {selectedItem.minStockLevel || 'Không có'}
+              </div>
+              <div className="detail-row">
+                <strong>Hạn sử dụng:</strong> {selectedItem.expiryDate || selectedItem.expiration_date || 'Không có'}
+              </div>
+              <div className="detail-row">
+                <strong>Số lô:</strong> {selectedItem.batchNumber || 'Không có'}
+              </div>
+              <div className="detail-row">
+                <strong>Nhà sản xuất:</strong> {selectedItem.manufacturer || 'Không có'}
+              </div>
+              <div className="detail-row">
+                <strong>Ngày nhập:</strong> {selectedItem.importDate || 'Không có'}
+              </div>
+              <div className="detail-row">
+                <strong>Giá nhập:</strong> {selectedItem.importPrice ? `${selectedItem.importPrice} VND` : 'Không có'}
+              </div>
+              <div className="detail-row">
+                <strong>Vị trí lưu trữ:</strong> {selectedItem.storageLocation || 'Không có'}
+              </div>
+              <div className="detail-row">
+                <strong>Trạng thái:</strong> {getStatusText(selectedItem.status)}
+              </div>
+              <div className="detail-row">
+                <strong>Nguồn cung cấp:</strong> {selectedItem.source || 'Không có'}
+              </div>
+              <div className="detail-row">
+                <strong>Ngày tạo:</strong> {selectedItem.createdAt || 'Không có'}
               </div>
             </div>
 
             <div className="modal-actions">
-              <button className="cancel-button" onClick={closeMedicationSelection}>
-                Hủy
-              </button>
-              <button className="submit-button" onClick={openNotificationModal}>
-                Tiếp tục
+              <button className="cancel-button" onClick={closeDetailsModal}>
+                Đóng
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Notification Modal */}
-      {notificationModalOpen && (
-        <div className="modal">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h2>Gửi thông báo cho phụ huynh</h2>
-              <button className="close-button" onClick={() => setNotificationModalOpen(false)}>
-                <X size={20} />
-              </button>
-            </div>
-
-            <form onSubmit={sendNotification}>
-              <div className="form-group">
-                <label>Học sinh</label>
-                <input
-                  type="text"
-                  value={notification.studentName}
-                  disabled
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Danh sách thuốc</label>
-                <ul className="selected-medications-list">
-                  {notification.medications.map(medication => (
-                    <li key={medication.id}>
-                      {medication.name} - {medication.dosage}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="dosage">Liều lượng uống <span className="required">*</span></label>
-                <input
-                  type="text"
-                  id="dosage"
-                  name="dosage"
-                  value={notification.dosage}
-                  onChange={handleNotificationChange}
-                  placeholder="Ví dụ: 1 viên/lần, 2 lần/ngày"
-                  required
-                />
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="date">Ngày uống <span className="required">*</span></label>
-                  <input
-                    type="date"
-                    id="date"
-                    name="date"
-                    value={notification.date}
-                    onChange={handleNotificationChange}
-                    required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="time">Thời gian uống <span className="required">*</span></label>
-                  <input
-                    type="time"
-                    id="time"
-                    name="time"
-                    value={notification.time}
-                    onChange={handleNotificationChange}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="notes">Ghi chú</label>
-                <textarea
-                  id="notes"
-                  name="notes"
-                  value={notification.notes}
-                  onChange={handleNotificationChange}
-                  placeholder="Thêm ghi chú về cách uống thuốc hoặc lưu ý đặc biệt"
-                  rows="3"
-                ></textarea>
-              </div>
-
-              <div className="form-actions">
-                <button type="button" className="cancel-button" onClick={() => setNotificationModalOpen(false)}>
-                  Hủy
-                </button>
-                <button type="submit" className="submit-button">
-                  <Save size={16} />
-                  Gửi thông báo
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )}

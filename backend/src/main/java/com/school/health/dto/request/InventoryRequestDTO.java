@@ -54,5 +54,6 @@ public class InventoryRequestDTO {
     
     @NotBlank(message = "Nguồn cung cấp không được để trống")
     private String source;
+
 }
 
