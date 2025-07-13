@@ -24,7 +24,7 @@ import java.util.List;
 
 public class MedicalEventsController {
     private final MedicalEventsServiceImpl medicalEventsService;
-    @PreAuthorize("hasRole('NURSE')")
+    @PreAuthorize("hasRole('NURSE') or hasRole('ADMIN')")
     @PostMapping("/api/nurse/medical-events")
     public ResponseEntity<MedicalEventsResponseDTO> addMedicalEvent(@RequestBody @Valid MedicalEventsRequestDTO medicalEventsRequestDTO, Authentication authentication) {
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();

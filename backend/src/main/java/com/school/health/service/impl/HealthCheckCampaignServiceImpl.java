@@ -302,6 +302,10 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
         if (healthCheck.isParentConfirmation() == false) {
             throw new RuntimeException("Parent confirmation is required to update health check results.");
         }
+        // date phải bằng hoặc lớn hơn từ scheduled date của campaign
+        if (requestDTO.getDate() == null || requestDTO.getDate().isBefore(campaign.getScheduledDate())) {
+            throw new RuntimeException("Ngày cập nhật không hợp lệ. Ngày khám phải bằng hoặc lớn hơn ngày đã lên lịch của chiến dịch.");
+        }
         healthCheck.setDate(requestDTO.getDate());
         healthCheck.setHeight(requestDTO.getHeight());
         healthCheck.setWeight(requestDTO.getWeight());
