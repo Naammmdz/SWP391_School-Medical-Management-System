@@ -9,6 +9,7 @@ const { Panel } = Collapse;
 const HealthCheckResultStudent = () => {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [campaignsLoading, setCampaignsLoading] = useState(false);
   const [error, setError] = useState('');
   const [studentInfo, setStudentInfo] = useState({ fullName: '', className: '' });
   const [campaignName, setcampaignName] = useState({});
@@ -28,15 +29,36 @@ const HealthCheckResultStudent = () => {
     }
   }, [studentId]);
 
-  // Lấy map {campaignId: campaignName} từ localStorage
+  // Lấy map {campaignId: campaignName} từ API
   useEffect(() => {
-    const campaigns = JSON.parse(localStorage.getItem('healthCheckCampaigns') || '[]');
-    const map = {};
-    campaigns.forEach(c => {
-      map[c.campaignId] = c.campaignName;
-    });
-    setcampaignName(map);
-  }, []);
+    const fetchCampaigns = async () => {
+      setCampaignsLoading(true);
+      try {
+        const config = { headers: { Authorization: `Bearer ${token}` } };
+        const campaigns = await HealthCheckService.getAllHealthCheckCampaign(config);
+        const map = {};
+        if (Array.isArray(campaigns)) {
+          campaigns.forEach(c => {
+            map[c.campaignId] = c.campaignName;
+          });
+        }
+        setcampaignName(map);
+        console.log('Campaign map loaded:', map);
+      } catch (error) {
+        console.error('Error loading campaigns:', error);
+        // Fallback to localStorage if API fails
+        const campaigns = JSON.parse(localStorage.getItem('healthCheckCampaigns') || '[]');
+        const map = {};
+        campaigns.forEach(c => {
+          map[c.campaignId] = c.campaignName;
+        });
+        setcampaignName(map);
+      } finally {
+        setCampaignsLoading(false);
+      }
+    };
+    fetchCampaigns();
+  }, [token]);
 
   useEffect(() => {
     const fetchResults = async () => {
@@ -49,8 +71,10 @@ const HealthCheckResultStudent = () => {
       try {
         const config = { headers: { Authorization: `Bearer ${token}` } };
         const data = await HealthCheckService.getResultByStudentId(studentId, config);
+        console.log('Kết quả kiểm tra sức khỏe:', data);
         if (data && typeof data === 'object' && !Array.isArray(data)) {
           setResults([data]);
+          console.log('Kết quả kiểm tra sức khỏe:', data);
         } else if (Array.isArray(data)) {
           setResults(data);
         } else {
@@ -92,7 +116,16 @@ const HealthCheckResultStudent = () => {
             )}
           </div>
           <div style={{ flex: 1 }} />
-          <Button icon={<ArrowLeftOutlined />} onClick={handleBack} type="primary" ghost size="large">
+          <Button 
+            icon={<ArrowLeftOutlined />} 
+            onClick={handleBack} 
+            size="large"
+            style={{
+              backgroundColor: '#f0f7ff',
+              borderColor: '#d6e4ff',
+              color: '#597ef7'
+            }}
+          >
             Quay lại
           </Button>
         </div>
@@ -124,7 +157,7 @@ const HealthCheckResultStudent = () => {
                     <div style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontWeight: 600, fontSize: 18, color: '#1890ff' }}>
-                          {campaignName[result.campaignId] || 'Không xác định'}
+                          {campaignName[result.campaignId] || `Chiến dịch #${result.campaignId}`}
                         </div>
                         <div style={{ margin: '8px 0', color: '#555' }}>
                           <FaRegCalendarCheck style={{ color: '#1890ff', marginRight: 6 }} />
