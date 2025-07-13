@@ -31,6 +31,20 @@ const UpdateHealthCheck = () => {
           campaignId,
           { headers: { Authorization: `Bearer ${token}` } }
         );
+        // Format the scheduled date for date input (YYYY-MM-DD)
+        let formattedDate = data.scheduledDate || '';
+        if (Array.isArray(data.scheduledDate)) {
+          // If it's an array like [2024, 1, 15], format to YYYY-MM-DD
+          const [year, month, day] = data.scheduledDate;
+          formattedDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        } else if (formattedDate && !formattedDate.includes('-')) {
+          // If it's a different format, try to parse and format
+          const date = new Date(formattedDate);
+          if (!isNaN(date.getTime())) {
+            formattedDate = date.toISOString().split('T')[0];
+          }
+        }
+        
         setForm({
           campaignName: data.campaignName || '',
           targetGroup: data.targetGroup || '',
@@ -38,7 +52,7 @@ const UpdateHealthCheck = () => {
           address: data.address || '',
           organizer: data.organizer || user.id || '',
           description: data.description || '',
-          scheduledDate: data.scheduledDate || '',
+          scheduledDate: formattedDate,
           status: data.status || 'CRAFT'
         });
       } catch (err) {

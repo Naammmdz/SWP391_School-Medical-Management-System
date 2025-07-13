@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Input, Button, DatePicker, Checkbox, Card, message } from 'antd';
+import { Form, Input, Button, DatePicker, Checkbox, Card, message, Alert } from 'antd';
 import { useLocation, useNavigate } from 'react-router-dom';
 import HealthCheckService from '../../../services/HealthCheckService';
 import dayjs from 'dayjs';
@@ -19,12 +19,13 @@ const UpdateHealthCheckResult = () => {
 
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   // Điền dữ liệu mặc định vào form
   useEffect(() => {
     if (result) {
       form.setFieldsValue({
-        date: result.date ? dayjs(result.date) : null,
+        date: dayjs(),
         height: result.height,
         weight: result.weight,
         eyesightLeft: result.eyesightLeft,
@@ -44,10 +45,11 @@ const UpdateHealthCheckResult = () => {
 
   const handleSubmit = async (values) => {
     setLoading(true);
+    setErrorMessage(''); // Clear previous errors
     try {
       // Gửi đầy đủ các trường theo yêu cầu backend
       const payload = {
-        date: values.date ? values.date.format('YYYY-MM-DD') : '',
+        date: values.date ? values.date.format('YYYY-MM-DD') : dayjs().format('YYYY-MM-DD'),
         height: Number(values.height),
         weight: Number(values.weight),
         eyesightLeft: values.eyesightLeft,
@@ -70,7 +72,8 @@ const UpdateHealthCheckResult = () => {
       message.success('Cập nhật kết quả thành công!');
       navigate('/ketquakiemtradinhky');
     } catch (err) {
-      message.error('Cập nhật thất bại!');
+      const error = err.response?.data?.message || 'Cập nhật thất bại!';
+      setErrorMessage(error);
     }
     setLoading(false);
   };
@@ -83,7 +86,7 @@ const UpdateHealthCheckResult = () => {
           layout="vertical"
           onFinish={handleSubmit}
         >
-          <Form.Item label="Ngày khám" name="date" rules={[{ required: true, message: 'Vui lòng chọn ngày khám' }]}>
+          <Form.Item label="Ngày nhập kết quả" name="date" rules={[{ required: true, message: 'Vui lòng chọn ngày nhập kết quả' }]}>
             <DatePicker format="YYYY-MM-DD" style={{ width: '100%' }} />
           </Form.Item>
           <Form.Item label="Chiều cao (cm)" name="height" rules={[{ required: true, message: 'Vui lòng nhập chiều cao' }]}>
@@ -133,6 +136,19 @@ const UpdateHealthCheckResult = () => {
               Hủy
             </Button>
           </Form.Item>
+          
+          {/* Error message display */}
+          {errorMessage && (
+            <div style={{ marginTop: 16 }}>
+              <Alert
+                message={errorMessage}
+                type="error"
+                showIcon
+                closable
+                onClose={() => setErrorMessage('')}
+              />
+            </div>
+          )}
         </Form>
       </Card>
     </div>
