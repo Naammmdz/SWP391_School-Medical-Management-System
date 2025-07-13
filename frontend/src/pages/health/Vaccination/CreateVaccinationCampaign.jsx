@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, Form, Input, DatePicker, TimePicker, Button, Row, Col, Typography, message, Space, Select, Checkbox, Tag, Tooltip } from 'antd';
+import { Card, Form, Input, DatePicker, TimePicker, Button, Row, Col, Typography, message, Space, Select, Checkbox, Tag, Tooltip, Alert } from 'antd';
 import { MedicineBoxOutlined, SaveOutlined, ArrowLeftOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import VaccinationService from '../../../services/VaccinationService';
@@ -16,6 +16,7 @@ const CreateVaccinationCampaign = () => {
   const [selectedGrades, setSelectedGrades] = useState([]);
   const [selectedClasses, setSelectedClasses] = useState([]);
   const [customTarget, setCustomTarget] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -56,6 +57,7 @@ const CreateVaccinationCampaign = () => {
 
   const handleSubmit = async (values) => {
     setLoading(true);
+    setErrorMessage(''); // Clear previous errors
     try {
       const token = localStorage.getItem('token');
 
@@ -87,7 +89,28 @@ const CreateVaccinationCampaign = () => {
       message.success('Tạo chiến dịch tiêm chủng thành công!');
       navigate('/quanlytiemchung');
     } catch (error) {
-      message.error('Có lỗi xảy ra khi tạo chiến dịch. Vui lòng thử lại!');
+      console.error('Tạo chiến dịch thất bại:', error);
+      console.error('Error response:', error.response);
+      console.error('Error response data:', error.response?.data);
+      console.error('Error response status:', error.response?.status);
+      console.error('Error message:', error.message);
+      
+      // Show detailed error message on form
+      let errorMsg = 'Tạo chiến dịch thất bại! ';
+      
+      if (error.response?.data?.message) {
+        errorMsg += error.response.data.message;
+      } else if (error.response?.data?.error) {
+        errorMsg += error.response.data.error;
+      } else if (error.response?.status) {
+        errorMsg += `Lỗi ${error.response.status}: ${error.response.statusText || 'Unknown error'}`;
+      } else if (error.message) {
+        errorMsg += error.message;
+      } else {
+        errorMsg += 'Vui lòng thử lại!';
+      }
+      
+      setErrorMessage(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -99,6 +122,7 @@ const CreateVaccinationCampaign = () => {
     setSelectedGrades([]);
     setSelectedClasses([]);
     setCustomTarget('');
+    setErrorMessage(''); // Clear error message
     message.info('Đã xóa tất cả thông tin trong form');
   };
 
@@ -130,6 +154,18 @@ const CreateVaccinationCampaign = () => {
           </Button>
         </Col>
       </Row>
+
+      {/* Error Alert */}
+      {errorMessage && (
+        <Alert
+          message={errorMessage}
+          type="error"
+          showIcon
+          closable
+          onClose={() => setErrorMessage('')}
+          style={{ marginBottom: 24 }}
+        />
+      )}
 
       {/* Form */}
       <Form
