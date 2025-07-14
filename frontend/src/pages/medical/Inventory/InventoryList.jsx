@@ -210,6 +210,7 @@ const InventoryList = () => {
                   name="type"
                   value={filter.type}
                   onChange={handleFilterChange}
+                  sx={{ minWidth: 200 }}
                 >
                   {typeOptions.map(opt => (
                     <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>

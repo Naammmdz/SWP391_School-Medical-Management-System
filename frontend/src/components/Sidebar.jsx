@@ -150,7 +150,7 @@ const getNavGroupsForRole = (role) => {
         ...commonGroups.overview,
         items: [
           ...commonGroups.overview.items,
-          { path: '/nurse', name: 'Trang Y tá', icon: 'stethoscope' },
+          // { path: '/nurse', name: 'Trang Y tá', icon: 'stethoscope' },
         ]
       },
       {
