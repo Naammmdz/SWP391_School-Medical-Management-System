@@ -443,19 +443,47 @@ const logStatus = medicineLogsStatus[date];
                         )}
                         
                         {isCheckedIn && (
-                          <Button 
-                            type="default" 
-                            icon={isGiven ? <CheckCircleOutlined /> : <CloseOutlined />}
-                            disabled
-                            style={{ 
-                              width: '100%',
-                              backgroundColor: isGiven ? '#f6ffed' : '#fff2f0',
-                              borderColor: isGiven ? '#52c41a' : '#ff4d4f',
-                              color: isGiven ? '#52c41a' : '#ff4d4f'
-                            }}
-                          >
-                            {isGiven ? '✓ Đã xác nhận uống' : '✗ Đã xác nhận không uống'}
-                          </Button>
+                          <>
+                            <Button 
+                              type="default" 
+                              icon={isGiven ? <CheckCircleOutlined /> : <CloseOutlined />}
+                              disabled
+                              style={{ 
+                                width: '100%',
+                                backgroundColor: isGiven ? '#f6ffed' : '#fff2f0',
+                                borderColor: isGiven ? '#52c41a' : '#ff4d4f',
+                                color: isGiven ? '#52c41a' : '#ff4d4f'
+                              }}
+                            >
+                              {isGiven ? '✓ Đã xác nhận uống' : '✗ Đã xác nhận không uống'}
+                            </Button>
+                            
+                            {logStatus.imageData && (
+                              <div style={{ 
+                                marginTop: 12, 
+                                textAlign: 'center',
+                                padding: 8,
+                                backgroundColor: '#fafafa',
+                                borderRadius: 8,
+                                border: '1px solid #f0f0f0'
+                              }}>
+                                <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 8 }}>
+                                  Ảnh xác nhận:
+                                </Text>
+                                <Image
+                                  src={logStatus.imageData}
+                                  alt="Check-in photo"
+                                  style={{
+                                    width: '100%',
+                                    maxWidth: 150,
+                                    height: 'auto',
+                                    borderRadius: 6,
+                                    border: '1px solid #d9d9d9'
+                                  }}
+                                />
+                              </div>
+                            )}
+                          </>
                         )}
                       </Space>
                     </Card>
@@ -492,14 +520,36 @@ const logStatus = medicineLogsStatus[date];
             maxCount={1}
             listType="picture-card"
             style={{ marginTop: 4 }}
+            showUploadList={{
+              showPreviewIcon: true,
+              showRemoveIcon: true,
+              showDownloadIcon: false
+            }}
           >
-            {!currentImage && (
+            {!currentImage ? (
               <div>
                 <CameraOutlined />
                 <div style={{ marginTop: 8, fontSize: 12 }}>Tải ảnh</div>
               </div>
-            )}
+            ) : null}
           </Upload>
+          
+          {/* Show image preview if available */}
+          {currentImage && (
+            <div style={{ marginTop: 8 }}>
+              <img
+                src={URL.createObjectURL(currentImage)}
+                alt="Preview"
+                style={{
+                  width: '100%',
+                  maxWidth: 200,
+                  height: 'auto',
+                  borderRadius: 8,
+                  border: '1px solid #d9d9d9'
+                }}
+              />
+            </div>
+          )}
           <Button
             type="primary"
             block
