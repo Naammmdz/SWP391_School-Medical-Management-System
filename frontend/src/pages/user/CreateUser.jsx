@@ -27,7 +27,8 @@ const CreateUser = () => {
   const roles = [
     { value: 'ADMIN', label: 'Admin' },
     { value: 'NURSE', label: 'Nhân viên y tế' },
-    { value: 'PARENT', label: 'Phụ huynh' }
+    { value: 'PARENT', label: 'Phụ huynh' },
+    { value: 'PRINCIPAL', label: 'Hiệu trưởng' }
   ];
 
   // Handle form input changes

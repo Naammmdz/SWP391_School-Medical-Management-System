@@ -83,6 +83,7 @@ const getNavGroupsForRole = (role) => {
         { path: '/thongke', name: 'Bảng điều khiển', icon: 'home', roles: ['ROLE_ADMIN'] },
         { path: '/parent', name: 'Bảng điều khiển', icon: 'home', roles: ['ROLE_PARENT'] },
         { path: '/nurse', name: 'Bảng điều khiển', icon: 'home', roles: ['ROLE_NURSE'] },
+        { path: '/principal', name: 'Bảng điều khiển', icon: 'home', roles: ['ROLE_PRINCIPAL'] },
       ]
     }
   };
@@ -185,6 +186,42 @@ const getNavGroupsForRole = (role) => {
         ]
       },
      
+    ],
+    ROLE_PRINCIPAL: [
+      {
+        ...commonGroups.overview,
+        items: [
+          ...commonGroups.overview.items,
+          { path: '/principal', name: 'Trang hiệu trưởng', icon: 'users' },
+        ]
+      },
+      {
+        title: 'Quản lý học sinh',
+        items: [
+          { path: '/danhsachhocsinh', name: 'Danh sách học sinh', icon: 'bookUser' },
+        ]
+      },
+      {
+        title: 'Tiêm chủng',
+        items: [
+          { path: '/quanlytiemchung', name: 'Quản lý tiêm chủng', icon: 'syringe' },
+          { path: '/ketquatiemchung', name: 'Kết quả tiêm chủng', icon: 'report' },
+        ]
+      },
+      {
+        title: 'Khám sức khỏe',
+        items: [
+          { path: '/danhsachkiemtradinhky', name: 'Danh sách kiểm tra định kỳ', icon: 'stethoscope' },
+          { path: '/ketquakiemtradinhky', name: 'Kết quả kiểm tra định kỳ', icon: 'report' },
+        ]
+      },
+      {
+        title: 'Báo cáo & Sự kiện',
+        items: [
+          { path: '/sukienyte', name: 'Sự kiện y tế', icon: 'activity' },
+          { path: '/thongke', name: 'Báo cáo thống kê', icon: 'barChart' },
+        ]
+      }
     ]
     // ROLE_PARENT: [
     //   commonGroups.overview,
@@ -610,6 +647,7 @@ const Sidebar = ({ userRole, onToggleCollapse, className = "" }) => {
       case 'ROLE_ADMIN': return 'Quản trị viên';
       case 'ROLE_NURSE': return 'Y tá';
       case 'ROLE_PARENT': return 'Phụ huynh';
+      case 'ROLE_PRINCIPAL': return 'Hiệu trưởng';
       default: return 'Người dùng';
     }
   };
@@ -619,6 +657,7 @@ const Sidebar = ({ userRole, onToggleCollapse, className = "" }) => {
       case 'ROLE_ADMIN': return '👨‍💼';
       case 'ROLE_NURSE': return '👩‍⚕️';
       case 'ROLE_PARENT': return '👪';
+      case 'ROLE_PRINCIPAL': return '🎓';
       default: return '👤';
     }
   };

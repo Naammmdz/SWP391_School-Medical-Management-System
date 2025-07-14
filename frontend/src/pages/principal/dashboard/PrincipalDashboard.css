@@ -1,0 +1,116 @@
+.principal-dashboard {
+  padding: 24px;
+  background-color: #f5f7fa;
+  min-height: 100vh;
+}
+
+.dashboard-header {
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.dashboard-header .ant-typography {
+  margin-bottom: 8px;
+}
+
+.recent-activities {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.activity-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+  gap: 12px;
+}
+
+.activity-item:last-child {
+  border-bottom: none;
+}
+
+.activity-icon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f6f8fa;
+  border-radius: 50%;
+  font-size: 16px;
+}
+
+.activity-content {
+  flex: 1;
+}
+
+.activity-message {
+  font-size: 14px;
+  color: #262626;
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+
+.activity-time {
+  font-size: 12px;
+  color: #8c8c8c;
+}
+
+/* Card hover effects */
+.ant-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .principal-dashboard {
+    padding: 16px;
+  }
+  
+  .dashboard-header {
+    margin-bottom: 24px;
+  }
+  
+  .ant-statistic-title {
+    font-size: 14px;
+  }
+  
+  .ant-statistic-content {
+    font-size: 20px;
+  }
+}
+
+/* Statistics card styling */
+.ant-statistic .ant-statistic-content {
+  font-weight: 600;
+}
+
+.ant-statistic .ant-statistic-title {
+  color: #595959;
+  font-weight: 500;
+}
+
+/* Progress bar styling */
+.ant-progress-bg {
+  transition: all 0.3s ease;
+}
+
+/* Card title styling */
+.ant-card-head-title {
+  font-weight: 600;
+  color: #262626;
+}
+
+/* Hover effect for quick action cards */
+.ant-card[style*="cursor: pointer"]:hover {
+  transform: translateY(-2px);
+  transition: all 0.3s ease;
+}
+
+.ant-card[style*="cursor: pointer"]:hover .anticon {
+  transform: scale(1.1);
+  transition: all 0.3s ease;
+}
