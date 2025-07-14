@@ -176,12 +176,21 @@ const HealthCheckList = () => {
           </Button>
           {(user.userRole === 'ROLE_ADMIN' || user.userRole === 'ROLE_PRICIPAL') && c.status === 'PENDING' && (
             <>
-              {/* <Button type="success" loading={approvingId === c.campaignId} onClick={() => handleApprove(c.campaignId)}>
+              <Button 
+                type="primary" 
+                style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
+                loading={approvingId === c.campaignId} 
+                onClick={() => handleApprove(c.campaignId)}
+              >
                 {approvingId === c.campaignId ? 'Đang duyệt...' : 'Chấp nhận'}
               </Button>
-              <Button type="danger" loading={rejectingId === c.campaignId} onClick={() => handleReject(c.campaignId)}>
+              <Button 
+                danger 
+                loading={rejectingId === c.campaignId} 
+                onClick={() => handleReject(c.campaignId)}
+              >
                 {rejectingId === c.campaignId ? 'Đang từ chối...' : 'Từ chối'}
-              </Button> */}
+              </Button>
             </>
           )}
         </Space>

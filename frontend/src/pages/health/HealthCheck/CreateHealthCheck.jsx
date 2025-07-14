@@ -300,7 +300,7 @@ const CreateHealthCheck = () => {
                 prefix={<CalendarOutlined />}
                 format="DD/MM/YYYY"
                 placeholder="Chọn ngày"
-                disabledDate={(current) => current && current < moment().endOf('day')}
+                disabledDate={(current) => current && current < moment().startOf('day')}
               />
             </Form.Item>
 

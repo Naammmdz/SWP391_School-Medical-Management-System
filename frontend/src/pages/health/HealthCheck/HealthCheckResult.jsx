@@ -256,15 +256,92 @@ const HealthCheckResult = () => {
       render: (campaignName) => campaignName || '-'
     },
     {
-      title: 'Ngày khám',
+      title: 'Ngày dự kiến',
+      dataIndex: 'scheduledDate',
+      key: 'scheduledDate',
+      render: (scheduledDate, record) => {
+        // First try to get from record.scheduledDate
+        let date = scheduledDate;
+        
+        // If not available, try to find from campaign data
+        if (!date && record.campaignId) {
+          const campaign = approvedCampaigns.find(c => c.campaignId === record.campaignId);
+          if (campaign) {
+            date = campaign.scheduledDate;
+          }
+        }
+        
+        if (!date) return '-';
+        
+        // Handle array format [year, month, day]
+        if (Array.isArray(date) && date.length === 3) {
+          const [y, m, d] = date;
+          if (y && m && d) {
+            const pad = (n) => n.toString().padStart(2, '0');
+            return `${pad(d)}/${pad(m)}/${y}`;
+          }
+        }
+        
+        // Handle string format YYYY-MM-DD
+        if (typeof date === 'string' && date.includes('-')) {
+          const [y, m, d] = date.split('-');
+          if (y && m && d) {
+            return `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y}`;
+          }
+        }
+        
+        // Handle other formats
+        if (date) {
+          try {
+            const dateObj = new Date(date);
+            if (!isNaN(dateObj.getTime())) {
+              return dateObj.toLocaleDateString('vi-VN');
+            }
+          } catch (e) {
+            console.error('Scheduled date parsing error:', e);
+          }
+        }
+        
+        return '-';
+      }
+    },
+    {
+      title: 'Ngày nhập kết quả',
       dataIndex: 'date',
       key: 'date',
       render: (date) => {
-        if (!date || !Array.isArray(date)) return '-';
-        const [y, m, d] = date;
-        if (!y || !m || !d) return '-';
-        const pad = (n) => n.toString().padStart(2, '0');
-        return `${pad(d)}/${pad(m)}/${y}`;
+        console.log('Date value:', date, 'Type:', typeof date);
+        
+        // Handle array format [year, month, day]
+        if (Array.isArray(date) && date.length === 3) {
+          const [y, m, d] = date;
+          if (y && m && d) {
+            const pad = (n) => n.toString().padStart(2, '0');
+            return `${pad(d)}/${pad(m)}/${y}`;
+          }
+        }
+        
+        // Handle string format YYYY-MM-DD
+        if (typeof date === 'string' && date.includes('-')) {
+          const [y, m, d] = date.split('-');
+          if (y && m && d) {
+            return `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y}`;
+          }
+        }
+        
+        // Handle other formats
+        if (date) {
+          try {
+            const dateObj = new Date(date);
+            if (!isNaN(dateObj.getTime())) {
+              return dateObj.toLocaleDateString('vi-VN');
+            }
+          } catch (e) {
+            console.error('Date parsing error:', e);
+          }
+        }
+        
+        return 'Chưa nhập';
       }
     },
     { title: 'Ghi chú', dataIndex: 'notes', key: 'notes', render: (v, record) => record.parentConfirmation === false ? 'Phụ huynh từ chối khám' : (v || '-') },
@@ -393,7 +470,61 @@ const HealthCheckResult = () => {
             <div><b>Học sinh:</b> {getStudentInfo(detailRecord.studentId).fullName}</div>
             <div><b>Lớp:</b> {getStudentInfo(detailRecord.studentId).className}</div>
             <div><b>Chiến dịch:</b> {detailRecord.campaignName || '-'}</div>
-            <div><b>Ngày khám:</b> {Array.isArray(detailRecord.date) ? `${detailRecord.date[2].toString().padStart(2, '0')}/${detailRecord.date[1].toString().padStart(2, '0')}/${detailRecord.date[0]}` : '-'}</div>
+            <div><b>Ngày dự kiến:</b> {(() => {
+              let date = detailRecord.scheduledDate;
+              
+              // If not available, try to find from campaign data
+              if (!date && detailRecord.campaignId) {
+                const campaign = approvedCampaigns.find(c => c.campaignId === detailRecord.campaignId);
+                if (campaign) {
+                  date = campaign.scheduledDate;
+                }
+              }
+              
+              if (!date) return '-';
+              
+              if (Array.isArray(date) && date.length === 3) {
+                const [y, m, d] = date;
+                return `${d.toString().padStart(2, '0')}/${m.toString().padStart(2, '0')}/${y}`;
+              }
+              if (typeof date === 'string' && date.includes('-')) {
+                const [y, m, d] = date.split('-');
+                return `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y}`;
+              }
+              if (date) {
+                try {
+                  const dateObj = new Date(date);
+                  if (!isNaN(dateObj.getTime())) {
+                    return dateObj.toLocaleDateString('vi-VN');
+                  }
+                } catch (e) {
+                  console.error('Scheduled date parsing error:', e);
+                }
+              }
+              return '-';
+            })()}</div>
+            <div><b>Ngày nhập kết quả:</b> {(() => {
+              const date = detailRecord.date;
+              if (Array.isArray(date) && date.length === 3) {
+                const [y, m, d] = date;
+                return `${d.toString().padStart(2, '0')}/${m.toString().padStart(2, '0')}/${y}`;
+              }
+              if (typeof date === 'string' && date.includes('-')) {
+                const [y, m, d] = date.split('-');
+                return `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y}`;
+              }
+              if (date) {
+                try {
+                  const dateObj = new Date(date);
+                  if (!isNaN(dateObj.getTime())) {
+                    return dateObj.toLocaleDateString('vi-VN');
+                  }
+                } catch (e) {
+                  console.error('Date parsing error:', e);
+                }
+              }
+              return 'Chưa nhập';
+            })()}</div>
             <div><b>Chiều cao (cm):</b> {detailRecord.height || '-'}</div>
             <div><b>Cân nặng (kg):</b> {detailRecord.weight || '-'}</div>
             <div><b>Thị lực trái:</b> {detailRecord.eyesightLeft || '-'}</div>
