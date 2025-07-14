@@ -93,12 +93,12 @@ const ParentMainPage = () => {
     },
     {
       id: 'medicine',
-      title: 'Khai báo thuốc',
-      subtitle: 'Khai báo và theo dõi thuốc',
+      title: 'Gửi thuốc',
+      subtitle: 'Gửi và theo dõi thuốc',
       icon: '💊',
       gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
       shadowColor: 'rgba(240, 147, 251, 0.3)',
-      path: '/parent/khaibaothuoc',
+      path: '/parent/donthuocdagui',
       priority: 'high'
     },
     {

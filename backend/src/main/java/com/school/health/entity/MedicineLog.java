@@ -26,7 +26,7 @@ public class MedicineLog {
     @Column(name = "GivenAt", nullable = false)
     private LocalDate givenAt;
 
-    @Column(name = "Notes", length = 500)
+    @Column(name = "Notes", length = 500, columnDefinition = "NVARCHAR(500)")
     private String notes;
 
     @Column(name = "Status")

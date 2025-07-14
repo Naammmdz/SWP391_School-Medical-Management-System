@@ -33,7 +33,7 @@ public class MedicineSubmission {
     @Column(name = "SubmissionDate", length = 1000,nullable = false)
     private LocalDate submissionDate;
 
-    @Column(name = "Instruction", length = 255)
+    @Column(name = "Instruction", length = 255, columnDefinition = "NVARCHAR(255)")
     private String instruction;
 
     @Column(name = "Duration")
@@ -49,7 +49,7 @@ public class MedicineSubmission {
     @Column(name = "SubmissionStatus", nullable = false, length = 20)
     private MedicineSubmissionStatus submissionStatus;
 
-    @Column(name = "Notes", length = 500)
+    @Column(name = "Notes", length = 500, columnDefinition = "NVARCHAR(500)")
     private String notes;
 
     @ManyToOne(fetch = FetchType.LAZY)

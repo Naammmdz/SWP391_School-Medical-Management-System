@@ -436,39 +436,97 @@ const MedicineList = () => {
           </div>
         ) : medicineLog && Array.isArray(medicineLog.medicineLogs) && medicineLog.medicineLogs.length > 0 ? (
           <div>
-            {medicineLog.medicineLogs.map((log, idx) => (
-              <Card
-                key={log.id || idx}
-                style={{ marginBottom: 16, borderRadius: 12 }}
-                title={
-                  <span style={{ color: "#15803d", fontWeight: 600 }}>
-                    <CheckCircleOutlined style={{ marginRight: 8 }} />
-                    Lần uống thuốc {idx + 1}
-                  </span>
+            {medicineLog.medicineLogs.map((log, idx) => {
+              // Handle new status logic: true = given, false = not given, null = default
+              const isGiven = log.status === true;
+              const isNotGiven = log.status === false;
+              const isDefault = log.status === null || log.status === undefined;
+              
+              // Get status display info
+              const getStatusInfo = () => {
+                if (isGiven) {
+                  return {
+                    icon: <CheckCircleOutlined style={{ marginRight: 8 }} />,
+                    text: "Đã uống thuốc",
+                    color: "#52c41a",
+                    bgColor: "#f6ffed",
+                    borderColor: "#b7eb8f"
+                  };
+                } else if (isNotGiven) {
+                  return {
+                    icon: <CloseCircleOutlined style={{ marginRight: 8 }} />,
+                    text: "Không uống thuốc",
+                    color: "#ff4d4f",
+                    bgColor: "#fff2f0",
+                    borderColor: "#ffccc7"
+                  };
+                } else {
+                  return {
+                    icon: <ExclamationCircleOutlined style={{ marginRight: 8 }} />,
+                    text: "Chưa ghi nhận",
+                    color: "#faad14",
+                    bgColor: "#fff7e6",
+                    borderColor: "#ffd591"
+                  };
                 }
-              >
-                <Row gutter={[16, 12]}>
-                  <Col span={12}>
-                    <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
-                      <UserOutlined style={{ color: "#52c41a", marginRight: 8 }} />
-                      <Text strong>Người cho uống:</Text>
-                    </div>
-                    <Text>{log.givenByName || <Text type="secondary">---</Text>}</Text>
-                  </Col>
-                  <Col span={12}>
-                    <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
-                      <CalendarOutlined style={{ color: "#15803d", marginRight: 8 }} />
-                      <Text strong>Ngày giờ uống:</Text>
-                    </div>
-                    <Text>
-                      {log.givenAt
-                        ? Array.isArray(log.givenAt)
-                          ? new Date(log.givenAt[0], log.givenAt[1] - 1, log.givenAt[2]).toLocaleDateString("vi-VN")
-                          : new Date(log.givenAt).toLocaleString("vi-VN")
-                        : <Text type="secondary">---</Text>}
-                    </Text>
-                  </Col>
-                </Row>
+              };
+              
+              const statusInfo = getStatusInfo();
+              
+              return (
+                <Card
+                  key={log.id || idx}
+                  style={{ 
+                    marginBottom: 16, 
+                    borderRadius: 12,
+                    border: `1px solid ${statusInfo.borderColor}`,
+                    backgroundColor: statusInfo.bgColor
+                  }}
+                  title={
+                    <span style={{ color: statusInfo.color, fontWeight: 600 }}>
+                      {statusInfo.icon}
+                      {statusInfo.text} - Ngày {idx + 1}
+                    </span>
+                  }
+                >
+                  <Row gutter={[16, 12]}>
+                    <Col span={12}>
+                      <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
+                        <UserOutlined style={{ color: statusInfo.color, marginRight: 8 }} />
+                        <Text strong>Người ghi nhận:</Text>
+                      </div>
+                      <Text>{log.givenByName || <Text type="secondary">---</Text>}</Text>
+                    </Col>
+                    <Col span={12}>
+                      <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
+                        <CalendarOutlined style={{ color: statusInfo.color, marginRight: 8 }} />
+                        <Text strong>Ngày ghi nhận:</Text>
+                      </div>
+                      <Text>
+                        {log.givenAt
+                          ? Array.isArray(log.givenAt)
+                            ? new Date(log.givenAt[0], log.givenAt[1] - 1, log.givenAt[2]).toLocaleDateString("vi-VN")
+                            : new Date(log.givenAt).toLocaleString("vi-VN")
+                          : <Text type="secondary">---</Text>}
+                      </Text>
+                    </Col>
+                  </Row>
+                  
+                  {/* Status badge */}
+                  <div style={{ marginTop: 12, marginBottom: 8 }}>
+                    <span style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      padding: '4px 12px',
+                      borderRadius: '6px',
+                      backgroundColor: statusInfo.color,
+                      color: 'white',
+                      fontSize: '12px',
+                      fontWeight: 600
+                    }}>
+                      {statusInfo.text}
+                    </span>
+                  </div>
                 
                 {log.notes && (
                   <div style={{ marginTop: 12 }}>
@@ -493,8 +551,9 @@ const MedicineList = () => {
                     />
                   </div>
                 )}
-              </Card>
-            ))}
+                </Card>
+              );
+            })}
           </div>
         ) : (
           <Alert 
