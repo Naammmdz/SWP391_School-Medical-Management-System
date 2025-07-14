@@ -91,6 +91,14 @@ const Header = () => {
         { path: "/khaibaothuoc", label: "Khai báo thuốc" },
         { path: "/donthuocdagui", label: "Đơn thuốc đã gửi" },
         { path: "/capnhatthongtin", label: "Cập nhật thông tin" }
+      ],
+      ROLE_PRINCIPAL: [
+        { path: "/principal", label: "Bảng điều khiển" },
+        { path: "/thongke", label: "Thống kê" },
+        { path: "/danhsachhocsinh", label: "Quản lý học sinh" },
+        { path: "/quanlytiemchung", label: "Quản lý tiêm chủng" },
+        { path: "/danhsachkiemtradinhky", label: "Kiểm tra sức khỏe" },
+        { path: "/sukienyte", label: "Sự kiện y tế" }
       ]
     };
     

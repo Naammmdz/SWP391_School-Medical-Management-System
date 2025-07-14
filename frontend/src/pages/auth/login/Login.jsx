@@ -53,6 +53,11 @@ const Login = () => {
           localStorage.setItem('students', JSON.stringify(response.data.students || []));
           navigate('/nurse');
           break;
+        case 'ROLE_PRINCIPAL':
+          // Add local storage student list if role is principal
+          localStorage.setItem('students', JSON.stringify(response.data.students || []));
+          navigate('/principal');
+          break;
         default:
           navigate('/');
       }
