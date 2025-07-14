@@ -54,7 +54,7 @@ const Layout = ({ children, showSidebar = false }) => {
     '/admin/danhsachnguoidung', '/admin/khoanguoidung', '/taomoihocsinh', '/danhsachhocsinh', 
     '/capnhathocsinh', '/taosukientiemchung', '/ketquatiemchung', '/ketquatiemchunghocsinh', 
     '/capnhatthongtintiemchung', '/blog', '/donthuocdagui', '/danhsachnguoidung', '/capnhatnguoidung', '/taomoinguoidung',
-    '/quanlyvattuyte', '/khoanguoidung' , '/donthuoc'
+    '/quanlyvattuyte', '/khoanguoidung' , '/donthuoc' , '/capnhatketquakiemtra'
   ];
   const shouldHideFooter = hideFooterPaths.some(path => location.pathname.startsWith(path));
 

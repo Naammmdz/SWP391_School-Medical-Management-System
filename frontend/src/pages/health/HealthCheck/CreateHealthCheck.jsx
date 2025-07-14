@@ -106,7 +106,7 @@ const CreateHealthCheck = () => {
     setLoading(false);
   };
 
-  if (!nurse.userRole || (nurse.userRole !== 'ROLE_NURSE' && nurse.userRole !== 'ROLE_ADMIN')) {
+  if (!nurse.userRole || (nurse.userRole !== 'ROLE_NURSE' && nurse.userRole !== 'ROLE_ADMIN' && nurse.userRole !== 'ROLE_PRINCIPAL')) {
     return (
       <div style={{ maxWidth: 800, margin: '32px auto', padding: '24px' }}>
         <Alert

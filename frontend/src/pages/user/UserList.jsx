@@ -214,15 +214,17 @@ const UserList = () => {
         </Col>
         <Col>
           <Space>
-            <Button
-              type="primary"
-              icon={<UserAddOutlined />}
-              size="large"
-              onClick={navigateToCreateUser}
-              style={{ borderRadius: 8 }}
-            >
-              Thêm người dùng
-            </Button>
+            {user.userRole === 'ROLE_ADMIN' && (
+              <Button
+                type="primary"
+                icon={<UserAddOutlined />}
+                size="large"
+                onClick={navigateToCreateUser}
+                style={{ borderRadius: 8 }}
+              >
+                Thêm người dùng
+              </Button>
+            )}
             {user.userRole === 'ROLE_PARENT' && (
               <Button
                 type="default"

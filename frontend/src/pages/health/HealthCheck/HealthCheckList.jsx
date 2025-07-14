@@ -47,7 +47,7 @@ const HealthCheckList = () => {
     if (
       user.userRole === 'ROLE_ADMIN' ||
       user.userRole === 'ROLE_NURSE' ||
-      user.userRole === 'ROLE_PRICIPAL'
+      user.userRole === 'ROLE_PRINCIPAL'
     ) {
       fetchCampaigns();
     }
@@ -56,7 +56,7 @@ const HealthCheckList = () => {
   if (
     user.userRole !== 'ROLE_ADMIN' &&
     user.userRole !== 'ROLE_NURSE' &&
-    user.userRole !== 'ROLE_PRICIPAL'
+    user.userRole !== 'ROLE_PRINCIPAL'
   ) {
     return <div>Bạn không có quyền truy cập trang này.</div>;
   }
@@ -174,7 +174,7 @@ const HealthCheckList = () => {
           <Button className="btn btn-warning btn-sm" onClick={() => handleUpdateClick(c)}>
             Cập nhật
           </Button>
-          {(user.userRole === 'ROLE_ADMIN' || user.userRole === 'ROLE_PRICIPAL') && c.status === 'PENDING' && (
+          {(user.userRole === 'ROLE_ADMIN' || user.userRole === 'ROLE_PRINCIPAL') && c.status === 'PENDING' && (
             <>
               <Button 
                 type="primary" 
@@ -249,11 +249,13 @@ const HealthCheckList = () => {
   return (
     <div className="health-check-list-container">
       <h2>Danh sách chiến dịch kiểm tra sức khỏe</h2>
-      <div style={{ marginBottom: 16 }}>
-        <Button type="primary" onClick={() => navigate('/kiemtradinhky')}>
-          Tạo chiến dịch kiểm tra sức khỏe
-        </Button>
-      </div>
+      {(user.userRole === 'ROLE_ADMIN' || user.userRole === 'ROLE_NURSE') && (
+        <div style={{ marginBottom: 16 }}>
+          <Button type="primary" onClick={() => navigate('/kiemtradinhky')}>
+            Tạo chiến dịch kiểm tra sức khỏe
+          </Button>
+        </div>
+      )}
       {loading && <div>Đang tải...</div>}
       {error && <div className="text-danger">{error}</div>}
       {!loading && !error && (
@@ -271,7 +273,7 @@ const HealthCheckList = () => {
         onCancel={() => setDetailModalOpen(false)}
         width={700}
         footer={
-          selectedCampaign && selectedCampaign.status === 'PENDING' && (user.userRole === 'ROLE_ADMIN' || user.userRole === 'ROLE_PRICIPAL') ? [
+          selectedCampaign && selectedCampaign.status === 'PENDING' && (user.userRole === 'ROLE_ADMIN' || user.userRole === 'ROLE_PRINCIPAL') ? [
             <Button key="reject" danger loading={rejectingId === selectedCampaign.campaignId} onClick={() => handleReject(selectedCampaign.campaignId)}>
               {rejectingId === selectedCampaign.campaignId ? 'Đang từ chối...' : 'Từ chối'}
             </Button>,

@@ -112,10 +112,10 @@ function App() {
       <Route path="/capnhatthongtintiemchung" element={<ProtectedRoute element={<Layout showSidebar><UpdateVaccination /></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE']} />} />
       <Route path="/capnhattiemchung" element={<ProtectedRoute element={<Layout showSidebar><UpdateVaccination /></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE']} />} />
       <Route path="/ketquatiemchung" element={<ProtectedRoute element={<Layout showSidebar><VaccinationResult /></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE', 'ROLE_PRINCIPAL']} />} />
-      <Route path="/ketquatiemchunghocsinh" element={<ProtectedRoute element={<Layout showSidebar><VaccinationStudentResult /></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE']} />} />
+      <Route path="/ketquatiemchunghocsinh" element={<ProtectedRoute element={<Layout showSidebar><VaccinationStudentResult /></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE', 'ROLE_PRINCIPAL']} />} />
       
-      <Route path="/donthuoc" element={<ProtectedRoute element={<Layout showSidebar><NursePrescription /></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE']} />} />
-      <Route path="/chouongthuoc" element={<ProtectedRoute element={<Layout showSidebar><MedicineLog /></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE']} />} />
+      <Route path="/donthuoc" element={<ProtectedRoute element={<Layout showSidebar><NursePrescription /></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE', 'ROLE_PRINCIPAL']} />} />
+      <Route path="/chouongthuoc" element={<ProtectedRoute element={<Layout showSidebar><MedicineLog /></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE', 'ROLE_PRINCIPAL']} />} />
       <Route path="/thongke" element={<ProtectedRoute element={<Layout showSidebar><DashboardPage /></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE', 'ROLE_PRINCIPAL']} />} />
 
       <Route path="/kiemtradinhky" element={<ProtectedRoute element={<Layout showSidebar><CreateHealthCheck /></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE']} />} />
@@ -126,19 +126,19 @@ function App() {
       <Route path="/ketquakiemtradinhkyhocsinh" element={<ProtectedRoute element={<Layout showSidebar><HealthCheckResultStudent /></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE']} />} />
       <Route path="/capnhatketquakiemtra" element={<ProtectedRoute element={<Layout showSidebar><UpdateHealthCheckResult /></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE']} />} />
 
-      <Route path="/capnhatthongtin" element={<ProtectedRoute element={<Layout showSidebar><UpdateUser /></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE']} />} />
-      <Route path="/doimatkhau" element={<ProtectedRoute element={<Layout showSidebar><UpdatePassword /></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE']} />} />
+      <Route path="/capnhatthongtin" element={<ProtectedRoute element={<Layout showSidebar><UpdateUser /></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE', 'ROLE_PRINCIPAL']} />} />
+      <Route path="/doimatkhau" element={<ProtectedRoute element={<Layout showSidebar><UpdatePassword /></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE', 'ROLE_PRINCIPAL']} />} />
       <Route path="/taomoinguoidung" element={<ProtectedRoute element={<Layout showSidebar><CreateUser /></Layout>} requiredRole="ROLE_ADMIN" />} />
-      <Route path="/capnhatnguoidung/:userId" element={<ProtectedRoute element={<Layout showSidebar><UpdateUserByAdmin /></Layout>} requiredRole="ROLE_ADMIN" />} />
-      <Route path="/danhsachnguoidung" element={<ProtectedRoute element={<Layout showSidebar><UserList /></Layout>} requiredRole="ROLE_ADMIN" />} />
-      <Route path="/khoanguoidung/:userId" element={<ProtectedRoute element={<Layout showSidebar><BlockUser /></Layout>} requiredRole="ROLE_ADMIN" />} />
+      <Route path="/capnhatnguoidung/:userId" element={<ProtectedRoute element={<Layout showSidebar><UpdateUserByAdmin /></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_PRINCIPAL']} />} />
+      <Route path="/danhsachnguoidung" element={<ProtectedRoute element={<Layout showSidebar><UserList /></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_PRINCIPAL']} />} />
+      <Route path="/khoanguoidung/:userId" element={<ProtectedRoute element={<Layout showSidebar><BlockUser /></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_PRINCIPAL']} />} />
       
       <Route path="/taomoihocsinh" element={<ProtectedRoute element={<Layout showSidebar><CreateStudent /></Layout>} requiredRole="ROLE_ADMIN" />} />
       <Route path="/danhsachhocsinh" element={<ProtectedRoute element={<Layout showSidebar><StudentList /></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE', 'ROLE_PRINCIPAL']} />} />
-      <Route path="/capnhathocsinh/:studentId" element={<ProtectedRoute element={<Layout showSidebar><UpdateStudent /></Layout>} requiredRole="ROLE_ADMIN" />} />
+      <Route path="/capnhathocsinh/:studentId" element={<ProtectedRoute element={<Layout showSidebar><UpdateStudent /></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_PRINCIPAL']} />} />
 
       <Route path="/themvattu" element={<ProtectedRoute element={<Layout showSidebar><ImportInventory/> </Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE']} />} />
-      <Route path="/quanlyvattuyte" element={<ProtectedRoute element={<Layout showSidebar><InventoryList/></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE']} />} />
+      <Route path="/quanlyvattuyte" element={<ProtectedRoute element={<Layout showSidebar><InventoryList/></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE', 'ROLE_PRINCIPAL']} />} />
       
      
       

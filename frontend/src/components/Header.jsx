@@ -95,10 +95,13 @@ const Header = () => {
       ROLE_PRINCIPAL: [
         { path: "/principal", label: "Bảng điều khiển" },
         { path: "/thongke", label: "Thống kê" },
+        { path: "/danhsachnguoidung", label: "Quản lý người dùng" },
         { path: "/danhsachhocsinh", label: "Quản lý học sinh" },
         { path: "/quanlytiemchung", label: "Quản lý tiêm chủng" },
         { path: "/danhsachkiemtradinhky", label: "Kiểm tra sức khỏe" },
-        { path: "/sukienyte", label: "Sự kiện y tế" }
+        { path: "/sukienyte", label: "Sự kiện y tế" },
+        { path: "/quanlyvattuyte", label: "Quản lý vật tư y tế" },
+        { path: "/donthuoc", label: "Đơn thuốc" }
       ]
     };
     

@@ -257,7 +257,8 @@ const VaccinationResult = () => {
     console.log('Debug - Determined scheduledDate:', scheduledDate);
     
     const formData = {
-      date: scheduledDate ? dayjs(scheduledDate) : dayjs(),
+      scheduledDate: scheduledDate ? dayjs(scheduledDate) : null,
+      actualDate: record.date ? dayjs(record.date) : dayjs(), // Ngày thực hiện tiêm, mặc định hôm nay
       doseNumber: record.doseNumber,
       parentConfirmation: record.parentConfirmation,
       previousDose: record.isPreviousDose,
@@ -268,7 +269,8 @@ const VaccinationResult = () => {
     };
     
     console.log('Debug - Form data:', formData);
-    console.log('Debug - Form date value:', formData.date.format('YYYY-MM-DD'));
+    console.log('Debug - Form scheduledDate value:', formData.scheduledDate ? formData.scheduledDate.format('YYYY-MM-DD') : 'null');
+    console.log('Debug - Form actualDate value:', formData.actualDate.format('YYYY-MM-DD'));
     
     // Set the selected result and form data
     setSelectedResult(record);
@@ -289,11 +291,11 @@ const VaccinationResult = () => {
     setLoadingSubmit(true);
     setSubmitStatus(null);
     try {
-      // Set actual vaccination date to current time when updating result
-      const now = dayjs();
-      const dateArr = [now.year(), now.month() + 1, now.date()];
+      // Use the actual vaccination date from form input
+      const actualDate = values.actualDate || dayjs();
+      const dateArr = [actualDate.year(), actualDate.month() + 1, actualDate.date()];
       
-      console.log('Setting actual vaccination date to current time:', dateArr);
+      console.log('Setting actual vaccination date:', dateArr);
       const payload = {
         vaccinationId: selectedResult.vaccinationId,
         date: dateArr,
@@ -347,6 +349,28 @@ const VaccinationResult = () => {
       dataIndex: 'campaignId',
       key: 'campaignId',
       render: (campaignId) => getCampaignInfo(campaignId).campaignName || campaignId
+    },
+    {
+      title: 'Ngày dự kiến',
+      dataIndex: 'scheduledDate',
+      key: 'scheduledDate',
+      render: (scheduledDate, record) => {
+        // Get scheduled date from record or campaign info
+        let displayDate = scheduledDate;
+        if (!displayDate) {
+          const campaignInfo = getCampaignInfo(record.campaignId);
+          displayDate = campaignInfo.scheduledDate;
+        }
+        
+        if (displayDate) {
+          // Handle different date formats
+          if (Array.isArray(displayDate)) {
+            return displayDate.join('-');
+          }
+          return displayDate;
+        }
+        return '-';
+      }
     },
     {
       title: 'Ngày thực hiện tiêm',
@@ -610,11 +634,20 @@ const VaccinationResult = () => {
                     </Form.Item>
                   </Col>
                   <Col xs={24} sm={12}>
-                    <Form.Item label="Ngày tiêm dự kiến theo lịch" name="date">
+                    <Form.Item label="Ngày tiêm dự kiến theo lịch" name="scheduledDate">
                       <DatePicker
                           style={{ width: '100%' }}
                           format="YYYY-MM-DD"
                           disabled
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col xs={24} sm={12}>
+                    <Form.Item label="Ngày thực hiện tiêm" name="actualDate" rules={[{ required: true, message: 'Vui lòng chọn ngày thực hiện tiêm' }]}>
+                      <DatePicker
+                          style={{ width: '100%' }}
+                          format="YYYY-MM-DD"
+                          placeholder="Chọn ngày thực hiện tiêm"
                       />
                     </Form.Item>
                   </Col>

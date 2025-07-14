@@ -192,15 +192,11 @@ const getNavGroupsForRole = (role) => {
         ...commonGroups.overview,
         items: [
           ...commonGroups.overview.items,
-          { path: '/principal', name: 'Trang hiệu trưởng', icon: 'users' },
+          // { path: '/principal', name: 'Trang hiệu trưởng', icon: 'users' },
+          { path: '/thongke', name: 'Báo cáo thống kê', icon: 'barChart' },
         ]
       },
-      {
-        title: 'Quản lý học sinh',
-        items: [
-          { path: '/danhsachhocsinh', name: 'Danh sách học sinh', icon: 'bookUser' },
-        ]
-      },
+
       {
         title: 'Tiêm chủng',
         items: [
@@ -213,13 +209,6 @@ const getNavGroupsForRole = (role) => {
         items: [
           { path: '/danhsachkiemtradinhky', name: 'Danh sách kiểm tra định kỳ', icon: 'stethoscope' },
           { path: '/ketquakiemtradinhky', name: 'Kết quả kiểm tra định kỳ', icon: 'report' },
-        ]
-      },
-      {
-        title: 'Báo cáo & Sự kiện',
-        items: [
-          { path: '/sukienyte', name: 'Sự kiện y tế', icon: 'activity' },
-          { path: '/thongke', name: 'Báo cáo thống kê', icon: 'barChart' },
         ]
       }
     ]

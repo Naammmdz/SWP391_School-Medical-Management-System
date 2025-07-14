@@ -54,6 +54,7 @@ const InventoryList = () => {
   const [editSuccess, setEditSuccess] = useState('');
   const [editLoading, setEditLoading] = useState(false);
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   useEffect(() => {
     fetchData();
@@ -218,20 +219,22 @@ const InventoryList = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={12} md={4} textAlign={{ xs: 'left', md: 'right' }}>
-              <Button
-                variant="contained"
-                startIcon={<AddCircleOutlineIcon />}
-                sx={{
-                  minWidth: 180,
-                  background: GREEN,
-                  '&:hover': { background: '#10632e' }
-                }}
-                onClick={() => navigate('/themvattu')}
-              >
-                Thêm thuốc/Vật tư
-              </Button>
-            </Grid>
+            {(user.userRole === 'ROLE_ADMIN' || user.userRole === 'ROLE_NURSE') && (
+              <Grid item xs={12} sm={12} md={4} textAlign={{ xs: 'left', md: 'right' }}>
+                <Button
+                  variant="contained"
+                  startIcon={<AddCircleOutlineIcon />}
+                  sx={{
+                    minWidth: 180,
+                    background: GREEN,
+                    '&:hover': { background: '#10632e' }
+                  }}
+                  onClick={() => navigate('/themvattu')}
+                >
+                  Thêm thuốc/Vật tư
+                </Button>
+              </Grid>
+            )}
           </Grid>
         </CardContent>
       </Card>

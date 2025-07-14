@@ -67,7 +67,7 @@ const VaccinationManagement = () => {
   // User info
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const users = JSON.parse(localStorage.getItem('users') || '[]');
-  const isAdmin = user.userRole === 'ROLE_ADMIN';
+  const isAdmin = user.userRole === 'ROLE_ADMIN' || user.userRole === 'ROLE_PRINCIPAL';
   
   const getOrganizerName = (organizerId, record) => {
     // Use organizer field from backend response
@@ -550,23 +550,25 @@ const VaccinationManagement = () => {
             Quản lý các chiến dịch tiêm chủng và theo dõi phản hồi từ phụ huynh
           </Text>
         </Col>
-        <Col>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            size="large"
-            onClick={() => navigate('/taosukientiemchung')}
-            style={{ 
-              borderRadius: 8,
-              background: 'linear-gradient(135deg, #52c41a 0%, #73d13d 100%)',
-              border: 'none',
-              fontWeight: 600,
-              boxShadow: '0 4px 12px rgba(82, 196, 26, 0.3)'
-            }}
-          >
-            Tạo chiến dịch mới
-          </Button>
-        </Col>
+        {(user.userRole === 'ROLE_ADMIN' || user.userRole === 'ROLE_NURSE') && (
+          <Col>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              size="large"
+              onClick={() => navigate('/taosukientiemchung')}
+              style={{ 
+                borderRadius: 8,
+                background: 'linear-gradient(135deg, #52c41a 0%, #73d13d 100%)',
+                border: 'none',
+                fontWeight: 600,
+                boxShadow: '0 4px 12px rgba(82, 196, 26, 0.3)'
+              }}
+            >
+              Tạo chiến dịch mới
+            </Button>
+          </Col>
+        )}
       </Row>
 
       {/* Statistics */}
