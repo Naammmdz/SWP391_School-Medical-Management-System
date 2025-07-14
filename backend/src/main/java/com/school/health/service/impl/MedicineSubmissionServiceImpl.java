@@ -69,7 +69,7 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
         // Calculate duration based on start and end dates
         int duration = (int) ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate()) + 1;
 
-        String encodedImage = null;;
+        String encodedImage = null;
         if (image != null) {
             try {
                 // Check file size (max 5MB)

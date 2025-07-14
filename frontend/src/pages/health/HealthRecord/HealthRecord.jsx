@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useForm, Controller } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
 import { Card, Form, Input, Button, Alert, Spin, Typography, Space, Row, Col, message, Table, Tag, Select, Divider, Modal, Descriptions } from 'antd';
 import { 
   HeartOutlined, 
@@ -14,7 +15,8 @@ import {
   EditOutlined,
   InfoCircleOutlined,
   CloseOutlined,
-  BarChartOutlined
+  BarChartOutlined,
+  ArrowLeftOutlined
 } from '@ant-design/icons';
 import { Search, XCircle } from 'lucide-react';
 import Header from '../../../components/Header';
@@ -28,6 +30,7 @@ const { TextArea } = Input;
 const { Option } = Select;
 
 const HealthRecord = () => {
+  const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const accessToken = localStorage.getItem('token');
   const isNurseOrAdmin =
@@ -299,14 +302,33 @@ const HealthRecord = () => {
       {/* Header */}
       <Row justify="space-between" align="middle" style={{ marginBottom: 32, marginTop: 50 }}>
         <Col>
-          <Title level={2} style={{ margin: 0, color: '#15803d' }}>
-            <HeartOutlined style={{ marginRight: 12 }} />
-            {isNurseOrAdmin
-              ? 'Danh Sách Hồ Sơ Sức Khỏe Học Sinh'
-              : isParent
-                ? 'Hồ Sơ Sức Khỏe '
-                : 'Hồ Sơ Sức Khỏe Học Sinh'}
-          </Title>
+          <Space>
+            {isParent && (
+              <Button 
+                type="text" 
+                icon={<ArrowLeftOutlined />}
+                onClick={() => navigate(-1)}
+                style={{ 
+                  fontSize: 16,
+                  height: 40,
+                  display: 'flex',
+                  alignItems: 'center',
+                  color: '#15803d',
+                  fontWeight: 600
+                }}
+              >
+                Quay lại
+              </Button>
+            )}
+            <Title level={2} style={{ margin: 0, color: '#15803d' }}>
+              <HeartOutlined style={{ marginRight: 12 }} />
+              {isNurseOrAdmin
+                ? 'Danh Sách Hồ Sơ Sức Khỏe Học Sinh'
+                : isParent
+                  ? 'Hồ Sơ Sức Khỏe '
+                  : 'Hồ Sơ Sức Khỏe Học Sinh'}
+            </Title>
+          </Space>
         </Col>
       </Row>
       
