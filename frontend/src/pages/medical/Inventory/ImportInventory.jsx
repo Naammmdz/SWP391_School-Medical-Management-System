@@ -26,6 +26,13 @@ const ImportInventory = () => {
     quantity: '',
     minStockLevel: '',
     expiryDate: null,
+    batchNumber: '',
+    manufacturer: '',
+    importDate: dayjs(),
+    importPrice: '',
+    storageLocation: '',
+    status: 'ACTIVE',
+    source: '',
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -40,8 +47,12 @@ const ImportInventory = () => {
     setForm(prev => ({ ...prev, expiryDate: value }));
   };
 
+  const handleImportDateChange = (value) => {
+    setForm(prev => ({ ...prev, importDate: value }));
+  };
+
   const validate = () => {
-    if (!form.name || !form.type || !form.unit || !form.quantity || !form.minStockLevel || !form.expiryDate) {
+    if (!form.name || !form.type || !form.unit || !form.quantity || !form.minStockLevel || !form.expiryDate || !form.batchNumber || !form.manufacturer || !form.importPrice || !form.storageLocation || !form.source) {
       setError('Vui lòng nhập đầy đủ thông tin.');
       return false;
     }
@@ -53,9 +64,26 @@ const ImportInventory = () => {
       setError('Tồn kho tối thiểu không hợp lệ.');
       return false;
     }
+    if (isNaN(form.importPrice) || Number(form.importPrice) <= 0) {
+      setError('Giá nhập phải lớn hơn 0.');
+      return false;
+    }
     if (!dayjs(form.expiryDate).isValid() || dayjs(form.expiryDate).isBefore(dayjs(), 'day')) {
       setError('Hạn sử dụng phải là ngày trong tương lai.');
       return false;
+    }
+    if (!dayjs(form.importDate).isValid()) {
+      setError('Ngày nhập không hợp lệ.');
+      return false;
+    }
+    // Validate expiry date vs status combination
+    if (form.expiryDate && form.status === 'EXPIRED') {
+      const today = dayjs();
+      const expiryDate = dayjs(form.expiryDate);
+      if (expiryDate.isAfter(today, 'day')) {
+        setError('Không thể đặt trạng thái là "Hết hạn" khi hạn sử dụng còn trong tương lai.');
+        return false;
+      }
     }
     setError('');
     return true;
@@ -76,10 +104,31 @@ const ImportInventory = () => {
         quantity: Number(form.quantity),
         minStockLevel: Number(form.minStockLevel),
         expiryDate: dayjs(form.expiryDate).format('YYYY-MM-DD'),
+        batchNumber: form.batchNumber,
+        manufacturer: form.manufacturer,
+        importDate: dayjs(form.importDate).format('YYYY-MM-DD'),
+        importPrice: Number(form.importPrice),
+        storageLocation: form.storageLocation,
+        status: form.status,
+        source: form.source,
       };
       await InventoryService.createInventory(payload, config);
       setSuccess('Nhập kho thành công!');
-      setForm({ name: '', type: '', unit: '', quantity: '', minStockLevel: '', expiryDate: null });
+      setForm({ 
+        name: '', 
+        type: '', 
+        unit: '', 
+        quantity: '', 
+        minStockLevel: '', 
+        expiryDate: null,
+        batchNumber: '',
+        manufacturer: '',
+        importDate: dayjs(),
+        importPrice: '',
+        storageLocation: '',
+        status: 'ACTIVE',
+        source: '',
+      });
     } catch (err) {
       setError('Nhập kho thất bại. Vui lòng thử lại.');
     }
@@ -166,6 +215,92 @@ const ImportInventory = () => {
                     slotProps={{ textField: { fullWidth: true, required: true } }}
                   />
                 </LocalizationProvider>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Số lô"
+                  name="batchNumber"
+                  value={form.batchNumber}
+                  onChange={handleChange}
+                  fullWidth
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Nhà sản xuất"
+                  name="manufacturer"
+                  value={form.manufacturer}
+                  onChange={handleChange}
+                  fullWidth
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <DatePicker
+                    label="Ngày nhập kho"
+                    value={form.importDate}
+                    onChange={handleImportDateChange}
+                    format="YYYY-MM-DD"
+                    slotProps={{ textField: { fullWidth: true, required: true } }}
+                  />
+                </LocalizationProvider>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Giá nhập (VND)"
+                  name="importPrice"
+                  type="number"
+                  value={form.importPrice}
+                  onChange={handleChange}
+                  fullWidth
+                  required
+                  inputProps={{ min: 0, step: 0.01 }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Vị trí lưu trữ"
+                  name="storageLocation"
+                  value={form.storageLocation}
+                  onChange={handleChange}
+                  fullWidth
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth required>
+                  <InputLabel>Trạng thái</InputLabel>
+                  <Select
+                    name="status"
+                    value={form.status}
+                    label="Trạng thái"
+                    onChange={handleChange}
+                  >
+                    <MenuItem value="ACTIVE">Hoạt động</MenuItem>
+                    <MenuItem value="INACTIVE">Không hoạt động</MenuItem>
+                    <MenuItem 
+                      value="EXPIRED" 
+                      disabled={form.expiryDate && dayjs(form.expiryDate).isAfter(dayjs(), 'day')}
+                      title={form.expiryDate && dayjs(form.expiryDate).isAfter(dayjs(), 'day') ? 'Không thể chọn "Hết hạn" khi hạn sử dụng còn trong tương lai' : ''}
+                    >
+                      Hết hạn
+                    </MenuItem>
+                    <MenuItem value="DAMAGED">Hư hỏng</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  label="Nguồn cung cấp"
+                  name="source"
+                  value={form.source}
+                  onChange={handleChange}
+                  fullWidth
+                  required
+                  placeholder="Ví dụ: Nhà cung cấp A, Bệnh viện B, v.v."
+                />
               </Grid>
               <Grid item xs={12}>
                 <Button

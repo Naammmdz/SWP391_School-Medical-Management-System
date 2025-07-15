@@ -9,7 +9,7 @@ public class InventoryUsedInMedicalEventRequestDTO {
     @NotNull(message = "Item ID không được để trống!")
     private Integer itemId;
     @NotNull(message = "Số lượng đã dùng không được để trống")
-    @Min(value = 1, message = "Số lượng đã dùng phải lớn hơn 0")
+    @Min(value = 0, message = "Số lượng đã dùng không khả dụng")
     private Integer quantityUsed;
 
     private String notes; // Ghi chú (có thể null)

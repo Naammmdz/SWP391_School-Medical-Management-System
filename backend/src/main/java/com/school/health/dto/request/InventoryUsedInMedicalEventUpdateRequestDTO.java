@@ -8,7 +8,7 @@ import lombok.Data;
 public class InventoryUsedInMedicalEventUpdateRequestDTO {
     private Integer id;
     private Integer itemId;
-    @Min(value = 1, message = "Số lượng đã dùng phải lớn hơn 0")
+    @Min(value = 0, message = "Số lượng đã dùng chưa hợp lí")
     private Integer quantityUsed;
     private String notes; // Ghi chú (có thể null)
 }

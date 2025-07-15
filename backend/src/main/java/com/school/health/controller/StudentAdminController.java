@@ -56,4 +56,28 @@ public class StudentAdminController {
         return ResponseEntity.ok(studentService.getStudentsByParentId(parentId));
     }
 
+    @GetMapping("/class/{className}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE')")
+    public ResponseEntity<?> getStudentsByClassName(@PathVariable String className) {
+        return ResponseEntity.ok(studentService.getStudentsByClassName(className));
+    }
+
+    @GetMapping("/search")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE')")
+    public ResponseEntity<?> searchStudentsByName(@RequestParam String name) {
+        return ResponseEntity.ok(studentService.searchStudentsByName(name));
+    }
+
+    @GetMapping("/classes")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE')")
+    public ResponseEntity<?> getDistinctClassNames() {
+        return ResponseEntity.ok(studentService.getDistinctClassNames());
+    }
+
+    @GetMapping("/class/{className}/students")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('NURSE')")
+    public ResponseEntity<?> getStudentsByClass(@PathVariable String className) {
+        return ResponseEntity.ok(studentService.getStudentsByClassName(className));
+    }
+
 }

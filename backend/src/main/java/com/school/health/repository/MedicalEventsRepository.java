@@ -19,14 +19,18 @@ public interface MedicalEventsRepository extends JpaRepository<MedicalEvent, Int
     SELECT DISTINCT m FROM MedicalEvent m
     JOIN m.studentList s
     WHERE
-        (:from IS NULL OR m.createdAt >= :from)
-        AND (:to IS NULL OR m.createdAt <= :to)
+        (:from IS NULL OR m.eventDate >= :from)
+        AND (:to IS NULL OR m.eventDate <= :to)
         AND (:eventType IS NULL OR m.eventType LIKE CONCAT('%', :eventType, '%'))
         AND (:stuId IS NULL OR s.studentId  = :stuId)
         AND (:createBy IS NULL OR m.createdBy.userId = :createBy)
-         AND (:status IS NULL OR m.status = :status)  
+        AND (:status IS NULL OR m.status = :status)
+        AND (:searchTerm IS NULL OR 
+             m.title LIKE CONCAT('%', :searchTerm, '%') OR 
+             s.fullName LIKE CONCAT('%', :searchTerm, '%') OR
+             m.description LIKE CONCAT('%', :searchTerm, '%'))
     """)
-    List<MedicalEvent> findByFilter(LocalDateTime from, LocalDateTime to, String eventType, Integer stuId, Integer createBy, MedicalEventStatus status);
+    List<MedicalEvent> findByFilter(LocalDateTime from, LocalDateTime to, String eventType, Integer stuId, Integer createBy, MedicalEventStatus status, String searchTerm);
 
     Optional<MedicalEvent> findById(Integer id);
 

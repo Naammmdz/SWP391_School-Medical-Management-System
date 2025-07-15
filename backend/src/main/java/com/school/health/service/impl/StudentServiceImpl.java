@@ -158,4 +158,8 @@ public class StudentServiceImpl implements StudentService {
         student.setActive(false);
         studentRepository.save(student);
     }
+
+    public List<String> getDistinctClassNames() {
+        return studentRepository.findDistinctClassNames();
+    }
 }

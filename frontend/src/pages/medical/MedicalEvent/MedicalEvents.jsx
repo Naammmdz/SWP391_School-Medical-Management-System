@@ -1,151 +1,657 @@
 import React, { useState, useEffect } from 'react';
 import MedicalEventService from '../../../services/MedicalEventService';
+import studentService from '../../../services/StudentService';
+import StudentSelectionModal from '../../../components/StudentSelectionModal';
 import InventoryService from '../../../services/InventoryService';
-import { useNavigate } from 'react-router-dom';
 
-const severityLevels = [
+// Enum values from backend
+const SEVERITY_LEVELS = [
   { value: 'MINOR', label: 'Nhẹ' },
   { value: 'MODERATE', label: 'Trung bình' },
-  { value: 'SERIOUS', label: 'Nặng' },
-  { value: 'CRITICAL', label: 'Rất nặng' }
+  { value: 'MAJOR', label: 'Nặng' },
+  { value: 'CRITICAL', label: 'Cấp cứu' }
 ];
-const statusOptions = [
+
+const MEDICAL_EVENT_STATUS = [
   { value: 'PROCESSING', label: 'Đang xử lý' },
   { value: 'RESOLVED', label: 'Đã xử lý' }
 ];
 
-const boxStyle = {
-  background: '#fff',
-  borderRadius: 8,
-  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-  padding: 24,
-  marginBottom: 24
-};
-const labelStyle = { fontWeight: 600, marginBottom: 4, display: 'block' };
-const inputStyle = { marginBottom: 16, width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ccc' };
-const rowStyle = { display: 'flex', gap: 16, alignItems: 'center', marginBottom: 8 };
-
-// Popup component
-const Popup = ({ message, onClose }) => (
-  <div style={{
-    position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-    background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
-  }}>
-    <div style={{
-      background: '#fff', padding: 32, borderRadius: 10, minWidth: 320, boxShadow: '0 2px 16px rgba(0,0,0,0.2)', textAlign: 'center'
-    }}>
-      <div style={{ marginBottom: 20, fontSize: 18 }}>{message}</div>
-      <button
-        onClick={onClose}
-        style={{
-          padding: '8px 24px', background: '#43a047', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 600,
-          cursor: 'pointer', transition: 'filter 0.2s',
-        }}
-        onMouseOver={e => e.currentTarget.style.filter = 'brightness(1.1)'}
-        onMouseOut={e => e.currentTarget.style.filter = 'none'}
-      >
-        Đóng
-      </button>
-    </div>
-  </div>
-);
+const EVENT_TYPES = [
+  { value: 'INJURY', label: 'Chấn thương' },
+  { value: 'ILLNESS', label: 'Bệnh tật' },
+  { value: 'ALLERGIC_REACTION', label: 'Phản ứng dị ứng' },
+  { value: 'EMERGENCY', label: 'Cấp cứu' },
+  { value: 'OTHER', label: 'Khác' }
+];
 
 const MedicalEvents = () => {
-  const [students, setStudents] = useState([]);
+  // Helper functions for enum translation
+  const getSeverityLevelText = (severityLevel) => {
+    switch (severityLevel) {
+      case 'MINOR': return 'Nhẹ';
+      case 'MODERATE': return 'Trung bình';
+      case 'MAJOR': return 'Nặng';
+      case 'CRITICAL': return 'Cấp cứu';
+      default: return severityLevel || 'Không có';
+    }
+  };
+  
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'PROCESSING': return 'Đang xử lý';
+      case 'RESOLVED': return 'Đã xử lý';
+      default: return status || 'Không có';
+    }
+  };
+  
+  // Helper function to translate inventory status to Vietnamese
+  const getInventoryStatusText = (status) => {
+    switch (status) {
+      case 'ACTIVE': return 'Hoạt động';
+      case 'INACTIVE': return 'Không hoạt động';
+      case 'EXPIRED': return 'Hết hạn';
+      case 'DAMAGED': return 'Hư hỏng';
+      default: return status || 'Không có';
+    }
+  };
+  
+  // State cho danh sách sự cố y tế
+  const [medicalEvents, setMedicalEvents] = useState([]);
+  // State cho thông tin học sinh
+  const [studentsInfo, setStudentsInfo] = useState({});
+  // State cho inventory items used
   const [inventoryItems, setInventoryItems] = useState([]);
-  const [selectedStudents, setSelectedStudents] = useState([]);
-  const [relatedItemUsed, setRelatedItemUsed] = useState([]);
-  const [form, setForm] = useState({
+  const [selectedInventoryItems, setSelectedInventoryItems] = useState([]);
+  const [inventoryUsageLogs, setInventoryUsageLogs] = useState([]);
+  // State cho form thêm/sửa sự cố - matching backend DTO
+  const [currentEvent, setCurrentEvent] = useState({
+    id: null,
     title: '',
+    stuId: [], // Array of student IDs
     eventType: '',
-    eventDate: new Date().toISOString().split('T')[0],
+    eventDate: new Date().toISOString().slice(0, 16), // datetime-local format
     location: '',
     description: '',
+    relatedItemUsed: [], // Array of InventoryUsedInMedicalEventRequestDTO objects
     notes: '',
     handlingMeasures: '',
     severityLevel: 'MINOR',
     status: 'PROCESSING'
   });
+  
+  // State for student selection
+  const [availableStudents, setAvailableStudents] = useState([]);
+  const [selectedStudents, setSelectedStudents] = useState([]);
+  const [availableClasses, setAvailableClasses] = useState([]);
+  const [studentSelectionModalOpen, setStudentSelectionModalOpen] = useState(false);
+  const [resetStudentModal, setResetStudentModal] = useState(false);
+  const [editing, setEditing] = useState(false);
+  // State cho hiển thị modal
+  const [modalOpen, setModalOpen] = useState(false);
+  
+  // State for inventory search modal
+  const [inventorySearchModalOpen, setInventorySearchModalOpen] = useState(false);
+  const [inventorySearchTerm, setInventorySearchTerm] = useState('');
+  const [filteredInventoryItems, setFilteredInventoryItems] = useState([]);
+  // State cho loading
   const [loading, setLoading] = useState(false);
-  const [classFilter, setClassFilter] = useState('');
-  const [nameFilter, setNameFilter] = useState('');
-  const [quantityErrors, setQuantityErrors] = useState({});
-  const [popup, setPopup] = useState({ open: false, message: '' });
-  const navigate = useNavigate();
+  // State cho lọc và tìm kiếm - matching MedicalEventsFiltersRequestDTO
+  const [filters, setFilters] = useState({
+    stuId: null,
+    from: null,
+    to: null,
+    createdBy: null,
+    status: null
+  });
+  
+  // Additional UI-only filters
+  const [uiFilters, setUIFilters] = useState({
+    searchTerm: '',
+    fromDate: '',
+    toDate: ''
+  });
+  
+  // Track if filters are active
+  const [isFiltering, setIsFiltering] = useState(false);
 
-  useEffect(() => {
-    const storedStudents = localStorage.getItem('students');
-    if (storedStudents) {
-      try {
-        setStudents(JSON.parse(storedStudents));
-      } catch {
-        setStudents([]);
-      }
+  // Hàm lấy thông tin học sinh theo ID
+  const fetchStudentInfo = async (studentId) => {
+    try {
+      const response = await studentService.getStudentById(studentId);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching student ${studentId}:`, error);
+      return null;
     }
-    const fetchInventory = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const config = { headers: { Authorization: `Bearer ${token}` } };
-        const res = await InventoryService.getInventoryList(config);
-        setInventoryItems(Array.isArray(res) ? res : []);
-      } catch {
-        setInventoryItems([]);
+  };
+  
+  // Hàm lấy danh sách tất cả học sinh
+  const fetchAllStudents = async () => {
+    try {
+      const response = await studentService.getAllStudents();
+      if (response.data && Array.isArray(response.data)) {
+        setAvailableStudents(response.data);
       }
-    };
-    fetchInventory();
-  }, []);
-
-  const addItemRow = () => {
-    setRelatedItemUsed([
-      ...relatedItemUsed,
-      { itemId: '', quantityUsed: 1, notes: '' }
-    ]);
+    } catch (error) {
+      console.error('Error fetching students:', error);
+    }
   };
-  const removeItemRow = idx => {
-    setRelatedItemUsed(relatedItemUsed.filter((_, i) => i !== idx));
-  };
-  const updateItemRow = (idx, field, value) => {
-    const updated = [...relatedItemUsed];
-    updated[idx][field] = value;
 
-    // Kiểm tra số lượng tồn kho
-    let itemId = field === 'itemId' ? value : updated[idx].itemId;
-    let quantityUsed = field === 'quantityUsed' ? value : updated[idx].quantityUsed;
-    const inventory = inventoryItems.find(inv => String(inv.itemId || inv.id) === String(itemId));
-    if (inventory && Number(quantityUsed) > inventory.quantity) {
-      setQuantityErrors(prev => ({ ...prev, [idx]: `Đã sử dụng hết!` }));
-    } else {
-      setQuantityErrors(prev => {
-        const newErr = { ...prev };
-        delete newErr[idx];
-        return newErr;
-      });
+  // Hàm lấy danh sách lớp
+  const fetchAvailableClasses = async () => {
+    try {
+      const response = await studentService.getDistinctClassNames();
+      if (response.data && Array.isArray(response.data)) {
+        const classOptions = response.data.map(className => ({
+          id: className,
+          name: className
+        }));
+        setAvailableClasses(classOptions);
+      }
+    } catch (error) {
+      console.error('Error fetching classes:', error);
+      alert('Không thể lấy danh sách lớp. Vui lòng thử lại.');
+    }
+  };
+
+
+  // Hàm mở modal chọn học sinh
+  const handleOpenStudentModal = () => {
+    setStudentSelectionModalOpen(true);
+  };
+
+  // Hàm đóng modal chọn học sinh
+  const handleCloseStudentModal = () => {
+    setStudentSelectionModalOpen(false);
+  };
+
+  // Hàm xác nhận chọn học sinh
+  const handleConfirmStudentSelection = (selectedIds, selectedStudentObjects) => {
+    setCurrentEvent({...currentEvent, stuId: selectedIds});
+    setSelectedStudents(selectedStudentObjects);
+    setStudentSelectionModalOpen(false);
+  };
+
+  // Hàm xóa học sinh khỏi danh sách đã chọn
+  const handleRemoveStudent = (studentId) => {
+    const updatedStudentIds = currentEvent.stuId.filter(id => id !== studentId);
+    setCurrentEvent({...currentEvent, stuId: updatedStudentIds});
+    const updatedSelectedStudents = selectedStudents.filter(s => s.studentId !== studentId);
+    setSelectedStudents(updatedSelectedStudents);
+  };
+
+  // Hàm gọi API để lấy danh sách sự cố y tế
+  const fetchMedicalEvents = async (filterParams = null) => {
+    setLoading(true);
+    try {
+      let response;
+      
+      // If filtering is active, use the filtered endpoints
+      if (isFiltering || filterParams) {
+        const filtersToUse = filterParams || filters;
+        console.log('Fetching filtered medical events with filters:', filtersToUse);
+        response = await MedicalEventService.searchMedicalEvents(filtersToUse);
+      } else {
+        console.log('Fetching all medical events');
+        response = await MedicalEventService.getAllMedicalEvents();
+      }
+      
+      console.log('API Response:', response.data); // Debug log
+      
+      if (response.data && Array.isArray(response.data)) {
+        // Sort medical events by ID in descending order (newest first)
+        const sortedEvents = response.data.sort((a, b) => b.id - a.id);
+        setMedicalEvents(sortedEvents);
+        
+        console.log('Medical events sorted by ID (desc):', sortedEvents.map(e => e.id).join(', '));
+        
+        // Lấy thông tin học sinh cho tất cả các sự cố
+        const studentIds = new Set();
+        sortedEvents.forEach(event => {
+          if (event.stuId && Array.isArray(event.stuId)) {
+            event.stuId.forEach(id => studentIds.add(id));
+          }
+        });
+        
+        // Fetch thông tin học sinh
+        const studentsData = {};
+        for (const studentId of studentIds) {
+          const studentInfo = await fetchStudentInfo(studentId);
+          if (studentInfo) {
+            studentsData[studentId] = studentInfo;
+          }
+        }
+        setStudentsInfo(studentsData);
+      } else {
+        console.warn('API response is not an array:', response.data);
+        setMedicalEvents([]);
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching medical events:', error);
+      console.error('Error response:', error.response);
+      console.error('Error message:', error.message);
+      
+      let errorMessage = 'Failed to fetch medical events. Please try again.';
+      
+      // Check if it's an authentication error
+      if (error.response?.status === 401) {
+        errorMessage = 'Authentication failed. Please login again.';
+        // Redirect to login page
+        window.location.href = '/login';
+      } else if (error.response?.status === 403) {
+        errorMessage = 'Access denied. You need NURSE role to access medical events.';
+      } else if (error.response?.status === 400) {
+        // Bad request - likely invalid filter parameters
+        const serverMessage = error.response?.data?.message || error.response?.data || 'Invalid filter parameters';
+        errorMessage = `Invalid request: ${serverMessage}`;
+        console.error('Server response data:', error.response?.data);
+      } else if (error.response?.status === 500) {
+        // Internal server error
+        const serverMessage = error.response?.data?.message || error.response?.data || 'Internal server error';
+        errorMessage = `Server error: ${serverMessage}`;
+        console.error('Server response data:', error.response?.data);
+      } else if (error.request) {
+        // Network error
+        errorMessage = 'Network error. Please check your connection.';
+        console.error('Network error - no response received:', error.request);
+      }
+      
+      alert(errorMessage);
+      
+      setMedicalEvents([]);
+      setLoading(false);
+    }
+  };
+
+  // Hàm thêm sự cố y tế mới
+  const addMedicalEvent = async (event) => {
+    setLoading(true);
+    try {
+      // Transform inventory items to match backend DTO format
+      const transformedInventoryItems = event.relatedItemUsed ? event.relatedItemUsed.map(item => ({
+        itemId: item.inventoryId,
+        quantityUsed: item.quantity,
+        notes: item.notes || null
+      })) : [];
+      
+      // Transform event data to match backend DTO
+      const eventDTO = {
+        title: event.title,
+        stuId: event.stuId,
+        eventType: event.eventType,
+        eventDate: event.eventDate,
+        location: event.location,
+        description: event.description,
+        relatedItemUsed: transformedInventoryItems,
+        notes: event.notes,
+        handlingMeasures: event.handlingMeasures,
+        severityLevel: event.severityLevel,
+        status: event.status
+      };
+      
+      // Debug logging
+      console.log('=== MEDICAL EVENT DEBUG ===');
+      console.log('Original event data:', JSON.stringify(event, null, 2));
+      console.log('Original inventory items:', event.relatedItemUsed);
+      console.log('Transformed inventory items:', transformedInventoryItems);
+      console.log('Sending Event DTO:', JSON.stringify(eventDTO, null, 2));
+      console.log('Student IDs:', eventDTO.stuId);
+      console.log('Event Date:', eventDTO.eventDate);
+      console.log('Severity Level:', eventDTO.severityLevel);
+      console.log('Status:', eventDTO.status);
+      console.log('Related Items Used:', eventDTO.relatedItemUsed);
+      
+      const response = await MedicalEventService.createMedicalEvent(eventDTO);
+      
+      console.log('Medical event created successfully:', response.data);
+      
+      // Refresh the medical events list
+      await fetchMedicalEvents();
+      
+      setModalOpen(false);
+      resetCurrentEvent();
+      setLoading(false);
+      
+      alert('Tạo sự cố y tế thành công!');
+      
+    } catch (error) {
+      console.error('=== MEDICAL EVENT ERROR ===');
+      console.error('Full error object:', error);
+      console.error('Error message:', error.message);
+      console.error('Error code:', error.code);
+      
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response headers:', error.response.headers);
+        console.error('Response data:', error.response.data);
+        
+        // Try to extract detailed error message from response
+        let serverMessage = 'Unknown server error';
+        if (error.response.data) {
+          if (typeof error.response.data === 'string') {
+            serverMessage = error.response.data;
+          } else if (error.response.data.message) {
+            serverMessage = error.response.data.message;
+          } else if (error.response.data.error) {
+            serverMessage = error.response.data.error;
+          }
+        }
+        
+        console.error('Server error message:', serverMessage);
+        
+        let errorMessage = 'Không thể thêm sự cố y tế. Vui lòng thử lại.';
+        
+        if (error.response.status === 400) {
+          errorMessage = `Lỗi dữ liệu không hợp lệ: ${serverMessage}`;
+        } else if (error.response.status === 401) {
+          errorMessage = 'Bạn cần đăng nhập lại để thực hiện thao tác này.';
+          // Redirect to login
+          window.location.href = '/login';
+        } else if (error.response.status === 403) {
+          errorMessage = 'Bạn không có quyền thực hiện thao tác này.';
+        } else if (error.response.status === 500) {
+          errorMessage = `Lỗi máy chủ: ${serverMessage}`;
+        }
+        
+        alert(errorMessage);
+      } else if (error.request) {
+        console.error('Request made but no response received:', error.request);
+        alert('Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng.');
+      } else {
+        console.error('Error setting up request:', error.message);
+        alert('Có lỗi xảy ra khi chuẩn bị yêu cầu.');
+      }
+      
+      setLoading(false);
+    }
+  };
+  
+  // Hàm reset form
+  const resetCurrentEvent = () => {
+    setCurrentEvent({
+      id: null,
+      title: '',
+      stuId: [],
+      eventType: '',
+      eventDate: new Date().toISOString().slice(0, 16),
+      location: '',
+      description: '',
+      relatedItemUsed: [],
+      notes: '',
+      handlingMeasures: '',
+      severityLevel: 'MINOR',
+      status: 'PROCESSING'
+    });
+    setSelectedStudents([]);
+    setSelectedInventoryItems([]);
+    setInventoryUsageLogs([]);
+  };
+
+  // Hàm cập nhật sự cố y tế
+  const updateMedicalEvent = async (id, updatedEvent) => {
+    setLoading(true);
+    try {
+      // Transform inventory items to match backend DTO format
+      const transformedInventoryItems = updatedEvent.relatedItemUsed ? updatedEvent.relatedItemUsed.map(item => ({
+        itemId: item.inventoryId || item.itemId,
+        quantityUsed: item.quantity || item.quantityUsed,
+        notes: item.notes || item.usageNote || null
+      })) : [];
+      
+      // Transform event data to match backend DTO
+      const eventDTO = {
+        title: updatedEvent.title,
+        stuId: updatedEvent.stuId,
+        eventType: updatedEvent.eventType,
+        eventDate: updatedEvent.eventDate,
+        location: updatedEvent.location,
+        description: updatedEvent.description,
+        relatedItemUsed: transformedInventoryItems,
+        notes: updatedEvent.notes,
+        handlingMeasures: updatedEvent.handlingMeasures,
+        severityLevel: updatedEvent.severityLevel,
+        status: updatedEvent.status
+      };
+      
+      console.log('=== UPDATING MEDICAL EVENT ===');
+      console.log('Event ID:', id);
+      console.log('Update data:', JSON.stringify(eventDTO, null, 2));
+      
+      // Call the API to update the medical event
+      await MedicalEventService.updateMedicalEvent(id, eventDTO);
+      
+      console.log('Medical event updated successfully');
+      
+      // Refresh the medical events list
+      await fetchMedicalEvents();
+      
+      setEditing(false);
+      setModalOpen(false);
+      resetCurrentEvent();
+      setLoading(false);
+      
+      alert('Cập nhật sự cố y tế thành công!');
+      
+    } catch (error) {
+      console.error('=== UPDATE MEDICAL EVENT ERROR ===');
+      console.error('Full error object:', error);
+      console.error('Error message:', error.message);
+      
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response data:', error.response.data);
+        
+        let errorMessage = 'Không thể cập nhật sự cố y tế. Vui lòng thử lại.';
+        
+        if (error.response.status === 400) {
+          errorMessage = `Lỗi dữ liệu không hợp lệ: ${error.response.data.message || error.response.data}`;
+        } else if (error.response.status === 401) {
+          errorMessage = 'Bạn cần đăng nhập lại để thực hiện thao tác này.';
+          window.location.href = '/login';
+        } else if (error.response.status === 403) {
+          errorMessage = 'Bạn không có quyền thực hiện thao tác này.';
+        } else if (error.response.status === 404) {
+          errorMessage = 'Không tìm thấy sự cố y tế cần cập nhật.';
+        } else if (error.response.status === 500) {
+          errorMessage = `Lỗi máy chủ: ${error.response.data.message || error.response.data}`;
+        }
+        
+        alert(errorMessage);
+      } else if (error.request) {
+        console.error('Request made but no response received:', error.request);
+        alert('Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng.');
+      } else {
+        console.error('Error setting up request:', error.message);
+        alert('Có lỗi xảy ra khi chuẩn bị yêu cầu.');
+      }
+      
+      setLoading(false);
     }
     setRelatedItemUsed(updated);
   };
 
-  const handleStudentCheckbox = (id) => {
-    setSelectedStudents(prev =>
-      prev.includes(id) ? prev.filter(sid => sid !== id) : [...prev, id]
-    );
+
+  // Hàm lấy inventory usage logs theo medical event ID và trả về chúng
+  const fetchInventoryUsageLogsAndReturn = async (medicalEventId) => {
+    try {
+      console.log('=== FETCHING INVENTORY USAGE LOGS ===');
+      console.log('Medical Event ID:', medicalEventId);
+      
+      const response = await InventoryService.getInventoryUsageLogsByMedicalEventId(medicalEventId);
+      console.log('Raw API response:', response);
+      console.log('Response type:', typeof response);
+      console.log('Is array:', Array.isArray(response));
+      
+      // Handle different response formats
+      let usageLogs = [];
+      if (Array.isArray(response)) {
+        usageLogs = response;
+        console.log('Using direct array response');
+      } else if (response && Array.isArray(response.data)) {
+        usageLogs = response.data;
+        console.log('Using response.data array');
+      } else if (response && Array.isArray(response.content)) {
+        usageLogs = response.content;
+        console.log('Using response.content array');
+      } else {
+        console.log('No valid array found in response');
+        console.log('Response structure:', JSON.stringify(response, null, 2));
+      }
+      
+      console.log('Final usage logs:', usageLogs);
+      console.log('Usage logs count:', usageLogs.length);
+      
+      // Before returning or setting the logs, let's clean up if necessary
+      setInventoryUsageLogs(usageLogs);
+      return usageLogs;
+    } catch (error) {
+      console.error('=== ERROR FETCHING INVENTORY USAGE LOGS ===');
+      console.error('Error details:', error);
+      if (error.response) {
+        console.error('Error response status:', error.response.status);
+        console.error('Error response data:', error.response.data);
+      }
+      setInventoryUsageLogs([]);
+      return [];
+    }
   };
 
-  const classList = Array.from(new Set(students.map(stu => stu.className))).sort();
-  const filteredStudents = students.filter(stu =>
-    (classFilter === '' || stu.className === classFilter) &&
-    (nameFilter === '' || stu.fullName.toLowerCase().includes(nameFilter.toLowerCase()))
-  );
+  // Hàm mở form chỉnh sửa
+  const editMedicalEvent = async (event) => {
+    setLoading(true);
+    setEditing(true);
+    try {
+      const response = await MedicalEventService.getMedicalEventById(event.id);
+      const fullEventData = response.data;
+      setCurrentEvent({...fullEventData});
+      
+      // Set selected students for multi-select
+      if (fullEventData.stuId && Array.isArray(fullEventData.stuId)) {
+        const students = fullEventData.stuId.map(id => availableStudents.find(s => s.id === id)).filter(Boolean);
+        setSelectedStudents(students);
+      }
+
+      // Set selected inventory items for editing
+      if (fullEventData.relatedItemUsed && Array.isArray(fullEventData.relatedItemUsed)) {
+        setSelectedInventoryItems(fullEventData.relatedItemUsed);
+      }
+      
+      // Fetch inventory usage logs for this medical event
+      const fetchedLogs = await fetchInventoryUsageLogsAndReturn(event.id);
+      
+      // Fallback: if no usage logs found, try to use existing relatedItemUsed data
+      if (fetchedLogs.length === 0 && fullEventData.relatedItemUsed && fullEventData.relatedItemUsed.length > 0) {
+        console.log('Using fallback: converting relatedItemUsed to usage logs format');
+        const fallbackLogs = fullEventData.relatedItemUsed.map(item => ({
+          itemId: item.inventoryId || item.itemId,
+          quantityUsed: item.quantity || item.quantityUsed,
+          notes: item.notes || item.usageNote,
+          usedDate: fullEventData.eventDate || fullEventData.createdAt,
+          usedBy: fullEventData.createdBy || 'Unknown'
+        }));
+        console.log('Fallback usage logs:', fallbackLogs);
+        setInventoryUsageLogs(fallbackLogs);
+      }
+      
+      setModalOpen(true);
+    } catch (error) {
+      console.error('Error fetching medical event details:', error);
+      alert('Failed to load event details. Please try again.');
+    }
+    setLoading(false);
+  };
+
+  // Hàm xem chi tiết sự cố y tế
+  const viewMedicalEventDetails = (event) => {
+    setCurrentEvent({...event});
+    setEditing(false);
+    setModalOpen(true);
+  };
+
 
   const handleSubmit = async e => {
     e.preventDefault();
-    if (!form.title || !form.eventType || !form.eventDate || selectedStudents.length === 0) {
-      setPopup({ open: true, message: 'Vui lòng nhập đủ thông tin bắt buộc và chọn học sinh!' });
+
+    
+    console.log('=== FORM VALIDATION ===');
+    console.log('Current Event:', currentEvent);
+    console.log('Selected Students:', selectedStudents);
+    console.log('Available Classes:', availableClasses);
+    
+    // Enhanced validation
+    const validationErrors = [];
+    
+    if (!currentEvent.title || currentEvent.title.trim() === '') {
+      validationErrors.push('Tiêu đề sự cố không được để trống');
+    }
+    
+    if (!currentEvent.eventType || currentEvent.eventType.trim() === '') {
+      validationErrors.push('Loại sự cố không được để trống');
+    }
+    
+    if (!currentEvent.eventDate) {
+      validationErrors.push('Ngày xảy ra sự cố không được để trống');
+    }
+    
+    if (!currentEvent.stuId || currentEvent.stuId.length === 0) {
+      validationErrors.push('Phải chọn ít nhất một học sinh');
+    }
+    
+    // Check if selected students are valid
+    if (currentEvent.stuId && currentEvent.stuId.length > 0) {
+      const invalidStudents = currentEvent.stuId.filter(id => !id || id === null || id === undefined);
+      if (invalidStudents.length > 0) {
+        validationErrors.push('Có học sinh không hợp lệ trong danh sách đã chọn');
+      }
+    }
+    
+    // Check if eventDate is valid
+    if (currentEvent.eventDate) {
+      const eventDateObj = new Date(currentEvent.eventDate);
+      if (isNaN(eventDateObj.getTime())) {
+        validationErrors.push('Ngày xảy ra sự cố không hợp lệ');
+      }
+    }
+    
+    // Check severityLevel
+    const validSeverityLevels = ['MINOR', 'MODERATE', 'MAJOR', 'CRITICAL'];
+    if (!validSeverityLevels.includes(currentEvent.severityLevel)) {
+      validationErrors.push('Mức độ nghiêm trọng không hợp lệ');
+    }
+    
+    // Check status
+    const validStatuses = ['PROCESSING', 'RESOLVED'];
+    if (!validStatuses.includes(currentEvent.status)) {
+      validationErrors.push('Trạng thái không hợp lệ');
+    }
+    
+    // Check inventory items if any are selected
+    if (currentEvent.relatedItemUsed && currentEvent.relatedItemUsed.length > 0) {
+      const invalidInventoryItems = currentEvent.relatedItemUsed.filter(item => {
+        const quantity = typeof item.quantity === 'string' ? parseInt(item.quantity) : item.quantity;
+        return !item.inventoryId || item.inventoryId === null || item.inventoryId === undefined ||
+               quantity === null || quantity === undefined || quantity < 0 || isNaN(quantity);
+      });
+      if (invalidInventoryItems.length > 0) {
+        validationErrors.push('Có vật phẩm y tế không hợp lệ trong danh sách đã chọn. Số lượng phải là số nguyên không âm.');
+      }
+    }
+    
+    if (validationErrors.length > 0) {
+      console.error('Validation errors:', validationErrors);
+      alert('Lỗi kiểm tra dữ liệu:\n' + validationErrors.join('\n'));
       return;
     }
-    const validItems = relatedItemUsed.filter(item => item.itemId !== '' && item.itemId !== undefined && item.itemId !== null);
-    if (validItems.length === 0) {
-      setPopup({ open: true, message: 'Vui lòng chọn ít nhất 1 thuốc/vật tư đã dùng!' });
-      return;
+    
+    console.log('Form validation passed. Submitting...');
+    
+    if (editing) {
+      updateMedicalEvent(currentEvent.id, currentEvent);
+    } else {
+      addMedicalEvent(currentEvent);
+
     }
     if (Object.keys(quantityErrors).length > 0) {
       setPopup({ open: true, message: 'Có thuốc/vật tư vượt quá số lượng tồn kho!' });
@@ -179,172 +685,1065 @@ const MedicalEvents = () => {
     setLoading(false);
   };
 
+  // Xử lý thay đổi input
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setCurrentEvent({...currentEvent, [name]: value});
+  };
+  
+  // Xử lý thay đổi student selection
+  const handleStudentSelection = (studentId) => {
+    let updatedStudentIds;
+    
+    if (currentEvent.stuId.includes(studentId)) {
+      // Remove student
+      updatedStudentIds = currentEvent.stuId.filter(id => id !== studentId);
+    } else {
+      // Add student
+      updatedStudentIds = [...currentEvent.stuId, studentId];
+    }
+    
+    setCurrentEvent({...currentEvent, stuId: updatedStudentIds});
+  };
+  
+  // Xử lý thay đổi inventory item selection
+  const handleInventoryItemSelection = (itemId, quantity = 1) => {
+    console.log('handleInventoryItemSelection called with:', { itemId, quantity });
+    console.log('Current selectedInventoryItems:', selectedInventoryItems);
+    
+    if (!itemId) {
+      console.log('No itemId provided, returning');
+      return;
+    }
+    
+    const existingItemIndex = selectedInventoryItems.findIndex(item => item.inventoryId === itemId);
+    let updatedItems;
+    
+    if (existingItemIndex >= 0) {
+      // Update existing item quantity (allow empty strings and zero during editing)
+      console.log('Updating existing item at index:', existingItemIndex);
+      updatedItems = [...selectedInventoryItems];
+      updatedItems[existingItemIndex].quantity = quantity;
+    } else {
+      // Add new item
+      console.log('Adding new item to selection');
+      updatedItems = [...selectedInventoryItems, {
+        inventoryId: itemId,
+        quantity: quantity
+      }];
+    }
+    
+    console.log('Updated items:', updatedItems);
+    setSelectedInventoryItems(updatedItems);
+    setCurrentEvent({...currentEvent, relatedItemUsed: updatedItems});
+  };
+  
+  // Xử lý xóa inventory item
+  const handleRemoveInventoryItem = (itemId) => {
+    const updatedItems = selectedInventoryItems.filter(item => item.inventoryId !== itemId);
+    setSelectedInventoryItems(updatedItems);
+    setCurrentEvent({...currentEvent, relatedItemUsed: updatedItems});
+  };
+
+  // Filter inventory items based on search term
+  const filterInventoryItems = (searchTerm) => {
+    // Always filter to only show active items
+    const activeItems = inventoryItems.filter(item => item.status === 'ACTIVE');
+    
+    if (!searchTerm.trim()) {
+      setFilteredInventoryItems(activeItems);
+      return;
+    }
+    
+    const filtered = activeItems.filter(item => {
+      const itemName = item.name || item.itemName || '';
+      const itemType = item.type || item.category || '';
+      const itemManufacturer = item.manufacturer || '';
+      const itemBatchNumber = item.batchNumber || '';
+      const itemSource = item.source || '';
+      const itemStorageLocation = item.storageLocation || '';
+      
+      return itemName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+             itemType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+             itemManufacturer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+             itemBatchNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+             itemSource.toLowerCase().includes(searchTerm.toLowerCase()) ||
+             itemStorageLocation.toLowerCase().includes(searchTerm.toLowerCase());
+    });
+    
+    setFilteredInventoryItems(filtered);
+  };
+
+  // Handle inventory search modal
+  const openInventorySearchModal = () => {
+    setInventorySearchTerm('');
+    // Only show active items when modal opens
+    const activeItems = inventoryItems.filter(item => item.status === 'ACTIVE');
+    setFilteredInventoryItems(activeItems);
+    setInventorySearchModalOpen(true);
+  };
+
+  const closeInventorySearchModal = () => {
+    setInventorySearchModalOpen(false);
+    setInventorySearchTerm('');
+    setFilteredInventoryItems([]);
+  };
+
+  const handleInventorySearchChange = (e) => {
+    const searchTerm = e.target.value;
+    setInventorySearchTerm(searchTerm);
+    filterInventoryItems(searchTerm);
+  };
+
+  const handleInventoryItemSelect = (itemId) => {
+    handleInventoryItemSelection(itemId, 1);
+    closeInventorySearchModal();
+  };
+  // Xử lý thay đổi filter
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    
+    // Handle UI filters
+    if (name === 'searchTerm' || name === 'fromDate' || name === 'toDate') {
+      setUIFilters({...uiFilters, [name]: value});
+      
+      // Auto-apply filters when search term changes (with debounce)
+      if (name === 'searchTerm') {
+        // Clear existing timeout
+        if (window.searchTimeout) {
+          clearTimeout(window.searchTimeout);
+        }
+        
+        // Set new timeout for auto-search
+        window.searchTimeout = setTimeout(() => {
+          applyFilters();
+        }, 300); // 300ms debounce
+      }
+    } else {
+      // Handle DTO filters
+      const updatedFilters = {...filters};
+      
+      // Convert UI values to DTO format
+      if (name === 'status') {
+        updatedFilters.status = value || null;
+      }
+      
+      setFilters(updatedFilters);
+    }
+  };
+  // Apply filters function
+  const applyFilters = () => {
+    const filterParams = {...filters};
+    
+    // Convert UI date filters to DTO format
+    if (uiFilters.fromDate) {
+      filterParams.from = `${uiFilters.fromDate}T00:00:00`;
+    }
+    if (uiFilters.toDate) {
+      filterParams.to = `${uiFilters.toDate}T23:59:59`;
+    }
+    
+    // Add search term to filter params
+    if (uiFilters.searchTerm && uiFilters.searchTerm.trim() !== '') {
+      filterParams.searchTerm = uiFilters.searchTerm.trim();
+    }
+    
+    // Remove empty filters
+    Object.keys(filterParams).forEach(key => {
+      if (filterParams[key] === null || filterParams[key] === '' || filterParams[key] === undefined) {
+        delete filterParams[key];
+      }
+    });
+    
+    console.log('Applying filters:', filterParams);
+    
+    // Check if any filters are active
+    const hasFilters = Object.keys(filterParams).length > 0;
+    setIsFiltering(hasFilters);
+    
+    // Fetch filtered results
+    fetchMedicalEvents(hasFilters ? filterParams : null);
+  };
+  
+  // Clear filters function
+  const clearFilters = () => {
+    setFilters({
+      stuId: null,
+      from: null,
+      to: null,
+      createdBy: null,
+      status: null
+    });
+    setUIFilters({
+      searchTerm: '',
+      fromDate: '',
+      toDate: ''
+    });
+    setIsFiltering(false);
+    fetchMedicalEvents(null);
+  };
+
+
+  // Events are already filtered by the backend and sorted by ID descending
+  const filteredEvents = medicalEvents;
+
+// Fetch inventory items
+  const fetchInventoryItems = async () => {
+    try {
+      console.log('Fetching inventory items...');
+      const response = await InventoryService.getInventoryList();
+      console.log('Raw inventory response:', response);
+      
+      let inventoryData = response;
+      
+      // Handle different response formats
+      if (response && typeof response === 'object') {
+        // Check if response is wrapped in a data property
+        if (response.data && Array.isArray(response.data)) {
+          inventoryData = response.data;
+          console.log('Using response.data for inventory items');
+        } else if (response.content && Array.isArray(response.content)) {
+          inventoryData = response.content;
+          console.log('Using response.content for inventory items');
+        } else if (response.items && Array.isArray(response.items)) {
+          inventoryData = response.items;
+          console.log('Using response.items for inventory items');
+        } else if (Array.isArray(response)) {
+          inventoryData = response;
+          console.log('Using response directly for inventory items');
+        } else {
+          console.warn('Unknown response format:', response);
+          inventoryData = [];
+        }
+      }
+      
+      if (Array.isArray(inventoryData)) {
+        // Filter to only show active inventory items
+        const activeInventoryItems = inventoryData.filter(item => item.status === 'ACTIVE');
+        setInventoryItems(activeInventoryItems);
+        console.log('Successfully loaded', activeInventoryItems.length, 'active inventory items out of', inventoryData.length, 'total items');
+      } else {
+        console.warn('Invalid inventory response format:', response);
+        setInventoryItems([]);
+      }
+    } catch (error) {
+      console.error('Error fetching inventory items:', error);
+      
+      // Handle authentication errors
+      if (error.response?.status === 401) {
+        console.error('Authentication failed - redirecting to login');
+        alert('Authentication failed. Please login again.');
+        window.location.href = '/login';
+      } else if (error.response?.status === 403) {
+        console.error('Access denied - insufficient permissions');
+        alert('Access denied. You need proper permissions to access inventory.');
+      } else {
+        console.error('Failed to fetch inventory items:', error.message);
+      }
+      
+      // Set empty array as fallback
+      setInventoryItems([]);
+    }
+  };
+
+  // Lấy danh sách khi component mount
+  useEffect(() => {
+    fetchMedicalEvents();
+    fetchAllStudents();
+    fetchAvailableClasses();
+    fetchInventoryItems();
+    
+    // Cleanup timeout on unmount
+    return () => {
+      if (window.searchTimeout) {
+        clearTimeout(window.searchTimeout);
+      }
+    };
+  }, []);
+
   return (
-    <div style={{ maxWidth: 700, margin: '0 auto', background: '#f6f8fa', padding: 32, borderRadius: 12 }}>
-      <button
-        type="button"
-        style={{ marginBottom: 24, padding: '8px 20px', background: '#1976d2', color: '#fff', border: 'none', borderRadius: 4, fontWeight: 600, cursor: 'pointer', transition: 'filter 0.2s' }}
-        onClick={() => navigate('/danhsachsukienyte')}
-        onMouseOver={e => e.currentTarget.style.filter = 'brightness(1.1)'}
-        onMouseOut={e => e.currentTarget.style.filter = 'none'}
+    <div className="medical-events-page">
+      <h1 className="page-title">Quản lý sự cố y tế</h1>
+      
+      {/* Bộ lọc */}
+      <div className="filters-container">
+        <div className="search-box">
+          <input 
+            type="text"
+            name="searchTerm"
+            placeholder="Tìm kiếm theo tiêu đề hoặc tên học sinh"
+            value={uiFilters.searchTerm}
+            onChange={handleFilterChange}
+          />
+        </div>
+        <div className="filter-options">
+          <select
+            name="status" 
+            value={filters.status || ''}
+            onChange={handleFilterChange}
+          >
+            <option value="">Tất cả trạng thái</option>
+            {MEDICAL_EVENT_STATUS.map(status => (
+              <option key={status.value} value={status.value}>{status.label}</option>
+            ))}
+          </select>
+          
+          <input 
+            type="date" 
+            name="fromDate"
+            value={uiFilters.fromDate}
+            onChange={handleFilterChange}
+            placeholder="Từ ngày"
+          />
+          
+          <input 
+            type="date" 
+            name="toDate"
+            value={uiFilters.toDate}
+            onChange={handleFilterChange}
+            placeholder="Đến ngày"
+          />
+        </div>
+        
+        <div className="filter-actions">
+          <button 
+            type="button" 
+            className="apply-filters-btn"
+            onClick={applyFilters}
+          >
+            Áp dụng lọc
+          </button>
+          <button 
+            type="button" 
+            className="clear-filters-btn"
+            onClick={clearFilters}
+          >
+            Xóa lọc
+          </button>
+        </div>
+      </div>
+
+      {/* Nút thêm sự cố mới */}
+      <button 
+        className="add-event-btn"
+        onClick={() => {
+          setEditing(false);
+          resetCurrentEvent();
+          setModalOpen(true);
+        }}
       >
         Xem danh sách sự kiện y tế
       </button>
-      <h2 style={{ textAlign: 'center', marginBottom: 32 }}>Tạo sự kiện y tế</h2>
-      <form onSubmit={handleSubmit}>
-        <div style={boxStyle}>
-          <div style={rowStyle}>
-            <label style={labelStyle}>Tiêu đề*:</label>
-            <input style={inputStyle} type="text" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} required />
-          </div>
-          <div style={rowStyle}>
-            <label style={labelStyle}>Loại sự kiện*:</label>
-            <input style={inputStyle} type="text" value={form.eventType} onChange={e => setForm({ ...form, eventType: e.target.value })} required />
-          </div>
-          <div style={rowStyle}>
-            <label style={labelStyle}>Ngày xảy ra*:</label>
-            <input style={inputStyle} type="date" value={form.eventDate} onChange={e => setForm({ ...form, eventDate: e.target.value })} required />
-          </div>
-          <div style={rowStyle}>
-            <label style={labelStyle}>Địa điểm:</label>
-            <input style={inputStyle} type="text" value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} />
-          </div>
-        </div>
-        <div style={boxStyle}>
-          <label style={labelStyle}>Lọc học sinh:</label>
-          <div style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
-            <select style={inputStyle} value={classFilter} onChange={e => setClassFilter(e.target.value)}>
-              <option value="">Tất cả lớp</option>
-              {classList.map(cls => (
-                <option key={cls} value={cls}>{cls}</option>
-              ))}
-            </select>
-            <input
-              style={inputStyle}
-              type="text"
-              placeholder="Tìm theo tên học sinh"
-              value={nameFilter}
-              onChange={e => setNameFilter(e.target.value)}
-            />
-          </div>
-          <div style={{ maxHeight: 220, overflowY: 'auto', border: '1px solid #eee', borderRadius: 4, padding: 8, background: '#fafcff' }}>
-            {filteredStudents.length === 0 && <div style={{ color: '#888' }}>Không có học sinh phù hợp</div>}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              {filteredStudents.map(stu => {
-                const checked = selectedStudents.includes(stu.studentId);
-                return (
-                  <label
-                    key={stu.studentId}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 12,
-                      padding: '8px 12px',
-                      borderRadius: 6,
-                      background: checked ? '#e6f7ff' : '#fff',
-                      border: checked ? '1.5px solid #1890ff' : '1.5px solid #f0f0f0',
-                      fontWeight: checked ? 700 : 500,
-                      fontSize: 16,
-                      color: checked ? '#1890ff' : '#222',
-                      cursor: 'pointer',
-                      transition: 'background 0.2s, border 0.2s',
-                      boxShadow: checked ? '0 2px 8px rgba(24,144,255,0.08)' : 'none',
-                      userSelect: 'none',
-                    }}
-                    onMouseOver={e => e.currentTarget.style.background = '#f0faff'}
-                    onMouseOut={e => e.currentTarget.style.background = checked ? '#e6f7ff' : '#fff'}
+
+
+      {/* Bảng danh sách sự cố */}
+      {loading ? (
+        <div className="loading">Đang tải dữ liệu...</div>
+      ) : (
+        <table className="events-table">
+          <thead>
+            <tr>
+              <th>ID <span className="sort-indicator">↓</span></th>
+              <th>Tiêu đề</th>
+              <th>Học sinh</th>
+              <th>Ngày xảy ra</th>
+              <th>Biện pháp xử lý</th>
+              <th>Trạng thái</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredEvents.length > 0 ? (
+              filteredEvents.map(event => (
+                <tr key={event.id}>
+                  <td>{event.id}</td>
+                  <td>{event.title}</td>
+                  <td>
+                    {event.stuId && event.stuId.length > 0 ? (
+                      <div>
+                        {event.stuId.map(studentId => {
+                          const studentInfo = studentsInfo[studentId];
+                          return (
+                            <div key={studentId} className="student-info">
+                              {studentInfo ? (
+                                <span>
+                                  <strong>{studentInfo.fullName}</strong>
+                                  <br />
+                                  <small>ID: {studentId} | Lớp: {studentInfo.className}</small>
+                                </span>
+                              ) : (
+                                <span>Đang tải thông tin học sinh {studentId}...</span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <span>Chưa gán học sinh</span>
+                    )}
+                  </td>
+                  <td>{event.eventDate ? new Date(event.eventDate).toLocaleDateString('vi-VN') : 'Không có'}</td>
+                  <td>{event.handlingMeasures || 'Không có'}</td>
+                  <td>
+                    <span className={`status ${event.status === 'PROCESSING' ? 'pending' : 'resolved'}`}>
+                      {getStatusText(event.status)}
+                    </span>
+                  </td>
+                  <td className="actions">
+                    <button className="view-btn" onClick={() => viewMedicalEventDetails(event)} title="Xem chi tiết">
+                      <span className="btn-icon">👁️</span>
+                      Xem
+                    </button>
+                    <button className="edit-btn" onClick={() => editMedicalEvent(event)} title="Chỉnh sửa">
+                      <span className="btn-icon">✏️</span>
+                      Sửa
+                    </button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="7" className="no-data">Không có dữ liệu sự cố y tế</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      )}
+
+      {/* Modal thêm/sửa/xem chi tiết sự cố y tế */}
+      {modalOpen && (
+        <div className="modal">
+          <div className="modal-content">
+            <span className="close" onClick={() => setModalOpen(false)}>&times;</span>
+            <h2>
+              {!editing && currentEvent.id ? 'Chi tiết sự cố y tế' : 
+               editing ? 'Sửa sự cố y tế' : 'Thêm sự cố y tế mới'}
+            </h2>
+            
+            {/* View Details Mode */}
+            {!editing && currentEvent.id && (
+              <div className="event-details">
+                <div className="event-details-left">
+                  <div className="detail-row">
+                    <strong>ID:</strong> {currentEvent.id}
+                  </div>
+                  <div className="detail-row">
+                    <strong>Tiêu đề:</strong> {currentEvent.title}
+                  </div>
+                  <div className="detail-row">
+                    <strong>Loại sự cố:</strong> {currentEvent.eventType}
+                  </div>
+                  <div className="detail-row">
+                    <strong>Ngày xảy ra:</strong> {currentEvent.eventDate ? new Date(currentEvent.eventDate).toLocaleString('vi-VN') : 'Không có'}
+                  </div>
+                  <div className="detail-row">
+                    <strong>Địa điểm:</strong> {currentEvent.location || 'Không có'}
+                  </div>
+                  <div className="detail-row">
+                    <strong>Mức độ nghiêm trọng:</strong> {getSeverityLevelText(currentEvent.severityLevel)}
+                  </div>
+                  <div className="detail-row">
+                    <strong>Trạng thái:</strong> {getStatusText(currentEvent.status)}
+                  </div>
+                </div>
+                
+                <div className="event-details-right">
+                  <div className="detail-row">
+                    <strong>Ngày tạo:</strong> {currentEvent.createdAt ? new Date(currentEvent.createdAt).toLocaleString('vi-VN') : 'Không có'}
+                  </div>
+                  <div className="detail-row">
+                    <strong>Người tạo:</strong> {currentEvent.createdBy || 'Không có'}
+                  </div>
+                  <div className="detail-row">
+                    <strong>Biện pháp xử lý:</strong> {currentEvent.handlingMeasures || 'Không có'}
+                  </div>
+                  <div className="detail-row">
+                    <strong>Ghi chú:</strong> {currentEvent.notes || 'Không có'}
+                  </div>
+                  
+                  {/* Related medicines/inventory items used */}
+                  {currentEvent.relatedMedicinesUsed && currentEvent.relatedMedicinesUsed.length > 0 && (
+                    <div className="detail-row">
+                      <strong>Vật phẩm y tế đã sử dụng:</strong>
+                      <ul className="inventory-used-list">
+                        {currentEvent.relatedMedicinesUsed.map((item, index) => (
+                          <li key={index} className="inventory-used-item">
+                            <div className="item-info">
+                              <strong>{item.medicineName || `Vật phẩm ID: ${item.medicineId}`}</strong>
+                              <div className="item-details">
+                                <span className="quantity">Số lượng: {item.quantityUsed || item.quantity || 0}</span>
+                                {item.unit && <span className="unit">({item.unit})</span>}
+                                {item.usageNote && (
+                                  <div className="usage-note">
+                                    <em>Ghi chú: {item.usageNote}</em>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="event-details-full">
+                  <div className="detail-row">
+                    <strong>Mô tả:</strong> {currentEvent.description || 'Không có'}
+                  </div>
+                  
+                  <div className="detail-row student-detail-row">
+                    <strong>Học sinh liên quan:</strong>
+                    {currentEvent.stuId && currentEvent.stuId.length > 0 ? (
+                      <div className="students-detail">
+                        {currentEvent.stuId.map(studentId => {
+                          const studentInfo = studentsInfo[studentId];
+                          return (
+                            <div key={studentId} className="student-detail-item-row">
+                              {studentInfo ? (
+                                <div>
+                                  <strong>{studentInfo.fullName}</strong>
+                                  <br />
+                                  <small>ID: {studentId}</small>
+                                  <br />
+                                  <small>Lớp: {studentInfo.className}</small>
+                                  <br />
+                                  <small>Ngày sinh: {studentInfo.dob}</small>
+                                  <br />
+                                  <small>Giới tính: {studentInfo.gender}</small>
+                                </div>
+                              ) : (
+                                <span>Đang tải học sinh {studentId}...</span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      'Không có'
+                    )}
+                  </div>
+                </div>
+                
+                <div className="modal-actions event-details-full">
+                  <button className="close-btn" onClick={() => setModalOpen(false)}>
+                    <span className="btn-icon">❌</span>
+                    Đóng
+                  </button>
+                  <button className="edit-btn" onClick={() => setEditing(true)}>
+                    <span className="btn-icon">✏️</span>
+                    Chỉnh sửa
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Edit/Add Form Mode */}
+            {(editing || !currentEvent.id) && (
+            <form onSubmit={handleSubmit}>
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="title">Tiêu đề sự cố <span className="required">*</span></label>
+                  <input
+                    type="text"
+                    name="title"
+                    id="title"
+                    value={currentEvent.title}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="eventType">Loại sự cố <span className="required">*</span></label>
+                  <input
+                    type="text"
+                    name="eventType"
+                    id="eventType"
+                    value={currentEvent.eventType}
+                    onChange={handleInputChange}
+                    placeholder="Nhập loại sự cố (ví dụ: Chấn thương, Bệnh tật, Dị ứng...)"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="students">Học sinh liên quan <span className="required">*</span></label>
+                  <div className="students-selection">
+                    <div className="student-selection-actions">
+                      <button 
+                        type="button" 
+                        onClick={handleOpenStudentModal}
+                        className="open-student-modal-btn"
+                      >
+                        Chọn học sinh
+                      </button>
+                    </div>
+                    
+                    {currentEvent.stuId.length > 0 && (
+                      <div className="selected-students-summary">
+                        <strong>Đã chọn {currentEvent.stuId.length} học sinh:</strong>
+                        <div className="selected-students-list">
+                          {currentEvent.stuId.map(studentId => {
+                            const studentInfo = studentsInfo[studentId] || availableStudents.find(s => s.studentId === studentId);
+                            return (
+                              <span key={studentId} className="selected-student-tag">
+                                {studentInfo ? studentInfo.fullName : `ID: ${studentId}`} (ID: {studentId})
+                                <button 
+                                  type="button" 
+                                  onClick={() => handleRemoveStudent(studentId)}
+                                  className="remove-student-btn"
+                                >
+                                  ×
+                                </button>
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="eventDate">Ngày và giờ xảy ra <span className="required">*</span></label>
+                  <input
+                    type="datetime-local"
+                    name="eventDate"
+                    id="eventDate"
+                    value={currentEvent.eventDate}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="location">Địa điểm</label>
+                  <input
+                    type="text"
+                    name="location"
+                    id="location"
+                    value={currentEvent.location}
+                    onChange={handleInputChange}
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="handlingMeasures">Biện pháp xử lý</label>
+                  <textarea
+                    name="handlingMeasures"
+                    id="handlingMeasures"
+                    value={currentEvent.handlingMeasures}
+                    onChange={handleInputChange}
+                    rows="3"
+                    placeholder="Mô tả các biện pháp xử lý đã thực hiện..."
+                  ></textarea>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="severityLevel">Mức độ nghiêm trọng</label>
+                  <select
+                    name="severityLevel"
+                    id="severityLevel"
+                    value={currentEvent.severityLevel}
+                    onChange={handleInputChange}
                   >
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() => handleStudentCheckbox(stu.studentId)}
-                      style={{ width: 22, height: 22, accentColor: '#1890ff', marginRight: 8 }}
-                    />
-                    <span style={{ flex: 1 }}>{stu.fullName} <span style={{ color: '#888', fontWeight: 400 }}>- {stu.className}</span></span>
-                  </label>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-        <div style={boxStyle}>
-          <label style={labelStyle}>Mô tả:</label>
-          <textarea style={{ ...inputStyle, minHeight: 60 }} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
-          <label style={labelStyle}>Biện pháp xử lý:</label>
-          <input style={inputStyle} type="text" value={form.handlingMeasures} onChange={e => setForm({ ...form, handlingMeasures: e.target.value })} />
-          <div style={rowStyle}>
-            <label style={labelStyle}>Mức độ nghiêm trọng:</label>
-            <select style={inputStyle} value={form.severityLevel} onChange={e => setForm({ ...form, severityLevel: e.target.value })}>
-              {severityLevels.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-        <div style={boxStyle}>
-          <label style={labelStyle}>Thuốc/vật tư đã dùng*:</label>
-          {relatedItemUsed.map((item, idx) => (
-            <div key={idx} style={{ display: 'flex', gap: 8, marginBottom: 4, alignItems: 'center' }}>
-              <select
-                style={{ ...inputStyle, width: 180, marginBottom: 0 }}
-                value={item.itemId !== undefined && item.itemId !== null ? String(item.itemId) : ''}
-                onChange={e => updateItemRow(idx, 'itemId', e.target.value)}
-                required
-              >
-                <option value="">Chọn thuốc/vật tư</option>
-                {inventoryItems.map(inv => (
-                  <option key={inv.itemId || inv.id} value={String(inv.itemId || inv.id)}>{inv.name}</option>
-                ))}
-              </select>
-              {inventoryItems.length > 0 && item.itemId && (
-                <span style={{ color: '#888', marginLeft: 8 }}>
-                  {(() => {
-                    const inv = inventoryItems.find(inv => String(inv.itemId || inv.id) === String(item.itemId));
-                    return inv ? `Còn lại: ${inv.quantity}` : '';
-                  })()}
-                </span>
+                    {SEVERITY_LEVELS.map(level => (
+                      <option key={level.value} value={level.value}>{level.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="description">Mô tả chi tiết</label>
+                <textarea
+                  name="description"
+                  id="description"
+                  value={currentEvent.description}
+                  onChange={handleInputChange}
+                  rows="4"
+                  placeholder="Mô tả chi tiết về sự cố..."
+                ></textarea>
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="inventoryItems">Vật phẩm y tế đã sử dụng</label>
+                <div className="inventory-selection">
+                  <div className="inventory-input-row">
+                    <select 
+                      id="inventoryItemsSelect"
+                      onChange={(e) => {
+                        const itemId = e.target.value;
+                        
+                        if (itemId && itemId !== '') {
+                          const parsedItemId = parseInt(itemId);
+                          
+                          if (!isNaN(parsedItemId)) {
+                            handleInventoryItemSelection(parsedItemId, 1);
+                            
+                            // Reset the select to placeholder after selection
+                            e.target.selectedIndex = 0;
+                          }
+                        }
+                      }}
+                      defaultValue=""
+                    >
+                      <option value="">-- Chọn vật phẩm y tế --</option>
+                      {inventoryItems && inventoryItems.length > 0 ? (
+                        inventoryItems
+                          .filter(item => item.status === 'ACTIVE') // Only show active items
+                          .map((item, index) => {
+                            // Handle different possible ID field names
+                            const itemId = item.id || item.inventoryId || item.itemId;
+                            const itemName = item.name || item.itemName || item.title || 'Unknown Item';
+                            const itemQuantity = item.quantity || item.stock || item.availableQuantity || 0;
+                            
+                            return (
+                              <option key={itemId || index} value={itemId}>
+                                {itemName} (Còn lại: {itemQuantity})
+                              </option>
+                            );
+                          })
+                      ) : (
+                        <option value="" disabled>Đang tải danh sách vật phẩm...</option>
+                      )}
+                    </select>
+                    <button 
+                      type="button" 
+                      className="search-inventory-btn"
+                      onClick={openInventorySearchModal}
+                      title="Tìm kiếm vật phẩm y tế"
+                    >
+                      🔍 Tìm kiếm
+                    </button>
+                    {inventoryItems && inventoryItems.length === 0 && (
+                      <div className="inventory-debug-info">
+                        <small style={{color: 'red'}}>Không có vật phẩm y tế nào. Kiểm tra console để xem lỗi.</small>
+                      </div>
+                    )}
+                  </div>
+                  <div className="selected-inventory-items">
+                    {selectedInventoryItems.length > 0 && (
+                      <div className="selected-items-header">
+                        <h4>Vật phẩm y tế đã chọn:</h4>
+                      </div>
+                    )}
+                    {selectedInventoryItems.map(item => {
+                      const inventoryItem = inventoryItems.find(inv => {
+                        const invId = inv.id || inv.inventoryId || inv.itemId;
+                        return invId === item.inventoryId;
+                      });
+                      
+                      // Extract item details with fallbacks
+                      const itemName = inventoryItem?.name || inventoryItem?.itemName || inventoryItem?.title || 'Unknown Item';
+                      const itemUnit = inventoryItem?.unit || inventoryItem?.measurementUnit || 'đơn vị';
+                      const itemExpiry = inventoryItem?.expirationDate || inventoryItem?.expiry || null;
+                      const itemCondition = inventoryItem?.condition || inventoryItem?.status || 'N/A';
+                      const availableQuantity = inventoryItem?.quantity || inventoryItem?.stock || inventoryItem?.availableQuantity || 0;
+                      const itemStatus = inventoryItem?.status || '';
+                      
+                      return (
+                        <div key={item.inventoryId} className="selected-inventory-item-detailed">
+                          <div className="item-info">
+                            <div className="item-header">
+                              <h5 className="item-name">{itemName}</h5>
+                              <span className="item-id">ID: {item.inventoryId}</span>
+                            </div>
+                            <div className="item-details">
+                              <div className="item-detail-row">
+                                <span className="detail-label">Tình trạng:</span>
+                                <span className="detail-value">{itemStatus ? getInventoryStatusText(itemStatus) : (itemCondition || 'Không có')}</span>
+                              </div>
+                              <div className="item-detail-row">
+                                <span className="detail-label">Còn lại:</span>
+                                <span className="detail-value">{availableQuantity} {itemUnit}</span>
+                              </div>
+                              {itemExpiry && (
+                                <div className="item-detail-row">
+                                  <span className="detail-label">Hạn sử dụng:</span>
+                                  <span className="detail-value">{new Date(itemExpiry).toLocaleDateString('vi-VN')}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <div className="item-controls">
+                            <div className="quantity-control">
+                              <label htmlFor={`quantity-${item.inventoryId}`}>Số lượng sử dụng:</label>
+                              <input
+                                id={`quantity-${item.inventoryId}`}
+                                type="number"
+                                min="0"
+                                max={availableQuantity}
+                                value={item.quantity}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  handleInventoryItemSelection(item.inventoryId, parseInt(value) || 0);
+                                }}
+                                onBlur={(e) => {
+                                  // When user leaves the field, ensure it has a valid value
+                                  const value = e.target.value;
+                                  if (value === '' || parseInt(value) < 0) {
+                                    handleInventoryItemSelection(item.inventoryId, 0);
+                                  }
+                                }}
+                                className="quantity-input"
+                              />
+                              <span className="unit-label">{itemUnit}</span>
+                            </div>
+                            <button 
+                              type="button" 
+                              onClick={() => handleRemoveInventoryItem(item.inventoryId)}
+                              className="remove-item-btn"
+                              title="Xóa vật phẩm này"
+                            >
+                              🗑️ Xóa
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {selectedInventoryItems.length === 0 && (
+                      <div className="no-selected-items">
+                        <p>Chưa chọn vật phẩm y tế nào.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Inventory Usage Logs Section - Only show in edit mode */}
+              {editing && currentEvent.id && (
+                <div className="form-group">
+                  <label>Lịch sử sử dụng vật phẩm y tế</label>
+                  <div className="inventory-usage-logs">
+                    {inventoryUsageLogs.length > 0 ? (
+                      <div className="usage-logs-container">
+                        <h4>Các vật phẩm đã sử dụng trong sự cố này:</h4>
+                        <div className="usage-logs-list">
+                          {inventoryUsageLogs.map((log, index) => {
+                            const inventoryItem = inventoryItems.find(item => 
+                              (item.id || item.inventoryId) === log.itemId
+                            );
+                            const itemName = inventoryItem?.name || inventoryItem?.itemName || log.itemName || `Vật phẩm ID: ${log.itemId}`;
+                            
+                            return (
+                              <div key={index} className="usage-log-item">
+                                <div className="log-item-header">
+                                  <strong>{itemName}</strong>
+                                  <span className="log-item-id">ID: {log.itemId}</span>
+                                </div>
+                                <div className="log-item-details">
+                                  <div className="log-detail-row">
+                                    <span className="log-label">Số lượng sử dụng:</span>
+                                    <span className="log-value">{log.quantityUsed || log.quantity || 0}</span>
+                                  </div>
+                                  <div className="log-detail-row">
+                                    <span className="log-label">Ngày sử dụng:</span>
+                                    <span className="log-value">{log.usedDate ? new Date(log.usedDate).toLocaleString('vi-VN') : 'Không có'}</span>
+                                  </div>
+                                  {log.notes && (
+                                    <div className="log-detail-row">
+                                      <span className="log-label">Ghi chú:</span>
+                                      <span className="log-value">{log.notes}</span>
+                                    </div>
+                                  )}
+                                  {log.usedBy && (
+                                    <div className="log-detail-row">
+                                      <span className="log-label">Người sử dụng:</span>
+                                      <span className="log-value">{log.usedBy}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="no-usage-logs">
+                        <p>Chưa có lịch sử sử dụng vật phẩm y tế cho sự cố này.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
               )}
-              <input
-                style={{ ...inputStyle, width: 60, marginBottom: 0 }}
-                type="number"
-                min={1}
-                value={item.quantityUsed}
-                onChange={e => updateItemRow(idx, 'quantityUsed', e.target.value)}
-                required
-              />
-              <input
-                style={{ ...inputStyle, width: 120, marginBottom: 0 }}
-                type="text"
-                value={item.notes}
-                onChange={e => updateItemRow(idx, 'notes', e.target.value)}
-                placeholder="Ghi chú"
-              />
-              <button type="button" onClick={() => removeItemRow(idx)} style={{ padding: '4px 10px', background: '#f44336', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', transition: 'filter 0.2s' }}
-                onMouseOver={e => e.currentTarget.style.filter = 'brightness(1.1)'}
-                onMouseOut={e => e.currentTarget.style.filter = 'none'}>
-                Xóa
+              
+              <div className="form-group">
+                <label htmlFor="notes">Ghi chú</label>
+                <textarea
+                  name="notes"
+                  id="notes"
+                  value={currentEvent.notes}
+                  onChange={handleInputChange}
+                  rows="3"
+                  placeholder="Ghi chú thêm..."
+                ></textarea>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="status">Trạng thái</label>
+                  <select
+                    name="status"
+                    id="status"
+                    value={currentEvent.status}
+                    onChange={handleInputChange}
+                  >
+                    {MEDICAL_EVENT_STATUS.map(status => (
+                      <option key={status.value} value={status.value}>{status.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-actions">
+                <button type="button" className="cancel-btn" onClick={() => setModalOpen(false)}>
+                  Hủy
+                </button>
+                <button type="submit" className="submit-btn">
+                  {editing ? 'Cập nhật' : 'Thêm mới'}
+                </button>
+              </div>
+            </form>
+            )}
+          </div>
+        </div>
+      )}
+      
+      {/* Student Selection Modal */}
+      <StudentSelectionModal
+        isOpen={studentSelectionModalOpen}
+        onClose={handleCloseStudentModal}
+        onConfirm={handleConfirmStudentSelection}
+        selectedStudentIds={currentEvent.stuId}
+        availableClasses={availableClasses}
+      />
+      
+      {/* Inventory Search Modal */}
+      {inventorySearchModalOpen && (
+        <div className="modal inventory-search-modal">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2>Tìm kiếm vật phẩm y tế</h2>
+              <button className="close-btn" onClick={closeInventorySearchModal}>
+                ×
               </button>
-              {quantityErrors[idx] && (
-                <span style={{ color: 'red', marginLeft: 8 }}>{quantityErrors[idx]}</span>
-              )}
             </div>
-          ))}
-          <button type="button" onClick={addItemRow} style={{ marginTop: 8, padding: '6px 16px', background: '#1976d2', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', transition: 'filter 0.2s' }}
-            onMouseOver={e => e.currentTarget.style.filter = 'brightness(1.1)'}
-            onMouseOut={e => e.currentTarget.style.filter = 'none'}>
-            Thêm thuốc/vật tư
-          </button>
-        </div>
-        <div style={boxStyle}>
-          <label style={labelStyle}>Ghi chú:</label>
-          <input style={inputStyle} type="text" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
-          <div style={rowStyle}>
-            <label style={labelStyle}>Trạng thái:</label>
-            <select style={inputStyle} value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
-              {statusOptions.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
+            
+            <div className="inventory-search-content">
+              <div className="search-input-container">
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm theo tên, loại, nhà sản xuất, số lô, nguồn cung cấp, vị trí lưu trữ..."
+                  value={inventorySearchTerm}
+                  onChange={handleInventorySearchChange}
+                  className="inventory-search-input"
+                  autoFocus
+                />
+                <div className="search-results-info">
+                  {inventorySearchTerm && `Tìm thấy ${filteredInventoryItems.length} kết quả`}
+                </div>
+              </div>
+              
+              <div className="inventory-search-results">
+                {filteredInventoryItems.length > 0 ? (
+                  <div className="inventory-items-grid">
+                    {filteredInventoryItems.map((item) => {
+                      const itemId = item.id || item.inventoryId || item.itemId;
+                      const itemName = item.name || item.itemName || item.title || 'Unknown Item';
+                      const itemQuantity = item.quantity || item.stock || item.availableQuantity || 0;
+                      const itemType = item.type || item.category || '';
+                      const itemManufacturer = item.manufacturer || '';
+                      const itemBatchNumber = item.batchNumber || '';
+                      const itemExpiryDate = item.expiryDate || item.expiration_date || '';
+                      const itemStorageLocation = item.storageLocation || '';
+                      const itemUnit = item.unit || '';
+                      const itemStatus = item.status || '';
+                      
+                      // Check if item is already selected
+                      const isSelected = selectedInventoryItems.some(selected => selected.inventoryId === itemId);
+                      
+                      return (
+                        <div 
+                          key={itemId} 
+                          className={`inventory-item-card ${isSelected ? 'selected' : ''}`}
+                          onClick={() => !isSelected && handleInventoryItemSelect(itemId)}
+                        >
+                          <div className="item-header">
+                            <h4 className="item-name">{itemName}</h4>
+                            <span className="item-id">ID: {itemId}</span>
+                          </div>
+                          
+                          <div className="item-details">
+                            {itemType && (
+                              <div className="item-detail">
+                                <span className="detail-label">Loại:</span>
+                                <span className="detail-value">{itemType}</span>
+                              </div>
+                            )}
+                            
+                            <div className="item-detail">
+                              <span className="detail-label">Số lượng:</span>
+                              <span className="detail-value">{itemQuantity} {itemUnit}</span>
+                            </div>
+                            
+                            {itemManufacturer && (
+                              <div className="item-detail">
+                                <span className="detail-label">Nhà sản xuất:</span>
+                                <span className="detail-value">{itemManufacturer}</span>
+                              </div>
+                            )}
+                            
+                            {itemBatchNumber && (
+                              <div className="item-detail">
+                                <span className="detail-label">Số lô:</span>
+                                <span className="detail-value">{itemBatchNumber}</span>
+                              </div>
+                            )}
+                            
+                            {itemExpiryDate && (
+                              <div className="item-detail">
+                                <span className="detail-label">Hạn sử dụng:</span>
+                                <span className="detail-value">{itemExpiryDate}</span>
+                              </div>
+                            )}
+                            
+                            {itemStorageLocation && (
+                              <div className="item-detail">
+                                <span className="detail-label">Vị trí:</span>
+                                <span className="detail-value">{itemStorageLocation}</span>
+                              </div>
+                            )}
+                            
+                            {itemStatus && (
+                              <div className="item-detail">
+                                <span className="detail-label">Trạng thái:</span>
+                                <span className="detail-value">{getInventoryStatusText(itemStatus)}</span>
+                              </div>
+                            )}
+                          </div>
+                          
+                          {isSelected && (
+                            <div className="item-selected-indicator">
+                              ✓ Đã chọn
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="no-results">
+                    {inventorySearchTerm ? 'Không tìm thấy vật phẩm nào phù hợp.' : 'Nhập từ khóa để tìm kiếm vật phẩm y tế.'}
+                  </div>
+                )}
+              </div>
+            </div>
+
           </div>
         </div>
         <button type="submit" disabled={loading || Object.keys(quantityErrors).length > 0} style={{ width: '100%', padding: 12, background: '#43a047', color: '#fff', fontWeight: 600, fontSize: 18, border: 'none', borderRadius: 6, cursor: 'pointer', transition: 'filter 0.2s' }}
@@ -359,3 +1758,7 @@ const MedicalEvents = () => {
 };
 
 export default MedicalEvents;
+
+
+
+

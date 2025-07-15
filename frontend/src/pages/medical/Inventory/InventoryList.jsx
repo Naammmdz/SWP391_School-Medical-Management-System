@@ -56,6 +56,27 @@ const InventoryList = () => {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
+  // Status helper functions
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case 'ACTIVE': return 'Hoạt động';
+      case 'INACTIVE': return 'Không hoạt động';
+      case 'EXPIRED': return 'Hết hạn';
+      case 'DAMAGED': return 'Hư hỏng';
+      default: return status || 'N/A';
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'ACTIVE': return 'success';
+      case 'INACTIVE': return 'default';
+      case 'EXPIRED': return 'error';
+      case 'DAMAGED': return 'warning';
+      default: return 'default';
+    }
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -113,6 +134,13 @@ const InventoryList = () => {
       quantity: item.quantity,
       minStockLevel: item.minStockLevel || '',
       expiryDate: item.expiryDate ? dayjs(`${item.expiryDate[0]}-${item.expiryDate[1]}-${item.expiryDate[2]}`) : null,
+      batchNumber: item.batchNumber || '',
+      manufacturer: item.manufacturer || '',
+      importDate: item.importDate ? dayjs(`${item.importDate[0]}-${item.importDate[1]}-${item.importDate[2]}`) : null,
+      importPrice: item.importPrice || '',
+      storageLocation: item.storageLocation || '',
+      status: item.status || 'ACTIVE',
+      source: item.source || '',
     });
     setEditError('');
     setEditSuccess('');
@@ -136,8 +164,12 @@ const InventoryList = () => {
     setEditForm(prev => ({ ...prev, expiryDate: value }));
   };
 
+  const handleEditImportDateChange = (value) => {
+    setEditForm(prev => ({ ...prev, importDate: value }));
+  };
+
   const validateEdit = () => {
-    if (!editForm.name || !editForm.type || !editForm.unit || !editForm.quantity || !editForm.expiryDate) {
+    if (!editForm.name || !editForm.type || !editForm.unit || !editForm.quantity || !editForm.expiryDate || !editForm.batchNumber || !editForm.manufacturer || !editForm.importPrice || !editForm.storageLocation || !editForm.source) {
       setEditError('Vui lòng nhập đầy đủ thông tin.');
       return false;
     }
@@ -149,9 +181,26 @@ const InventoryList = () => {
       setEditError('Tồn kho tối thiểu không hợp lệ.');
       return false;
     }
+    if (isNaN(editForm.importPrice) || Number(editForm.importPrice) <= 0) {
+      setEditError('Giá nhập phải lớn hơn 0.');
+      return false;
+    }
     if (!dayjs(editForm.expiryDate).isValid() || dayjs(editForm.expiryDate).isBefore(dayjs(), 'day')) {
       setEditError('Hạn sử dụng phải là ngày trong tương lai.');
       return false;
+    }
+    if (!dayjs(editForm.importDate).isValid()) {
+      setEditError('Ngày nhập không hợp lệ.');
+      return false;
+    }
+    // Validate expiry date vs status combination
+    if (editForm.expiryDate && editForm.status === 'EXPIRED') {
+      const today = dayjs();
+      const expiryDate = dayjs(editForm.expiryDate);
+      if (expiryDate.isAfter(today, 'day')) {
+        setEditError('Không thể đặt trạng thái là "Hết hạn" khi hạn sử dụng còn trong tương lai.');
+        return false;
+      }
     }
     setEditError('');
     return true;
@@ -172,6 +221,13 @@ const InventoryList = () => {
         quantity: Number(editForm.quantity),
         minStockLevel: editForm.minStockLevel === '' ? undefined : Number(editForm.minStockLevel),
         expiryDate: dayjs(editForm.expiryDate).format('YYYY-MM-DD'),
+        batchNumber: editForm.batchNumber,
+        manufacturer: editForm.manufacturer,
+        importDate: dayjs(editForm.importDate).format('YYYY-MM-DD'),
+        importPrice: Number(editForm.importPrice),
+        storageLocation: editForm.storageLocation,
+        status: editForm.status,
+        source: editForm.source,
       };
       await InventoryService.updateInventory(editItem.itemId, payload, config);
       setEditSuccess('Cập nhật thành công!');
@@ -238,24 +294,32 @@ const InventoryList = () => {
           </Grid>
         </CardContent>
       </Card>
-
-      {/* Vật tư y tế */}
-      <Card elevation={2} sx={{ mb: 3, borderRadius: 3, border: `1.5px solid ${GREEN}` }}>
-        <CardContent>
-          <Typography variant="h6" gutterBottom sx={{ color: GREEN, display: 'flex', alignItems: 'center', gap: 1 }}>
-            <LocalHospitalIcon sx={{ color: GREEN }} /> Danh sách vật tư y tế
-          </Typography>
-          <TableContainer component={Paper}>
-            <Table size="small">
-              <TableHead sx={{ background: '#e8f5e9' }}>
+      <Paper elevation={2}>
+        <TableContainer>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>Tên</TableCell>
+                <TableCell>Loại</TableCell>
+                <TableCell>Số lô</TableCell>
+                <TableCell>Nhà sản xuất</TableCell>
+                <TableCell>Đơn vị</TableCell>
+                <TableCell>Số lượng</TableCell>
+                <TableCell>Hạn sử dụng</TableCell>
+                <TableCell>Ngày nhập</TableCell>
+                <TableCell>Giá nhập</TableCell>
+                <TableCell>Vị trí</TableCell>
+                <TableCell>Trạng thái</TableCell>
+                <TableCell>Thao tác</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {loading ? (
                 <TableRow>
-                  <TableCell>Tên</TableCell>
-                  <TableCell>Loại</TableCell>
-                  <TableCell>Đơn vị</TableCell>
-                  <TableCell>Số lượng</TableCell>
-                  <TableCell>Hạn sử dụng</TableCell>
-                  <TableCell>Ngày nhập kho</TableCell>
-                  <TableCell>Thao tác</TableCell>
+                  <TableCell colSpan={12} align="center">
+                    <CircularProgress size={28} />
+                  </TableCell>
+
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -311,13 +375,9 @@ const InventoryList = () => {
             <Table size="small">
               <TableHead sx={{ background: '#e8f5e9' }}>
                 <TableRow>
-                  <TableCell>Tên</TableCell>
-                  <TableCell>Loại</TableCell>
-                  <TableCell>Đơn vị</TableCell>
-                  <TableCell>Số lượng</TableCell>
-                  <TableCell>Hạn sử dụng</TableCell>
-                  <TableCell>Ngày nhập kho</TableCell>
-                  <TableCell>Thao tác</TableCell>
+                  <TableCell colSpan={12} align="center">
+                    Không có dữ liệu
+                  </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -326,11 +386,25 @@ const InventoryList = () => {
                     <TableCell colSpan={7} align="center">
                       <CircularProgress size={28} sx={{ color: '#43a047' }} />
                     </TableCell>
-                  </TableRow>
-                ) : medicines.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} align="center">
-                      Không có dữ liệu
+                    <TableCell>{item.batchNumber || 'N/A'}</TableCell>
+                    <TableCell>{item.manufacturer || 'N/A'}</TableCell>
+                    <TableCell>{item.unit}</TableCell>
+                    <TableCell>{item.quantity}</TableCell>
+                    <TableCell>{formatDate(item.expiryDate)}</TableCell>
+                    <TableCell>{formatDate(item.importDate) || formatDateTime(item.createdAt)}</TableCell>
+                    <TableCell>{item.importPrice ? `${item.importPrice.toLocaleString()} VND` : 'N/A'}</TableCell>
+                    <TableCell>{item.storageLocation || 'N/A'}</TableCell>
+                    <TableCell>
+                      <Chip 
+                        label={getStatusLabel(item.status)} 
+                        color={getStatusColor(item.status)} 
+                        size="small" 
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Button variant="outlined" size="small" onClick={() => handleEditOpen(item)}>
+                        Cập nhật
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -438,6 +512,92 @@ const InventoryList = () => {
                     slotProps={{ textField: { fullWidth: true, required: true } }}
                   />
                 </LocalizationProvider>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Số lô"
+                  name="batchNumber"
+                  value={editForm.batchNumber || ''}
+                  onChange={handleEditChange}
+                  fullWidth
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Nhà sản xuất"
+                  name="manufacturer"
+                  value={editForm.manufacturer || ''}
+                  onChange={handleEditChange}
+                  fullWidth
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <DatePicker
+                    label="Ngày nhập kho"
+                    value={editForm.importDate || null}
+                    onChange={handleEditImportDateChange}
+                    format="YYYY-MM-DD"
+                    slotProps={{ textField: { fullWidth: true, required: true } }}
+                  />
+                </LocalizationProvider>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Giá nhập (VND)"
+                  name="importPrice"
+                  type="number"
+                  value={editForm.importPrice || ''}
+                  onChange={handleEditChange}
+                  fullWidth
+                  required
+                  inputProps={{ min: 0, step: 0.01 }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Vị trí lưu trữ"
+                  name="storageLocation"
+                  value={editForm.storageLocation || ''}
+                  onChange={handleEditChange}
+                  fullWidth
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth required>
+                  <InputLabel>Trạng thái</InputLabel>
+                  <Select
+                    name="status"
+                    value={editForm.status || ''}
+                    label="Trạng thái"
+                    onChange={handleEditChange}
+                  >
+                    <MenuItem value="ACTIVE">Hoạt động</MenuItem>
+                    <MenuItem value="INACTIVE">Không hoạt động</MenuItem>
+                    <MenuItem 
+                      value="EXPIRED" 
+                      disabled={editForm.expiryDate && dayjs(editForm.expiryDate).isAfter(dayjs(), 'day')}
+                      title={editForm.expiryDate && dayjs(editForm.expiryDate).isAfter(dayjs(), 'day') ? 'Không thể chọn "Hết hạn" khi hạn sử dụng còn trong tương lai' : ''}
+                    >
+                      Hết hạn
+                    </MenuItem>
+                    <MenuItem value="DAMAGED">Hư hỏng</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  label="Nguồn cung cấp"
+                  name="source"
+                  value={editForm.source || ''}
+                  onChange={handleEditChange}
+                  fullWidth
+                  required
+                  placeholder="Ví dụ: Nhà cung cấp A, Bệnh viện B, v.v."
+                />
               </Grid>
             </Grid>
             <DialogActions sx={{ mt: 2 }}>

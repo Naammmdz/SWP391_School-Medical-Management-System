@@ -14,10 +14,13 @@ import com.school.health.repository.InventoryUsedRepo;
 import com.school.health.repository.MedicalEventsRepository;
 import com.school.health.repository.StudentRepository;
 import com.school.health.repository.UserRepository;
+import com.school.health.repository.InventoryRepo;
 import com.school.health.service.MedicalEvents;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import com.school.health.service.impl.InventoryUsedServiceImpl;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,42 +40,68 @@ public class MedicalEventsServiceImpl implements MedicalEvents {
 
     @Autowired
     private InventoryUsedRepo  inventoryUsedRepo;
+    
+    @Autowired
+    private InventoryRepo inventoryRepo;
+    
+    @Autowired
+    private InventoryUsedServiceImpl inventoryUsedService;
 
     @Override
+    @Transactional
     public MedicalEventsResponseDTO createMedicalEvents(int createBy, MedicalEventsRequestDTO dto) {
-        MedicalEvent entity = new MedicalEvent();
+        try {
+            System.out.println("=== CREATING MEDICAL EVENT ===");
+            System.out.println("Student IDs: " + dto.getStuId());
+            System.out.println("Inventory items: " + dto.getRelatedItemUsed());
+            
+            MedicalEvent entity = new MedicalEvent();
 
-        entity.setTitle(dto.getTitle());
-        if (dto.getStuId() != null) {
-            for (Integer stuId : dto.getStuId()) {
-                Student s = studentRepository.findById(stuId)
-                        .orElseThrow(() -> new RuntimeException("Không tìm thấy học sinh ID: " + stuId));
-                entity.getStudentList().add(s); // gọi addStudent
+            entity.setTitle(dto.getTitle());
+            
+            // Add students with proper error handling (following project patterns)
+            if (dto.getStuId() != null && !dto.getStuId().isEmpty()) {
+                List<Student> students = new ArrayList<>();
+                for (Integer stuId : dto.getStuId()) {
+                    Student s = studentRepository.findById(stuId)
+                            .orElseThrow(() -> new RuntimeException("Không tìm thấy học sinh ID: " + stuId));
+                    students.add(s);
+                    System.out.println("Added student: " + s.getFullName() + " (ID: " + stuId + ")");
+                }
+                entity.setStudentList(students);
             }
-        }
-        entity.setCreatedBy(userRepository.getReferenceById(createBy));
-        entity.setEventType(dto.getEventType());
-        entity.setEventDate(dto.getEventDate());
-        entity.setLocation(dto.getLocation());
-        entity.setDescription(dto.getDescription());
-        entity.setNotes(dto.getNotes());
-        entity.setHandlingMeasures(dto.getHandlingMeasures());
-        entity.setSeverityLevel(dto.getSeverityLevel());
-        entity.setStatus(dto.getStatus());
-        medicalEventsRepository.save(entity);
-        if (dto.getRelatedItemUsed() != null) {
-            for(InventoryUsedInMedicalEventRequestDTO itemUsed : dto.getRelatedItemUsed()) {
+            
+            entity.setCreatedBy(userRepository.getReferenceById(createBy));
+            entity.setEventType(dto.getEventType());
+            entity.setEventDate(dto.getEventDate());
+            entity.setLocation(dto.getLocation());
+            entity.setDescription(dto.getDescription());
+            entity.setNotes(dto.getNotes());
+            entity.setHandlingMeasures(dto.getHandlingMeasures());
+            entity.setSeverityLevel(dto.getSeverityLevel());
+            entity.setStatus(dto.getStatus());
+            
+            // Save the medical event first
+            MedicalEvent savedEntity = medicalEventsRepository.save(entity);
+            if (dto.getRelatedItemUsed() != null) {
+                for(InventoryUsedInMedicalEventRequestDTO itemUsed : dto.getRelatedItemUsed()) {
                     // Tạo cái Inventory Used
-               publisher.publishEvent(new InventoryUsedEvent(entity.getId(),itemUsed));
+                    publisher.publishEvent(new InventoryUsedEvent(entity.getId(),itemUsed));
 
+                }
             }
+            
+            // Publish notification event
+            publisher.publishEvent(new MedicalEventNotificationEvent(savedEntity));
+            
+
+            return mapToResponseDTO(savedEntity);
+            
+        } catch (Exception e) {
+            System.err.println("Error creating medical event: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Failed to create medical event: " + e.getMessage(), e);
         }
-//                    entity.getRelatedInventoryUsed().add(inventoryUsedLog);
-//        inventoryUsedRepo.findByEvent(entity.getId()).forEach(entity::addRelatedInventoryUsed);
-//
-//      medicalEventsRepository.save(entity);
-      publisher.publishEvent(new MedicalEventNotificationEvent(entity));
-        return mapToResponseDTO(entity);
     }
 
     @Override
@@ -87,7 +116,7 @@ public class MedicalEventsServiceImpl implements MedicalEvents {
     @Override
     public List<MedicalEventsResponseDTO> getAllMedicalEvents(MedicalEventsFiltersRequestDTO filters) {
         List<MedicalEvent> list = medicalEventsRepository.findByFilter(
-                filters.getFrom(), filters.getTo(), filters.getEventType(), filters.getStuId(), filters.getCreatedBy(), filters.getStatus()
+                filters.getFrom(), filters.getTo(), filters.getEventType(), filters.getStuId(), filters.getCreatedBy(), filters.getStatus(), filters.getSearchTerm()
         );
         return list.stream()
                 .map(this::mapToResponseDTO)

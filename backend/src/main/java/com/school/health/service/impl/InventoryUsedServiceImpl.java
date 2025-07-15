@@ -19,6 +19,7 @@ import com.school.health.service.InventoryUsedLogService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class InventoryUsedServiceImpl implements InventoryUsedLogService {
@@ -45,16 +46,33 @@ public class InventoryUsedServiceImpl implements InventoryUsedLogService {
 
     }
     @Override
+    @Transactional
     public InventoryUsedResponseDTO createInventoryUsedInMedicalEvent(Integer evenID,InventoryUsedInMedicalEventRequestDTO DTO) {
-        InventoryUsedLog inventoryUsedLog = new InventoryUsedLog();
-        inventoryUsedLog.setItem(inventoryRepo.getReferenceById(DTO.getItemId()));
-        inventoryUsedLog.setQuantityUsed(DTO.getQuantityUsed());
-        inventoryUsedLog.setRelatedEvent(medicalEventsRepo.getReferenceById(evenID));
-        inventoryUsedLog.setNotes(DTO.getNotes());
-        updateInventoryItem(DTO.getItemId(),DTO.getQuantityUsed());
-        inventoryUsedRepo.save(inventoryUsedLog);
-        return mapDTO(inventoryUsedLog);
-
+        try {
+            System.out.println("=== CREATING INVENTORY USED LOG ===");
+            System.out.println("Event ID: " + evenID);
+            System.out.println("Item ID: " + DTO.getItemId());
+            System.out.println("Quantity Used: " + DTO.getQuantityUsed());
+            
+            InventoryUsedLog inventoryUsedLog = new InventoryUsedLog();
+            inventoryUsedLog.setItem(inventoryRepo.getReferenceById(DTO.getItemId()));
+            inventoryUsedLog.setQuantityUsed(DTO.getQuantityUsed());
+            inventoryUsedLog.setRelatedEvent(medicalEventsRepo.getReferenceById(evenID));
+            inventoryUsedLog.setNotes(DTO.getNotes());
+            
+            // Update inventory quantity first
+            updateInventoryItem(DTO.getItemId(), DTO.getQuantityUsed());
+            
+            // Save the usage log
+            InventoryUsedLog savedLog = inventoryUsedRepo.save(inventoryUsedLog);
+            System.out.println("Inventory used log created with ID: " + savedLog.getId());
+            
+            return mapDTO(savedLog);
+        } catch (Exception e) {
+            System.err.println("Error creating inventory used log: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Failed to create inventory used log: " + e.getMessage(), e);
+        }
     }
     public InventoryUsedResponseDTO InventoryUsedInMedicalEvent(Integer evenID, InventoryUsedInMedicalEventUpdateRequestDTO DTO) {
         InventoryUsedLog inventoryUsedLog = new InventoryUsedLog();

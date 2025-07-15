@@ -27,9 +27,21 @@ public class MedicalEventsController {
     @PreAuthorize("hasRole('NURSE') or hasRole('ADMIN')")
     @PostMapping("/api/nurse/medical-events")
     public ResponseEntity<MedicalEventsResponseDTO> addMedicalEvent(@RequestBody @Valid MedicalEventsRequestDTO medicalEventsRequestDTO, Authentication authentication) {
-        UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
-        Integer userId = userPrincipal.getId();
-        return ResponseEntity.ok(medicalEventsService.createMedicalEvents(userId, medicalEventsRequestDTO));
+        try {
+            UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
+            Integer userId = userPrincipal.getId();
+            
+            // Validate that at least one student is selected
+            if (medicalEventsRequestDTO.getStuId() == null || medicalEventsRequestDTO.getStuId().isEmpty()) {
+                throw new IllegalArgumentException("Phải chọn ít nhất một học sinh cho sự cố y tế");
+            }
+            
+            return ResponseEntity.ok(medicalEventsService.createMedicalEvents(userId, medicalEventsRequestDTO));
+        } catch (Exception e) {
+            // Log error for debugging
+            System.err.println("Error creating medical event: " + e.getMessage());
+            throw e;
+        }
     }
     @PreAuthorize("hasRole('NURSE')")
     @PostMapping("/api/nurse/medical-events/search")
