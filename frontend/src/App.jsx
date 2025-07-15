@@ -138,7 +138,7 @@ function App() {
       <Route path="/capnhathocsinh/:studentId" element={<ProtectedRoute element={<Layout showSidebar><UpdateStudent /></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_PRINCIPAL']} />} />
 
       <Route path="/themvattu" element={<ProtectedRoute element={<Layout showSidebar><ImportInventory/> </Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE']} />} />
-      <Route path="/quanlyvattuyte" element={<ProtectedRoute element={<Layout showSidebar><InventoryList/></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE', 'ROLE_PRINCIPAL']} />} />
+      <Route path="/quanlyvattuyte" element={<ProtectedRoute element={<Layout showSidebar><Pharmaceutical/></Layout>} requiredRole={['ROLE_ADMIN', 'ROLE_NURSE', 'ROLE_PRINCIPAL']} />} />
       
      
       

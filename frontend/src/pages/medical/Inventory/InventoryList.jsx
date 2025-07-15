@@ -30,18 +30,12 @@ import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import InventoryService from '../../../services/InventoryService';
 import dayjs from 'dayjs';
-import { useNavigate } from 'react-router-dom';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
-import MedicationIcon from '@mui/icons-material/Medication';
 
 const typeOptions = [
   { value: '', label: 'Tất cả' },
   { value: 'medical supplies', label: 'Vật tư y tế' },
   { value: 'medicine', label: 'Thuốc' },
 ];
-
-const GREEN = '#15803d';
 
 const InventoryList = () => {
   const [data, setData] = useState([]);
@@ -53,8 +47,6 @@ const InventoryList = () => {
   const [editError, setEditError] = useState('');
   const [editSuccess, setEditSuccess] = useState('');
   const [editLoading, setEditLoading] = useState(false);
-  const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   // Status helper functions
   const getStatusLabel = (status) => {
@@ -88,7 +80,6 @@ const InventoryList = () => {
       const config = { headers: { Authorization: `Bearer ${token}` } };
       const res = await InventoryService.getInventoryList(config);
       setData(Array.isArray(res) ? res : []);
-      console.log('Fetched inventory data:', res);
     } catch (err) {
       setData([]);
     }
@@ -107,15 +98,10 @@ const InventoryList = () => {
     return matchName && matchType;
   });
 
-  // Lọc dữ liệu cho từng bảng
-  const medicalSupplies = filteredData.filter(item => item.type === 'medical supplies');
-  const medicines = filteredData.filter(item => item.type === 'medicine');
-
-  const formatDate = (str) => {
-    if (!str) return '';
-    const d = new Date(str);
-    if (isNaN(d)) return str; // fallback nếu không parse được
-    return d.toLocaleDateString('vi-VN');
+  const formatDate = (arr) => {
+    if (!arr || !Array.isArray(arr) || arr.length !== 3) return '';
+    const [y, m, d] = arr;
+    return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
   };
 
   const formatDateTime = (str) => {
@@ -242,374 +228,281 @@ const InventoryList = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: 1100, mx: 'auto', mt: 4, mb: 4 }}>
-      <Card elevation={3} sx={{ mb: 3, borderRadius: 3, border: `2px solid ${GREEN}` }}>
-        <CardContent>
-          <Typography variant="h5" gutterBottom sx={{ color: GREEN, display: 'flex', alignItems: 'center', gap: 1 }}>
-            <LocalHospitalIcon sx={{ color: GREEN }} /> Quản lý kho vật tư y tế & thuốc
-          </Typography>
-          <Grid container spacing={2} sx={{ mb: 1 }} alignItems="center">
-            <Grid item xs={12} sm={6} md={4}>
-              <TextField
-                label="Tìm theo tên"
-                name="name"
-                value={filter.name}
-                onChange={handleFilterChange}
-                fullWidth
-                size="small"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Loại</InputLabel>
-                <Select
-                  label="Loại"
-                  name="type"
-                  value={filter.type}
-                  onChange={handleFilterChange}
-                  sx={{ minWidth: 200 }}
-                >
-                  {typeOptions.map(opt => (
-                    <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            {(user.userRole === 'ROLE_ADMIN' || user.userRole === 'ROLE_NURSE') && (
-              <Grid item xs={12} sm={12} md={4} textAlign={{ xs: 'left', md: 'right' }}>
-                <Button
-                  variant="contained"
-                  startIcon={<AddCircleOutlineIcon />}
-                  sx={{
-                    minWidth: 180,
-                    background: GREEN,
-                    '&:hover': { background: '#10632e' }
-                  }}
-                  onClick={() => navigate('/themvattu')}
-                >
-                  Thêm thuốc/Vật tư
-                </Button>
-              </Grid>
-            )}
-          </Grid>
-        </CardContent>
-      </Card>
-      <Paper elevation={2}>
-        <TableContainer>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Tên</TableCell>
-                <TableCell>Loại</TableCell>
-                <TableCell>Số lô</TableCell>
-                <TableCell>Nhà sản xuất</TableCell>
-                <TableCell>Đơn vị</TableCell>
-                <TableCell>Số lượng</TableCell>
-                <TableCell>Hạn sử dụng</TableCell>
-                <TableCell>Ngày nhập</TableCell>
-                <TableCell>Giá nhập</TableCell>
-                <TableCell>Vị trí</TableCell>
-                <TableCell>Trạng thái</TableCell>
-                <TableCell>Thao tác</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={12} align="center">
-                    <CircularProgress size={28} />
-                  </TableCell>
-
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={7} align="center">
-                      <CircularProgress size={28} sx={{ color: GREEN }} />
-                    </TableCell>
-                  </TableRow>
-                ) : medicalSupplies.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} align="center">
-                      Không có dữ liệu
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  medicalSupplies.map(item => (
-                    <TableRow key={item.itemId} hover sx={{ '&:hover': { background: '#f1f8e9' } }}>
-                      <TableCell>{item.name}</TableCell>
-                      <TableCell>
-                        <Chip label="Vật tư y tế" sx={{ background: GREEN, color: '#fff' }} />
-                      </TableCell>
-                      <TableCell>{item.unit}</TableCell>
-                      <TableCell>{item.quantity}</TableCell>
-                      <TableCell>{formatDate(item.expiryDate)}</TableCell>
-                      <TableCell>{formatDateTime(item.createdAt)}</TableCell>
-                      <TableCell>
-                        <Button
-                          variant="contained"
-                          size="small"
-                          sx={{ background: GREEN, color: '#fff', '&:hover': { background: '#10632e' } }}
-                          onClick={() => handleEditOpen(item)}
-                        >
-                          Cập nhật
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </CardContent>
-      </Card>
-
-      {/* Thuốc */}
-      <Card elevation={2} sx={{ borderRadius: 3, border: '1.5px solid #43a047' }}>
-        <CardContent>
-          <Typography variant="h6" gutterBottom sx={{ color: '#43a047', display: 'flex', alignItems: 'center', gap: 1 }}>
-            <MedicationIcon sx={{ color: '#43a047' }} /> Danh sách thuốc
-          </Typography>
-          <TableContainer component={Paper}>
-            <Table size="small">
-              <TableHead sx={{ background: '#e8f5e9' }}>
-                <TableRow>
-                  <TableCell colSpan={12} align="center">
-                    Không có dữ liệu
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={7} align="center">
-                      <CircularProgress size={28} sx={{ color: '#43a047' }} />
-                    </TableCell>
-                    <TableCell>{item.batchNumber || 'N/A'}</TableCell>
-                    <TableCell>{item.manufacturer || 'N/A'}</TableCell>
-                    <TableCell>{item.unit}</TableCell>
-                    <TableCell>{item.quantity}</TableCell>
-                    <TableCell>{formatDate(item.expiryDate)}</TableCell>
-                    <TableCell>{formatDate(item.importDate) || formatDateTime(item.createdAt)}</TableCell>
-                    <TableCell>{item.importPrice ? `${item.importPrice.toLocaleString()} VND` : 'N/A'}</TableCell>
-                    <TableCell>{item.storageLocation || 'N/A'}</TableCell>
-                    <TableCell>
-                      <Chip 
-                        label={getStatusLabel(item.status)} 
-                        color={getStatusColor(item.status)} 
-                        size="small" 
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Button variant="outlined" size="small" onClick={() => handleEditOpen(item)}>
-                        Cập nhật
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  medicines.map(item => (
-                    <TableRow key={item.itemId} hover sx={{ '&:hover': { background: '#f1f8e9' } }}>
-                      <TableCell>{item.name}</TableCell>
-                      <TableCell>
-                        <Chip label="Thuốc" sx={{ background: '#43a047', color: '#fff' }} />
-                      </TableCell>
-                      <TableCell>{item.unit}</TableCell>
-                      <TableCell>{item.quantity}</TableCell>
-                      <TableCell>{formatDate(item.expiryDate)}</TableCell>
-                      <TableCell>{formatDateTime(item.createdAt)}</TableCell>
-                      <TableCell>
-                        <Button
-                          variant="contained"
-                          size="small"
-                          sx={{ background: '#43a047', color: '#fff', '&:hover': { background: '#2e7031' } }}
-                          onClick={() => handleEditOpen(item)}
-                        >
-                          Cập nhật
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </CardContent>
-      </Card>
-
-      {/* Dialog cập nhật */}
-      <Dialog open={editOpen} onClose={handleEditClose} maxWidth="sm" fullWidth>
-        <DialogTitle>Cập nhật vật tư/thuốc</DialogTitle>
-        <DialogContent dividers>
-          {editError && <Alert severity="error" sx={{ mb: 2 }}>{editError}</Alert>}
-          {editSuccess && <Alert severity="success" sx={{ mb: 2 }}>{editSuccess}</Alert>}
-          <Box component="form" onSubmit={handleEditSubmit} sx={{ mt: 1 }}>
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
+      <Box sx={{ maxWidth: 1100, mx: 'auto', mt: 4, mb: 4 }}>
+        <Card elevation={3} sx={{ mb: 3 }}>
+          <CardContent>
+            <Typography variant="h5" gutterBottom>
+              Danh sách vật tư/thuốc trong kho
+            </Typography>
+            <Grid container spacing={2} sx={{ mb: 1 }}>
+              <Grid item xs={12} sm={6} md={4}>
                 <TextField
-                  label="Tên vật tư/thuốc"
-                  name="name"
-                  value={editForm.name || ''}
-                  onChange={handleEditChange}
-                  fullWidth
-                  required
+                    label="Tìm theo tên"
+                    name="name"
+                    value={filter.name}
+                    onChange={handleFilterChange}
+                    fullWidth
+                    size="small"
                 />
               </Grid>
-              <Grid item xs={12}>
-                <FormControl fullWidth required>
+              <Grid item xs={12} sm={6} md={4}>
+                <FormControl fullWidth size="small">
                   <InputLabel>Loại</InputLabel>
                   <Select
-                    name="type"
-                    value={editForm.type || ''}
-                    label="Loại"
-                    onChange={handleEditChange}
+                      label="Loại"
+                      name="type"
+                      value={filter.type}
+                      onChange={handleFilterChange}
                   >
-                    <MenuItem value="medical supplies">Vật tư y tế</MenuItem>
-                    <MenuItem value="medicine">Thuốc</MenuItem>
+                    {typeOptions.map(opt => (
+                        <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                    ))}
                   </Select>
                 </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Đơn vị"
-                  name="unit"
-                  value={editForm.unit || ''}
-                  onChange={handleEditChange}
-                  fullWidth
-                  required
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Số lượng"
-                  name="quantity"
-                  type="number"
-                  value={editForm.quantity || ''}
-                  onChange={handleEditChange}
-                  fullWidth
-                  required
-                  inputProps={{ min: 1 }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Tồn kho tối thiểu"
-                  name="minStockLevel"
-                  type="number"
-                  value={editForm.minStockLevel || ''}
-                  onChange={handleEditChange}
-                  fullWidth
-                  inputProps={{ min: 0 }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <DatePicker
-                    label="Hạn sử dụng"
-                    value={editForm.expiryDate || null}
-                    onChange={handleEditDateChange}
-                    format="YYYY-MM-DD"
-                    slotProps={{ textField: { fullWidth: true, required: true } }}
-                  />
-                </LocalizationProvider>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Số lô"
-                  name="batchNumber"
-                  value={editForm.batchNumber || ''}
-                  onChange={handleEditChange}
-                  fullWidth
-                  required
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Nhà sản xuất"
-                  name="manufacturer"
-                  value={editForm.manufacturer || ''}
-                  onChange={handleEditChange}
-                  fullWidth
-                  required
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <DatePicker
-                    label="Ngày nhập kho"
-                    value={editForm.importDate || null}
-                    onChange={handleEditImportDateChange}
-                    format="YYYY-MM-DD"
-                    slotProps={{ textField: { fullWidth: true, required: true } }}
-                  />
-                </LocalizationProvider>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Giá nhập (VND)"
-                  name="importPrice"
-                  type="number"
-                  value={editForm.importPrice || ''}
-                  onChange={handleEditChange}
-                  fullWidth
-                  required
-                  inputProps={{ min: 0, step: 0.01 }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Vị trí lưu trữ"
-                  name="storageLocation"
-                  value={editForm.storageLocation || ''}
-                  onChange={handleEditChange}
-                  fullWidth
-                  required
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth required>
-                  <InputLabel>Trạng thái</InputLabel>
-                  <Select
-                    name="status"
-                    value={editForm.status || ''}
-                    label="Trạng thái"
-                    onChange={handleEditChange}
-                  >
-                    <MenuItem value="ACTIVE">Hoạt động</MenuItem>
-                    <MenuItem value="INACTIVE">Không hoạt động</MenuItem>
-                    <MenuItem 
-                      value="EXPIRED" 
-                      disabled={editForm.expiryDate && dayjs(editForm.expiryDate).isAfter(dayjs(), 'day')}
-                      title={editForm.expiryDate && dayjs(editForm.expiryDate).isAfter(dayjs(), 'day') ? 'Không thể chọn "Hết hạn" khi hạn sử dụng còn trong tương lai' : ''}
-                    >
-                      Hết hạn
-                    </MenuItem>
-                    <MenuItem value="DAMAGED">Hư hỏng</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label="Nguồn cung cấp"
-                  name="source"
-                  value={editForm.source || ''}
-                  onChange={handleEditChange}
-                  fullWidth
-                  required
-                  placeholder="Ví dụ: Nhà cung cấp A, Bệnh viện B, v.v."
-                />
               </Grid>
             </Grid>
-            <DialogActions sx={{ mt: 2 }}>
-              <Button onClick={handleEditClose} variant="outlined">Hủy</Button>
-              <Button type="submit" variant="contained" color="primary" disabled={editLoading}>
-                {editLoading ? 'Đang cập nhật...' : 'Cập nhật'}
-              </Button>
-            </DialogActions>
-          </Box>
-        </DialogContent>
-      </Dialog>
-    </Box>
+          </CardContent>
+        </Card>
+        <Paper elevation={2}>
+          <TableContainer>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Tên</TableCell>
+                  <TableCell>Loại</TableCell>
+                  <TableCell>Số lô</TableCell>
+                  <TableCell>Nhà sản xuất</TableCell>
+                  <TableCell>Đơn vị</TableCell>
+                  <TableCell>Số lượng</TableCell>
+                  <TableCell>Hạn sử dụng</TableCell>
+                  <TableCell>Ngày nhập</TableCell>
+                  <TableCell>Giá nhập</TableCell>
+                  <TableCell>Vị trí</TableCell>
+                  <TableCell>Trạng thái</TableCell>
+                  <TableCell>Thao tác</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={12} align="center">
+                        <CircularProgress size={28} />
+                      </TableCell>
+                    </TableRow>
+                ) : filteredData.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={12} align="center">
+                        Không có dữ liệu
+                      </TableCell>
+                    </TableRow>
+                ) : (
+                    filteredData.map(item => (
+                        <TableRow key={item.itemId}>
+                          <TableCell>{item.name}</TableCell>
+                          <TableCell>
+                            {item.type === 'medical supplies' ? <Chip label="Vật tư y tế" color="primary" size="small" /> : <Chip label="Thuốc" color="success" size="small" />}
+                          </TableCell>
+                          <TableCell>{item.batchNumber || 'N/A'}</TableCell>
+                          <TableCell>{item.manufacturer || 'N/A'}</TableCell>
+                          <TableCell>{item.unit}</TableCell>
+                          <TableCell>{item.quantity}</TableCell>
+                          <TableCell>{formatDate(item.expiryDate)}</TableCell>
+                          <TableCell>{formatDate(item.importDate) || formatDateTime(item.createdAt)}</TableCell>
+                          <TableCell>{item.importPrice ? `${item.importPrice.toLocaleString()} VND` : 'N/A'}</TableCell>
+                          <TableCell>{item.storageLocation || 'N/A'}</TableCell>
+                          <TableCell>
+                            <Chip
+                                label={getStatusLabel(item.status)}
+                                color={getStatusColor(item.status)}
+                                size="small"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Button variant="outlined" size="small" onClick={() => handleEditOpen(item)}>
+                              Cập nhật
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                    ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+
+        {/* Dialog cập nhật */}
+        <Dialog open={editOpen} onClose={handleEditClose} maxWidth="sm" fullWidth>
+          <DialogTitle>Cập nhật vật tư/thuốc</DialogTitle>
+          <DialogContent dividers>
+            {editError && <Alert severity="error" sx={{ mb: 2 }}>{editError}</Alert>}
+            {editSuccess && <Alert severity="success" sx={{ mb: 2 }}>{editSuccess}</Alert>}
+            <Box component="form" onSubmit={handleEditSubmit} sx={{ mt: 1 }}>
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <TextField
+                      label="Tên vật tư/thuốc"
+                      name="name"
+                      value={editForm.name || ''}
+                      onChange={handleEditChange}
+                      fullWidth
+                      required
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <FormControl fullWidth required>
+                    <InputLabel>Loại</InputLabel>
+                    <Select
+                        name="type"
+                        value={editForm.type || ''}
+                        label="Loại"
+                        onChange={handleEditChange}
+                    >
+                      <MenuItem value="medical supplies">Vật tư y tế</MenuItem>
+                      <MenuItem value="medicine">Thuốc</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                      label="Đơn vị"
+                      name="unit"
+                      value={editForm.unit || ''}
+                      onChange={handleEditChange}
+                      fullWidth
+                      required
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                      label="Số lượng"
+                      name="quantity"
+                      type="number"
+                      value={editForm.quantity || ''}
+                      onChange={handleEditChange}
+                      fullWidth
+                      required
+                      inputProps={{ min: 1 }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                      label="Tồn kho tối thiểu"
+                      name="minStockLevel"
+                      type="number"
+                      value={editForm.minStockLevel || ''}
+                      onChange={handleEditChange}
+                      fullWidth
+                      inputProps={{ min: 0 }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <DatePicker
+                        label="Hạn sử dụng"
+                        value={editForm.expiryDate || null}
+                        onChange={handleEditDateChange}
+                        format="YYYY-MM-DD"
+                        slotProps={{ textField: { fullWidth: true, required: true } }}
+                    />
+                  </LocalizationProvider>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                      label="Số lô"
+                      name="batchNumber"
+                      value={editForm.batchNumber || ''}
+                      onChange={handleEditChange}
+                      fullWidth
+                      required
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                      label="Nhà sản xuất"
+                      name="manufacturer"
+                      value={editForm.manufacturer || ''}
+                      onChange={handleEditChange}
+                      fullWidth
+                      required
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <DatePicker
+                        label="Ngày nhập kho"
+                        value={editForm.importDate || null}
+                        onChange={handleEditImportDateChange}
+                        format="YYYY-MM-DD"
+                        slotProps={{ textField: { fullWidth: true, required: true } }}
+                    />
+                  </LocalizationProvider>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                      label="Giá nhập (VND)"
+                      name="importPrice"
+                      type="number"
+                      value={editForm.importPrice || ''}
+                      onChange={handleEditChange}
+                      fullWidth
+                      required
+                      inputProps={{ min: 0, step: 0.01 }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                      label="Vị trí lưu trữ"
+                      name="storageLocation"
+                      value={editForm.storageLocation || ''}
+                      onChange={handleEditChange}
+                      fullWidth
+                      required
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth required>
+                    <InputLabel>Trạng thái</InputLabel>
+                    <Select
+                        name="status"
+                        value={editForm.status || ''}
+                        label="Trạng thái"
+                        onChange={handleEditChange}
+                    >
+                      <MenuItem value="ACTIVE">Hoạt động</MenuItem>
+                      <MenuItem value="INACTIVE">Không hoạt động</MenuItem>
+                      <MenuItem
+                          value="EXPIRED"
+                          disabled={editForm.expiryDate && dayjs(editForm.expiryDate).isAfter(dayjs(), 'day')}
+                          title={editForm.expiryDate && dayjs(editForm.expiryDate).isAfter(dayjs(), 'day') ? 'Không thể chọn "Hết hạn" khi hạn sử dụng còn trong tương lai' : ''}
+                      >
+                        Hết hạn
+                      </MenuItem>
+                      <MenuItem value="DAMAGED">Hư hỏng</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                      label="Nguồn cung cấp"
+                      name="source"
+                      value={editForm.source || ''}
+                      onChange={handleEditChange}
+                      fullWidth
+                      required
+                      placeholder="Ví dụ: Nhà cung cấp A, Bệnh viện B, v.v."
+                  />
+                </Grid>
+              </Grid>
+              <DialogActions sx={{ mt: 2 }}>
+                <Button onClick={handleEditClose} variant="outlined">Hủy</Button>
+                <Button type="submit" variant="contained" color="primary" disabled={editLoading}>
+                  {editLoading ? 'Đang cập nhật...' : 'Cập nhật'}
+                </Button>
+              </DialogActions>
+            </Box>
+          </DialogContent>
+        </Dialog>
+      </Box>
   );
 };
 
