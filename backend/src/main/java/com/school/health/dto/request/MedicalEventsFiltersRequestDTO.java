@@ -12,6 +12,7 @@ import java.util.List;
 public class MedicalEventsFiltersRequestDTO {
     private Integer stuId;
     private String eventType;
+    private String searchTerm; // Search in title, student name, or description
 
 //    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
     private LocalDateTime  from;

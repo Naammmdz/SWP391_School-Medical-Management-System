@@ -116,7 +116,7 @@ public class MedicalEventsServiceImpl implements MedicalEvents {
     @Override
     public List<MedicalEventsResponseDTO> getAllMedicalEvents(MedicalEventsFiltersRequestDTO filters) {
         List<MedicalEvent> list = medicalEventsRepository.findByFilter(
-                filters.getFrom(), filters.getTo(), filters.getEventType(), filters.getStuId(), filters.getCreatedBy(), filters.getStatus()
+                filters.getFrom(), filters.getTo(), filters.getEventType(), filters.getStuId(), filters.getCreatedBy(), filters.getStatus(), filters.getSearchTerm()
         );
         return list.stream()
                 .map(this::mapToResponseDTO)

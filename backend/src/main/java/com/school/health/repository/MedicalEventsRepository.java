@@ -24,9 +24,13 @@ public interface MedicalEventsRepository extends JpaRepository<MedicalEvent, Int
         AND (:eventType IS NULL OR m.eventType LIKE CONCAT('%', :eventType, '%'))
         AND (:stuId IS NULL OR s.studentId  = :stuId)
         AND (:createBy IS NULL OR m.createdBy.userId = :createBy)
-         AND (:status IS NULL OR m.status = :status)  
+        AND (:status IS NULL OR m.status = :status)
+        AND (:searchTerm IS NULL OR 
+             m.title LIKE CONCAT('%', :searchTerm, '%') OR 
+             s.fullName LIKE CONCAT('%', :searchTerm, '%') OR
+             m.description LIKE CONCAT('%', :searchTerm, '%'))
     """)
-    List<MedicalEvent> findByFilter(LocalDateTime from, LocalDateTime to, String eventType, Integer stuId, Integer createBy, MedicalEventStatus status);
+    List<MedicalEvent> findByFilter(LocalDateTime from, LocalDateTime to, String eventType, Integer stuId, Integer createBy, MedicalEventStatus status, String searchTerm);
 
     Optional<MedicalEvent> findById(Integer id);
 

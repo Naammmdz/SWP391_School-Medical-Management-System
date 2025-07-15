@@ -767,7 +767,6 @@ const MedicalEvents = () => {
     handleInventoryItemSelection(itemId, 1);
     closeInventorySearchModal();
   };
-
   // Xử lý thay đổi filter
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -775,6 +774,19 @@ const MedicalEvents = () => {
     // Handle UI filters
     if (name === 'searchTerm' || name === 'fromDate' || name === 'toDate') {
       setUIFilters({...uiFilters, [name]: value});
+      
+      // Auto-apply filters when search term changes (with debounce)
+      if (name === 'searchTerm') {
+        // Clear existing timeout
+        if (window.searchTimeout) {
+          clearTimeout(window.searchTimeout);
+        }
+        
+        // Set new timeout for auto-search
+        window.searchTimeout = setTimeout(() => {
+          applyFilters();
+        }, 300); // 300ms debounce
+      }
     } else {
       // Handle DTO filters
       const updatedFilters = {...filters};
@@ -787,17 +799,21 @@ const MedicalEvents = () => {
       setFilters(updatedFilters);
     }
   };
-  
   // Apply filters function
   const applyFilters = () => {
     const filterParams = {...filters};
     
     // Convert UI date filters to DTO format
-if (uiFilters.fromDate) {
+    if (uiFilters.fromDate) {
       filterParams.from = `${uiFilters.fromDate}T00:00:00`;
     }
-if (uiFilters.toDate) {
+    if (uiFilters.toDate) {
       filterParams.to = `${uiFilters.toDate}T23:59:59`;
+    }
+    
+    // Add search term to filter params
+    if (uiFilters.searchTerm && uiFilters.searchTerm.trim() !== '') {
+      filterParams.searchTerm = uiFilters.searchTerm.trim();
     }
     
     // Remove empty filters
@@ -900,10 +916,17 @@ if (uiFilters.toDate) {
 
   // Lấy danh sách khi component mount
   useEffect(() => {
-fetchMedicalEvents();
+    fetchMedicalEvents();
     fetchAllStudents();
     fetchAvailableClasses();
     fetchInventoryItems();
+    
+    // Cleanup timeout on unmount
+    return () => {
+      if (window.searchTimeout) {
+        clearTimeout(window.searchTimeout);
+      }
+    };
   }, []);
 
   return (
@@ -1695,3 +1718,7 @@ fetchMedicalEvents();
 };
 
 export default MedicalEvents;
+
+
+
+
