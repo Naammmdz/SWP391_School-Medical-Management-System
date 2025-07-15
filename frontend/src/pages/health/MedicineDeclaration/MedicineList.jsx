@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import MedicineDeclarationService from "../../../services/MedicineDeclarationService";
+import StudentService from "../../../services/StudentService";
 import { Card, Modal, Image, Typography, Spin, Alert, Empty, Button, Popconfirm, message, Row, Col, Badge, Divider, Space, Tag } from "antd";
 import { UserOutlined, FileTextOutlined, DeleteOutlined, PlusOutlined, CalendarOutlined, ClockCircleOutlined, MedicineBoxOutlined, CheckCircleOutlined, CloseCircleOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
@@ -35,13 +36,37 @@ const MedicineList = () => {
   const [logModalOpen, setLogModalOpen] = useState(false);
   const [medicineLog, setMedicineLog] = useState(null);
   const [logLoading, setLogLoading] = useState(false);
+  const [studentInfo, setStudentInfo] = useState(null);
+  const [studentLoading, setStudentLoading] = useState(false);
 
   const navigate = useNavigate();
 
-  // Lấy studentId từ localStorage (phụ huynh đã chọn con ở ParentPages.jsx)
-  const studentId = localStorage.getItem("selectedStudentId");
-  const students = JSON.parse(localStorage.getItem("students") || "[]");
-  const student = students.find(s => String(s.studentId) === String(studentId));
+  // Lấy studentId từ URL params hoặc localStorage
+  const urlParams = new URLSearchParams(window.location.search);
+  const studentId = urlParams.get('studentId') || localStorage.getItem("selectedStudentId");
+
+  // Fetch thông tin học sinh từ API
+  const fetchStudentInfo = async () => {
+    if (!studentId) return;
+    
+    setStudentLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      
+      // Fetch tất cả học sinh và tìm học sinh theo ID
+      const response = await StudentService.getAllStudents(config);
+      const students = Array.isArray(response.data) ? response.data : [];
+      const student = students.find(s => String(s.studentId) === String(studentId));
+      
+      setStudentInfo(student || null);
+      console.log("Found student info:", student);
+    } catch (error) {
+      console.error("Error fetching student info:", error);
+      setStudentInfo(null);
+    }
+    setStudentLoading(false);
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -60,6 +85,7 @@ const MedicineList = () => {
   useEffect(() => {
     if (studentId) {
       fetchData();
+      fetchStudentInfo();
     } else {
       setMedicineList([]);
       setLoading(false);
@@ -290,7 +316,7 @@ const MedicineList = () => {
           type="primary"
           icon={<PlusOutlined />}
           size="large"
-          onClick={() => navigate("/khaibaothuoc")}
+          onClick={() => navigate("/parent/khaibaothuoc")}
           style={{ borderRadius: 8, height: 40 }}
         >
           Gửi đơn thuốc mới
@@ -298,7 +324,7 @@ const MedicineList = () => {
       </div>
 
       {/* Thông tin học sinh */}
-      {student ? (
+      {studentInfo ? (
         <Card
           style={{ 
             marginBottom: 32, 
@@ -322,14 +348,26 @@ const MedicineList = () => {
               <UserOutlined style={{ fontSize: 40, color: "white" }} />
             </div>
             <div>
-              <Title level={3} style={{ margin: 0, color: "white" }}>{student.fullName}</Title>
+              <Title level={3} style={{ margin: 0, color: "white" }}>{studentInfo.fullName}</Title>
               <Text style={{ color: "rgba(255,255,255,0.9)", fontSize: 16 }}>
-                <strong>Lớp:</strong> {student.className} | 
-                <strong> Ngày sinh:</strong> {formatDate(student.dob || student.yob)} | 
-                <strong> Giới tính:</strong> {student.gender === "Male" ? "Nam" : "Nữ"}
+                <strong>Lớp:</strong> {
+                  studentInfo.className || 
+                  studentInfo.class || 
+                  studentInfo.classroom || 
+                  studentInfo.grade || 
+                  studentInfo.classroomName ||
+                  studentInfo.academicYear ||
+                  "Chưa cập nhật"
+                } | 
+                <strong> Ngày sinh:</strong> {formatDate(studentInfo.dob || studentInfo.yob)} | 
+                <strong> Giới tính:</strong> {studentInfo.gender === "Male" ? "Nam" : "Nữ"}
               </Text>
             </div>
           </div>
+        </Card>
+      ) : studentLoading ? (
+        <Card style={{ marginBottom: 32, textAlign: "center", padding: "20px" }}>
+          <Spin /> <Text style={{ marginLeft: 8 }}>Đang tải thông tin học sinh...</Text>
         </Card>
       ) : null}
 
@@ -398,39 +436,97 @@ const MedicineList = () => {
           </div>
         ) : medicineLog && Array.isArray(medicineLog.medicineLogs) && medicineLog.medicineLogs.length > 0 ? (
           <div>
-            {medicineLog.medicineLogs.map((log, idx) => (
-              <Card
-                key={log.id || idx}
-                style={{ marginBottom: 16, borderRadius: 12 }}
-                title={
-                  <span style={{ color: "#15803d", fontWeight: 600 }}>
-                    <CheckCircleOutlined style={{ marginRight: 8 }} />
-                    Lần uống thuốc {idx + 1}
-                  </span>
+            {medicineLog.medicineLogs.map((log, idx) => {
+              // Handle new status logic: true = given, false = not given, null = default
+              const isGiven = log.status === true;
+              const isNotGiven = log.status === false;
+              const isDefault = log.status === null || log.status === undefined;
+              
+              // Get status display info
+              const getStatusInfo = () => {
+                if (isGiven) {
+                  return {
+                    icon: <CheckCircleOutlined style={{ marginRight: 8 }} />,
+                    text: "Đã uống thuốc",
+                    color: "#52c41a",
+                    bgColor: "#f6ffed",
+                    borderColor: "#b7eb8f"
+                  };
+                } else if (isNotGiven) {
+                  return {
+                    icon: <CloseCircleOutlined style={{ marginRight: 8 }} />,
+                    text: "Không uống thuốc",
+                    color: "#ff4d4f",
+                    bgColor: "#fff2f0",
+                    borderColor: "#ffccc7"
+                  };
+                } else {
+                  return {
+                    icon: <ExclamationCircleOutlined style={{ marginRight: 8 }} />,
+                    text: "Chưa ghi nhận",
+                    color: "#faad14",
+                    bgColor: "#fff7e6",
+                    borderColor: "#ffd591"
+                  };
                 }
-              >
-                <Row gutter={[16, 12]}>
-                  <Col span={12}>
-                    <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
-                      <UserOutlined style={{ color: "#52c41a", marginRight: 8 }} />
-                      <Text strong>Người cho uống:</Text>
-                    </div>
-                    <Text>{log.givenByName || <Text type="secondary">---</Text>}</Text>
-                  </Col>
-                  <Col span={12}>
-                    <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
-                      <CalendarOutlined style={{ color: "#15803d", marginRight: 8 }} />
-                      <Text strong>Ngày giờ uống:</Text>
-                    </div>
-                    <Text>
-                      {log.givenAt
-                        ? Array.isArray(log.givenAt)
-                          ? new Date(log.givenAt[0], log.givenAt[1] - 1, log.givenAt[2]).toLocaleDateString("vi-VN")
-                          : new Date(log.givenAt).toLocaleString("vi-VN")
-                        : <Text type="secondary">---</Text>}
-                    </Text>
-                  </Col>
-                </Row>
+              };
+              
+              const statusInfo = getStatusInfo();
+              
+              return (
+                <Card
+                  key={log.id || idx}
+                  style={{ 
+                    marginBottom: 16, 
+                    borderRadius: 12,
+                    border: `1px solid ${statusInfo.borderColor}`,
+                    backgroundColor: statusInfo.bgColor
+                  }}
+                  title={
+                    <span style={{ color: statusInfo.color, fontWeight: 600 }}>
+                      {statusInfo.icon}
+                      {statusInfo.text} - Ngày {idx + 1}
+                    </span>
+                  }
+                >
+                  <Row gutter={[16, 12]}>
+                    <Col span={12}>
+                      <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
+                        <UserOutlined style={{ color: statusInfo.color, marginRight: 8 }} />
+                        <Text strong>Người ghi nhận:</Text>
+                      </div>
+                      <Text>{log.givenByName || <Text type="secondary">---</Text>}</Text>
+                    </Col>
+                    <Col span={12}>
+                      <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
+                        <CalendarOutlined style={{ color: statusInfo.color, marginRight: 8 }} />
+                        <Text strong>Ngày ghi nhận:</Text>
+                      </div>
+                      <Text>
+                        {log.givenAt
+                          ? Array.isArray(log.givenAt)
+                            ? new Date(log.givenAt[0], log.givenAt[1] - 1, log.givenAt[2]).toLocaleDateString("vi-VN")
+                            : new Date(log.givenAt).toLocaleString("vi-VN")
+                          : <Text type="secondary">---</Text>}
+                      </Text>
+                    </Col>
+                  </Row>
+                  
+                  {/* Status badge */}
+                  <div style={{ marginTop: 12, marginBottom: 8 }}>
+                    <span style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      padding: '4px 12px',
+                      borderRadius: '6px',
+                      backgroundColor: statusInfo.color,
+                      color: 'white',
+                      fontSize: '12px',
+                      fontWeight: 600
+                    }}>
+                      {statusInfo.text}
+                    </span>
+                  </div>
                 
                 {log.notes && (
                   <div style={{ marginTop: 12 }}>
@@ -455,8 +551,9 @@ const MedicineList = () => {
                     />
                   </div>
                 )}
-              </Card>
-            ))}
+                </Card>
+              );
+            })}
           </div>
         ) : (
           <Alert 

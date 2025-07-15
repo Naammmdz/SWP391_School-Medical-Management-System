@@ -27,7 +27,8 @@ const CreateUser = () => {
   const roles = [
     { value: 'ADMIN', label: 'Admin' },
     { value: 'NURSE', label: 'Nhân viên y tế' },
-    { value: 'PARENT', label: 'Phụ huynh' }
+    { value: 'PARENT', label: 'Phụ huynh' },
+    { value: 'PRINCIPAL', label: 'Hiệu trưởng' }
   ];
 
   // Handle form input changes
@@ -276,11 +277,13 @@ const CreateUser = () => {
             <Col>
               <Space size={16}>
                 <Button
-                  onClick={resetForm}
+                  onClick={() => {
+                    resetForm();
+                    navigate('/danhsachnguoidung');
+                  }}
                   icon={<CloseOutlined />}
                   size="large"
                   style={{ borderRadius: 8, minWidth: 120 }}
-                  // Return to user list
                 >
                   Hủy
                 </Button>

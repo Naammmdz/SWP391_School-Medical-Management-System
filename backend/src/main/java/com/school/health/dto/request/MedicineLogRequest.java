@@ -14,4 +14,6 @@ public class MedicineLogRequest {
 //    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
     private LocalDate givenAt;
     private String notes;
+    private Boolean status; // true = đã cho uống, false = chưa cho uống
+
 }

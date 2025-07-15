@@ -21,7 +21,8 @@ import {
   BookOutlined,
   ArrowRightOutlined,
   MenuOutlined,
-  TrophyOutlined
+  TrophyOutlined,
+  AlertOutlined
 } from '@ant-design/icons';
 import studentService from '../../services/StudentService';
 import './ParentMainPage.css';
@@ -92,12 +93,12 @@ const ParentMainPage = () => {
     },
     {
       id: 'medicine',
-      title: 'Quản lý thuốc',
-      subtitle: 'Khai báo và theo dõi thuốc',
+      title: 'Gửi thuốc',
+      subtitle: 'Gửi và theo dõi thuốc',
       icon: '💊',
       gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
       shadowColor: 'rgba(240, 147, 251, 0.3)',
-      path: '/parent/khaibaothuoc',
+      path: '/parent/donthuocdagui',
       priority: 'high'
     },
     {
@@ -140,6 +141,16 @@ const ParentMainPage = () => {
       gradient: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
       shadowColor: 'rgba(168, 237, 234, 0.3)',
       path: '/parent/kiemtradinhkyhocsinh',
+      priority: 'medium'
+    },
+     {
+      id: 'schedule',
+      title: 'Sự kiện y tế',
+      subtitle: 'Theo dõi sự kiện y tế',
+      icon: <AlertOutlined style={{ fontSize: 28, color: '#d4380d' }} />, 
+      gradient: 'linear-gradient(135deg,rgb(23, 144, 138) 0%, #fed6e3 100%)',
+      shadowColor: 'rgba(168, 237, 234, 0.3)',
+      path: '/parent/sukienytehocsinh',
       priority: 'medium'
     }
   ];

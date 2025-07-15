@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import './MedicalEvents.css';
 import MedicalEventService from '../../../services/MedicalEventService';
 import studentService from '../../../services/StudentService';
 import StudentSelectionModal from '../../../components/StudentSelectionModal';
@@ -470,6 +469,7 @@ const MedicalEvents = () => {
       
       setLoading(false);
     }
+    setRelatedItemUsed(updated);
   };
 
 
@@ -570,9 +570,10 @@ const MedicalEvents = () => {
     setModalOpen(true);
   };
 
-  // Xử lý submit form
-  const handleSubmit = (e) => {
+
+  const handleSubmit = async e => {
     e.preventDefault();
+
     
     console.log('=== FORM VALIDATION ===');
     console.log('Current Event:', currentEvent);
@@ -650,7 +651,38 @@ const MedicalEvents = () => {
       updateMedicalEvent(currentEvent.id, currentEvent);
     } else {
       addMedicalEvent(currentEvent);
+
     }
+    if (Object.keys(quantityErrors).length > 0) {
+      setPopup({ open: true, message: 'Có thuốc/vật tư vượt quá số lượng tồn kho!' });
+      return;
+    }
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      const payload = {
+        ...form,
+        stuId: selectedStudents,
+        relatedItemUsed: validItems.map(item => ({
+          ...item,
+          itemId: Number(item.itemId)
+        })),
+        eventDate: new Date(form.eventDate).toISOString()
+      };
+      console.log('Submitting medical event:', payload);
+      await MedicalEventService.createMedicalEvent(payload, config);
+      setPopup({ open: true, message: 'Tạo sự kiện y tế thành công!' });
+      setForm({
+        title: '', eventType: '', eventDate: new Date().toISOString().split('T')[0],
+        location: '', description: '', notes: '', handlingMeasures: '', severityLevel: 'MINOR', status: 'PROCESSING'
+      });
+      setSelectedStudents([]);
+      setRelatedItemUsed([]);
+    } catch (err) {
+      setPopup({ open: true, message: 'Có lỗi khi tạo sự kiện y tế!' });
+    }
+    setLoading(false);
   };
 
   // Xử lý thay đổi input
@@ -1000,8 +1032,9 @@ const MedicalEvents = () => {
           setModalOpen(true);
         }}
       >
-        Thêm sự cố y tế
+        Xem danh sách sự kiện y tế
       </button>
+
 
       {/* Bảng danh sách sự cố */}
       {loading ? (
@@ -1710,9 +1743,16 @@ const MedicalEvents = () => {
                 )}
               </div>
             </div>
+
           </div>
         </div>
-      )}
+        <button type="submit" disabled={loading || Object.keys(quantityErrors).length > 0} style={{ width: '100%', padding: 12, background: '#43a047', color: '#fff', fontWeight: 600, fontSize: 18, border: 'none', borderRadius: 6, cursor: 'pointer', transition: 'filter 0.2s' }}
+          onMouseOver={e => e.currentTarget.style.filter = 'brightness(1.1)'}
+          onMouseOut={e => e.currentTarget.style.filter = 'none'}>
+          {loading ? 'Đang gửi...' : 'Tạo sự kiện'}
+        </button>
+      </form>
+      {popup.open && <Popup message={popup.message} onClose={() => setPopup({ open: false, message: '' })} />}
     </div>
   );
 };

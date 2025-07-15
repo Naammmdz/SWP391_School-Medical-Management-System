@@ -85,6 +85,7 @@ public class StudentServiceImpl implements StudentService {
         dto.setParentId(student.getParent().getUserId());
         dto.setCreatedAt(student.getCreatedAt());
         dto.setActive(student.isActive());
+        dto.setPhone(student.getParent().getPhone());
         return dto;
     }
 

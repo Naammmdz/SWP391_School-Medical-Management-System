@@ -27,7 +27,8 @@ const roles = [
   { value: '', label: 'Vai trò' },
   { value: 'ADMIN', label: 'Admin' },
   { value: 'NURSE', label: 'Nhân viên y tế' },
-  { value: 'PARENT', label: 'Phụ huynh' }
+  { value: 'PARENT', label: 'Phụ huynh' },
+  { value: 'PRINCIPAL', label: 'Hiệu trưởng' }
 ];
 
 const sortOptions = [
@@ -213,15 +214,17 @@ const UserList = () => {
         </Col>
         <Col>
           <Space>
-            <Button
-              type="primary"
-              icon={<UserAddOutlined />}
-              size="large"
-              onClick={navigateToCreateUser}
-              style={{ borderRadius: 8 }}
-            >
-              Thêm người dùng
-            </Button>
+            {user.userRole === 'ROLE_ADMIN' && (
+              <Button
+                type="primary"
+                icon={<UserAddOutlined />}
+                size="large"
+                onClick={navigateToCreateUser}
+                style={{ borderRadius: 8 }}
+              >
+                Thêm người dùng
+              </Button>
+            )}
             {user.userRole === 'ROLE_PARENT' && (
               <Button
                 type="default"

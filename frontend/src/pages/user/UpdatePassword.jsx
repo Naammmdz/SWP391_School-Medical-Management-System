@@ -40,7 +40,7 @@ const UpdatePassword = () => {
         .then(() => {
             setUpdateSuccess(true);
             let redirectPath = '/';
-            if (user?.userRole === 'ROLE_ADMIN') redirectPath = '/admin';
+            if (user?.userRole === 'ROLE_ADMIN' || user?.userRole === 'ROLE_PRINCIPAL') redirectPath = '/admin';
             else if (user?.userRole === 'ROLE_PARENT') redirectPath = '/parent';
             else if (user?.userRole === 'ROLE_NURSE') redirectPath = '/nurse';
             setTimeout(() => navigate(redirectPath), 1500);

@@ -10,6 +10,7 @@ const { Title, Text } = Typography;
 const UpdateUserByAdmin = () => {
   const navigate = useNavigate();
   const { userId } = useParams();
+  const [form] = Form.useForm();
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
   const [currentUser, setCurrentUser] = useState({
@@ -91,14 +92,13 @@ const UpdateUserByAdmin = () => {
   };
 
   // Update user
-  const updateUser = async (e) => {
-    e.preventDefault();
+  const updateUser = async (values) => {
     try {
       const token = localStorage.getItem('token');
       const updateRequest = {};
-      if (currentUser.fullName) updateRequest.fullName = currentUser.fullName;
-      if (currentUser.email) updateRequest.email = currentUser.email;
-      if (currentUser.phone) updateRequest.phone = currentUser.phone;
+      if (values.fullName) updateRequest.fullName = values.fullName;
+      if (values.email) updateRequest.email = values.email;
+      if (values.phone) updateRequest.phone = values.phone;
 
       await userService.updateUser(currentUser.id, updateRequest, {
         headers: {
@@ -120,6 +120,10 @@ const UpdateUserByAdmin = () => {
   useEffect(() => {
     fetchUserData();
   }, [userId]);
+
+  useEffect(() => {
+    form.setFieldsValue(currentUser);
+  }, [currentUser, form]);
 
   return (
     <div style={{ maxWidth: 800, margin: '0 auto', padding: 24 }}>
@@ -168,14 +172,11 @@ const UpdateUserByAdmin = () => {
           </Space>
         }
       >
-        <Form layout="vertical" onFinish={updateUser}>
+        <Form form={form} layout="vertical" onFinish={updateUser} initialValues={currentUser}>
           <Row gutter={[24, 16]}>
             <Col xs={24} sm={12}>
-              <Form.Item label="Họ và tên" required>
+              <Form.Item label="Họ và tên" name="fullName" required>
                 <Input
-                  name="fullName"
-                  value={currentUser.fullName}
-                  onChange={handleInputChange}
                   size="large"
                   placeholder="Nhập họ và tên"
                   prefix={<UserOutlined style={{ color: '#8c8c8c' }} />}
@@ -185,11 +186,8 @@ const UpdateUserByAdmin = () => {
               </Form.Item>
             </Col>
             <Col xs={24} sm={12}>
-              <Form.Item label="Số điện thoại" required>
+              <Form.Item label="Số điện thoại" name="phone" required>
                 <Input
-                  name="phone"
-                  value={currentUser.phone}
-                  onChange={handleInputChange}
                   size="large"
                   placeholder="Nhập số điện thoại"
                   prefix={<PhoneOutlined style={{ color: '#8c8c8c' }} />}
@@ -199,11 +197,8 @@ const UpdateUserByAdmin = () => {
               </Form.Item>
             </Col>
             <Col xs={24} sm={12}>
-              <Form.Item label="Email" required>
+              <Form.Item label="Email" name="email" required>
                 <Input
-                  name="email"
-                  value={currentUser.email}
-                  onChange={handleInputChange}
                   size="large"
                   placeholder="Nhập email"
                   prefix={<MailOutlined style={{ color: '#8c8c8c' }} />}

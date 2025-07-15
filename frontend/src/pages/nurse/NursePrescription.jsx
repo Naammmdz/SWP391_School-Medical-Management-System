@@ -12,6 +12,7 @@ import {
   CheckOutlined, CloseOutlined, HourglassOutlined
 } from '@ant-design/icons';
 import MedicineDeclarationService from '../../services/MedicineDeclarationService';
+import studentService from '../../services/StudentService';
 import dayjs from 'dayjs';
 import { useNavigate } from 'react-router-dom';
 
@@ -59,6 +60,29 @@ const MedicineDeclarationsList = () => {
   const isParent = user.userRole === 'ROLE_PARENT';
   const isNurse = user.userRole === 'ROLE_NURSE';
 
+  // Fetch student information to get class names
+  const fetchStudentInfo = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      const response = await studentService.getAllStudents(config);
+      
+      if (response.data && Array.isArray(response.data)) {
+        const map = {};
+        response.data.forEach(student => {
+          if (student.studentId && student.className) {
+            map[student.studentId] = student.className;
+          }
+        });
+        console.log('Student class map from API:', map);
+        setStudentClassMap(prevMap => ({ ...prevMap, ...map }));
+}
+    } catch (error) {
+      console.log('Could not fetch student information:', error);
+      // Không hiển thị lỗi cho user vì đây là thông tin bổ sung
+    }
+  };
+
   // Lấy thông tin lớp học từ localStorage
   useEffect(() => {
     const students = JSON.parse(localStorage.getItem('students') || '[]');
@@ -67,6 +91,9 @@ const MedicineDeclarationsList = () => {
       map[s.studentId] = s.className;
     });
     setStudentClassMap(map);
+    
+    // Cố gắng lấy thêm thông tin từ API
+    fetchStudentInfo();
   }, []);
 
   // Calculate statistics
@@ -129,12 +156,15 @@ const MedicineDeclarationsList = () => {
     // Filter by search text
     if (search) {
       const searchLower = search.toLowerCase();
-      filtered = filtered.filter(item =>
-        item.studentName?.toLowerCase().includes(searchLower) ||
-        item.parentName?.toLowerCase().includes(searchLower) ||
-        item.instruction?.toLowerCase().includes(searchLower) ||
-        studentClassMap[item.studentId]?.toLowerCase().includes(searchLower)
-      );
+      filtered = filtered.filter(item => {
+        const className = item.className || 
+                         item.studentClassName || 
+                         studentClassMap[item.studentId] || '';
+return item.studentName?.toLowerCase().includes(searchLower) ||
+               item.parentName?.toLowerCase().includes(searchLower) ||
+               item.instruction?.toLowerCase().includes(searchLower) ||
+               className.toLowerCase().includes(searchLower);
+      });
     }
 
     // Filter by status (this is the additional status filter, not tab-based)
@@ -165,6 +195,13 @@ const MedicineDeclarationsList = () => {
       const config = { headers: { Authorization: `Bearer ${token}` } };
       const data = await MedicineDeclarationService.getMedicineSubmissions(config);
       const submissions = Array.isArray(data) ? data : [];
+      
+      // Log để kiểm tra dữ liệu
+      console.log('Medicine submissions data:', submissions);
+      if (submissions.length > 0) {
+        console.log('Sample submission:', submissions[0]);
+      }
+      
       setSubmissions(submissions);
       calculateStatistics(submissions);
       filterSubmissions(submissions, searchText, statusFilter, dateFilter, activeTab);
@@ -212,7 +249,7 @@ const MedicineDeclarationsList = () => {
       message.success('Cập nhật trạng thái thành công!');
       fetchData();
     } catch (err) {
-      message.error('Cập nhật trạng thái thất bại!');
+message.error('Cập nhật trạng thái thất bại!');
     }
   };
 
@@ -258,6 +295,12 @@ const MedicineDeclarationsList = () => {
       key: 'studentName',
       render: (text, record) => {
         const priorityColor = getPriorityColor(record);
+        // Lấy thông tin lớp học từ nhiều nguồn khác nhau
+        const className = record.className || 
+                         record.studentClassName || 
+                         studentClassMap[record.studentId] || 
+                         'Không xác định';
+        
         return (
           <div style={{ position: 'relative' }}>
             {priorityColor && (
@@ -283,7 +326,7 @@ const MedicineDeclarationsList = () => {
                 <Text strong style={{ fontSize: 14 }}>{text}</Text>
                 <br />
                 <Tag color="blue" size="small">
-                  {studentClassMap[record.studentId] || '---'}
+                  {className}
                 </Tag>
               </div>
             </Space>
@@ -310,7 +353,7 @@ const MedicineDeclarationsList = () => {
     },
     {
       title: 'Hướng dẫn & Thời gian',
-      key: 'instructionAndDuration',
+key: 'instructionAndDuration',
       render: (_, record) => (
         <div>
           <Paragraph 
@@ -396,7 +439,7 @@ const MedicineDeclarationsList = () => {
                 disabled={record.submissionStatus !== 'PENDING'}
               >
                 <Button
-                  icon={<DeleteOutlined />}
+icon={<DeleteOutlined />}
                   size="small"
                   type="link"
                   danger
@@ -483,7 +526,7 @@ const MedicineDeclarationsList = () => {
           {isParent ? 'Đơn thuốc của con em' : 'Quản lý đơn thuốc'}
         </Title>
         <Text type="secondary">
-          {isParent ? 'Theo dõi tình trạng đơn thuốc đã gửi' : 'Duyệt và quản lý đơn thuốc từ phụ huynh'}
+{isParent ? 'Theo dõi tình trạng đơn thuốc đã gửi' : 'Duyệt và quản lý đơn thuốc từ phụ huynh'}
         </Text>
       </div>
 
@@ -560,7 +603,7 @@ const MedicineDeclarationsList = () => {
           </Col>
           <Col xs={24} sm={12} md={6}>
             <RangePicker
-              placeholder={['Từ ngày', 'Đến ngày']}
+placeholder={['Từ ngày', 'Đến ngày']}
               value={dateFilter}
               onChange={setDateFilter}
               style={{ width: '100%' }}
@@ -649,7 +692,7 @@ const MedicineDeclarationsList = () => {
                   locale={{
                     emptyText: (
                       <Empty
-                        image={Empty.PRESENTED_IMAGE_SIMPLE}
+image={Empty.PRESENTED_IMAGE_SIMPLE}
                         description="Không có đơn thuốc đã duyệt"
                       />
                     )
@@ -737,7 +780,7 @@ const MedicineDeclarationsList = () => {
         title={
           <Space>
             <MedicineBoxOutlined style={{ color: '#1890ff' }} />
-            <span>Chi tiết đơn thuốc - {selectedSubmission?.studentName}</span>
+<span>Chi tiết đơn thuốc - {selectedSubmission?.studentName}</span>
           </Space>
         }
         open={detailModalVisible}
@@ -807,7 +850,7 @@ const MedicineDeclarationsList = () => {
                 <Text>{dayjs(selectedSubmission.endDate).format('DD/MM/YYYY')}</Text>
               </Descriptions.Item>
               <Descriptions.Item label="Thời gian sử dụng" span={2}>
-                <Tag color="purple">{selectedSubmission.duration} ngày</Tag>
+<Tag color="purple">{selectedSubmission.duration} ngày</Tag>
               </Descriptions.Item>
               <Descriptions.Item label="Hướng dẫn sử dụng" span={2}>
                 <Paragraph style={{ margin: 0 }}>

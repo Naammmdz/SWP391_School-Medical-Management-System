@@ -30,12 +30,18 @@ import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import InventoryService from '../../../services/InventoryService';
 import dayjs from 'dayjs';
+import { useNavigate } from 'react-router-dom';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
+import MedicationIcon from '@mui/icons-material/Medication';
 
 const typeOptions = [
   { value: '', label: 'Tất cả' },
   { value: 'medical supplies', label: 'Vật tư y tế' },
   { value: 'medicine', label: 'Thuốc' },
 ];
+
+const GREEN = '#15803d';
 
 const InventoryList = () => {
   const [data, setData] = useState([]);
@@ -47,6 +53,8 @@ const InventoryList = () => {
   const [editError, setEditError] = useState('');
   const [editSuccess, setEditSuccess] = useState('');
   const [editLoading, setEditLoading] = useState(false);
+  const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   // Status helper functions
   const getStatusLabel = (status) => {
@@ -80,6 +88,7 @@ const InventoryList = () => {
       const config = { headers: { Authorization: `Bearer ${token}` } };
       const res = await InventoryService.getInventoryList(config);
       setData(Array.isArray(res) ? res : []);
+      console.log('Fetched inventory data:', res);
     } catch (err) {
       setData([]);
     }
@@ -98,10 +107,15 @@ const InventoryList = () => {
     return matchName && matchType;
   });
 
-  const formatDate = (arr) => {
-    if (!arr || !Array.isArray(arr) || arr.length !== 3) return '';
-    const [y, m, d] = arr;
-    return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  // Lọc dữ liệu cho từng bảng
+  const medicalSupplies = filteredData.filter(item => item.type === 'medical supplies');
+  const medicines = filteredData.filter(item => item.type === 'medicine');
+
+  const formatDate = (str) => {
+    if (!str) return '';
+    const d = new Date(str);
+    if (isNaN(d)) return str; // fallback nếu không parse được
+    return d.toLocaleDateString('vi-VN');
   };
 
   const formatDateTime = (str) => {
@@ -229,12 +243,12 @@ const InventoryList = () => {
 
   return (
     <Box sx={{ maxWidth: 1100, mx: 'auto', mt: 4, mb: 4 }}>
-      <Card elevation={3} sx={{ mb: 3 }}>
+      <Card elevation={3} sx={{ mb: 3, borderRadius: 3, border: `2px solid ${GREEN}` }}>
         <CardContent>
-          <Typography variant="h5" gutterBottom>
-            Danh sách vật tư/thuốc trong kho
+          <Typography variant="h5" gutterBottom sx={{ color: GREEN, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <LocalHospitalIcon sx={{ color: GREEN }} /> Quản lý kho vật tư y tế & thuốc
           </Typography>
-          <Grid container spacing={2} sx={{ mb: 1 }}>
+          <Grid container spacing={2} sx={{ mb: 1 }} alignItems="center">
             <Grid item xs={12} sm={6} md={4}>
               <TextField
                 label="Tìm theo tên"
@@ -253,6 +267,7 @@ const InventoryList = () => {
                   name="type"
                   value={filter.type}
                   onChange={handleFilterChange}
+                  sx={{ minWidth: 200 }}
                 >
                   {typeOptions.map(opt => (
                     <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
@@ -260,6 +275,22 @@ const InventoryList = () => {
                 </Select>
               </FormControl>
             </Grid>
+            {(user.userRole === 'ROLE_ADMIN' || user.userRole === 'ROLE_NURSE') && (
+              <Grid item xs={12} sm={12} md={4} textAlign={{ xs: 'left', md: 'right' }}>
+                <Button
+                  variant="contained"
+                  startIcon={<AddCircleOutlineIcon />}
+                  sx={{
+                    minWidth: 180,
+                    background: GREEN,
+                    '&:hover': { background: '#10632e' }
+                  }}
+                  onClick={() => navigate('/themvattu')}
+                >
+                  Thêm thuốc/Vật tư
+                </Button>
+              </Grid>
+            )}
           </Grid>
         </CardContent>
       </Card>
@@ -288,19 +319,72 @@ const InventoryList = () => {
                   <TableCell colSpan={12} align="center">
                     <CircularProgress size={28} />
                   </TableCell>
+
                 </TableRow>
-              ) : filteredData.length === 0 ? (
+              </TableHead>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} align="center">
+                      <CircularProgress size={28} sx={{ color: GREEN }} />
+                    </TableCell>
+                  </TableRow>
+                ) : medicalSupplies.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} align="center">
+                      Không có dữ liệu
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  medicalSupplies.map(item => (
+                    <TableRow key={item.itemId} hover sx={{ '&:hover': { background: '#f1f8e9' } }}>
+                      <TableCell>{item.name}</TableCell>
+                      <TableCell>
+                        <Chip label="Vật tư y tế" sx={{ background: GREEN, color: '#fff' }} />
+                      </TableCell>
+                      <TableCell>{item.unit}</TableCell>
+                      <TableCell>{item.quantity}</TableCell>
+                      <TableCell>{formatDate(item.expiryDate)}</TableCell>
+                      <TableCell>{formatDateTime(item.createdAt)}</TableCell>
+                      <TableCell>
+                        <Button
+                          variant="contained"
+                          size="small"
+                          sx={{ background: GREEN, color: '#fff', '&:hover': { background: '#10632e' } }}
+                          onClick={() => handleEditOpen(item)}
+                        >
+                          Cập nhật
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </CardContent>
+      </Card>
+
+      {/* Thuốc */}
+      <Card elevation={2} sx={{ borderRadius: 3, border: '1.5px solid #43a047' }}>
+        <CardContent>
+          <Typography variant="h6" gutterBottom sx={{ color: '#43a047', display: 'flex', alignItems: 'center', gap: 1 }}>
+            <MedicationIcon sx={{ color: '#43a047' }} /> Danh sách thuốc
+          </Typography>
+          <TableContainer component={Paper}>
+            <Table size="small">
+              <TableHead sx={{ background: '#e8f5e9' }}>
                 <TableRow>
                   <TableCell colSpan={12} align="center">
                     Không có dữ liệu
                   </TableCell>
                 </TableRow>
-              ) : (
-                filteredData.map(item => (
-                  <TableRow key={item.itemId}>
-                    <TableCell>{item.name}</TableCell>
-                    <TableCell>
-                      {item.type === 'medical supplies' ? <Chip label="Vật tư y tế" color="primary" size="small" /> : <Chip label="Thuốc" color="success" size="small" />}
+              </TableHead>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} align="center">
+                      <CircularProgress size={28} sx={{ color: '#43a047' }} />
                     </TableCell>
                     <TableCell>{item.batchNumber || 'N/A'}</TableCell>
                     <TableCell>{item.manufacturer || 'N/A'}</TableCell>
@@ -323,12 +407,35 @@ const InventoryList = () => {
                       </Button>
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Paper>
+                ) : (
+                  medicines.map(item => (
+                    <TableRow key={item.itemId} hover sx={{ '&:hover': { background: '#f1f8e9' } }}>
+                      <TableCell>{item.name}</TableCell>
+                      <TableCell>
+                        <Chip label="Thuốc" sx={{ background: '#43a047', color: '#fff' }} />
+                      </TableCell>
+                      <TableCell>{item.unit}</TableCell>
+                      <TableCell>{item.quantity}</TableCell>
+                      <TableCell>{formatDate(item.expiryDate)}</TableCell>
+                      <TableCell>{formatDateTime(item.createdAt)}</TableCell>
+                      <TableCell>
+                        <Button
+                          variant="contained"
+                          size="small"
+                          sx={{ background: '#43a047', color: '#fff', '&:hover': { background: '#2e7031' } }}
+                          onClick={() => handleEditOpen(item)}
+                        >
+                          Cập nhật
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </CardContent>
+      </Card>
 
       {/* Dialog cập nhật */}
       <Dialog open={editOpen} onClose={handleEditClose} maxWidth="sm" fullWidth>

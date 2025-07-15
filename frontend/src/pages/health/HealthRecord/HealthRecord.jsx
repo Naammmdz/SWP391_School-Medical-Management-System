@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useForm, Controller } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
 import { Card, Form, Input, Button, Alert, Spin, Typography, Space, Row, Col, message, Table, Tag, Select, Divider, Modal, Descriptions } from 'antd';
 import { 
   HeartOutlined, 
@@ -14,7 +15,8 @@ import {
   EditOutlined,
   InfoCircleOutlined,
   CloseOutlined,
-  BarChartOutlined
+  BarChartOutlined,
+  ArrowLeftOutlined
 } from '@ant-design/icons';
 import { Search, XCircle } from 'lucide-react';
 import Header from '../../../components/Header';
@@ -28,6 +30,7 @@ const { TextArea } = Input;
 const { Option } = Select;
 
 const HealthRecord = () => {
+  const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const accessToken = localStorage.getItem('token');
   const isNurseOrAdmin =
@@ -299,14 +302,33 @@ const HealthRecord = () => {
       {/* Header */}
       <Row justify="space-between" align="middle" style={{ marginBottom: 32, marginTop: 50 }}>
         <Col>
-          <Title level={2} style={{ margin: 0, color: '#15803d' }}>
-            <HeartOutlined style={{ marginRight: 12 }} />
-            {isNurseOrAdmin
-              ? 'Danh Sách Hồ Sơ Sức Khỏe Học Sinh'
-              : isParent
-                ? 'Hồ Sơ Sức Khỏe '
-                : 'Hồ Sơ Sức Khỏe Học Sinh'}
-          </Title>
+          <Space>
+            {isParent && (
+              <Button 
+                type="text" 
+                icon={<ArrowLeftOutlined />}
+                onClick={() => navigate(-1)}
+                style={{ 
+                  fontSize: 16,
+                  height: 40,
+                  display: 'flex',
+                  alignItems: 'center',
+                  color: '#15803d',
+                  fontWeight: 600
+                }}
+              >
+                Quay lại
+              </Button>
+            )}
+            <Title level={2} style={{ margin: 0, color: '#15803d' }}>
+              <HeartOutlined style={{ marginRight: 12 }} />
+              {isNurseOrAdmin
+                ? 'Danh Sách Hồ Sơ Sức Khỏe Học Sinh'
+                : isParent
+                  ? 'Hồ Sơ Sức Khỏe '
+                  : 'Hồ Sơ Sức Khỏe Học Sinh'}
+            </Title>
+          </Space>
         </Col>
       </Row>
       
@@ -435,38 +457,54 @@ const HealthRecord = () => {
                     )
                   },
                   {
-                    title: 'Trạng thái',
-                    key: 'status',
+                    title: 'BMI',
+                    key: 'bmi',
                     width: 80,
                     align: 'center',
                     render: (_, record) => {
-                      const hasIssues = (record.allergies && record.allergies.trim()) || 
-                                       (record.chronicDiseases && record.chronicDiseases.trim());
-                      
-                      if (hasIssues) {
+                      if (record.height && record.weight) {
+                        const bmi = (record.weight / ((record.height / 100) ** 2)).toFixed(1);
+                        let color = 'green';
+                        let status = 'Bình thường';
+                        
+                        if (bmi < 18.5) {
+                          color = 'blue';
+                          status = 'Thiếu cân';
+                        } else if (bmi >= 25 && bmi < 30) {
+                          color = 'orange';
+                          status = 'Thừa cân';
+                        } else if (bmi >= 30) {
+                          color = 'red';
+                          status = 'Béo phì';
+                        }
+                        
                         return (
                           <div style={{ textAlign: 'center' }}>
                             <div style={{ 
-                              width: 8, 
-                              height: 8, 
-                              borderRadius: '50%', 
-                              backgroundColor: '#ff4d4f', 
-                              margin: '0 auto 2px' 
-                            }} />
-                            <Text style={{ fontSize: 9, color: '#ff4d4f' }}>Cần chú ý</Text>
+                              fontSize: 16, 
+                              fontWeight: 700, 
+                              color: color === 'green' ? '#52c41a' : 
+                                     color === 'blue' ? '#1890ff' : 
+                                     color === 'orange' ? '#fa8c16' : '#ff4d4f',
+                              marginBottom: 3
+                            }}>
+                              {bmi}
+                            </div>
+                            <Text style={{ 
+                              fontSize: 11, 
+                              fontWeight: 600,
+                              color: color === 'green' ? '#52c41a' : 
+                                     color === 'blue' ? '#1890ff' : 
+                                     color === 'orange' ? '#fa8c16' : '#ff4d4f'
+                            }}>
+                              {status}
+                            </Text>
                           </div>
                         );
                       }
                       return (
                         <div style={{ textAlign: 'center' }}>
-                          <div style={{ 
-                            width: 8, 
-                            height: 8, 
-                            borderRadius: '50%', 
-                            backgroundColor: '#52c41a', 
-                            margin: '0 auto 2px' 
-                          }} />
-                          <Text style={{ fontSize: 9, color: '#52c41a' }}>Bình thường</Text>
+                          <Text style={{ fontSize: 12, color: '#8c8c8c', fontWeight: 500 }}>Chưa đo</Text>
                         </div>
                       );
                     }
@@ -898,27 +936,40 @@ const HealthRecord = () => {
               <Descriptions
                 title="Thông tin học sinh"
                 bordered
-                column={{ xs: 1, sm: 2 }}
+                column={{ xs: 1, sm: 2, md: 3 }}
                 size="middle"
                 style={{ marginBottom: 24 }}
+                labelStyle={{ width: '35%', fontWeight: 600 }}
+                contentStyle={{ width: '65%' }}
               >
                 <Descriptions.Item 
                   label={<span><UserOutlined /> Họ và tên</span>}
-                  span={2}
                 >
-                  <Text strong style={{ fontSize: 16, color: '#2563eb' }}>
+                  <Text strong style={{ fontSize: 15, color: '#2563eb' }}>
                     {selectedRecord.studentName}
                   </Text>
                 </Descriptions.Item>
                 <Descriptions.Item label="Lớp">
-                  <Tag color="blue" style={{ fontSize: 14 }}>
+                  <Tag color="blue" style={{ fontSize: 13 }}>
                     {selectedRecord.studentClass}
                   </Tag>
                 </Descriptions.Item>
                 <Descriptions.Item label="Giới tính">
-                  <Tag color={selectedRecord.studentGender === 'Nam' ? 'geekblue' : 'magenta'}>
+                  <Tag color={selectedRecord.studentGender === 'Nam' ? 'geekblue' : 'magenta'} style={{ fontSize: 13 }}>
                     {selectedRecord.studentGender || 'Chưa cập nhật'}
                   </Tag>
+                </Descriptions.Item>
+                <Descriptions.Item 
+                  label={<span><UserOutlined /> Phụ huynh</span>}
+                >
+                  <Text strong style={{ color: '#15803d', fontSize: 14 }}>
+                    {selectedRecord.parentName || 'Chưa cập nhật'}
+                  </Text>
+                </Descriptions.Item>
+                <Descriptions.Item label="Số điện thoại" span={2}>
+                  <Text strong style={{ color: '#1890ff', fontSize: 14 }}>
+                    {selectedRecord.phone || 'Chưa cập nhật'}
+                  </Text>
                 </Descriptions.Item>
               </Descriptions>
 

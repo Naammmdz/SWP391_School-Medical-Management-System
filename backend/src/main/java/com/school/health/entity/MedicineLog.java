@@ -26,11 +26,11 @@ public class MedicineLog {
     @Column(name = "GivenAt", nullable = false)
     private LocalDate givenAt;
 
-    @Column(name = "Notes", length = 500)
+    @Column(name = "Notes", length = 500, columnDefinition = "NVARCHAR(500)")
     private String notes;
 
-    @Column(name = "Status", nullable = false)
-    private boolean status = false;
+    @Column(name = "Status")
+    private Boolean status = null;
 
     @Column(name = "ImageData", columnDefinition = "TEXT")
     private String imageData; // Base64 encoded image

@@ -17,6 +17,7 @@ import com.school.health.repository.MedicineSubmissionRepository;
 import com.school.health.repository.StudentRepository;
 import com.school.health.repository.UserRepository;
 import com.school.health.service.MedicineSubmissionService;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -68,7 +69,7 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
         // Calculate duration based on start and end dates
         int duration = (int) ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate()) + 1;
 
-        String encodedImage = null;;
+        String encodedImage = null;
         if (image != null) {
             try {
                 // Check file size (max 5MB)
@@ -122,7 +123,8 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
             if (dayOfWeek != DayOfWeek.SATURDAY && dayOfWeek != DayOfWeek.SUNDAY) {
                 MedicineLog log = new MedicineLog();
                 log.setGivenAt(currentDate);
-                log.setStatus(false);
+                // not taken is null
+                log.setStatus(null); // Initially not taken
                 medicineSubmission.addMedicineLog(log);
             }
             // Move to the next day
@@ -399,6 +401,7 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
     }
 
     @Override
+    @Transactional
     public MedicineLogResponse markMedicineTaken(Integer submissionId, MedicineLogRequest request, MultipartFile image) {
         MedicineSubmission submission = medicineSubmissionRepository.findById(submissionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Submission not found: " + submissionId));
@@ -420,7 +423,7 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
         log.setGivenBy(givenBy);
 //        log.setGivenAt(request.getGivenAt());
         log.setNotes(request.getNotes());
-        log.setStatus(true); // Mark as taken
+        log.setStatus(request.getStatus()); // Use status from request (true = given, false = not given)
 
         // Handle image upload
         String encodedImage = null;
@@ -467,7 +470,7 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
         }
         response.setGivenAt(log.getGivenAt());
         response.setNotes(log.getNotes());
-        response.setStatus(log.isStatus());
+        response.setStatus(log.getStatus());
         // Chỉ set imageData nếu có
         if (log.getImageData() != null) {
             response.setImageData(log.getImageData());
@@ -481,7 +484,7 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
     public MedicineSubmissionResponse getByIdWithLog(Integer id) {
         MedicineSubmission submission = medicineSubmissionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Submission not found: " + id));
-// hàm này mục đích là để trả về thông tin đơn thuốc bao gồm cả logs, dành cho NURSE
+        // hàm này mục đích là để trả về thông tin đơn thuốc bao gồm cả logs, dành cho NURSE
         return toResponse(submission, true);
     }
 }

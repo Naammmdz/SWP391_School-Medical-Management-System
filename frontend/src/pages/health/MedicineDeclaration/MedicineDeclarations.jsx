@@ -96,6 +96,7 @@ const MedicineDeclarations = () => {
       setImageFile(null);
       setImagePreview(null);
       message.success('Khai báo thuốc đã được gửi thành công!');
+      navigate('/parent/donthuocdagui');
     } catch (err) {
       message.error('Có lỗi xảy ra khi gửi khai báo. Vui lòng thử lại sau.');
     } finally {
@@ -143,7 +144,7 @@ const MedicineDeclarations = () => {
             type="primary"
             icon={<FileTextOutlined />}
             size="large"
-            onClick={() => navigate('/donthuocdagui')}
+            onClick={() => navigate('/parent/donthuocdagui')}
             style={{ borderRadius: 8 }}
           >
             Xem đơn thuốc đã gửi

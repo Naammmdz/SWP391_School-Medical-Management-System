@@ -83,28 +83,30 @@ const CreateHealthCheck = () => {
       }
       const submitData = {
         campaignName: values.campaignName,
-        targetGroup: values.targetGroup,
+        targetGroup: targetGroup, 
         type: values.type,
         address: values.address,
-        organizer: values.organizer, // y tá nhập tay
+        organizer: values.organizer, 
         description: values.description,
         scheduledDate: values.scheduledDate.format('YYYY-MM-DD'),
         status: 'PENDING',
       };
-
+       console.log('Submitting data:', submitData);
       await HealthCheckService.createHealthCheckCampaign(submitData, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       setSuccessMsg('Tạo chiến dịch kiểm tra sức khỏe thành công!');
       form.resetFields();
+      // redirect to health check list
+      window.location.href = '/danhsachkiemtradinhky';
     } catch (err) {
       setErrorMsg(err.message || 'Tạo chiến dịch thất bại! Vui lòng thử lại.');
     }
     setLoading(false);
   };
 
-  if (!nurse.userRole || (nurse.userRole !== 'ROLE_NURSE' && nurse.userRole !== 'ROLE_ADMIN')) {
+  if (!nurse.userRole || (nurse.userRole !== 'ROLE_NURSE' && nurse.userRole !== 'ROLE_ADMIN' && nurse.userRole !== 'ROLE_PRINCIPAL')) {
     return (
       <div style={{ maxWidth: 800, margin: '32px auto', padding: '24px' }}>
         <Alert
@@ -298,7 +300,7 @@ const CreateHealthCheck = () => {
                 prefix={<CalendarOutlined />}
                 format="DD/MM/YYYY"
                 placeholder="Chọn ngày"
-                disabledDate={(current) => current && current < moment().endOf('day')}
+                disabledDate={(current) => current && current < moment().startOf('day')}
               />
             </Form.Item>
 

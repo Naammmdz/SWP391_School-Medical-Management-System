@@ -164,6 +164,7 @@ const ImportInventory = () => {
                     value={form.type}
                     label="Loại"
                     onChange={handleChange}
+                    sx={{ minWidth: 200 }}
                   >
                     <MenuItem value="medical supplies">Vật tư y tế</MenuItem>
                     <MenuItem value="medicine">Thuốc</MenuItem>

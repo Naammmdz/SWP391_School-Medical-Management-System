@@ -369,6 +369,10 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
         Vaccination vaccination = vaccinationRepository.findById(vaccinationId).orElseThrow(() -> new RuntimeException("Vaccination not found id :" + vaccinationId));
         VaccinationCampaign campaign = vaccinationCampaignRepository.findById(requestDTO.getCampaignId()).orElseThrow(() -> new RuntimeException("Campaign not found id :" + requestDTO.getCampaignId()));
         Student student = studentRepository.findById(requestDTO.getStudentId()).orElseThrow(() -> new RuntimeException("Student not found id :" + requestDTO.getStudentId()));
+        // date phải bằng từ scheduled date của campaign
+        if (requestDTO.getDate() == null || requestDTO.getDate().isBefore(campaign.getScheduledDate())) {
+            throw new RuntimeException("Date must be after the scheduled date of the campaign: " + campaign.getScheduledDate());
+        }
         vaccination.setDate(requestDTO.getDate());
         vaccination.setDoseNumber(requestDTO.getDoseNumber());
         vaccination.setAdverseReaction(requestDTO.getAdverseReaction());
@@ -446,8 +450,6 @@ public class VaccinationCampaignServiceImpl implements VaccinationCampaignServic
         } else if (Boolean.FALSE.equals(parentConfirmation)) {
             spec = spec.and((root, query, cb) -> cb.isFalse(root.get("parentConfirmation")));
         }
-// else null => không thêm gì vào spec
-
 
         if (startDate != null && endDate != null) {
             spec = spec.and((root, query, cb) ->

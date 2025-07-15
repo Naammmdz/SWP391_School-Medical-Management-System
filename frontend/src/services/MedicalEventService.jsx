@@ -23,6 +23,7 @@ const MedicalEventService = {
             'Content-Type': 'application/json'
         };
         return axios.get(`${API_URL}/${eventId}`, { headers, ...config });
+
     },
     
     searchMedicalEvents: (filters, config) => {
@@ -69,5 +70,6 @@ const MedicalEventService = {
         return axios.put(`${API_BASE_URL}api/nurse/medical-events-status/${eventId}`, {}, { headers, ...config });
     }
 };
+
 
 export default MedicalEventService;

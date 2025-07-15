@@ -47,9 +47,14 @@ const Layout = ({ children, showSidebar = false }) => {
 
   // Các path cần ẩn footer
   const hideFooterPaths = [
-    '/thongke', '/dashboard', '/admin', '/parent', '/nurse',
+    '/thongke', '/dashboard', '/admin', '/parent', '/nurse', '/principal',
     '/hososuckhoe', '/sukienyte', '/khaibaothuoc', '/quanlythuoc', '/quanlytiemchung', '/thongbaotiemchung',
-    '/kiemtradinhky', '/danhsachkiemtradinhky', '/capnhatkiemtradinhky', '/kiemtradinhkyhocsinh', '/ketquakiemtradinhky', '/capnhatthongtin', '/doimatkhau', '/admin/taomoinguoidung', '/admin/capnhatnguoidung', '/admin/danhsachnguoidung', '/admin/khoanguoidung', '/taomoihocsinh', '/danhsachhocsinh', '/capnhathocsinh', '/taosukientiemchung', '/ketquatiemchung', '/ketquatiemchunghocsinh', '/capnhatthongtintiemchung', '/blog', '/donthuocdagui'
+    '/kiemtradinhky', '/danhsachkiemtradinhky', '/capnhatkiemtradinhky', '/kiemtradinhkyhocsinh',
+    '/ketquakiemtradinhky', '/capnhatthongtin', '/doimatkhau', '/admin/taomoinguoidung', '/admin/capnhatnguoidung', 
+    '/admin/danhsachnguoidung', '/admin/khoanguoidung', '/taomoihocsinh', '/danhsachhocsinh', 
+    '/capnhathocsinh', '/taosukientiemchung', '/ketquatiemchung', '/ketquatiemchunghocsinh', 
+    '/capnhatthongtintiemchung', '/blog', '/donthuocdagui', '/danhsachnguoidung', '/capnhatnguoidung', '/taomoinguoidung',
+    '/quanlyvattuyte', '/khoanguoidung' , '/donthuoc' , '/capnhatketquakiemtra'
   ];
   const shouldHideFooter = hideFooterPaths.some(path => location.pathname.startsWith(path));
 

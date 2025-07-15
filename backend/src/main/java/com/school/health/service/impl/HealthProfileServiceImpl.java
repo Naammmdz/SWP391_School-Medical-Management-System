@@ -232,6 +232,8 @@ public class HealthProfileServiceImpl implements HealthProfileService {
         dto.setHeight(profile.getHeight());
         dto.setNotes(profile.getNotes());
         dto.setUpdatedAt(profile.getUpdatedAt());
+        dto.setParentName(profile.getStudent().getParent().getFullName());
+        dto.setPhone(profile.getStudent().getParent().getPhone());
         return dto;
     }
 }
