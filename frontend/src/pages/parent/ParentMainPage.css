@@ -316,12 +316,30 @@
   border-color: #52c41a;
   background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
   color: white;
+  box-shadow: 0 8px 25px rgba(82, 196, 26, 0.4);
 }
 
 .student-card-modern.selected .student-name,
-.student-card-modern.selected .student-class,
+.student-card-modern.selected .student-class {
+  color: #1f1f1f !important;
+  text-shadow: 0 1px 2px rgba(255,255,255,0.3);
+}
+
 .student-card-modern.selected .student-status {
   color: white !important;
+}
+
+.student-card-modern.selected:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(82, 196, 26, 0.5);
+  background: linear-gradient(135deg, #389e0d 0%, #52c41a 100%);
+}
+
+.student-card-modern.selected:hover .student-name,
+.student-card-modern.selected:hover .student-class,
+.student-card-modern.selected:hover .student-status {
+  color: white !important;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
 
 .student-avatar {
@@ -341,6 +359,17 @@
   margin: 0 auto;
   position: relative;
   box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+  transition: all 0.3s ease;
+}
+
+.student-card-modern.selected .avatar-circle {
+  background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+  box-shadow: 0 8px 24px rgba(255, 255, 255, 0.3);
+}
+
+.student-card-modern.selected:hover .avatar-circle {
+  background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
+  box-shadow: 0 10px 30px rgba(255, 255, 255, 0.4);
 }
 
 .selected-badge {
@@ -366,12 +395,14 @@
   font-weight: 600 !important;
   margin: 0 0 8px 0 !important;
   color: #333 !important;
+  transition: all 0.3s ease;
 }
 
 .student-class {
   font-size: 14px !important;
   color: #666 !important;
   margin: 0 0 12px 0 !important;
+  transition: all 0.3s ease;
 }
 
 .student-status {
@@ -382,6 +413,29 @@
   background: rgba(0,0,0,0.05);
   border-radius: 12px;
   display: inline-block;
+  transition: all 0.3s ease;
+}
+
+.student-card-modern.selected .student-status {
+  background: rgba(255,255,255,0.2);
+  color: white !important;
+  border: 1px solid rgba(255,255,255,0.3);
+}
+
+.student-card-modern.selected:hover .student-status {
+  background: rgba(255,255,255,0.3);
+  color: white !important;
+  border: 1px solid rgba(255,255,255,0.5);
+}
+
+.student-card-modern:active {
+  transform: translateY(-2px) scale(0.98);
+  transition: all 0.1s ease;
+}
+
+.student-card-modern.selected:active {
+  transform: translateY(-2px) scale(0.98);
+  background: linear-gradient(135deg, #237804 0%, #389e0d 100%);
 }
 
 /* ========================================

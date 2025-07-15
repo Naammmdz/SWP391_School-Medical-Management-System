@@ -603,6 +603,7 @@ const HealthRecord = () => {
                               placeholder="Nhập họ và tên học sinh"
                               prefix={<UserOutlined style={{ color: '#8c8c8c' }} />}
                               style={{ borderRadius: 8 }}
+                              disabled={true}
                             />
                           )}
                         />
@@ -624,6 +625,7 @@ const HealthRecord = () => {
                               size="large"
                               placeholder="Nhập lớp học"
                               style={{ borderRadius: 8 }}
+                              disabled={true}
                             />
                           )}
                         />
@@ -731,10 +733,14 @@ const HealthRecord = () => {
                               style={{ borderRadius: 8 }}
                               allowClear
                             >
-                              <Option value="A">A</Option>
-                              <Option value="B">B</Option>
-                              <Option value="AB">AB</Option>
-                              <Option value="O">O</Option>
+                              <Option value="A+">A+</Option>
+                              <Option value="A-">A-</Option>
+                              <Option value="B+">B+</Option>
+                              <Option value="B-">B-</Option>
+                              <Option value="AB+">AB+</Option>
+                              <Option value="AB-">AB-</Option>
+                              <Option value="O+">O+</Option>
+                              <Option value="O-">O-</Option>
                             </Select>
                           )}
                         />

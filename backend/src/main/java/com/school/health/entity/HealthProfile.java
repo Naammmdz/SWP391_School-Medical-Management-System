@@ -39,7 +39,7 @@ public class HealthProfile {
     @Column(name = "TreatmentHistory", length = 255,columnDefinition = "NVARCHAR(255)")
     private String treatmentHistory;
 
-    @Column(name = "Eyesight", length = 50)
+    @Column(name = "Eyesight", length = 255, columnDefinition = "NVARCHAR(255)")
     private String eyesight;
 
     @Column(name = "Hearing", length = 50,columnDefinition = "NVARCHAR(255)")

@@ -312,7 +312,8 @@ const VaccinationManagement = () => {
         }
 
         // Add cancel option for pending campaigns
-        if (record.status === 'PENDING') {
+
+        if (isAdmin && record.status === 'PENDING') {
           menuItems.push({
             key: 'cancel',
             icon: <CloseCircleOutlined />,

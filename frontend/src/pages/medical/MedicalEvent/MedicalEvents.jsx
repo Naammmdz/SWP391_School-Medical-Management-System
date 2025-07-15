@@ -955,7 +955,7 @@ const MedicalEvents = () => {
                   <option key={status.value} value={status.value}>{status.label}</option>
               ))}
             </select>
-
+<label> Từ ngày</label>
             <input
                 type="date"
                 name="fromDate"
@@ -963,6 +963,7 @@ const MedicalEvents = () => {
                 onChange={handleFilterChange}
                 placeholder="Từ ngày"
             />
+            <label> Đến ngày</label>
 
             <input
                 type="date"

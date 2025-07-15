@@ -739,7 +739,7 @@ image={Empty.PRESENTED_IMAGE_SIMPLE}
               label: (
                 <span>
                   <FilterOutlined />
-                  Tất cả ({filteredSubmissions.length}) - Pending trên đầu
+                  Tất cả ({filteredSubmissions.length})
                 </span>
               ),
               children: (

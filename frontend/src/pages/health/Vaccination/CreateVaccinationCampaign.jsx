@@ -353,7 +353,7 @@ const CreateVaccinationCampaign = () => {
                   placeholder="Chọn ngày"
                   size="large"
                   style={{ width: '100%' }}
-                  disabledDate={(current) => current && current < dayjs().startOf('day')}
+                  disabledDate={(current) => current && current <= dayjs().startOf('day')}
                 />
               </Form.Item>
             </Col>

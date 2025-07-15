@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import MedicineDeclarationService from "../../../services/MedicineDeclarationService";
 import StudentService from "../../../services/StudentService";
 import { Card, Modal, Image, Typography, Spin, Alert, Empty, Button, Popconfirm, message, Row, Col, Badge, Divider, Space, Tag } from "antd";
-import { UserOutlined, FileTextOutlined, DeleteOutlined, PlusOutlined, CalendarOutlined, ClockCircleOutlined, MedicineBoxOutlined, CheckCircleOutlined, CloseCircleOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
+import { UserOutlined, FileTextOutlined, DeleteOutlined, PlusOutlined, CalendarOutlined, ClockCircleOutlined, MedicineBoxOutlined, CheckCircleOutlined, CloseCircleOutlined, ExclamationCircleOutlined, ArrowLeftOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { EyeOutlined } from "@ant-design/icons";
 import { Descriptions } from "antd";
@@ -310,6 +310,19 @@ const MedicineList = () => {
         Đơn thuốc đã gửi
       </Title>
       
+{/* Nút quay về */}
+      <div style={{ textAlign: "left", marginBottom: 24 }}>
+        <Button
+          type="default"
+          icon={<ArrowLeftOutlined />}
+          size="large"
+          onClick={() => navigate("/parent")}
+          style={{ borderRadius: 8, height: 40 }}
+        >
+          Quay về
+        </Button>
+      </div>
+
       {/* Nút gửi thuốc */}
       <div style={{ textAlign: "right", marginBottom: 24 }}>
         <Button

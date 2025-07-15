@@ -137,14 +137,14 @@ const getNavGroupsForRole = (role) => {
           // { path: '/capnhatketquakiemtra', name: 'Cập nhật kết quả kiểm tra', icon: 'report' },
         ]
       },
-      {
-        title: 'Y tế & Thuốc',
-        items: [
-          { path: '/sukienyte', name: 'Sự kiện y tế', icon: 'activity' },
-          { path: '/quanlyvattuyte', name: 'Quản lý thuốc/Vật tư', icon: 'pill' },
-         
-        ]
-      }
+      // {
+      //   title: 'Y tế & Thuốc',
+      //   items: [
+      //     { path: '/sukienyte', name: 'Sự kiện y tế', icon: 'activity' },
+      //     { path: '/quanlyvattuyte', name: 'Quản lý thuốc/Vật tư', icon: 'pill' },
+      //
+      //   ]
+      // }
     ],
     ROLE_NURSE: [
       {
@@ -201,14 +201,14 @@ const getNavGroupsForRole = (role) => {
         title: 'Tiêm chủng',
         items: [
           { path: '/quanlytiemchung', name: 'Quản lý tiêm chủng', icon: 'syringe' },
-          { path: '/ketquatiemchung', name: 'Kết quả tiêm chủng', icon: 'report' },
+          // { path: '/ketquatiemchung', name: 'Kết quả tiêm chủng', icon: 'report' },
         ]
       },
       {
         title: 'Khám sức khỏe',
         items: [
           { path: '/danhsachkiemtradinhky', name: 'Danh sách kiểm tra định kỳ', icon: 'stethoscope' },
-          { path: '/ketquakiemtradinhky', name: 'Kết quả kiểm tra định kỳ', icon: 'report' },
+          // { path: '/ketquakiemtradinhky', name: 'Kết quả kiểm tra định kỳ', icon: 'report' },
         ]
       }
     ]
