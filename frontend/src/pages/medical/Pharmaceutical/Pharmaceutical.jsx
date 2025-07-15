@@ -217,6 +217,16 @@ const Pharmaceutical = () => {
       return;
     }
     
+    // Validate expiry date vs status combination
+    if (formData.expiryDate && formData.status === 'EXPIRED') {
+      const today = new Date();
+      const expiryDate = new Date(formData.expiryDate);
+      if (expiryDate > today) {
+        alert('Không thể đặt trạng thái là "Hết hạn" khi hạn sử dụng còn trong tương lai.');
+        return;
+      }
+    }
+    
     try {
       if (isEditMode) {
         // Update existing medication using InventoryService
@@ -636,7 +646,13 @@ const Pharmaceutical = () => {
                   >
                     <option value="ACTIVE">Hoạt động</option>
                     <option value="INACTIVE">Không hoạt động</option>
-                    <option value="EXPIRED">Hết hạn</option>
+                    <option 
+                      value="EXPIRED" 
+                      disabled={formData.expiryDate && new Date(formData.expiryDate) > new Date()}
+                      title={formData.expiryDate && new Date(formData.expiryDate) > new Date() ? 'Không thể chọn "Hết hạn" khi hạn sử dụng còn trong tương lai' : ''}
+                    >
+                      Hết hạn
+                    </option>
                     <option value="DAMAGED">Hư hỏng</option>
                   </select>
                 </div>

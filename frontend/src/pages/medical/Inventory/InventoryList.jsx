@@ -179,6 +179,15 @@ const InventoryList = () => {
       setEditError('Ngày nhập không hợp lệ.');
       return false;
     }
+    // Validate expiry date vs status combination
+    if (editForm.expiryDate && editForm.status === 'EXPIRED') {
+      const today = dayjs();
+      const expiryDate = dayjs(editForm.expiryDate);
+      if (expiryDate.isAfter(today, 'day')) {
+        setEditError('Không thể đặt trạng thái là "Hết hạn" khi hạn sử dụng còn trong tương lai.');
+        return false;
+      }
+    }
     setEditError('');
     return true;
   };
@@ -396,6 +405,92 @@ const InventoryList = () => {
                     slotProps={{ textField: { fullWidth: true, required: true } }}
                   />
                 </LocalizationProvider>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Số lô"
+                  name="batchNumber"
+                  value={editForm.batchNumber || ''}
+                  onChange={handleEditChange}
+                  fullWidth
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Nhà sản xuất"
+                  name="manufacturer"
+                  value={editForm.manufacturer || ''}
+                  onChange={handleEditChange}
+                  fullWidth
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <DatePicker
+                    label="Ngày nhập kho"
+                    value={editForm.importDate || null}
+                    onChange={handleEditImportDateChange}
+                    format="YYYY-MM-DD"
+                    slotProps={{ textField: { fullWidth: true, required: true } }}
+                  />
+                </LocalizationProvider>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Giá nhập (VND)"
+                  name="importPrice"
+                  type="number"
+                  value={editForm.importPrice || ''}
+                  onChange={handleEditChange}
+                  fullWidth
+                  required
+                  inputProps={{ min: 0, step: 0.01 }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Vị trí lưu trữ"
+                  name="storageLocation"
+                  value={editForm.storageLocation || ''}
+                  onChange={handleEditChange}
+                  fullWidth
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth required>
+                  <InputLabel>Trạng thái</InputLabel>
+                  <Select
+                    name="status"
+                    value={editForm.status || ''}
+                    label="Trạng thái"
+                    onChange={handleEditChange}
+                  >
+                    <MenuItem value="ACTIVE">Hoạt động</MenuItem>
+                    <MenuItem value="INACTIVE">Không hoạt động</MenuItem>
+                    <MenuItem 
+                      value="EXPIRED" 
+                      disabled={editForm.expiryDate && dayjs(editForm.expiryDate).isAfter(dayjs(), 'day')}
+                      title={editForm.expiryDate && dayjs(editForm.expiryDate).isAfter(dayjs(), 'day') ? 'Không thể chọn "Hết hạn" khi hạn sử dụng còn trong tương lai' : ''}
+                    >
+                      Hết hạn
+                    </MenuItem>
+                    <MenuItem value="DAMAGED">Hư hỏng</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  label="Nguồn cung cấp"
+                  name="source"
+                  value={editForm.source || ''}
+                  onChange={handleEditChange}
+                  fullWidth
+                  required
+                  placeholder="Ví dụ: Nhà cung cấp A, Bệnh viện B, v.v."
+                />
               </Grid>
             </Grid>
             <DialogActions sx={{ mt: 2 }}>

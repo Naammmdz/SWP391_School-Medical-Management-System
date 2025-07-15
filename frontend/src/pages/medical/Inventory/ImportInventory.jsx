@@ -76,6 +76,15 @@ const ImportInventory = () => {
       setError('Ngày nhập không hợp lệ.');
       return false;
     }
+    // Validate expiry date vs status combination
+    if (form.expiryDate && form.status === 'EXPIRED') {
+      const today = dayjs();
+      const expiryDate = dayjs(form.expiryDate);
+      if (expiryDate.isAfter(today, 'day')) {
+        setError('Không thể đặt trạng thái là "Hết hạn" khi hạn sử dụng còn trong tương lai.');
+        return false;
+      }
+    }
     setError('');
     return true;
   };
@@ -270,7 +279,13 @@ const ImportInventory = () => {
                   >
                     <MenuItem value="ACTIVE">Hoạt động</MenuItem>
                     <MenuItem value="INACTIVE">Không hoạt động</MenuItem>
-                    <MenuItem value="EXPIRED">Hết hạn</MenuItem>
+                    <MenuItem 
+                      value="EXPIRED" 
+                      disabled={form.expiryDate && dayjs(form.expiryDate).isAfter(dayjs(), 'day')}
+                      title={form.expiryDate && dayjs(form.expiryDate).isAfter(dayjs(), 'day') ? 'Không thể chọn "Hết hạn" khi hạn sử dụng còn trong tương lai' : ''}
+                    >
+                      Hết hạn
+                    </MenuItem>
                     <MenuItem value="DAMAGED">Hư hỏng</MenuItem>
                   </Select>
                 </FormControl>

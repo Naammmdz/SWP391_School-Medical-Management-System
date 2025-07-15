@@ -1,12 +1,7 @@
 package com.school.health.dto.request;
 
 import com.school.health.enums.InventoryStatus;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.FutureOrPresent;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -39,7 +34,8 @@ public class InventoryRequestDTO {
     
     @NotBlank(message = "Nhà sản xuất không được để trống")
     private String manufacturer;
-    
+
+    @PastOrPresent(message = "Ngày nhập không được là ngày trong tương lai")
     @NotNull(message = "Ngày nhập không được để trống")
     private LocalDate importDate;
     
