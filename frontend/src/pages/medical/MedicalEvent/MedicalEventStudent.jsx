@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import MedicalEventService from '../../../services/MedicalEventService';
 import { useNavigate } from 'react-router-dom';
 import {
-  Box, Button, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Dialog, DialogTitle, DialogContent, DialogActions, IconButton
+  Box, Button, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
+  Dialog, DialogTitle, DialogContent, DialogActions, IconButton
 } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
 
@@ -16,28 +17,52 @@ const MedicalEventStudent = () => {
   useEffect(() => {
     const selectedStudentId = localStorage.getItem('selectedStudentId');
     const students = JSON.parse(localStorage.getItem('students') || '[]');
-    const stu = students.find(s => String(s.studentId) === String(selectedStudentId));
-    setStudent(stu);
+    const matchedStudent = students.find(s => String(s.studentId) === String(selectedStudentId));
+    setStudent(matchedStudent);
+
     const fetchEvents = async () => {
       try {
         const token = localStorage.getItem('token');
-        const config = { headers: { Authorization: `Bearer ${token}` }, params: { studentId: selectedStudentId } };
-        const res = await MedicalEventService.getMedicalEventByStudentId(config);
-        setEvents(Array.isArray(res.data) ? res.data : res);
-      } catch {
+        if (!selectedStudentId || !token) return;
+
+       const res = await MedicalEventService.getMedicalEventByStudentId(selectedStudentId, {
+  headers: { Authorization: `Bearer ${token}` }
+});
+
+if (Array.isArray(res)) {
+  setEvents(res);
+} else {
+  console.warn('Response is not an array:', res);
+  setEvents([]);
+}
+
+      } catch (error) {
+        console.error('Failed to fetch medical events:', error);
         setEvents([]);
       }
     };
-    if (selectedStudentId) fetchEvents();
+
+    if (selectedStudentId) {
+      fetchEvents();
+    }
   }, []);
 
   const handleOpenDetail = (event) => {
     setSelectedEvent(event);
     setOpenDetail(true);
   };
+
   const handleCloseDetail = () => {
     setOpenDetail(false);
     setSelectedEvent(null);
+  };
+
+  // Updated severity levels to Vietnamese
+  const severityLevels = {
+    MINOR: "Nhẹ",
+    MODERATE: "Trung bình",
+    SERIOUS: "Nặng",
+    CRITICAL: "Cấp cứu"
   };
 
   return (
@@ -50,14 +75,17 @@ const MedicalEventStudent = () => {
       >
         Quay lại
       </Button>
+
       <Typography variant="h4" align="center" sx={{ mb: 2, color: '#1565c0', fontWeight: 700 }}>
         Sự kiện y tế của học sinh
       </Typography>
+
       {student && (
         <Typography align="center" sx={{ mb: 3, fontWeight: 600, fontSize: 20, color: '#1976d2' }}>
           {student.fullName} - {student.className}
         </Typography>
       )}
+
       <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 3 }}>
         <Table>
           <TableHead sx={{ bgcolor: '#1976d2' }}>
@@ -71,52 +99,59 @@ const MedicalEventStudent = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {events.length === 0 && (
+            {events.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} align="center" sx={{ color: '#888', py: 3 }}>
                   Không có sự kiện y tế nào
                 </TableCell>
               </TableRow>
+            ) : (
+              events.map(ev => (
+                <TableRow key={ev.id} hover>
+                  <TableCell>{ev.title}</TableCell>
+                  <TableCell>{ev.eventType}</TableCell>
+                  <TableCell>{new Date(ev.eventDate).toLocaleDateString('vi-VN')}</TableCell>
+                  <TableCell>{ev.location}</TableCell>
+                  <TableCell>
+                    <Box sx={{
+                      display: 'inline-block',
+                      px: 2, py: 0.5,
+                      borderRadius: 2,
+                      bgcolor: ev.status === 'RESOLVED' ? '#43a047' : '#fbc02d',
+                      color: '#fff', fontWeight: 600
+                    }}>
+                      {ev.status === 'RESOLVED' ? 'Đã xử lý' : 'Đang xử lý'}
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <IconButton color="primary" onClick={() => handleOpenDetail(ev)}>
+                      <InfoIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))
             )}
-            {events.map(ev => (
-              <TableRow key={ev.id} hover>
-                <TableCell>{ev.title}</TableCell>
-                <TableCell>{ev.eventType}</TableCell>
-                <TableCell>{new Date(ev.eventDate).toLocaleDateString('vi-VN')}</TableCell>
-                <TableCell>{ev.location}</TableCell>
-                <TableCell>
-                  <Box sx={{
-                    display: 'inline-block',
-                    px: 2, py: 0.5,
-                    borderRadius: 2,
-                    bgcolor: ev.status === 'RESOLVED' ? '#43a047' : '#fbc02d',
-                    color: '#fff', fontWeight: 600
-                  }}>{ev.status === 'RESOLVED' ? 'Đã xử lý' : 'Đang xử lý'}</Box>
-                </TableCell>
-                <TableCell>
-                  <IconButton color="primary" onClick={() => handleOpenDetail(ev)}>
-                    <InfoIcon />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
           </TableBody>
         </Table>
       </TableContainer>
-      {/* Dialog chi tiết */}
+
       <Dialog open={openDetail} onClose={handleCloseDetail} maxWidth="md" fullWidth>
-        <DialogTitle sx={{ bgcolor: '#1976d2', color: '#fff', fontWeight: 600 }}>Chi tiết sự kiện y tế</DialogTitle>
+        <DialogTitle sx={{ bgcolor: '#1976d2', color: '#fff', fontWeight: 600 }}>
+          Chi tiết sự kiện y tế
+        </DialogTitle>
         <DialogContent dividers>
           {selectedEvent && (
             <Box sx={{ p: 2 }}>
-              <Typography variant="h6" sx={{ color: '#1976d2', fontWeight: 600, mb: 1 }}>{selectedEvent.title}</Typography>
+              <Typography variant="h6" sx={{ color: '#1976d2', fontWeight: 600, mb: 1 }}>
+                {selectedEvent.title}
+              </Typography>
               <Typography><b>Loại sự kiện:</b> {selectedEvent.eventType}</Typography>
               <Typography><b>Ngày:</b> {new Date(selectedEvent.eventDate).toLocaleDateString('vi-VN')}</Typography>
               <Typography><b>Địa điểm:</b> {selectedEvent.location}</Typography>
               <Typography><b>Trạng thái:</b> {selectedEvent.status === 'RESOLVED' ? 'Đã xử lý' : 'Đang xử lý'}</Typography>
               <Typography><b>Mô tả:</b> {selectedEvent.description}</Typography>
               <Typography><b>Ghi chú:</b> {selectedEvent.notes}</Typography>
-              <Typography><b>Mức độ:</b> {selectedEvent.severityLevel}</Typography>
+              <Typography><b>Mức độ:</b> {severityLevels[selectedEvent.severityLevel]}</Typography>
               <Typography><b>Biện pháp xử lý:</b> {selectedEvent.handlingMeasures}</Typography>
               <Typography sx={{ mt: 2 }}><b>Vật tư/Thuốc đã dùng:</b></Typography>
               {(selectedEvent.relatedMedicinesUsed || []).length === 0 ? (
@@ -134,7 +169,9 @@ const MedicalEventStudent = () => {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDetail} color="primary" variant="contained">Đóng</Button>
+          <Button onClick={handleCloseDetail} color="primary" variant="contained">
+            Đóng
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

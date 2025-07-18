@@ -1,8 +1,10 @@
 import axios from 'axios';
+import { get } from 'react-hook-form';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
-const API_URL = `${API_BASE_URL}api/nurse/medical-events`;
 
+const API_URL = `${API_BASE_URL}api/nurse/medical-events`;
+const API_URL_PARENT = import.meta.env.VITE_API_MEDICALE;
 // Set up axios defaults for authentication
 axios.defaults.withCredentials = true;
 
@@ -68,7 +70,40 @@ const MedicalEventService = {
             'Content-Type': 'application/json'
         };
         return axios.put(`${API_BASE_URL}api/nurse/medical-events-status/${eventId}`, {}, { headers, ...config });
-    }
+    },
+    // getMedicalEventByStudentId: async (studentID, config) => {
+    //      try {
+    //   const response = await axios.get(API_URL_PARENT, { ...config, params: { studentId: studentID } });
+    //   return response.data;
+    // } catch (error) {
+    //   console.error('Lỗi khi lấy dữ liệu:', error);
+    //   throw error;
+    // }
+        
+    // },
+  getMedicalEventByStudentId: async (studentId, config = {}) => {
+  try {
+    const token = localStorage.getItem('token');
+    const headers = {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    };
+
+    const response = await axios.get('http://localhost:8080/api/parent/medical-events/', {
+      params: { studentId },
+      headers,
+      ...config
+    });
+
+    console.log('Medical Events:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching medical events:', error);
+    throw error;
+  }
+}
+
+
 };
 
 
