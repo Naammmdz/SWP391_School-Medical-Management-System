@@ -24,7 +24,9 @@ import {
   TrophyOutlined,
   AlertOutlined
 } from '@ant-design/icons';
+import { Box } from '@mui/material';
 import studentService from '../../services/StudentService';
+import NotificationPopup from '../../components/NotificationPopup';
 import './ParentMainPage.css';
 
 const { Title, Paragraph, Text } = Typography;
@@ -35,6 +37,7 @@ const ParentMainPage = () => {
   const [studentList, setStudentList] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [showQuickGuide, setShowQuickGuide] = useState(false);
+  const [showNotificationPopup, setShowNotificationPopup] = useState(false);
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const token = localStorage.getItem('token');
@@ -273,19 +276,26 @@ const ParentMainPage = () => {
           Quản lý sức khỏe con em
         </Text>
         
-        {/* Simple notification alert */}
-        {modernMenuItems.find(item => item.hasNotification) && (
-          <Alert
-            message="3 thông báo mới!"
-            description="Bạn có thông báo chưa đọc."
-            type="info"
-            showIcon
-            closable
-            style={{ marginTop: '16px' }}
-            onClick={() => navigate('/parent/thongbaotiemchung')}
-            className="clickable-alert"
-          />
-        )}
+        {/* Notification icon with unread count */}
+        <Box style={{ position: 'relative', display: 'inline-block', cursor: 'pointer' }} onClick={() => setShowNotificationPopup(true)}>
+          <BellOutlined style={{ fontSize: '24px', color: '#1890ff' }} />
+          {modernMenuItems.find(item => item.id === 'notifications').notificationCount > 0 && (
+            <span style={{
+              position: 'absolute',
+              top: '-5px',
+              right: '-10px',
+              background: '#ff4d4f',
+              color: 'white',
+              borderRadius: '50%',
+              padding: '2px 6px',
+              fontSize: '12px',
+              fontWeight: 'bold'
+            }}>
+              {modernMenuItems.find(item => item.id === 'notifications').notificationCount}
+            </span>
+          )}
+        </Box>
+        <NotificationPopup open={showNotificationPopup} onClose={() => setShowNotificationPopup(false)} />
       </div>
 
       {/* Modern Student Selection */}

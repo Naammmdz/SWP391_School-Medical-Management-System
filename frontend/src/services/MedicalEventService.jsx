@@ -71,16 +71,7 @@ const MedicalEventService = {
         };
         return axios.put(`${API_BASE_URL}api/nurse/medical-events-status/${eventId}`, {}, { headers, ...config });
     },
-    // getMedicalEventByStudentId: async (studentID, config) => {
-    //      try {
-    //   const response = await axios.get(API_URL_PARENT, { ...config, params: { studentId: studentID } });
-    //   return response.data;
-    // } catch (error) {
-    //   console.error('Lỗi khi lấy dữ liệu:', error);
-    //   throw error;
-    // }
-        
-    // },
+   
   getMedicalEventByStudentId: async (studentId, config = {}) => {
   try {
     const token = localStorage.getItem('token');
@@ -89,7 +80,7 @@ const MedicalEventService = {
       'Content-Type': 'application/json'
     };
 
-    const response = await axios.get('http://localhost:8080/api/parent/medical-events/', {
+    const response = await axios.get(`${API_URL_PARENT}`, {
       params: { studentId },
       headers,
       ...config
