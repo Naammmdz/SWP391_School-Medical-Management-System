@@ -46,6 +46,12 @@ const NotificationPopup = () => {
       if (notification.title === 'THÔNG BÁO THĂM KHÁM Y TẾ CÁ NHÂN') {
         window.location.href = '/parent/sukienytehocsinh';
       }
+      else if (notification.title === '[THÔNG BÁO] Tổ chức kiểm tra sức khỏe định kỳ cho học sinh') {
+        window.location.href = '/parent/kiemtradinhkyhocsinh';
+      }
+      else if (notification.title === '[THÔNG BÁO] Triển khai chiến dịch tiêm chủng tại trường!') {
+        window.location.href = '/parent/thongbaotiemchung';
+      }
     } catch (error) {
       console.error('Error handling notification click:', error);
     }
