@@ -20,8 +20,22 @@ const MEDICAL_EVENT_STATUS = [
 
 const EVENT_TYPES = [
   { value: 'INJURY', label: 'Chấn thương' },
+  { value: 'FALLS', label: 'Ngã, té' },
+  { value: 'CUTS_WOUNDS', label: 'Vết cắt, vết thương' },
+  { value: 'BURNS', label: 'Bỏng' },
+  { value: 'SPRAINS', label: 'Bong gân' },
   { value: 'ILLNESS', label: 'Bệnh tật' },
+  { value: 'FEVER', label: 'Sốt' },
+  { value: 'HEADACHE', label: 'Đau đầu' },
+  { value: 'STOMACH_ACHE', label: 'Đau bụng' },
+  { value: 'NAUSEA_VOMITING', label: 'Buồn nôn, nôn' },
   { value: 'ALLERGIC_REACTION', label: 'Phản ứng dị ứng' },
+  { value: 'FOOD_ALLERGY', label: 'Dị ứng thức ăn' },
+  { value: 'SKIN_ALLERGY', label: 'Dị ứng da' },
+  { value: 'RESPIRATORY', label: 'Khó thở, hen suyễn' },
+  { value: 'NOSE_BLEED', label: 'Chảy máu cam' },
+  { value: 'FAINTING', label: 'Ngất xíu' },
+  { value: 'SEIZURE', label: 'Co giật' },
   { value: 'EMERGENCY', label: 'Cấp cứu' },
   { value: 'OTHER', label: 'Khác' }
 ];
@@ -45,6 +59,12 @@ const MedicalEvents = () => {
       default: return status || 'Không có';
     }
   };
+  
+  // Helper function to get event type display text
+  const getEventTypeText = (eventType) => {
+    const eventTypeObj = EVENT_TYPES.find(type => type.value === eventType);
+    return eventTypeObj ? eventTypeObj.label : eventType || 'Không có';
+  };
 
   // Helper function to translate inventory status to Vietnamese
   const getInventoryStatusText = (status) => {
@@ -65,13 +85,21 @@ const MedicalEvents = () => {
   const [inventoryItems, setInventoryItems] = useState([]);
   const [selectedInventoryItems, setSelectedInventoryItems] = useState([]);
   const [inventoryUsageLogs, setInventoryUsageLogs] = useState([]);
+  // Helper function to get current datetime in datetime-local format
+  const getCurrentDateTime = () => {
+    const now = new Date();
+    // Adjust for local timezone
+    const localDate = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
+    return localDate.toISOString().slice(0, 16);
+  };
+  
   // State cho form thêm/sửa sự cố - matching backend DTO
   const [currentEvent, setCurrentEvent] = useState({
     id: null,
     title: '',
     stuId: [], // Array of student IDs
     eventType: '',
-    eventDate: new Date().toISOString().slice(0, 16), // datetime-local format
+    eventDate: getCurrentDateTime(), // datetime-local format
     location: '',
     description: '',
     relatedItemUsed: [], // Array of InventoryUsedInMedicalEventRequestDTO objects
@@ -115,6 +143,10 @@ const MedicalEvents = () => {
 
   // Track if filters are active
   const [isFiltering, setIsFiltering] = useState(false);
+  
+  // State for custom event type
+  const [customEventType, setCustomEventType] = useState('');
+  const [showCustomEventType, setShowCustomEventType] = useState(false);
 
   // Hàm lấy thông tin học sinh theo ID
   const fetchStudentInfo = async (studentId) => {
@@ -376,7 +408,7 @@ const MedicalEvents = () => {
       title: '',
       stuId: [],
       eventType: '',
-      eventDate: new Date().toISOString().slice(0, 16),
+      eventDate: getCurrentDateTime(),
       location: '',
       description: '',
       relatedItemUsed: [],
@@ -388,6 +420,9 @@ const MedicalEvents = () => {
     setSelectedStudents([]);
     setSelectedInventoryItems([]);
     setInventoryUsageLogs([]);
+    // Reset custom event type states
+    setCustomEventType('');
+    setShowCustomEventType(false);
   };
 
   // Hàm cập nhật sự cố y tế
@@ -526,6 +561,16 @@ const MedicalEvents = () => {
       const response = await MedicalEventService.getMedicalEventById(event.id);
       const fullEventData = response.data;
       setCurrentEvent({...fullEventData});
+      
+      // Handle custom event types
+      const isCustomEventType = !EVENT_TYPES.some(type => type.value === fullEventData.eventType);
+      if (isCustomEventType) {
+        setShowCustomEventType(true);
+        setCustomEventType(fullEventData.eventType);
+      } else {
+        setShowCustomEventType(false);
+        setCustomEventType('');
+      }
 
       // Set selected students for multi-select
       if (fullEventData.stuId && Array.isArray(fullEventData.stuId)) {
@@ -657,6 +702,27 @@ const MedicalEvents = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setCurrentEvent({...currentEvent, [name]: value});
+  };
+  
+  // Xử lý thay đổi event type
+  const handleEventTypeChange = (e) => {
+    const selectedValue = e.target.value;
+    
+    if (selectedValue === 'OTHER') {
+      setShowCustomEventType(true);
+      setCurrentEvent({...currentEvent, eventType: customEventType});
+    } else {
+      setShowCustomEventType(false);
+      setCustomEventType('');
+      setCurrentEvent({...currentEvent, eventType: selectedValue});
+    }
+  };
+  
+  // Xử lý thay đổi custom event type
+  const handleCustomEventTypeChange = (e) => {
+    const value = e.target.value;
+    setCustomEventType(value);
+    setCurrentEvent({...currentEvent, eventType: value});
   };
 
   // Xử lý thay đổi student selection
@@ -935,43 +1001,56 @@ const MedicalEvents = () => {
 
         {/* Bộ lọc */}
         <div className="filters-container">
-          <div className="search-box">
-            <input
-                type="text"
-                name="searchTerm"
-                placeholder="Tìm kiếm theo tiêu đề hoặc tên học sinh"
-                value={uiFilters.searchTerm}
-                onChange={handleFilterChange}
-            />
-          </div>
-          <div className="filter-options">
-            <select
-                name="status"
-                value={filters.status || ''}
-                onChange={handleFilterChange}
-            >
-              <option value="">Tất cả trạng thái</option>
-              {MEDICAL_EVENT_STATUS.map(status => (
-                  <option key={status.value} value={status.value}>{status.label}</option>
-              ))}
-            </select>
-<label> Từ ngày</label>
-            <input
-                type="date"
-                name="fromDate"
-                value={uiFilters.fromDate}
-                onChange={handleFilterChange}
-                placeholder="Từ ngày"
-            />
-            <label> Đến ngày</label>
-
-            <input
-                type="date"
-                name="toDate"
-                value={uiFilters.toDate}
-                onChange={handleFilterChange}
-                placeholder="Đến ngày"
-            />
+          <div className="filters-section">
+            <div className="filter-group">
+              <label className="filter-label">Tìm kiếm</label>
+              <div className="search-box">
+                <input
+                    type="text"
+                    name="searchTerm"
+                    placeholder="Tìm kiếm theo tiêu đề hoặc tên học sinh"
+                    value={uiFilters.searchTerm}
+                    onChange={handleFilterChange}
+                />
+              </div>
+            </div>
+            
+            <div className="filter-group">
+              <label className="filter-label">Trạng thái</label>
+              <select
+                  name="status"
+                  value={filters.status || ''}
+                  onChange={handleFilterChange}
+                  className="filter-select"
+              >
+                <option value="">Tất cả trạng thái</option>
+                {MEDICAL_EVENT_STATUS.map(status => (
+                    <option key={status.value} value={status.value}>{status.label}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="filter-group">
+              <label className="filter-label">Từ ngày</label>
+              <input
+                  type="date"
+                  name="fromDate"
+                  value={uiFilters.fromDate}
+                  onChange={handleFilterChange}
+                  className="filter-date"
+              />
+            </div>
+            
+            <div className="filter-group">
+              <label className="filter-label">Đến ngày</label>
+              <input
+                  type="date"
+                  name="toDate"
+                  value={uiFilters.toDate}
+                  onChange={handleFilterChange}
+                  className="filter-date"
+              />
+            </div>
           </div>
 
           <div className="filter-actions">
@@ -980,6 +1059,7 @@ const MedicalEvents = () => {
                 className="apply-filters-btn"
                 onClick={applyFilters}
             >
+              <span className="btn-icon">🔍</span>
               Áp dụng lọc
             </button>
             <button
@@ -987,6 +1067,7 @@ const MedicalEvents = () => {
                 className="clear-filters-btn"
                 onClick={clearFilters}
             >
+              <span className="btn-icon">🗑️</span>
               Xóa lọc
             </button>
           </div>
@@ -1099,7 +1180,7 @@ const MedicalEvents = () => {
                           <strong>Tiêu đề:</strong> {currentEvent.title}
                         </div>
                         <div className="detail-row">
-                          <strong>Loại sự cố:</strong> {currentEvent.eventType}
+                          <strong>Loại sự cố:</strong> {getEventTypeText(currentEvent.eventType)}
                         </div>
                         <div className="detail-row">
                           <strong>Ngày xảy ra:</strong> {currentEvent.eventDate ? new Date(currentEvent.eventDate).toLocaleString('vi-VN') : 'Không có'}
@@ -1124,9 +1205,6 @@ const MedicalEvents = () => {
                         </div>
                         <div className="detail-row">
                           <strong>Biện pháp xử lý:</strong> {currentEvent.handlingMeasures || 'Không có'}
-                        </div>
-                        <div className="detail-row">
-                          <strong>Ghi chú:</strong> {currentEvent.notes || 'Không có'}
                         </div>
 
                         {/* Related medicines/inventory items used */}
@@ -1223,15 +1301,31 @@ const MedicalEvents = () => {
                         </div>
                         <div className="form-group">
                           <label htmlFor="eventType">Loại sự cố <span className="required">*</span></label>
-                          <input
-                              type="text"
+                          <select
                               name="eventType"
                               id="eventType"
-                              value={currentEvent.eventType}
-                              onChange={handleInputChange}
-                              placeholder="Nhập loại sự cố (ví dụ: Chấn thương, Bệnh tật, Dị ứng...)"
+                              value={showCustomEventType ? 'OTHER' : currentEvent.eventType}
+                              onChange={handleEventTypeChange}
                               required
-                          />
+                              className="event-type-select"
+                          >
+                            <option value="">-- Chọn loại sự cố --</option>
+                            {EVENT_TYPES.map(type => (
+                                <option key={type.value} value={type.value}>{type.label}</option>
+                            ))}
+                          </select>
+                          {showCustomEventType && (
+                              <input
+                                  type="text"
+                                  name="customEventType"
+                                  id="customEventType"
+                                  value={customEventType}
+                                  onChange={handleCustomEventTypeChange}
+                                  placeholder="Nhập loại sự cố khác..."
+                                  required
+                                  className="custom-event-type-input"
+                              />
+                          )}
                         </div>
                       </div>
 
@@ -1284,6 +1378,7 @@ const MedicalEvents = () => {
                               id="eventDate"
                               value={currentEvent.eventDate}
                               onChange={handleInputChange}
+                              max={getCurrentDateTime()}
                               required
                           />
                         </div>
@@ -1390,7 +1485,7 @@ const MedicalEvents = () => {
                             </button>
                             {inventoryItems && inventoryItems.length === 0 && (
                                 <div className="inventory-debug-info">
-                                  <small style={{color: 'red'}}>Không có vật phẩm y tế nào. Kiểm tra console để xem lỗi.</small>
+                                  <small style={{color: 'red'}}>Không có vật phẩm y tế nào.</small>
                                 </div>
                             )}
                           </div>
@@ -1540,18 +1635,6 @@ const MedicalEvents = () => {
                           </div>
                       )}
 
-                      <div className="form-group">
-                        <label htmlFor="notes">Ghi chú</label>
-                        <textarea
-                            name="notes"
-                            id="notes"
-                            value={currentEvent.notes}
-                            onChange={handleInputChange}
-                            rows="3"
-                            placeholder="Ghi chú thêm..."
-                        ></textarea>
-                      </div>
-
                       <div className="form-row">
                         <div className="form-group">
                           <label htmlFor="status">Trạng thái</label>
@@ -1561,9 +1644,19 @@ const MedicalEvents = () => {
                               value={currentEvent.status}
                               onChange={handleInputChange}
                           >
-                            {MEDICAL_EVENT_STATUS.map(status => (
-                                <option key={status.value} value={status.value}>{status.label}</option>
-                            ))}
+                            {MEDICAL_EVENT_STATUS.map(status => {
+                              // Disable RESOLVED status when creating new event
+                              const isDisabled = !editing && status.value === 'RESOLVED';
+                              return (
+                                <option 
+                                  key={status.value} 
+                                  value={status.value}
+                                  disabled={isDisabled}
+                                >
+                                  {status.label}
+                                </option>
+                              );
+                            })}
                           </select>
                         </div>
                       </div>
