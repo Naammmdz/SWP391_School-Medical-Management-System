@@ -54,4 +54,10 @@ public interface HealthCheckCampaignService {
 
     List<HealthCheckResponseDTO> getAllHealthCheckResultsWithParentConfirmationTrue();
 
+    // Get all students eligible for a campaign based on target group
+    List<StudentResponseDTO> getAllStudentsInCampaign(Integer campaignId);
+
+    // Get all students with their vaccination status for a campaign
+    List<HealthCheckResponseResultDTO> getStudentsWithVaccinationStatus(Integer campaignId);
+
 }

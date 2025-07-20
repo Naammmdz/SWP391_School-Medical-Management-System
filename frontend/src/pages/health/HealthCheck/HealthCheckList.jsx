@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import HealthCheckService from '../../../services/HealthCheckService';
 import './HealthCheckList.css';
 import { Table, Button, Modal, Tag, message, Space, Tabs } from 'antd';
+import AllStudentsInHealthCheckCampaign from '../../../components/healthcheck/AllStudentsInHealthCheckCampaign';
+import StudentsWithHealthStatus from '../../../components/healthcheck/StudentsWithHealthStatus';
 
 const HealthCheckList = () => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -22,6 +24,7 @@ const HealthCheckList = () => {
   const [approveSuccess, setApproveSuccess] = useState(false);
   const [rejectSuccess, setRejectSuccess] = useState(false);
   const [activeTab, setActiveTab] = useState('PENDING');
+  const [detailActiveTab, setDetailActiveTab] = useState('info');
 
   const getUserNameById = (id) => {
     const user = users.find(u => String(u.id) === String(id));
@@ -271,7 +274,7 @@ const HealthCheckList = () => {
         open={detailModalOpen}
         title={selectedCampaign ? `Chi tiết chiến dịch: ${selectedCampaign.campaignName}` : ''}
         onCancel={() => setDetailModalOpen(false)}
-        width={700}
+        width={900}
         footer={
           selectedCampaign && selectedCampaign.status === 'PENDING' && (user.userRole === 'ROLE_ADMIN' || user.userRole === 'ROLE_PRINCIPAL') ? [
             <Button key="reject" danger loading={rejectingId === selectedCampaign.campaignId} onClick={() => handleReject(selectedCampaign.campaignId)}>
@@ -283,26 +286,40 @@ const HealthCheckList = () => {
           ] : null
         }
       >
-        {approveSuccess && (
-          <div style={{ background: '#e6fffb', color: '#08979c', padding: 10, borderRadius: 6, marginBottom: 12, textAlign: 'center', fontWeight: 600 }}>
-            Duyệt chiến dịch thành công!
-          </div>
-        )}
         {selectedCampaign && (
-          <div style={{ lineHeight: 2, fontSize: 16 }}>
-            <div><b>Tên chiến dịch:</b> {selectedCampaign.campaignName}</div>
-            <div><b>Mô tả:</b> {selectedCampaign.description}</div>
-            <div><b>Ngày dự kiến:</b> {formatScheduledDate(selectedCampaign.scheduledDate)}</div>
-            <div><b>Địa điểm:</b> {selectedCampaign.address}</div>
-            <div><b>Đối tượng:</b> {selectedCampaign.targetGroup}</div>
-            <div><b>Loại:</b> {selectedCampaign.type}</div>
-            <div><b>Người thực hiện:</b> {selectedCampaign.organizer}</div>
-            <div><b>Trạng thái:</b> <Tag color={selectedCampaign.status === 'PENDING' ? 'orange' : selectedCampaign.status === 'APPROVED' ? 'green' : selectedCampaign.status === 'CANCELLED' ? 'red' : 'default'}>{renderStatusVN(selectedCampaign.status)}</Tag></div>
-            <div><b>Người tạo:</b> {getUserNameById(selectedCampaign.createdBy)}</div>
-            <div><b>Người duyệt:</b> {selectedCampaign.approvedBy ? getUserNameById(selectedCampaign.approvedBy) : <span style={{ color: '#bfbfbf' }}>Chưa duyệt</span>}</div>
-            <div><b>Ngày tạo:</b> {selectedCampaign.createdAt}</div>
+          <div style={{ marginBottom: '20px', padding: '16px', backgroundColor: '#f5f5f5', borderRadius: '6px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', lineHeight: 1.8 }}>
+              <div>
+                <div><strong>Tên chiến dịch:</strong> {selectedCampaign.campaignName}</div>
+                <div><strong>Mô tả:</strong> {selectedCampaign.description}</div>
+                <div><strong>Ngày dự kiến:</strong> {formatScheduledDate(selectedCampaign.scheduledDate)}</div>
+                <div><strong>Địa điểm:</strong> {selectedCampaign.address}</div>
+              </div>
+              <div>
+                <div><strong>Đối tượng:</strong> {selectedCampaign.targetGroup}</div>
+                <div><strong>Loại:</strong> {selectedCampaign.type}</div>
+                <div><strong>Người thực hiện:</strong> {selectedCampaign.organizer}</div>
+                <div><strong>Trạng thái:</strong> <Tag color={selectedCampaign.status === 'PENDING' ? 'orange' : selectedCampaign.status === 'APPROVED' ? 'green' : selectedCampaign.status === 'CANCELLED' ? 'red' : 'default'}>{renderStatusVN(selectedCampaign.status)}</Tag></div>
+              </div>
+            </div>
+            <div style={{ marginTop: '12px', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+              <div><strong>Người tạo:</strong> {getUserNameById(selectedCampaign.createdBy)}</div>
+              <div><strong>Người duyệt:</strong> {selectedCampaign.approvedBy ? getUserNameById(selectedCampaign.approvedBy) : <span style={{ color: '#bfbfbf' }}>Chưa duyệt</span>}</div>
+            </div>
+            <div style={{ marginTop: '8px' }}>
+              <div><strong>Ngày tạo:</strong> {selectedCampaign.createdAt}</div>
+            </div>
           </div>
         )}
+        
+        <Tabs activeKey={detailActiveTab} onChange={setDetailActiveTab} type="card">
+          <Tabs.TabPane tab="Học sinh đủ điều kiện" key="eligible">
+            {selectedCampaign && <AllStudentsInHealthCheckCampaign campaignId={selectedCampaign.campaignId} />}
+          </Tabs.TabPane>
+          <Tabs.TabPane tab="Trạng thái kiểm tra" key="status">
+            {selectedCampaign && <StudentsWithHealthStatus campaignId={selectedCampaign.campaignId} />}
+          </Tabs.TabPane>
+        </Tabs>
       </Modal>
       {/* Modal xác nhận từ chối với lý do */}
       <Modal

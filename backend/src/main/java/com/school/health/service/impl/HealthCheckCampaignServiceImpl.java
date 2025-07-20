@@ -463,6 +463,125 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<StudentResponseDTO> getAllStudentsInCampaign(Integer campaignId) {
+        HealthCheckCampaign campaign = healthCheckCampaignRepository.findById(campaignId)
+                .orElseThrow(() -> new RuntimeException("Campaign not found id: " + campaignId));
+
+        List<Student> allStudents = new ArrayList<>();
+        String[] targetGroups = campaign.getTargetGroup().split(",");
+
+        for (String group : targetGroups) {
+            group = group.trim();
+            if (group.length() == 1) {
+                // Single grade (e.g., "6" for grade 6)
+                List<Student> gradeStudents = studentRepository.findByGrade(group);
+                allStudents.addAll(gradeStudents);
+            } else if (group.length() == 2) {
+                // Specific class (e.g., "6A")
+                List<Student> classStudents = studentRepository.findByClassName(group);
+                allStudents.addAll(classStudents);
+            }
+        }
+
+        // Remove duplicates and convert to DTO
+        return allStudents.stream()
+                .distinct()
+                .filter(student -> student.isActive())
+                .map(student -> {
+                    StudentResponseDTO dto = new StudentResponseDTO();
+                    dto.setStudentId(student.getStudentId());
+                    dto.setFullName(student.getFullName());
+                    dto.setDob(student.getDob());
+                    dto.setGender(student.getGender());
+                    dto.setClassName(student.getClassName());
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<HealthCheckResponseResultDTO> getStudentsWithVaccinationStatus(Integer campaignId) {
+        HealthCheckCampaign campaign = healthCheckCampaignRepository.findById(campaignId)
+                .orElseThrow(() -> new RuntimeException("Campaign not found id: " + campaignId));
+
+        // Get all eligible students
+        List<Student> eligibleStudents = new ArrayList<>();
+        String[] targetGroups = campaign.getTargetGroup().split(",");
+
+        for (String group : targetGroups) {
+            group = group.trim();
+            if (group.length() == 1) {
+                List<Student> gradeStudents = studentRepository.findByGrade(group);
+                eligibleStudents.addAll(gradeStudents);
+            } else if (group.length() == 2) {
+                List<Student> classStudents = studentRepository.findByClassName(group);
+                eligibleStudents.addAll(classStudents);
+            }
+        }
+
+        // Remove duplicates
+        eligibleStudents = eligibleStudents.stream()
+                .distinct()
+                .filter(Student::isActive)
+                .collect(Collectors.toList());
+
+        // Get existing vaccination records for this campaign
+        List<HealthCheck> existingVaccinations = healthCheckRepository.findByCampaignId(campaignId);
+
+        // Create result list
+        List<HealthCheckResponseResultDTO> results = new ArrayList<>();
+
+        for (Student student : eligibleStudents) {
+            // Find existing vaccination record for this student
+            HealthCheck vaccination = existingVaccinations.stream()
+                    .filter(v -> v.getStudent().getStudentId().equals(student.getStudentId()))
+                    .findFirst()
+                    .orElse(null);
+
+            HealthCheckResponseResultDTO dto = HealthCheckResponseResultDTO.builder()
+                    .studentId(student.getStudentId())
+                    .studentName(student.getFullName())
+                    .className(student.getClassName())
+                    .campaignId(campaign.getCampaignId())
+                    .campaignName(campaign.getCampaignName())
+                    .scheduledDate(campaign.getScheduledDate())
+                    .build();
+
+            if (vaccination != null) {
+                // Student has vaccination record
+                dto.setHealthCheckId(vaccination.getCheckId());
+                dto.setDate(vaccination.getDate());
+                dto.setHeight(vaccination.getHeight());
+                dto.setWeight(vaccination.getWeight());
+                dto.setNotes(vaccination.getNotes());
+                dto.setParentConfirmation(vaccination.isParentConfirmation());
+                dto.setEyesightLeft(vaccination.getEyesightLeft());
+                dto.setEyesightRight(vaccination.getEyesightRight());
+                dto.setHearingLeft(vaccination.getHearingLeft());
+                dto.setHearingRight(vaccination.getHearingRight());
+                dto.setBloodPressure(vaccination.getBloodPressure());
+                dto.setTemperature(vaccination.getTemperature());
+                dto.setConsultationAppointment(vaccination.isConsultationAppointment());
+                dto.setStudentId(vaccination.getStudent().getStudentId());
+                dto.setCampaignId(vaccination.getCampaign().getCampaignId());
+                dto.setCampaignName(vaccination.getCampaign().getCampaignName());
+                dto.setScheduledDate(vaccination.getCampaign().getScheduledDate());
+                dto.setStudentName(vaccination.getStudent().getFullName());
+                dto.setClassName(vaccination.getStudent().getClassName());
+
+            } else {
+                // Student has no vaccination record yet
+                dto.setHealthCheckId(0);
+                dto.setParentConfirmation(false);
+            }
+
+            results.add(dto);
+        }
+
+        return results;
+    }
+
 
 }
 

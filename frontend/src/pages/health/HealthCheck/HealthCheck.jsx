@@ -46,30 +46,29 @@ const HealthCheck = () => {
 
       if (studentId && Array.isArray(allCampaigns)) {
         try {
-          // Lấy danh sách chiến dịch đã xác nhận
-          const confirmedData = await HealthCheckService.parentGetStautusCampaigns(studentId, true, config);
-          confirmed = Array.isArray(confirmedData) ? confirmedData : [];
-
-          // Lấy danh sách chiến dịch đã từ chối
-          const rejectedData = await HealthCheckService.parentGetStautusCampaigns(studentId, false, config);
-          rejected = Array.isArray(rejectedData) ? rejectedData : [];
-
-          hasStatus = true;
-          console.log('Confirmed campaigns:', confirmed);
-          console.log('Rejected campaigns:', rejected);
+          // Sử dụng endpoint khác hoặc bỏ qua việc lấy trạng thái từ backend
+          // Vì endpoint getCampaignStatus đang gây lỗi 500
+          console.log('Skipping status fetch due to backend API issues');
+          hasStatus = false;
         } catch (statusErr) {
           console.log('Error fetching status, treating as no status available:', statusErr);
           hasStatus = false;
         }
 
+        // Lấy trạng thái từ localStorage
+        const savedStatuses = JSON.parse(localStorage.getItem(`healthcheck_status_${studentId}`) || '{}');
+        
         // Cập nhật trạng thái cho từng chiến dịch
         const updatedCampaigns = allCampaigns.map(campaign => {
+          // Kiểm tra trạng thái từ localStorage trước
+          const savedStatus = savedStatuses[campaign.campaignId];
+          
           const isConfirmed = confirmed.some(c => c.campaignId === campaign.campaignId);
           const isRejected = rejected.some(c => c.campaignId === campaign.campaignId);
 
           return {
             ...campaign,
-            parentConfirmStatus: isConfirmed ? true : (isRejected ? false : null)
+            parentConfirmStatus: savedStatus !== undefined ? savedStatus : (isConfirmed ? true : (isRejected ? false : null))
           };
         });
 
@@ -100,6 +99,11 @@ const HealthCheck = () => {
       const config = { headers: { Authorization: `Bearer ${token}` } };
       await HealthCheckService.parentConfirmHealthCheck(campaignId, studentId, config);
 
+      // Lưu trạng thái vào localStorage
+      const savedStatuses = JSON.parse(localStorage.getItem(`healthcheck_status_${studentId}`) || '{}');
+      savedStatuses[campaignId] = true;
+      localStorage.setItem(`healthcheck_status_${studentId}`, JSON.stringify(savedStatuses));
+      
       // Cập nhật trạng thái ngay lập tức trong state
       setCampaigns(prev => prev.map(c =>
           c.campaignId === campaignId
@@ -125,6 +129,11 @@ const HealthCheck = () => {
       const config = { headers: { Authorization: `Bearer ${token}` } };
       await HealthCheckService.parentRejectHealthCheck(campaignId, studentId, config);
 
+      // Lưu trạng thái vào localStorage
+      const savedStatuses = JSON.parse(localStorage.getItem(`healthcheck_status_${studentId}`) || '{}');
+      savedStatuses[campaignId] = false;
+      localStorage.setItem(`healthcheck_status_${studentId}`, JSON.stringify(savedStatuses));
+      
       // Cập nhật trạng thái ngay lập tức trong state
       setCampaigns(prev => prev.map(c =>
           c.campaignId === campaignId

@@ -166,6 +166,25 @@ const HealthCheckService = {
       console.error('Error filtering health check results:', error);
       throw error;
     }
+  },
+  // New methods for campaign details
+  getAllStudentsInCampaign: async (campaignId, config) => {
+    try {
+      const response = await axios.get(`${API_URL}/${campaignId}/all-students`, config);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching all students in campaign:', error);
+      throw error;
+    }
+  },
+  getStudentsWithHealthStatus: async (campaignId, config) => {
+    try {
+      const response = await axios.get(`${API_URL}/${campaignId}/students-with-status`, config);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching students with health status:', error);
+      throw error;
+    }
   }
 };
 
