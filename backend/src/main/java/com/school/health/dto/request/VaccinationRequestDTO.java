@@ -16,12 +16,10 @@ import java.time.LocalDate;
 public class VaccinationRequestDTO {
     private LocalDate date;
     private Integer doseNumber;
-    @NotBlank(message = "không được để trống")
     private String adverseReaction;
     private boolean isPreviousDose;
     private String notes;
     private boolean parentConfirmation;
-    @NotBlank(message = "Kết quả không được để trống")
     private String result;
     @NotBlank(message = "Tên vắc xin không được để trống")
     private String vaccineName;

@@ -14,7 +14,6 @@ public class UpdateHealthProfileDTO {
     private String chronicDiseases;
 
     @Size(max = 255, message = "Tiền sử điều trị không được vượt quá 255 ký tự")
-    @NotBlank(message = "Tiền sử điều trị không được để trống")
     private String treatmentHistory;
 
     @Size(max = 50, message = "Thông tin thị lực không được vượt quá 50 ký tự")

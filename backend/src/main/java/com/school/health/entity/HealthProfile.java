@@ -54,8 +54,6 @@ public class HealthProfile {
     @Column(name = "Weight", precision = 5, scale = 2)
     private BigDecimal weight;
 
-    @DecimalMin(value = "0.1", message = "Chiều cao phải lớn hơn 0")
-    @DecimalMax(value = "999.99", message = "Chiều cao không hợp lệ")
     @Column(name = "Height", precision = 5, scale = 2)
     private BigDecimal height;
 

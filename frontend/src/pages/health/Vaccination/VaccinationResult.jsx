@@ -390,12 +390,12 @@ const VaccinationResult = () => {
         return <Text type="secondary">Chưa thực hiện</Text>;
       }
     },
-    {
-      title: 'Kết quả',
-      dataIndex: 'result',
-      key: 'result',
-      render: (result) => getResultTag(result)
-    },
+    // {
+    //   title: 'Kết quả',
+    //   dataIndex: 'result',
+    //   key: 'result',
+    //   render: (result) => getResultTag(result)
+    // },
     {
       title: 'Xác nhận PH',
       dataIndex: 'parentConfirmation',
@@ -681,15 +681,15 @@ const VaccinationResult = () => {
                       </Checkbox>
                     </Form.Item>
                   </Col>
-                  <Col xs={24} sm={12}>
-                    <Form.Item label="Kết quả" name="result" rules={[{ required: true, message: 'Vui lòng chọn kết quả' }]}>
-                      <Select placeholder="Chọn kết quả">
-                        {resultOptions.map(opt => (
-                            <Option key={opt.value} value={opt.value}>{opt.label}</Option>
-                        ))}
-                      </Select>
-                    </Form.Item>
-                  </Col>
+                  {/*<Col xs={24} sm={12}>*/}
+                  {/*  <Form.Item label="Kết quả" name="result" rules={[{ required: true, message: 'Vui lòng chọn kết quả' }]}>*/}
+                  {/*    <Select placeholder="Chọn kết quả">*/}
+                  {/*      {resultOptions.map(opt => (*/}
+                  {/*          <Option key={opt.value} value={opt.value}>{opt.label}</Option>*/}
+                  {/*      ))}*/}
+                  {/*    </Select>*/}
+                  {/*  </Form.Item>*/}
+                  {/*</Col>*/}
                   <Col xs={24}>
                     <Form.Item name="previousDose" valuePropName="checked">
                       <Checkbox>
