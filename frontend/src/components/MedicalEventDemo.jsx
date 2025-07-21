@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import StudentSelectionModal from './StudentSelectionModal';
 import studentService from '../services/StudentService';
 import MedicalEventService from '../services/MedicalEventService';
+import { getSeverityLevelOptions } from '../utils/severityLevelUtils';
+import { getEventTypeOptions } from '../utils/eventTypeUtils';
 import './MedicalEventDemo.css';
 
 const MedicalEventDemo = () => {
@@ -255,10 +257,9 @@ const MedicalEventDemo = () => {
                 value={currentEvent.severityLevel}
                 onChange={handleInputChange}
               >
-                <option value="MINOR">Nhẹ</option>
-                <option value="MODERATE">Trung bình</option>
-                <option value="MAJOR">Nặng</option>
-                <option value="CRITICAL">Cấp cứu</option>
+                {getSeverityLevelOptions().map(level => (
+                  <option key={level.value} value={level.value}>{level.label}</option>
+                ))}
               </select>
             </div>
             

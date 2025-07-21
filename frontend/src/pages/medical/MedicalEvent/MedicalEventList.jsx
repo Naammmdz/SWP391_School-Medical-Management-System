@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import MedicalEventService from '../../../services/MedicalEventService';
 import { useNavigate } from 'react-router-dom';
+import { getSeverityLevelText } from '../../../utils/severityLevelUtils';
+import { getEventTypeText } from '../../../utils/eventTypeUtils';
 
 
 const tableHeader = {
@@ -15,12 +17,6 @@ const tableHeader = {
 const statusVN = {
   PROCESSING: 'Đang xử lý',
   RESOLVED: 'Đã xử lý',
-};
-const severityVN = {
-  MINOR: 'Nhẹ',
-  MODERATE: 'Trung bình',
-  SERIOUS: 'Nặng',
-  CRITICAL: 'Rất nặng',
 };
 
 const fieldLabels = {
@@ -83,7 +79,7 @@ const MedicalEventList = () => {
         </tr>
         <tr>
           <td style={{ fontWeight: 600, padding: 8 }}>{fieldLabels.eventType}</td>
-          <td style={{ padding: 8 }}>{ev.eventType}</td>
+          <td style={{ padding: 8 }}>{getEventTypeText(ev.eventType)}</td>
         </tr>
         <tr>
           <td style={{ fontWeight: 600, padding: 8 }}>{fieldLabels.eventDate}</td>
@@ -95,7 +91,7 @@ const MedicalEventList = () => {
         </tr>
         <tr>
           <td style={{ fontWeight: 600, padding: 8 }}>{fieldLabels.severityLevel}</td>
-          <td style={{ padding: 8 }}>{severityVN[ev.severityLevel] || ev.severityLevel}</td>
+<td style={{ padding: 8 }}>{getSeverityLevelText(ev.severityLevel)}</td>
         </tr>
         <tr>
           <td style={{ fontWeight: 600, padding: 8 }}>{fieldLabels.stuId}</td>
@@ -181,7 +177,7 @@ const MedicalEventList = () => {
             {events.map(ev => (
               <tr key={ev.id} style={{ background: '#fff', borderBottom: '1px solid #f0f0f0' }}>
                 <td style={{ padding: 10, border: '1px solid #eee' }}>{ev.title}</td>
-                <td style={{ padding: 10, border: '1px solid #eee' }}>{ev.eventType}</td>
+                <td style={{ padding: 10, border: '1px solid #eee' }}>{getEventTypeText(ev.eventType)}</td>
                 <td style={{ padding: 10, border: '1px solid #eee' }}>{new Date(ev.eventDate).toLocaleDateString('vi-VN')}</td>
                 <td style={{ padding: 10, border: '1px solid #eee' }}>{statusVN[ev.status] || ev.status}</td>
                 <td style={{ padding: 10, border: '1px solid #eee' }}>{getStudentNames(ev.stuId)}</td>

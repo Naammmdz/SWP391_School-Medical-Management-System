@@ -4,53 +4,22 @@ import MedicalEventService from '../../../services/MedicalEventService';
 import studentService from '../../../services/StudentService';
 import StudentSelectionModal from '../../../components/StudentSelectionModal';
 import InventoryService from '../../../services/InventoryService';
+import { getSeverityLevelText, getSeverityLevelOptions } from '../../../utils/severityLevelUtils';
+import { getEventTypeText, getEventTypeOptions } from '../../../utils/eventTypeUtils';
 
-// Enum values from backend
-const SEVERITY_LEVELS = [
-  { value: 'MINOR', label: 'Nhẹ' },
-  { value: 'MODERATE', label: 'Trung bình' },
-  { value: 'MAJOR', label: 'Nặng' },
-  { value: 'CRITICAL', label: 'Cấp cứu' }
-];
+// Get severity levels from centralized utility
+const SEVERITY_LEVELS = getSeverityLevelOptions();
 
 const MEDICAL_EVENT_STATUS = [
   { value: 'PROCESSING', label: 'Đang xử lý' },
   { value: 'RESOLVED', label: 'Đã xử lý' }
 ];
 
-const EVENT_TYPES = [
-  { value: 'INJURY', label: 'Chấn thương' },
-  { value: 'FALLS', label: 'Ngã, té' },
-  { value: 'CUTS_WOUNDS', label: 'Vết cắt, vết thương' },
-  { value: 'BURNS', label: 'Bỏng' },
-  { value: 'SPRAINS', label: 'Bong gân' },
-  { value: 'ILLNESS', label: 'Bệnh tật' },
-  { value: 'FEVER', label: 'Sốt' },
-  { value: 'HEADACHE', label: 'Đau đầu' },
-  { value: 'STOMACH_ACHE', label: 'Đau bụng' },
-  { value: 'NAUSEA_VOMITING', label: 'Buồn nôn, nôn' },
-  { value: 'ALLERGIC_REACTION', label: 'Phản ứng dị ứng' },
-  { value: 'FOOD_ALLERGY', label: 'Dị ứng thức ăn' },
-  { value: 'SKIN_ALLERGY', label: 'Dị ứng da' },
-  { value: 'RESPIRATORY', label: 'Khó thở, hen suyễn' },
-  { value: 'NOSE_BLEED', label: 'Chảy máu cam' },
-  { value: 'FAINTING', label: 'Ngất xíu' },
-  { value: 'SEIZURE', label: 'Co giật' },
-  { value: 'EMERGENCY', label: 'Cấp cứu' },
-  { value: 'OTHER', label: 'Khác' }
-];
+// Get event types from centralized utility
+const EVENT_TYPES = getEventTypeOptions();
 
 const MedicalEvents = () => {
-  // Helper functions for enum translation
-  const getSeverityLevelText = (severityLevel) => {
-    switch (severityLevel) {
-      case 'MINOR': return 'Nhẹ';
-      case 'MODERATE': return 'Trung bình';
-      case 'MAJOR': return 'Nặng';
-      case 'CRITICAL': return 'Cấp cứu';
-      default: return severityLevel || 'Không có';
-    }
-  };
+  // Helper functions for enum translation - now using centralized utility
 
   const getStatusText = (status) => {
     switch (status) {
@@ -60,11 +29,7 @@ const MedicalEvents = () => {
     }
   };
   
-  // Helper function to get event type display text
-  const getEventTypeText = (eventType) => {
-    const eventTypeObj = EVENT_TYPES.find(type => type.value === eventType);
-    return eventTypeObj ? eventTypeObj.label : eventType || 'Không có';
-  };
+  // Helper function to get event type display text - now using centralized utility
 
   // Helper function to translate inventory status to Vietnamese
   const getInventoryStatusText = (status) => {

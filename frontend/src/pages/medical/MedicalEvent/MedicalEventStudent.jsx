@@ -6,6 +6,8 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions, IconButton
 } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
+import { getSeverityLevelText } from '../../../utils/severityLevelUtils';
+import { getEventTypeText } from '../../../utils/eventTypeUtils';
 
 const MedicalEventStudent = () => {
   const [events, setEvents] = useState([]);
@@ -57,13 +59,7 @@ if (Array.isArray(res)) {
     setSelectedEvent(null);
   };
 
-  // Updated severity levels to Vietnamese
-  const severityLevels = {
-    MINOR: "Nhẹ",
-    MODERATE: "Trung bình",
-    SERIOUS: "Nặng",
-    CRITICAL: "Cấp cứu"
-  };
+  // Using centralized severity level translations
 
   return (
     <Box sx={{ maxWidth: 1200, mx: 'auto', bgcolor: '#e3f2fd', p: 4, borderRadius: 3 }}>
@@ -109,7 +105,7 @@ if (Array.isArray(res)) {
               events.map(ev => (
                 <TableRow key={ev.id} hover>
                   <TableCell>{ev.title}</TableCell>
-                  <TableCell>{ev.eventType}</TableCell>
+                  <TableCell>{getEventTypeText(ev.eventType)}</TableCell>
                   <TableCell>{new Date(ev.eventDate).toLocaleDateString('vi-VN')}</TableCell>
                   <TableCell>{ev.location}</TableCell>
                   <TableCell>
@@ -145,13 +141,13 @@ if (Array.isArray(res)) {
               <Typography variant="h6" sx={{ color: '#1976d2', fontWeight: 600, mb: 1 }}>
                 {selectedEvent.title}
               </Typography>
-              <Typography><b>Loại sự kiện:</b> {selectedEvent.eventType}</Typography>
+              <Typography><b>Loại sự kiện:</b> {getEventTypeText(selectedEvent.eventType)}</Typography>
               <Typography><b>Ngày:</b> {new Date(selectedEvent.eventDate).toLocaleDateString('vi-VN')}</Typography>
               <Typography><b>Địa điểm:</b> {selectedEvent.location}</Typography>
               <Typography><b>Trạng thái:</b> {selectedEvent.status === 'RESOLVED' ? 'Đã xử lý' : 'Đang xử lý'}</Typography>
               <Typography><b>Mô tả:</b> {selectedEvent.description}</Typography>
               <Typography><b>Ghi chú:</b> {selectedEvent.notes}</Typography>
-              <Typography><b>Mức độ:</b> {severityLevels[selectedEvent.severityLevel]}</Typography>
+              <Typography><b>Mức độ:</b> {getSeverityLevelText(selectedEvent.severityLevel)}</Typography>
               <Typography><b>Biện pháp xử lý:</b> {selectedEvent.handlingMeasures}</Typography>
               <Typography sx={{ mt: 2 }}><b>Vật tư/Thuốc đã dùng:</b></Typography>
               {(selectedEvent.relatedMedicinesUsed || []).length === 0 ? (
