@@ -645,15 +645,19 @@ const Pharmaceutical = () => {
                     onChange={handleInputChange}
                   >
                     <option value="ACTIVE">Hoạt động</option>
-                    <option value="INACTIVE">Không hoạt động</option>
+                    <option value="INACTIVE"
+                     disabled={!isEditMode}
+                     >Không hoạt động</option>
                     <option 
                       value="EXPIRED" 
-                      disabled={formData.expiryDate && new Date(formData.expiryDate) > new Date()}
+                      disabled={formData.expiryDate && new Date(formData.expiryDate) > new Date() || !isEditMode}
                       title={formData.expiryDate && new Date(formData.expiryDate) > new Date() ? 'Không thể chọn "Hết hạn" khi hạn sử dụng còn trong tương lai' : ''}
                     >
                       Hết hạn
                     </option>
-                    <option value="DAMAGED">Hư hỏng</option>
+                    <option value="DAMAGED"
+                    disabled={!isEditMode}
+                    >Hư hỏng</option>
                   </select>
                 </div>
 

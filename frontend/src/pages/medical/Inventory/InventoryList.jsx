@@ -469,15 +469,6 @@ const InventoryList = () => {
                         onChange={handleEditChange}
                     >
                       <MenuItem value="ACTIVE">Hoạt động</MenuItem>
-                      <MenuItem value="INACTIVE">Không hoạt động</MenuItem>
-                      <MenuItem
-                          value="EXPIRED"
-                          disabled={editForm.expiryDate && dayjs(editForm.expiryDate).isAfter(dayjs(), 'day')}
-                          title={editForm.expiryDate && dayjs(editForm.expiryDate).isAfter(dayjs(), 'day') ? 'Không thể chọn "Hết hạn" khi hạn sử dụng còn trong tương lai' : ''}
-                      >
-                        Hết hạn
-                      </MenuItem>
-                      <MenuItem value="DAMAGED">Hư hỏng</MenuItem>
                     </Select>
                   </FormControl>
                 </Grid>
