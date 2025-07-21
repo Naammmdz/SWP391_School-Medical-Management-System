@@ -516,8 +516,9 @@ const MedicalEvents = () => {
 
       const response = await InventoryService.getInventoryUsageLogsByMedicalEventId(medicalEventId);
       console.log('Raw API response:', response);
-      console.log('Response type:', typeof response);
-      console.log('Is array:', Array.isArray(response));
+      if (response && typeof response === 'object') {
+        console.log('Keys in response:', Object.keys(response));
+      }
 
       // Handle different response formats
       let usageLogs = [];
@@ -538,7 +539,7 @@ const MedicalEvents = () => {
       console.log('Final usage logs:', usageLogs);
       console.log('Usage logs count:', usageLogs.length);
 
-      // Before returning or setting the logs, let's clean up if necessary
+      // Set the logs for the UI
       setInventoryUsageLogs(usageLogs);
       return usageLogs;
     } catch (error) {
@@ -1579,61 +1580,6 @@ const MedicalEvents = () => {
                       </div>
 
                       {/* Inventory Usage Logs Section - Only show in edit mode */}
-                      {editing && currentEvent.id && (
-                          <div className="form-group">
-                            <label>Lịch sử sử dụng vật phẩm y tế</label>
-                            <div className="inventory-usage-logs">
-                              {inventoryUsageLogs.length > 0 ? (
-                                  <div className="usage-logs-container">
-                                    <h4>Các vật phẩm đã sử dụng trong sự cố này:</h4>
-                                    <div className="usage-logs-list">
-                                      {inventoryUsageLogs.map((log, index) => {
-                                        const inventoryItem = inventoryItems.find(item =>
-                                            (item.id || item.inventoryId) === log.itemId
-                                        );
-                                        const itemName = inventoryItem?.name || inventoryItem?.itemName || log.itemName || `Vật phẩm ID: ${log.itemId}`;
-
-                                        return (
-                                            <div key={index} className="usage-log-item">
-                                              <div className="log-item-header">
-                                                <strong>{itemName}</strong>
-                                                <span className="log-item-id">ID: {log.itemId}</span>
-                                              </div>
-                                              <div className="log-item-details">
-                                                <div className="log-detail-row">
-                                                  <span className="log-label">Số lượng sử dụng:</span>
-                                                  <span className="log-value">{log.quantityUsed || log.quantity || 0}</span>
-                                                </div>
-                                                <div className="log-detail-row">
-                                                  <span className="log-label">Ngày sử dụng:</span>
-                                                  <span className="log-value">{log.usedDate ? new Date(log.usedDate).toLocaleString('vi-VN') : 'Không có'}</span>
-                                                </div>
-                                                {log.notes && (
-                                                    <div className="log-detail-row">
-                                                      <span className="log-label">Ghi chú:</span>
-                                                      <span className="log-value">{log.notes}</span>
-                                                    </div>
-                                                )}
-                                                {log.usedBy && (
-                                                    <div className="log-detail-row">
-                                                      <span className="log-label">Người sử dụng:</span>
-                                                      <span className="log-value">{log.usedBy}</span>
-                                                    </div>
-                                                )}
-                                              </div>
-                                            </div>
-                                        );
-                                      })}
-                                    </div>
-                                  </div>
-                              ) : (
-                                  <div className="no-usage-logs">
-                                    <p>Chưa có lịch sử sử dụng vật phẩm y tế cho sự cố này.</p>
-                                  </div>
-                              )}
-                            </div>
-                          </div>
-                      )}
 
                       <div className="form-row">
                         <div className="form-group">

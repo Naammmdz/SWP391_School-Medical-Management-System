@@ -51,7 +51,7 @@ public class MedicalEvent {
     @Column(name = "Location", columnDefinition = "NVARCHAR(100)")
     private String location;
 
-    @Column(name = "Description", columnDefinition = "NVARCHAR(255)")
+    @Column(name = "Description", columnDefinition = "NVARCHAR(2000)")
     private String description;
 
     @CreationTimestamp
