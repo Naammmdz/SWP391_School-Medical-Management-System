@@ -52,6 +52,9 @@ const NotificationPopup = () => {
       else if (notification.title === '[THÔNG BÁO] Triển khai chiến dịch tiêm chủng tại trường!') {
         window.location.href = '/parent/thongbaotiemchung';
       }
+      else if (notification.title === 'Yêu cầu gửi thuốc của bạn đã có kết quả') {
+        window.location.href = '/parent/donthuocdagui';
+      }
     } catch (error) {
       console.error('Error handling notification click:', error);
     }

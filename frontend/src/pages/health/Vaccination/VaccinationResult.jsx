@@ -256,17 +256,17 @@ const VaccinationResult = () => {
     
     console.log('Debug - Determined scheduledDate:', scheduledDate);
     
-    const formData = {
-      scheduledDate: scheduledDate ? dayjs(scheduledDate) : null,
-      actualDate: record.date ? dayjs(record.date) : dayjs(), // Ngày thực hiện tiêm, mặc định hôm nay
-      doseNumber: record.doseNumber,
-      parentConfirmation: record.parentConfirmation,
-      previousDose: record.isPreviousDose,
-      vaccineName: record.vaccineName,
-      adverseReaction: record.adverseReaction,
-      notes: record.notes,
-      result: record.result,
-    };
+   const formData = {
+  scheduledDate: scheduledDate ? dayjs(scheduledDate) : null,
+  actualDate: record.date ? dayjs(record.date) : dayjs(),
+  doseNumber: record.doseNumber,
+  parentConfirmation: record.parentConfirmation,
+  previousDose: record.isPreviousDose,
+  vaccineName: record.vaccineName,
+  adverseReaction: record.adverseReaction,
+  notes: record.notes,
+  result: record.result ? record.result : 'SUCCESS',
+};
     
     console.log('Debug - Form data:', formData);
     console.log('Debug - Form scheduledDate value:', formData.scheduledDate ? formData.scheduledDate.format('YYYY-MM-DD') : 'null');
@@ -681,15 +681,10 @@ const VaccinationResult = () => {
                       </Checkbox>
                     </Form.Item>
                   </Col>
-                  {/*<Col xs={24} sm={12}>*/}
-                  {/*  <Form.Item label="Kết quả" name="result" rules={[{ required: true, message: 'Vui lòng chọn kết quả' }]}>*/}
-                  {/*    <Select placeholder="Chọn kết quả">*/}
-                  {/*      {resultOptions.map(opt => (*/}
-                  {/*          <Option key={opt.value} value={opt.value}>{opt.label}</Option>*/}
-                  {/*      ))}*/}
-                  {/*    </Select>*/}
-                  {/*  </Form.Item>*/}
-                  {/*</Col>*/}
+                 <Form.Item name="result" initialValue="SUCCESS" noStyle>
+  <Input type="hidden" />
+</Form.Item>
+
                   <Col xs={24}>
                     <Form.Item name="previousDose" valuePropName="checked">
                       <Checkbox>
