@@ -10,8 +10,8 @@ branch = "deploy"
 
 [deploy]
 startCommand = "java -jar backend/target/school-health-management-0.0.1-SNAPSHOT.jar"
-healthcheckPath = "/actuator/health"
-healthcheckTimeout = 300
+# healthcheckPath = "/actuator/health"  # Disabled temporarily
+# healthcheckTimeout = 300
 restartPolicyType = "always"
 
 [environments.production.variables]
