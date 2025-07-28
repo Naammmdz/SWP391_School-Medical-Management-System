@@ -113,9 +113,9 @@ const UpdateHealthCheckResult = () => {
           <Form.Item label="Nhiệt độ" name="temperature" rules={[{ required: true, message: 'Vui lòng nhập nhiệt độ' }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="consultationAppointment" valuePropName="checked">
+          {/* <Form.Item name="consultationAppointment" valuePropName="checked">
             <Checkbox>Đặt lịch tư vấn</Checkbox>
-          </Form.Item>
+          </Form.Item> */}
           <Form.Item label="Ghi chú" name="notes">
             <Input.TextArea rows={2} />
           </Form.Item>
