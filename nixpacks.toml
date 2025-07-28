@@ -1,6 +1,3 @@
-[providers]
-java = "maven"
-
 [phases.setup]
 nixPkgs = ["maven", "openjdk"]
 
