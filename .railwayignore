@@ -1,8 +1,24 @@
+# Exclude frontend completely
 frontend/
+
+# Exclude Node.js files that might confuse Railway
+package.json
+package-lock.json
+node_modules/
+*.js
+*.ts
+*.jsx
+*.tsx
+index.html
+vite.config.js
+eslint.config.js
+
+# Exclude other unnecessary files
 database/
 *.md
 .idea/
 .vscode/
-package.json
-package-lock.json
 tatus
+
+# Only include backend
+!backend/

@@ -5,6 +5,9 @@ watchPatterns = ["backend/**"]
 [build.nixpacksOptions]
 workingDir = "backend"
 
+[build.nixpacksConfig]
+packages = ["maven", "openjdk"]
+
 [source]
 branch = "deploy"
 
