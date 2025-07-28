@@ -4,14 +4,8 @@ java = "maven"
 [phases.setup]
 nixPkgs = ["maven", "openjdk"]
 
-[phases.install]
-cmd = "echo 'Skipping default install'"
-
-[phases.build]
-cmd = "cd backend && mvn clean package -DskipTests"
-
 [phases.start]
-cmd = "cd backend && java -jar target/school-health-management-0.0.1-SNAPSHOT.jar"
+cmd = "java -jar backend/target/school-health-management-0.0.1-SNAPSHOT.jar"
 
 [variables]
 NODE_ENV = ""
