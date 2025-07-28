@@ -86,9 +86,13 @@ const UpdateHealthCheckResult = () => {
           layout="vertical"
           onFinish={handleSubmit}
         >
-          <Form.Item label="Ngày nhập kết quả" name="date" rules={[{ required: true, message: 'Vui lòng chọn ngày nhập kết quả' }]}>
-            <DatePicker format="YYYY-MM-DD" style={{ width: '100%' }} />
-          </Form.Item>
+         <Form.Item label="Ngày nhập kết quả" name="date" rules={[{ required: true, message: 'Vui lòng chọn ngày nhập kết quả' }]}>
+  <DatePicker 
+    format="YYYY-MM-DD" 
+    style={{ width: '100%' }} 
+    disabledDate={(current) => current && current < dayjs().startOf('day')}
+  />
+</Form.Item>
           <Form.Item label="Chiều cao (cm)" name="height" rules={[{ required: true, message: 'Vui lòng nhập chiều cao' }]}>
             <Input type="number" min={0} />
           </Form.Item>
@@ -113,9 +117,9 @@ const UpdateHealthCheckResult = () => {
           <Form.Item label="Nhiệt độ" name="temperature" rules={[{ required: true, message: 'Vui lòng nhập nhiệt độ' }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="consultationAppointment" valuePropName="checked">
+          {/* <Form.Item name="consultationAppointment" valuePropName="checked">
             <Checkbox>Đặt lịch tư vấn</Checkbox>
-          </Form.Item>
+          </Form.Item> */}
           <Form.Item label="Ghi chú" name="notes">
             <Input.TextArea rows={2} />
           </Form.Item>
