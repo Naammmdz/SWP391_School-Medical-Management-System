@@ -13,11 +13,11 @@ class HealthRecordService {
         return axios.get(`${HEALTH_ST}/health-profile/${studentId}`, config);
     }
     createHealthRecord(studentId, healthRecord) {
-        // Nếu backend dùng PUT cho update, POST cho tạo mới, bạn có thể tách hàm
+        
         return axios.post(`${BASE_URL}/${studentId}/health-profile`, healthRecord);
     }
     updateHealthRecord(studentId, healthRecord,config) {
-        // Nếu backend dùng PUT cho update, POST cho tạo mới, bạn có thể tách hàm
+       
         return axios.put(`${HEALTH_ST}/${studentId}/health-profile`, healthRecord,config);
     }
     getAllHealthRecord(config) {

@@ -1,7 +1,7 @@
 import axios from "axios";
 const API_URL = import.meta.env.VITE_API_INVENTORY;
 
-// Set up axios defaults for authentication
+
 axios.defaults.withCredentials = true;
 
 const InventoryService = {

@@ -1,12 +1,12 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_HEALTHCHECK; // <-- Sửa lại đường dẫn API cho Health Check
+const API_URL = import.meta.env.VITE_API_HEALTHCHECK; 
 
 
 const HealthCheckService = {
   createHealthCheckCampaign: async (campaignData, config) => {
     try {
-      const response = await axios.post(API_URL, campaignData, config); // <-- sửa lại vị trí
+      const response = await axios.post(API_URL, campaignData, config); 
       return response.data;
     } catch (error) {
       console.error('Lỗi khi tạo chiến dịch:', error);
