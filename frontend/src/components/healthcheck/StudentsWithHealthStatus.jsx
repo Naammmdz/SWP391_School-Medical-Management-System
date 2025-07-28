@@ -66,8 +66,9 @@ const StudentsWithHealthStatus = ({ campaignId }) => {
             dataIndex: 'status',
             key: 'status',
             render: (text, record) => {
-                const status = record.status || record.healthStatus || record.checkStatus || record.parentConfirmation;
-                
+                // Use parentConfirmation directly from backend
+                const status = record.parentConfirmation;
+
                 // Map different status values to display text and color
                 let displayText = 'Chưa xác định';
                 let badgeStatus = 'default';
@@ -82,7 +83,7 @@ const StudentsWithHealthStatus = ({ campaignId }) => {
                     displayText = 'Chưa phản hồi';
                     badgeStatus = 'warning';
                 }
-                
+
                 return (
                     <Badge
                         status={badgeStatus}
@@ -98,20 +99,20 @@ const StudentsWithHealthStatus = ({ campaignId }) => {
             render: (text, record) => {
                 const dateValue = record.checkDate || record.healthCheckDate || record.examinationDate || record.scheduledDate;
                 if (!dateValue) return 'Chưa có lịch';
-                
+
                 // Handle different date formats
                 if (Array.isArray(dateValue) && dateValue.length === 3) {
                     // Format [year, month, day] array
                     const [year, month, day] = dateValue;
                     return `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
                 }
-                
+
                 if (typeof dateValue === 'string') {
                     // Check if it's a valid date string first
                     if (dateValue === '' || dateValue === 'null' || dateValue === 'undefined') {
                         return 'Chưa có lịch';
                     }
-                    
+
                     // Try to parse and format string dates
                     try {
                         const date = new Date(dateValue);
@@ -126,7 +127,7 @@ const StudentsWithHealthStatus = ({ campaignId }) => {
                         return dateValue;
                     }
                 }
-                
+
                 // For other data types, convert to string
                 return String(dateValue);
             },

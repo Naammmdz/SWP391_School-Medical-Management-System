@@ -17,6 +17,7 @@ public class StudentRequestDTO {
     @Pattern(regexp = "^(Nam|Nữ)$", message = "Giới tính chỉ có thể là Nam hoặc Nữ")
     private String gender;
     @NotBlank(message = "Lớp không được để trống")
+    @Pattern(regexp = "^[1-5][AB]$", message = "Class phải là 1A đến 5B")
     private String className;
     @NotNull(message = "ID phụ huynh không được để trống")
     @Positive(message = "ID phụ huynh phải là số dương")

@@ -207,33 +207,40 @@ const HealthCheckList = () => {
     {
       title: 'Hành động',
       key: 'actions',
-      render: (_, c) => (
-        <Space>
-          <Button type="primary" onClick={() => { setSelectedCampaign(c); setDetailModalOpen(true); }}>Xem chi tiết</Button>
-          <Button className="btn btn-warning btn-sm" onClick={() => handleUpdateClick(c)}>
-            Cập nhật
-          </Button>
-          {(user.userRole === 'ROLE_ADMIN' || user.userRole === 'ROLE_PRINCIPAL') && c.status === 'PENDING' && (
-            <>
-              <Button 
-                type="primary" 
-                style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
-                loading={approvingId === c.campaignId} 
-                onClick={() => handleApprove(c.campaignId)}
-              >
-                {approvingId === c.campaignId ? 'Đang duyệt...' : 'Chấp nhận'}
+      render: (_, c) => {
+        // Only ADMIN and NURSE can update campaigns
+        const canUpdate = user.userRole === 'ROLE_ADMIN' || user.userRole === 'ROLE_NURSE';
+        
+        return (
+          <Space>
+            <Button type="primary" onClick={() => { setSelectedCampaign(c); setDetailModalOpen(true); }}>Xem chi tiết</Button>
+            {canUpdate && (
+              <Button className="btn btn-warning btn-sm" onClick={() => handleUpdateClick(c)}>
+                Cập nhật
               </Button>
-              <Button 
-                danger 
-                loading={rejectingId === c.campaignId} 
-                onClick={() => handleReject(c.campaignId)}
-              >
-                {rejectingId === c.campaignId ? 'Đang từ chối...' : 'Từ chối'}
-              </Button>
-            </>
-          )}
-        </Space>
-      )
+            )}
+            {(user.userRole === 'ROLE_ADMIN' || user.userRole === 'ROLE_PRINCIPAL') && c.status === 'PENDING' && (
+              <>
+                <Button 
+                  type="primary" 
+                  style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
+                  loading={approvingId === c.campaignId} 
+                  onClick={() => handleApprove(c.campaignId)}
+                >
+                  {approvingId === c.campaignId ? 'Đang duyệt...' : 'Chấp nhận'}
+                </Button>
+                <Button 
+                  danger 
+                  loading={rejectingId === c.campaignId} 
+                  onClick={() => handleReject(c.campaignId)}
+                >
+                  {rejectingId === c.campaignId ? 'Đang từ chối...' : 'Từ chối'}
+                </Button>
+              </>
+            )}
+          </Space>
+        );
+      }
     }
   ];
 
@@ -357,10 +364,9 @@ const HealthCheckList = () => {
           </Col>
           <Col span={3}>
             <Button 
-              onClick={refreshCampaigns} 
+              onClick={() => window.location.reload()} 
               type="primary" 
               icon={<ReloadOutlined />}
-              loading={loading}
             >
               Làm mới
             </Button>

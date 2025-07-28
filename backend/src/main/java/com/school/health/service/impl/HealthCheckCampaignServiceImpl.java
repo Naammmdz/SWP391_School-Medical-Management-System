@@ -526,8 +526,8 @@ public class HealthCheckCampaignServiceImpl implements HealthCheckCampaignServic
                 .filter(Student::isActive)
                 .collect(Collectors.toList());
 
-        // Get existing vaccination records for this campaign
-        List<HealthCheck> existingVaccinations = healthCheckRepository.findByCampaignId(campaignId);
+        // Get existing vaccination records for this campaign (including all parent confirmations)
+        List<HealthCheck> existingVaccinations = healthCheckRepository.findAllByCampaignId(campaignId);
 
         // Create result list
         List<HealthCheckResponseResultDTO> results = new ArrayList<>();

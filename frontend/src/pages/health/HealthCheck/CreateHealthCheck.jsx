@@ -297,7 +297,7 @@ const CreateHealthCheck = () => {
             <Form.Item
               name="description"
               label="Mô tả chi tiết"
-              rules={[{ required: true, message: 'Vui lòng nhập mô tả!' }]}
+              rules={[{ required: false, message: 'Vui lòng nhập mô tả!' }]}
             >
               <TextArea prefix={<FileTextOutlined />} rows={4} placeholder="Mô tả các hoạt động, mục tiêu của chiến dịch" />
             </Form.Item>

@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="test_fake@localhost" uuid="d9c75bbc-7550-4b12-8326-664ba2a27b87">
+    <data-source source="LOCAL" name="test_fake@localhost" uuid="4086975f-841c-49b7-acfb-b64e44c91f9c">
       <driver-ref>sqlserver.ms</driver-ref>
       <synchronize>true</synchronize>
-      <imported>true</imported>
       <jdbc-driver>com.microsoft.sqlserver.jdbc.SQLServerDriver</jdbc-driver>
-      <jdbc-url>jdbc:sqlserver://localhost:1433;databaseName=test_fake;encrypt=true;trustServerCertificate=true;characterEncoding=UTF-8</jdbc-url>
+      <jdbc-url>jdbc:sqlserver://localhost:1433;database=test_fake</jdbc-url>
       <jdbc-additional-properties>
         <property name="com.intellij.clouds.kubernetes.db.host.port" />
         <property name="com.intellij.clouds.kubernetes.db.enabled" value="false" />

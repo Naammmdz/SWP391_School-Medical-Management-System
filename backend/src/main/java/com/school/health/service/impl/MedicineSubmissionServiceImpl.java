@@ -44,9 +44,26 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
 
     @Autowired
     private UserRepository userRepository;
-   @Autowired
-   private ApplicationEventPublisher publisher;
+    @Autowired
+    private ApplicationEventPublisher publisher;
 
+
+    // Helper method to calculate weekdays between two dates (excluding weekends)
+    private int calculateWeekdaysBetween(LocalDate startDate, LocalDate endDate) {
+        int weekdays = 0;
+        LocalDate currentDate = startDate;
+
+        while (!currentDate.isAfter(endDate)) {
+            DayOfWeek dayOfWeek = currentDate.getDayOfWeek();
+            // Count only weekdays (Monday to Friday)
+            if (dayOfWeek != DayOfWeek.SATURDAY && dayOfWeek != DayOfWeek.SUNDAY) {
+                weekdays++;
+            }
+            currentDate = currentDate.plusDays(1);
+        }
+
+        return weekdays;
+    }
 
     // ===== PARENT OPERATIONS =====
     @Override
@@ -66,8 +83,8 @@ public class MedicineSubmissionServiceImpl implements MedicineSubmissionService 
             throw new AccessDeniedException("You are not allowed to submit medicine for this student.");
         }
 
-        // Calculate duration based on start and end dates
-        int duration = (int) ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate()) + 1;
+        // Calculate duration based on start and end dates, excluding weekends
+        int duration = calculateWeekdaysBetween(request.getStartDate(), request.getEndDate());
 
         String encodedImage = null;
         if (image != null) {
