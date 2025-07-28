@@ -16,3 +16,4 @@ restartPolicyType = "always"
 
 [environments.production.variables]
 SPRING_PROFILES_ACTIVE = "production"
+# Deployment trigger - healthcheck disabled for demo
