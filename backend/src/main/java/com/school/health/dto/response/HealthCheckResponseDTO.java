@@ -27,7 +27,7 @@ public class HealthCheckResponseDTO {
     private String temperature;
     private boolean consultationAppointment;
     private String notes;
-    private boolean parentConfirmation;
+    private Boolean parentConfirmation;
     private int studentId;
     private int campaignId;
 

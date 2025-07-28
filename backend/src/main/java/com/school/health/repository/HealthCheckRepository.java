@@ -23,7 +23,7 @@ public interface HealthCheckRepository extends JpaRepository<HealthCheck, Intege
     List<HealthCheck> findByStudentId(Integer studentId);
 
     @Query("SELECT hc FROM HealthCheck hc WHERE :startDate <= hc.date AND hc.date <= :endDate OR hc.consultationAppointment = :consultationAppointment")
-    List<HealthCheck> findResultWithDate(LocalDate startDate, LocalDate endDate,boolean consultationAppointment);
+    List<HealthCheck> findResultWithDate(LocalDate startDate, LocalDate endDate, Boolean consultationAppointment);
 
     @Query("SELECT v FROM HealthCheck v WHERE v.campaign IN :campaigns")
     List<HealthCheck> findByCampaign(List<HealthCheckCampaign> campaigns);

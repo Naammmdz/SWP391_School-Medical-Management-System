@@ -44,7 +44,7 @@ public class HealthCheck {
     @Column(name = "ConsultationAppointment")
     private boolean consultationAppointment; // true nếu muốn hẹn lịch khám để tư vấn, false nếu không muốn
     @Column(name = "ParentConfirmation")
-    private boolean parentConfirmation;
+    private Boolean parentConfirmation;
     @Column(name = "Notes",columnDefinition = "NVARCHAR(255)")
     private String notes;
     // thêm có muốn hẹn lịch khám để tư vấn hay không

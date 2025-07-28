@@ -16,7 +16,8 @@ import {
   InfoCircleOutlined,
   CloseOutlined,
   BarChartOutlined,
-  ArrowLeftOutlined
+  ArrowLeftOutlined,
+  ReloadOutlined
 } from '@ant-design/icons';
 import { Search, XCircle } from 'lucide-react';
 import Header from '../../../components/Header';
@@ -95,7 +96,28 @@ const HealthRecord = () => {
       setHealthRecords(res.data || []);
     } catch (err) {
       console.error("Error fetching all health records:", err);
-      setError('Không thể tải danh sách hồ sơ sức khỏe!');
+      let errorMessage = 'Không thể tải danh sách hồ sơ sức khỏe!';
+      
+      if (err.response) {
+        const statusCode = err.response.status;
+        switch (statusCode) {
+          case 401:
+            errorMessage = 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
+            break;
+          case 403:
+            errorMessage = 'Bạn không có quyền xem danh sách hồ sơ sức khỏe.';
+            break;
+          case 500:
+            errorMessage = 'Lỗi hệ thống khi tải danh sách hồ sơ. Vui lòng thử lại sau.';
+            break;
+          default:
+            errorMessage = err.response.data?.message || errorMessage;
+        }
+      } else if (err.message) {
+        errorMessage = `Lỗi kết nối: ${err.message}`;
+      }
+      
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -118,7 +140,31 @@ const HealthRecord = () => {
       setHealthRecords(res.data || []);
     } catch (err) {
       console.error("Error fetching filtered health records:", err);
-      setError('Không thể tải danh sách hồ sơ sức khỏe!');
+      let errorMessage = 'Không thể lọc hồ sơ sức khỏe theo điều kiện tìm kiếm!';
+      
+      if (err.response) {
+        const statusCode = err.response.status;
+        switch (statusCode) {
+          case 400:
+            errorMessage = 'Thông tin tìm kiếm không hợp lệ. Vui lòng kiểm tra lại.';
+            break;
+          case 401:
+            errorMessage = 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
+            break;
+          case 403:
+            errorMessage = 'Bạn không có quyền tìm kiếm hồ sơ sức khỏe.';
+            break;
+          case 500:
+            errorMessage = 'Lỗi hệ thống khi tìm kiếm. Vui lòng thử lại sau.';
+            break;
+          default:
+            errorMessage = err.response.data?.message || errorMessage;
+        }
+      } else if (err.message) {
+        errorMessage = `Lỗi kết nối: ${err.message}`;
+      }
+      
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -178,10 +224,36 @@ const HealthRecord = () => {
           }
           setIsLoading(false);
         })
-        .catch(() => {
+        .catch((err) => {
+          console.error('Error fetching student health record (parent):', err);
           setHasRecord(false);
           setIsLoading(false);
-          setError('Không thể tải hồ sơ sức khỏe của học sinh!');
+          
+          let errorMessage = 'Không thể tải hồ sơ sức khỏe của học sinh!';
+          
+          if (err.response) {
+            const statusCode = err.response.status;
+            switch (statusCode) {
+              case 401:
+                errorMessage = 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
+                break;
+              case 403:
+                errorMessage = 'Bạn không có quyền xem hồ sơ sức khỏe của học sinh này.';
+                break;
+              case 404:
+                errorMessage = 'Không tìm thấy hồ sơ sức khỏe của học sinh. Có thể hồ sơ chưa được tạo.';
+                break;
+              case 500:
+                errorMessage = 'Lỗi hệ thống khi tải hồ sơ. Vui lòng thử lại sau.';
+                break;
+              default:
+                errorMessage = err.response.data?.message || errorMessage;
+            }
+          } else if (err.message) {
+            errorMessage = `Lỗi kết nối: ${err.message}`;
+          }
+          
+          setError(errorMessage);
           reset();
         });
     } else if (studentId) {
@@ -255,7 +327,56 @@ const HealthRecord = () => {
         setUpdateSuccess(false);
       }, 1500);
     } catch (err) {
-      setError('Có lỗi xảy ra khi lưu hồ sơ. Vui lòng thử lại sau.');
+      console.error('Error updating health record:', err);
+      let errorMessage = 'Có lỗi xảy ra khi lưu hồ sơ.';
+      
+      if (err.response && err.response.data) {
+        // Nếu có message từ backend
+        if (err.response.data.message) {
+          errorMessage = err.response.data.message;
+        }
+        // Nếu có validation errors
+        else if (err.response.data.errors) {
+          const errors = err.response.data.errors;
+          if (Array.isArray(errors)) {
+            errorMessage = errors.join(', ');
+          } else {
+            errorMessage = Object.values(errors).join(', ');
+          }
+        }
+        // Nếu có error field
+        else if (err.response.data.error) {
+          errorMessage = err.response.data.error;
+        }
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      // Thêm thông tin status code nếu có
+      if (err.response && err.response.status) {
+        const statusCode = err.response.status;
+        switch (statusCode) {
+          case 400:
+            errorMessage = `Dữ liệu không hợp lệ: ${errorMessage}`;
+            break;
+          case 401:
+            errorMessage = 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
+            break;
+          case 403:
+            errorMessage = 'Bạn không có quyền thực hiện hành động này.';
+            break;
+          case 404:
+            errorMessage = 'Không tìm thấy hồ sơ sức khỏe của học sinh.';
+            break;
+          case 500:
+            errorMessage = 'Lỗi hệ thống. Vui lòng thử lại sau hoặc liên hệ quản trị viên.';
+            break;
+          default:
+            errorMessage = `Lỗi ${statusCode}: ${errorMessage}`;
+        }
+      }
+      
+      setError(errorMessage);
     }
     setIsLoading(false);
   };
@@ -408,6 +529,15 @@ const HealthRecord = () => {
                           Xóa
                         </Button>
                       )}
+                      <Button
+                        icon={<ReloadOutlined />}
+                        onClick={fetchAllHealthRecords}
+                        style={{ borderRadius: 8 }}
+                        size="large"
+                        title="Làm mới danh sách"
+                      >
+                        Làm mới
+                      </Button>
                     </Space>
                   </Col>
                 </Row>
@@ -689,7 +819,7 @@ const HealthRecord = () => {
                       </Form.Item>
                     </Col>
                     <Col xs={24} sm={12}>
-                      <Form.Item label="Thị lực">
+                      <Form.Item label="Thị lực *">
                         <Controller
                           name="eyesight"
                           control={control}
@@ -705,7 +835,7 @@ const HealthRecord = () => {
                       </Form.Item>
                     </Col>
                     <Col xs={24} sm={12}>
-                      <Form.Item label="Thính lực">
+                      <Form.Item label="Thính lực *">
                         <Controller
                           name="hearing"
                           control={control}
@@ -721,7 +851,7 @@ const HealthRecord = () => {
                       </Form.Item>
                     </Col>
                     <Col xs={24} sm={12}>
-                      <Form.Item label="Nhóm máu">
+                      <Form.Item label="Nhóm máu *">
                         <Controller
                           name="bloodType"
                           control={control}
@@ -747,7 +877,7 @@ const HealthRecord = () => {
                       </Form.Item>
                     </Col>
                     <Col xs={24} sm={12}>
-                      <Form.Item label="Cân nặng (kg)">
+                      <Form.Item label="Cân nặng (kg) *">
                         <Controller
                           name="weight"
                           control={control}
@@ -765,7 +895,7 @@ const HealthRecord = () => {
                       </Form.Item>
                     </Col>
                     <Col xs={24} sm={12}>
-                      <Form.Item label="Chiều cao (cm)">
+                      <Form.Item label="Chiều cao (cm) *">
                         <Controller
                           name="height"
                           control={control}
@@ -881,15 +1011,15 @@ const HealthRecord = () => {
                         <input type="text" className="form-control" {...register("treatmentHistory")} />
                       </div>
                       <div className="form-group">
-                        <label>Thị lực</label>
+                        <label>Thị lực *</label>
                         <input type="text" className="form-control" {...register("eyesight")} />
                       </div>
                       <div className="form-group">
-                        <label>Thính lực</label>
+                        <label>Thính lực *</label>
                         <input type="text" className="form-control" {...register("hearing")} />
                       </div>
                       <div className="form-group">
-                        <label>Nhóm máu</label>
+                        <label>Nhóm máu *</label>
                         <input type="text" className="form-control" {...register("bloodType")} />
                       </div>
                       <div className="form-group">

@@ -42,11 +42,11 @@ public interface HealthCheckCampaignService {
     List<HealthCheckResponseDTO> getResultByStudentId(Integer studentId);
 
 
-    List<HealthCheckResponseDTO> getResultWithFilterDate(LocalDate startDate, LocalDate endDate, boolean consultationAppointment);
+    List<HealthCheckResponseDTO> getResultWithFilterDate(LocalDate startDate, LocalDate endDate, Boolean consultationAppointment);
 
     HealthCheckResponseDTO rejectStudentVaccine(HealthCheckRequestDTO request);
 
-    List<HealthCampaignResponseDTO> getCampaignStatus(int studentId, boolean parentConfirmation);
+    List<HealthCampaignResponseDTO> getCampaignStatus(int studentId, Boolean parentConfirmation);
 
     List<HealthCampaignIsAcceptDTO> getCampaignsIsAcceptOrReject(Integer studentId);
 

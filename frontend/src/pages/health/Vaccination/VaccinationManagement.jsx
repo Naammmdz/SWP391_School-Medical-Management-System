@@ -9,7 +9,7 @@ import {
   CheckCircleOutlined, ExclamationCircleOutlined, CloseCircleOutlined,
   CalendarOutlined, MedicineBoxOutlined, UserOutlined, ExportOutlined,
   SearchOutlined, FilterOutlined, BellOutlined, TeamOutlined, MoreOutlined,
-  EyeOutlined, SyncOutlined
+  EyeOutlined, SyncOutlined, ClearOutlined
 } from '@ant-design/icons';
 import "./VaccinationManagement.css";
 import { useNavigate } from 'react-router-dom';
@@ -91,6 +91,15 @@ const VaccinationManagement = () => {
     );
     
     return foundUser ? (foundUser.fullName || foundUser.name) : (organizer || 'Không xác định');
+  };
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchText('');
+    setSelectedStatus(null);
+    setSelectedVaccineType(null);
+    setDateRange([]);
+    message.success('Đã xóa tất cả bộ lọc');
   };
 
   // Fetch vaccination events from backend API
@@ -636,21 +645,21 @@ const VaccinationManagement = () => {
               allowClear
             />
           </Col>
-          <Col xs={24} sm={6}>
-            <Select
-              placeholder="Chọn trạng thái"
-              value={selectedStatus}
-              onChange={setSelectedStatus}
-              allowClear
-              style={{ width: '100%' }}
-            >
-              {statusOptions.map(option => (
-                <Option key={option.value} value={option.value}>
-                  {option.label}
-                </Option>
-              ))}
-            </Select>
-          </Col>
+          {/*<Col xs={24} sm={6}>*/}
+          {/*  <Select*/}
+          {/*    placeholder="Chọn trạng thái"*/}
+          {/*    value={selectedStatus}*/}
+          {/*    onChange={setSelectedStatus}*/}
+          {/*    allowClear*/}
+          {/*    style={{ width: '100%' }}*/}
+          {/*  >*/}
+          {/*    {statusOptions.map(option => (*/}
+          {/*      <Option key={option.value} value={option.value}>*/}
+          {/*        {option.label}*/}
+          {/*      </Option>*/}
+          {/*    ))}*/}
+          {/*  </Select>*/}
+          {/*</Col>*/}
           {/* <Col xs={24} sm={4}>
             <Select
               placeholder="Chọn loại vắc-xin"
@@ -666,7 +675,7 @@ const VaccinationManagement = () => {
               ))}
             </Select>
           </Col> */}
-          <Col xs={24} sm={8}>
+          <Col xs={24} sm={6}>
             <RangePicker
               placeholder={['Từ ngày', 'Đến ngày']}
               value={dateRange}
@@ -674,13 +683,22 @@ const VaccinationManagement = () => {
               style={{ width: '100%' }}
             />
           </Col>
-          <Col xs={24} sm={2}>
+          <Col xs={24} sm={3}>
             <Button
               icon={<SyncOutlined />}
               onClick={fetchVaccinationEvents}
               loading={loading}
             >
               Làm mới
+            </Button>
+          </Col>
+          <Col xs={24} sm={3}>
+            <Button
+              icon={<ClearOutlined />}
+              onClick={clearFilters}
+              type="default"
+            >
+              Xóa lọc
             </Button>
           </Col>
         </Row>

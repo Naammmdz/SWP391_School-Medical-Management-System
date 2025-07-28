@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Form, Input, Button, DatePicker, Card, Typography, Alert, Spin, Tooltip, Select, Checkbox, Space, Tag } from 'antd';
-import { InfoCircleOutlined } from '@ant-design/icons';
+import { InfoCircleOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import {
   NotificationOutlined,
   TeamOutlined,
@@ -18,6 +19,7 @@ const { TextArea } = Input;
 
 const CreateHealthCheck = () => {
   const [form] = Form.useForm();
+  const navigate = useNavigate();
   const [nurse, setNurse] = useState({});
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -46,11 +48,11 @@ const CreateHealthCheck = () => {
   ];
 
   const classOptions = [
-    '1A', '1B', '1C', '1D',
-    '2A', '2B', '2C', '2D',
-    '3A', '3B', '3C', '3D',
-    '4A', '4B', '4C', '4D',
-    '5A', '5B', '5C', '5D'
+    '1A', '1B',
+    '2A', '2B',
+    '3A', '3B',
+    '4A', '4B',
+    '5A', '5B',
   ];
 
   // Generate target group string based on selection
@@ -122,6 +124,16 @@ const CreateHealthCheck = () => {
   return (
     <div style={{ maxWidth: 800, margin: '32px auto', padding: '24px', background: '#f4f8fb' }}>
       <Card style={{ borderRadius: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+        <div style={{ marginBottom: 16 }}>
+          <Button 
+            type="default" 
+            icon={<ArrowLeftOutlined />} 
+            onClick={() => navigate('/danhsachkiemtradinhky')}
+            style={{ marginBottom: 8 }}
+          >
+            Quay lại danh sách
+          </Button>
+        </div>
         <Title level={2} style={{ textAlign: 'center', color: '#1890ff', marginBottom: 24 }}>
           Tạo chiến dịch kiểm tra sức khỏe
         </Title>

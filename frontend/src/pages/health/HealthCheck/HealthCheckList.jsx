@@ -1,16 +1,52 @@
 import React, { useEffect, useState } from 'react';
+import dayjs from 'dayjs';
 import { useNavigate } from 'react-router-dom';
 import HealthCheckService from '../../../services/HealthCheckService';
 import './HealthCheckList.css';
-import { Table, Button, Modal, Tag, message, Space, Tabs } from 'antd';
+import { Table, Button, Modal, Tag, message, Space, Tabs, Input, DatePicker, Row, Col } from 'antd';
+import { ReloadOutlined } from '@ant-design/icons';
 import AllStudentsInHealthCheckCampaign from '../../../components/healthcheck/AllStudentsInHealthCheckCampaign';
 import StudentsWithHealthStatus from '../../../components/healthcheck/StudentsWithHealthStatus';
+
+const { Search } = Input;
 
 const HealthCheckList = () => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const token = localStorage.getItem('token');
   const navigate = useNavigate();
   const [campaigns, setCampaigns] = useState([]);
+  const [filterText, setFilterText] = useState('');
+  const [dateRange, setDateRange] = useState([null, null]);
+  
+  const handleFilter = (value) => {
+    setFilterText(value.toLowerCase());
+  };
+  
+  const handleDateRangeChange = (dates) => {
+    setDateRange(dates);
+  };
+  
+  const clearFilters = () => {
+    setFilterText('');
+    setDateRange([null, null]);
+  };
+  
+  const refreshCampaigns = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await HealthCheckService.getAllHealthCheckCampaign({
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setCampaigns(data);
+      localStorage.setItem('healthCheckCampaigns', JSON.stringify(data));
+      message.success('Đã làm mới danh sách chiến dịch!');
+    } catch (err) {
+      setError('Không thể tải danh sách chiến dịch!');
+      message.error('Làm mới thất bại!');
+    }
+    setLoading(false);
+  };
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [approvingId, setApprovingId] = useState(null);
@@ -201,10 +237,43 @@ const HealthCheckList = () => {
     }
   ];
 
+  // Helper function to parse date from different formats
+  const parseScheduledDate = (date) => {
+    if (Array.isArray(date) && date.length === 3) {
+      const [year, month, day] = date;
+      return new Date(year, month - 1, day); // month is 0-indexed in JavaScript Date
+    }
+    if (typeof date === 'string') {
+      return new Date(date);
+    }
+    return null;
+  };
+  
+  const filteredCampaigns = campaigns.filter(campaign => {
+    // Text filter
+    const matchesText = campaign.campaignName.toLowerCase().includes(filterText) || 
+                       campaign.status.toLowerCase().includes(filterText);
+    
+    // Date range filter
+    let matchesDateRange = true;
+    if (dateRange[0] && dateRange[1]) {
+      const campaignDate = parseScheduledDate(campaign.scheduledDate);
+      if (campaignDate) {
+        const startDate = dateRange[0].startOf('day');
+        const endDate = dateRange[1].endOf('day');
+        const campaignDayjs = dayjs(campaignDate);
+        matchesDateRange = (campaignDayjs.isAfter(startDate) || campaignDayjs.isSame(startDate, 'day')) &&
+                          (campaignDayjs.isBefore(endDate) || campaignDayjs.isSame(endDate, 'day'));
+      }
+    }
+    
+    return matchesText && matchesDateRange;
+  });
+
   const campaignsByStatus = {
-    PENDING: campaigns.filter(c => c.status === 'PENDING'),
-    APPROVED: campaigns.filter(c => c.status === 'APPROVED'),
-    CANCELLED: campaigns.filter(c => c.status === 'CANCELLED'),
+    PENDING: filteredCampaigns.filter(c => c.status === 'PENDING'),
+    APPROVED: filteredCampaigns.filter(c => c.status === 'APPROVED'),
+    CANCELLED: filteredCampaigns.filter(c => c.status === 'CANCELLED'),
   };
 
   const tabItems = [
@@ -259,6 +328,45 @@ const HealthCheckList = () => {
           </Button>
         </div>
       )}
+      {/* Thêm các bộ lọc */}
+      <div style={{ marginBottom: 16, padding: 16, background: '#f5f5f5', borderRadius: 8 }}>
+        <Row gutter={16} align="middle">
+          <Col span={8}>
+            <Search
+              placeholder="Tìm kiếm chiến dịch theo tên hoặc trạng thái"
+              onSearch={handleFilter}
+              enterButton
+              allowClear
+              value={filterText}
+              onChange={(e) => setFilterText(e.target.value.toLowerCase())}
+            />
+          </Col>
+          <Col span={8}>
+            <DatePicker.RangePicker
+              placeholder={['Từ ngày', 'Đến ngày']}
+              format="DD/MM/YYYY"
+              onChange={handleDateRangeChange}
+              value={dateRange}
+              style={{ width: '100%' }}
+            />
+          </Col>
+          <Col span={3}>
+            <Button onClick={clearFilters} type="default">
+              Xóa bộ lọc
+            </Button>
+          </Col>
+          <Col span={3}>
+            <Button 
+              onClick={refreshCampaigns} 
+              type="primary" 
+              icon={<ReloadOutlined />}
+              loading={loading}
+            >
+              Làm mới
+            </Button>
+          </Col>
+        </Row>
+      </div>
       {loading && <div>Đang tải...</div>}
       {error && <div className="text-danger">{error}</div>}
       {!loading && !error && (

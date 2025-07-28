@@ -37,7 +37,7 @@ public class HealthCheckRequestDTO {
     private boolean consultationAppointment;
     //
     private String notes;
-    private boolean parentConfirmation;
+    private Boolean parentConfirmation;
     @Positive(message = "ID học sinh không hợp lệ")
     private int studentId;
     @Positive(message = "ID chiến dịch không hợp lệ")

@@ -71,19 +71,16 @@ const StudentsWithHealthStatus = ({ campaignId }) => {
                 // Map different status values to display text and color
                 let displayText = 'Chưa xác định';
                 let badgeStatus = 'default';
-                
-                if (status === true || status === 'true' || status === 'COMPLETED' || status === 'Completed') {
-                    displayText = 'Đã hoàn thành';
+
+                if (status === true) {
+                    displayText = 'Đã đồng ý';
                     badgeStatus = 'success';
-                } else if (status === false || status === 'false' || status === 'PENDING' || status === 'In Progress') {
-                    displayText = 'Chờ kiểm tra';
-                    badgeStatus = 'processing';
-                } else if (status === 'REJECTED' || status === 'Rejected') {
+                } else if (status === false) {
                     displayText = 'Từ chối';
                     badgeStatus = 'error';
-                } else if (status === 'REGISTERED' || status === 'Registered') {
-                    displayText = 'Đã đăng ký';
-                    badgeStatus = 'processing';
+                } else {
+                    displayText = 'Chưa phản hồi';
+                    badgeStatus = 'warning';
                 }
                 
                 return (
