@@ -1,0 +1,8 @@
+frontend/
+database/
+*.md
+.idea/
+.vscode/
+package.json
+package-lock.json
+tatus
