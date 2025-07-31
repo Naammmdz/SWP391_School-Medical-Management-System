@@ -142,6 +142,7 @@ const VaccinationManagement = () => {
       }));
       setVaccinationEvents(mappedData);
       setLoading(false);
+      console.log(mappedData);
     } catch (error) {
       message.error('Không thể tải danh sách chiến dịch tiêm chủng');
       setLoading(false);
@@ -399,7 +400,7 @@ const VaccinationManagement = () => {
               <div style={{ marginBottom: 12 }}>
                 <Text strong style={{ color: '#595959' }}>Địa điểm:</Text>
                 <br />
-                <Text>{record.organizer || 'Phòng y tế trường'}</Text>
+                <Text>{record.location}</Text>
               </div>
               <div>
                 <Text strong style={{ color: '#595959' }}>Đối tượng:</Text>

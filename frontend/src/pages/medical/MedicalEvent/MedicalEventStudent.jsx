@@ -73,7 +73,7 @@ if (Array.isArray(res)) {
       </Button>
 
       <Typography variant="h4" align="center" sx={{ mb: 2, color: '#1565c0', fontWeight: 700 }}>
-        Sự kiện y tế của học sinh
+        Sự cố y tế của học sinh
       </Typography>
 
       {student && (

@@ -171,7 +171,7 @@ const getNavGroupsForRole = (role) => {
         title: 'Y tế & Điều trị',
         items: [
           { path: '/donthuoc', name: 'Đơn thuốc', icon: 'clipboard', badge: '2' },
-          { path: '/sukienyte', name: 'Sự kiện y tế', icon: 'activity', badge: '1' },
+          { path: '/sukienyte', name: 'Sự cố y tế', icon: 'activity', badge: '1' },
           { path: '/quanlyvattuyte', name: 'Quản lý thuốc/Vật tư', icon: 'pill' },
         ]
       },

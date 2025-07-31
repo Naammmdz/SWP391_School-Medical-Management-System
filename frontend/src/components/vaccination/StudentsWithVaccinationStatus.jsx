@@ -192,16 +192,16 @@ const StudentsWithVaccinationStatus = ({ campaignId, campaignInfo }) => {
         return <Tag color={color}>{text}</Tag>;
       },
     },
-    {
-      title: 'Ngày tiêm',
-      dataIndex: 'vaccinationDate',
-      key: 'vaccinationDate',
-      width: 120,
-      render: (date) => {
-        if (!date) return <Text type="secondary">—</Text>;
-        return dayjs(date).format('DD/MM/YYYY');
-      },
-    },
+    // {
+    //   title: 'Ngày tiêm',
+    //   dataIndex: 'vaccinationDate',
+    //   key: 'vaccinationDate',
+    //   width: 120,
+    //   render: (date) => {
+    //     if (!date) return <Text type="secondary">—</Text>;
+    //     return dayjs(date).format('DD/MM/YYYY');
+    //   },
+    // },
     {
       title: 'Ghi chú',
       dataIndex: 'notes',

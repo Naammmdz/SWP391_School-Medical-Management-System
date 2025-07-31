@@ -188,7 +188,7 @@ const HealthCheckResultStudent = () => {
                           <Col span={12}><b>Thính lực trái:</b> {result.hearingLeft}</Col>
                           <Col span={12}><b>Thính lực phải:</b> {result.hearingRight}</Col>
                           <Col span={12}><b>Nhiệt độ:</b> {result.temperature} °C</Col>
-                          <Col span={12}><b>Đặt lịch tư vấn:</b> {result.consultationAppointment ? <CheckCircleTwoTone twoToneColor="#52c41a" /> : <CloseCircleTwoTone twoToneColor="#ff4d4f" />}</Col>
+                          {/* <Col span={12} hidden><b>Đặt lịch tư vấn:</b> {result.consultationAppointment ? <CheckCircleTwoTone twoToneColor="#52c41a" /> : <CloseCircleTwoTone twoToneColor="#ff4d4f" />}</Col> */}
                           <Col span={24} style={{ marginTop: 8 }}>
                             <b><FaNotesMedical style={{ color: '#faad14', marginRight: 4 }} />Ghi chú:</b> {result.notes || <span style={{ color: '#bfbfbf' }}>Không có</span>}
                           </Col>

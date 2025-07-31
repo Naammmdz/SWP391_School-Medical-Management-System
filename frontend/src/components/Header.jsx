@@ -86,11 +86,11 @@ const Header = () => {
         { path: "/sukienyte", label: "Sự kiện y tế" }
       ],
       ROLE_PARENT: [
-        { path: "/parent", label: "Trang chính phụ huynh" },
-        { path: "/hososuckhoe", label: "Hồ sơ sức khỏe" },
-        { path: "/khaibaothuoc", label: "Khai báo thuốc" },
-        { path: "/donthuocdagui", label: "Đơn thuốc đã gửi" },
-        { path: "/capnhatthongtin", label: "Cập nhật thông tin" }
+        { path: "/parent", label: "Trang chính phụ huynh" }
+        // { path: "/hososuckhoe", label: "Hồ sơ sức khỏe" },
+        // { path: "/khaibaothuoc", label: "Khai báo thuốc" },
+        // { path: "/donthuocdagui", label: "Đơn thuốc đã gửi" },
+        // { path: "/capnhatthongtin", label: "Cập nhật thông tin" }
       ],
       ROLE_PRINCIPAL: [
         { path: "/principal", label: "Bảng điều khiển" },
@@ -126,11 +126,11 @@ const Header = () => {
         </div>
       </div>
       <nav className="header-nav">
-        <a href="#home" className="header-link" onClick={handleSmoothScroll}>Trang chủ</a>
-        <a href="#about" className="header-link" onClick={handleSmoothScroll}>Về chúng tôi</a>
-        <a href="#services" className="header-link" onClick={handleSmoothScroll}>Dịch vụ</a>
-        <a href="#blog" className="header-link" onClick={handleSmoothScroll}>Blog</a>
-        <a href="#contact" className="header-link" onClick={handleSmoothScroll}>Liên hệ</a>
+        <a href="/" className="header-link">Trang chủ</a>
+        <a href="/#about" className="header-link">Về chúng tôi</a>
+        <a href="/#services" className="header-link">Dịch vụ</a>
+        <a href="/#blog" className="header-link">Blog</a>
+        <a href="/#contact" className="header-link">Liên hệ</a>
       </nav>
       <div className="header-actions">
         {isAuthenticated ? (

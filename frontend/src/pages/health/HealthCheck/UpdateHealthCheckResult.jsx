@@ -123,7 +123,7 @@ const UpdateHealthCheckResult = () => {
           <Form.Item label="Ghi chú" name="notes">
             <Input.TextArea rows={2} />
           </Form.Item>
-          <Form.Item name="parentConfirmation" valuePropName="checked">
+          <Form.Item name="parentConfirmation" valuePropName="checked" hidden="true">
             <Checkbox>Đã xác nhận với phụ huynh</Checkbox>
           </Form.Item>
           <Form.Item label="Mã học sinh" name="studentId" hidden>

@@ -675,7 +675,7 @@ const VaccinationResult = () => {
                     </Form.Item>
                   </Col>
                   <Col xs={24} sm={12}>
-                    <Form.Item name="parentConfirmation" valuePropName="checked">
+                    <Form.Item name="parentConfirmation" valuePropName="checked" hidden="true">
                       <Checkbox>
                         Xác nhận của phụ huynh
                       </Checkbox>
