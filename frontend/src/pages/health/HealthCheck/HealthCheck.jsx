@@ -46,29 +46,37 @@ const HealthCheck = () => {
 
       if (studentId && Array.isArray(allCampaigns)) {
         try {
-          // Sử dụng endpoint khác hoặc bỏ qua việc lấy trạng thái từ backend
-          // Vì endpoint getCampaignStatus đang gây lỗi 500
-          console.log('Skipping status fetch due to backend API issues');
-          hasStatus = false;
+          // Gọi API để lấy trạng thái đã xác nhận
+          try {
+            confirmed = await HealthCheckService.parentGetStautusCampaigns(studentId, true, config);
+            hasStatus = true;
+            console.log('Confirmed campaigns from API:', confirmed);
+          } catch (confirmedErr) {
+            console.log('Error fetching confirmed campaigns:', confirmedErr);
+            confirmed = [];
+          }
+
+          // Gọi API để lấy trạng thái đã từ chối
+          try {
+            rejected = await HealthCheckService.parentGetStautusCampaigns(studentId, false, config);
+            console.log('Rejected campaigns from API:', rejected);
+          } catch (rejectedErr) {
+            console.log('Error fetching rejected campaigns:', rejectedErr);
+            rejected = [];
+          }
         } catch (statusErr) {
-          console.log('Error fetching status, treating as no status available:', statusErr);
+          console.log('Error fetching status from API:', statusErr);
           hasStatus = false;
         }
-
-        // Lấy trạng thái từ localStorage
-        const savedStatuses = JSON.parse(localStorage.getItem(`healthcheck_status_${studentId}`) || '{}');
         
-        // Cập nhật trạng thái cho từng chiến dịch
+        // Cập nhật trạng thái cho từng chiến dịch dựa trên API response
         const updatedCampaigns = allCampaigns.map(campaign => {
-          // Kiểm tra trạng thái từ localStorage trước
-          const savedStatus = savedStatuses[campaign.campaignId];
-          
-          const isConfirmed = confirmed.some(c => c.campaignId === campaign.campaignId);
-          const isRejected = rejected.some(c => c.campaignId === campaign.campaignId);
+          const isConfirmed = Array.isArray(confirmed) && confirmed.some(c => c.campaignId === campaign.campaignId);
+          const isRejected = Array.isArray(rejected) && rejected.some(c => c.campaignId === campaign.campaignId);
 
           return {
             ...campaign,
-            parentConfirmStatus: savedStatus !== undefined ? savedStatus : (isConfirmed ? true : (isRejected ? false : null))
+            parentConfirmStatus: isConfirmed ? true : (isRejected ? false : null)
           };
         });
 
@@ -98,11 +106,6 @@ const HealthCheck = () => {
     try {
       const config = { headers: { Authorization: `Bearer ${token}` } };
       await HealthCheckService.parentConfirmHealthCheck(campaignId, studentId, config);
-
-      // Lưu trạng thái vào localStorage
-      const savedStatuses = JSON.parse(localStorage.getItem(`healthcheck_status_${studentId}`) || '{}');
-      savedStatuses[campaignId] = true;
-      localStorage.setItem(`healthcheck_status_${studentId}`, JSON.stringify(savedStatuses));
       
       // Cập nhật trạng thái ngay lập tức trong state
       setCampaigns(prev => prev.map(c =>
@@ -113,7 +116,7 @@ const HealthCheck = () => {
 
       message.success('Xác nhận tham gia thành công!');
       setModalVisible(false);
-      // Fetch lại dữ liệu để đảm bảo đồng bộ
+      // Fetch lại dữ liệu để đảm bảo đồng bộ với server
       fetchData();
     } catch (err) {
       console.error('Error confirming campaign:', err);
@@ -128,11 +131,6 @@ const HealthCheck = () => {
     try {
       const config = { headers: { Authorization: `Bearer ${token}` } };
       await HealthCheckService.parentRejectHealthCheck(campaignId, studentId, config);
-
-      // Lưu trạng thái vào localStorage
-      const savedStatuses = JSON.parse(localStorage.getItem(`healthcheck_status_${studentId}`) || '{}');
-      savedStatuses[campaignId] = false;
-      localStorage.setItem(`healthcheck_status_${studentId}`, JSON.stringify(savedStatuses));
       
       // Cập nhật trạng thái ngay lập tức trong state
       setCampaigns(prev => prev.map(c =>
@@ -143,7 +141,7 @@ const HealthCheck = () => {
 
       message.success('Từ chối tham gia thành công!');
       setModalVisible(false);
-      // Fetch lại dữ liệu để đảm bảo đồng bộ
+      // Fetch lại dữ liệu để đảm bảo đồng bộ với server
       fetchData();
     } catch (err) {
       console.error('Error rejecting campaign:', err);
