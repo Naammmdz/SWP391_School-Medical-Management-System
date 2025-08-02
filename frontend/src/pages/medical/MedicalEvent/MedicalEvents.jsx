@@ -198,8 +198,34 @@ const MedicalEvents = () => {
       console.log('API Response:', response.data); // Debug log
 
       if (response.data && Array.isArray(response.data)) {
-        // Sort medical events by ID in descending order (newest first)
-        const sortedEvents = response.data.sort((a, b) => b.id - a.id);
+         const severityOrder = {
+      'CRITICAL': 1, // Ưu tiên cao nhất
+      'SERIOUS': 2,
+      'MODERATE': 3,
+      'MINOR': 4      // Ưu tiên thấp nhất
+    };
+
+    // 2. Tạo bản sao của mảng để tránh thay đổi mảng gốc và thực hiện sắp xếp đa cấp
+    const sortedEvents = [...response.data].sort((a, b) => {
+   
+       const severityA = severityOrder[a.severityLevel];
+          const severityB = severityOrder[b.severityLevel];
+      if (severityA !== severityB) {
+        return severityA - severityB; // Sắp xếp theo số ưu tiên (1 -> 4)
+      }
+
+
+      if (a.status === 'PROCESSING' && b.status !== 'PROCESSING') {
+        return -1; // a lên trước b
+      }
+      if (a.status !== 'PROCESSING' && b.status === 'PROCESSING') {
+        return 1; // b lên trước a
+      }
+
+      // Ưu tiên 3: Sắp xếp theo ID giảm dần (cuối cùng)
+      // Nếu cả mức độ và trạng thái đều giống nhau, sắp xếp theo ID
+      return b.id - a.id;
+    });
         setMedicalEvents(sortedEvents);
 
         console.log('Medical events sorted by ID (desc):', sortedEvents.map(e => e.id).join(', '));
@@ -1063,6 +1089,7 @@ const MedicalEvents = () => {
                 <th>Học sinh</th>
                 <th>Ngày xảy ra</th>
                 <th>Biện pháp xử lý</th>
+                <th>Mức độ</th>
                 <th>Trạng thái</th>
                 <th>Thao tác</th>
               </tr>
@@ -1099,6 +1126,7 @@ const MedicalEvents = () => {
                         </td>
                         <td>{event.eventDate ? new Date(event.eventDate).toLocaleDateString('vi-VN') : 'Không có'}</td>
                         <td>{event.handlingMeasures || 'Không có'}</td>
+                        <td>{getSeverityLevelText(event.severityLevel) }</td>
                         <td>
                     <span className={`status ${event.status === 'PROCESSING' ? 'pending' : 'resolved'}`}>
                       {getStatusText(event.status)}

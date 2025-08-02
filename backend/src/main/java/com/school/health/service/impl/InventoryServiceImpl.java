@@ -106,10 +106,10 @@ public class InventoryServiceImpl implements InventoryService {
         return inventoryRepo.getInventoryExpiringSoon(today.plusDays(30)).stream().map(inventory -> mapToDTO(inventory)).collect(Collectors.toList());
     }
     // Chạy mỗi ngày lúc 6:30 giờ sáng
-    @Scheduled(cron = "0 30 6 * * ?")
+    @Scheduled(cron = "0 2 23 * * ?")
     public void checkExpiredInventory() {
         LocalDate today = LocalDate.now();
         List<Inventory> expiredItems = inventoryRepo.findByExpiryDateBefore(today);
-        publisher.publishEvent(new ExpiredInventoryEvent( expiredItems));
+        publisher.publishEvent(new ExpiredInventoryEvent(expiredItems));
     }
 }

@@ -24,7 +24,7 @@ public class LowStockInventoryEventListener {
         Inventory item = event.getInventory();
         List<User> users = userRepo.findAllAdminAndNurse();
         users.forEach(user -> {
-            notificationService.createNotification(user.getUserId(),"Vật phẩm/thuốc trong kho đang sắp hết",item.getName() +" đang sắp hết trong kho, vui lòng nhập thêm hàng để tránh việc thiếu sót vật tư khi xử lí các sự kiện y tế!!");
+            notificationService.createNotification(user.getUserId(),"Vật phẩm/thuốc "+item.getName()+" trong kho đang sắp hết",item.getName() +" đang sắp hết trong kho, vui lòng nhập thêm hàng để tránh việc thiếu sót vật tư khi xử lí các sự kiện y tế!!");
         });
     }
 
