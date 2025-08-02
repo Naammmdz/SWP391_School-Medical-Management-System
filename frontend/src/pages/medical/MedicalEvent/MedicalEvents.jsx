@@ -207,15 +207,14 @@ const MedicalEvents = () => {
 
     // 2. Tạo bản sao của mảng để tránh thay đổi mảng gốc và thực hiện sắp xếp đa cấp
     const sortedEvents = [...response.data].sort((a, b) => {
-      // Ưu tiên 1: Sắp xếp theo Mức độ nghiêm trọng (Severity Level)
-      const severityA = severityOrder[a.severityLevel] || 99; // Gán số 99 cho mức độ không xác định để xuống cuối
-      const severityB = severityOrder[b.severityLevel] || 99;
+   
+       const severityA = severityOrder[a.severityLevel];
+          const severityB = severityOrder[b.severityLevel];
       if (severityA !== severityB) {
         return severityA - severityB; // Sắp xếp theo số ưu tiên (1 -> 4)
       }
 
-      // Ưu tiên 2: Sắp xếp theo Trạng thái (Status)
-      // Nếu mức độ nghiêm trọng bằng nhau, ưu tiên "PROCESSING" lên trước
+
       if (a.status === 'PROCESSING' && b.status !== 'PROCESSING') {
         return -1; // a lên trước b
       }
@@ -1090,6 +1089,7 @@ const MedicalEvents = () => {
                 <th>Học sinh</th>
                 <th>Ngày xảy ra</th>
                 <th>Biện pháp xử lý</th>
+                <th>Mức độ</th>
                 <th>Trạng thái</th>
                 <th>Thao tác</th>
               </tr>
@@ -1126,6 +1126,7 @@ const MedicalEvents = () => {
                         </td>
                         <td>{event.eventDate ? new Date(event.eventDate).toLocaleDateString('vi-VN') : 'Không có'}</td>
                         <td>{event.handlingMeasures || 'Không có'}</td>
+                        <td>{getSeverityLevelText(event.severityLevel) }</td>
                         <td>
                     <span className={`status ${event.status === 'PROCESSING' ? 'pending' : 'resolved'}`}>
                       {getStatusText(event.status)}
