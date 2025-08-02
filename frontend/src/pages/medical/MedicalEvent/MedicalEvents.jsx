@@ -198,8 +198,35 @@ const MedicalEvents = () => {
       console.log('API Response:', response.data); // Debug log
 
       if (response.data && Array.isArray(response.data)) {
-        // Sort medical events by ID in descending order (newest first)
-        const sortedEvents = response.data.sort((a, b) => b.id - a.id);
+         const severityOrder = {
+      'CRITICAL': 1, // Ưu tiên cao nhất
+      'SERIOUS': 2,
+      'MODERATE': 3,
+      'MINOR': 4      // Ưu tiên thấp nhất
+    };
+
+    // 2. Tạo bản sao của mảng để tránh thay đổi mảng gốc và thực hiện sắp xếp đa cấp
+    const sortedEvents = [...response.data].sort((a, b) => {
+      // Ưu tiên 1: Sắp xếp theo Mức độ nghiêm trọng (Severity Level)
+      const severityA = severityOrder[a.severityLevel] || 99; // Gán số 99 cho mức độ không xác định để xuống cuối
+      const severityB = severityOrder[b.severityLevel] || 99;
+      if (severityA !== severityB) {
+        return severityA - severityB; // Sắp xếp theo số ưu tiên (1 -> 4)
+      }
+
+      // Ưu tiên 2: Sắp xếp theo Trạng thái (Status)
+      // Nếu mức độ nghiêm trọng bằng nhau, ưu tiên "PROCESSING" lên trước
+      if (a.status === 'PROCESSING' && b.status !== 'PROCESSING') {
+        return -1; // a lên trước b
+      }
+      if (a.status !== 'PROCESSING' && b.status === 'PROCESSING') {
+        return 1; // b lên trước a
+      }
+
+      // Ưu tiên 3: Sắp xếp theo ID giảm dần (cuối cùng)
+      // Nếu cả mức độ và trạng thái đều giống nhau, sắp xếp theo ID
+      return b.id - a.id;
+    });
         setMedicalEvents(sortedEvents);
 
         console.log('Medical events sorted by ID (desc):', sortedEvents.map(e => e.id).join(', '));
