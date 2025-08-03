@@ -9,7 +9,7 @@ export const SEVERITY_LEVEL_TRANSLATIONS = {
   MINOR: 'Nhẹ',
   MODERATE: 'Trung bình', 
   SERIOUS: 'Nặng',
-  MAJOR: 'Nặng',  // Alternative name used in some components
+  // MAJOR: 'Nặng',  // Alternative name used in some components
   CRITICAL: 'Cấp cứu'
 };
 
@@ -17,7 +17,7 @@ export const SEVERITY_LEVEL_TRANSLATIONS = {
 export const SEVERITY_LEVELS = [
   { value: 'MINOR', label: 'Nhẹ' },
   { value: 'MODERATE', label: 'Trung bình' },
-  { value: 'MAJOR', label: 'Nặng' },
+  { value: 'SERIOUS', label: 'Nặng' },
   { value: 'CRITICAL', label: 'Cấp cứu' }
 ];
 

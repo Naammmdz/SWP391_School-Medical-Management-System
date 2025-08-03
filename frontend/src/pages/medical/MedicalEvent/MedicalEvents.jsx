@@ -652,7 +652,7 @@ const MedicalEvents = () => {
     }
 
     // Check severityLevel
-    const validSeverityLevels = ['MINOR', 'MODERATE', 'MAJOR', 'CRITICAL'];
+    const validSeverityLevels = ['MINOR', 'MODERATE', 'SERIOUS', 'CRITICAL'];
     if (!validSeverityLevels.includes(currentEvent.severityLevel)) {
       validationErrors.push('Mức độ nghiêm trọng không hợp lệ');
     }
