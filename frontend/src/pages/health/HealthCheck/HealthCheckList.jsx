@@ -202,7 +202,7 @@ const HealthCheckList = () => {
       if (status === 'CANCELLED') color = 'red';
       return <Tag color={color}>{renderStatusVN(status)}</Tag>;
     } },
-    { title: 'Người tạo', dataIndex: 'createdBy', key: 'createdBy', render: getUserNameById },
+    // { title: 'Người tạo', dataIndex: 'createdBy', key: 'createdBy', render: getUserNameById },
     { title: 'Ngày tạo', dataIndex: 'createdAt', key: 'createdAt' },
     {
       title: 'Hành động',
@@ -416,10 +416,10 @@ const HealthCheckList = () => {
                 <div><strong>Trạng thái:</strong> <Tag color={selectedCampaign.status === 'PENDING' ? 'orange' : selectedCampaign.status === 'APPROVED' ? 'green' : selectedCampaign.status === 'CANCELLED' ? 'red' : 'default'}>{renderStatusVN(selectedCampaign.status)}</Tag></div>
               </div>
             </div>
-            <div style={{ marginTop: '12px', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+            {/* <div style={{ marginTop: '12px', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
               <div><strong>Người tạo:</strong> {getUserNameById(selectedCampaign.createdBy)}</div>
               <div><strong>Người duyệt:</strong> {selectedCampaign.approvedBy ? getUserNameById(selectedCampaign.approvedBy) : <span style={{ color: '#bfbfbf' }}>Chưa duyệt</span>}</div>
-            </div>
+            </div> */}
             <div style={{ marginTop: '8px' }}>
               <div><strong>Ngày tạo:</strong> {selectedCampaign.createdAt}</div>
             </div>

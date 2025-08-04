@@ -207,7 +207,12 @@ const MedicalEvents = () => {
 
     // 2. Tạo bản sao của mảng để tránh thay đổi mảng gốc và thực hiện sắp xếp đa cấp
     const sortedEvents = [...response.data].sort((a, b) => {
-   
+      if (a.status === 'PROCESSING' && b.status !== 'PROCESSING') {
+        return -1; // a lên trước b
+      }
+      if (a.status !== 'PROCESSING' && b.status === 'PROCESSING') {
+        return 1; // b lên trước a
+      }
        const severityA = severityOrder[a.severityLevel];
           const severityB = severityOrder[b.severityLevel];
       if (severityA !== severityB) {
@@ -215,12 +220,7 @@ const MedicalEvents = () => {
       }
 
 
-      if (a.status === 'PROCESSING' && b.status !== 'PROCESSING') {
-        return -1; // a lên trước b
-      }
-      if (a.status !== 'PROCESSING' && b.status === 'PROCESSING') {
-        return 1; // b lên trước a
-      }
+      
 
       // Ưu tiên 3: Sắp xếp theo ID giảm dần (cuối cùng)
       // Nếu cả mức độ và trạng thái đều giống nhau, sắp xếp theo ID
